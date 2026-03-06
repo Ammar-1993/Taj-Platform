@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # 1. Laravel Backend Service (PHP 8.3)
+  laravel.test:
+    build:
+      context: ./backend/docker/8.3
+      dockerfile: Dockerfile
+    image: taj-laravel-8.3
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    ports:
+      - '${APP_PORT:-8000}:80'
+    environment:
+      WWWUSER: '${WWWUSER:-1000}'
+      LARAVEL_SAIL: 1
+    volumes:
+      - './backend:/var/www/html'
+    networks:
+      - taj-network
+    depends_on:
+      - mysql
+
+  # 2. MySQL Database Service (Isolated Port)
+  mysql:
+    image: 'mysql:8.0'
+    ports:
+      # تم تغيير المنفذ الخارجي إلى 3307 لتفادي التعارض في جهازك
+      - '${FORWARD_DB_PORT:-3307}:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD:-secret}'
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_DATABASE: '${DB_DATABASE:-taj_database}'
+      MYSQL_USER: '${DB_USERNAME:-taj_user}'
+      MYSQL_PASSWORD: '${DB_PASSWORD:-secret}'
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    volumes:
+      - 'taj-mysql:/var/lib/mysql'
+    networks:
+      - taj-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD:-secret}"]
+      retries: 3
+      timeout: 5s
+
+  # 3. Next.js Frontend Service
+  nextjs:
+    image: 'node:20-alpine'
+    working_dir: /app
+    ports:
+      - '${FRONTEND_PORT:-3000}:3000'
+    volumes:
+      - './frontend:/app'
+    environment:
+      - NODE_ENV=development
+    command: sh -c "npm install && npm run dev"
+    networks:
+      - taj-network
+    depends_on:
+      - laravel.test
+
+networks:
+  taj-network:
+    driver: bridge
+
+volumes:
+  taj-mysql:
+    driver: local
