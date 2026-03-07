@@ -12,12 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('student_profiles', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-    $table->foreignId('grade_level_id')->constrained()->restrictOnDelete();
-    $table->boolean('can_book_independently')->default(false);
-    $table->timestamps();
-});
+            $table->id();
+            $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
+            $table->foreignId('grade_level_id')->constrained()->restrictOnDelete();
+            $table->boolean('can_book_independently')->default(false);
+            $table->timestamps();
+        });
     }
 
     /**

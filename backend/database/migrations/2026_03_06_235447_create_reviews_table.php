@@ -11,16 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('reviews', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('booking_id')->unique()->constrained()->cascadeOnDelete();
-    $table->foreignId('student_id')->constrained('users')->cascadeOnDelete();
-    $table->foreignId('teacher_id')->constrained('users')->cascadeOnDelete();
-    $table->tinyInteger('rating');
-    $table->text('comment')->nullable();
-    $table->boolean('is_published')->default(false);
-    $table->timestamps();
-});
+        Schema::create('reviews', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('booking_id')->unique()->constrained()->cascadeOnDelete();
+            $table->foreignId('student_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('teacher_id')->constrained('users')->cascadeOnDelete();
+            $table->unsignedTinyInteger('rating'); // تعديل لمنع القيم السالبة
+            $table->text('comment')->nullable();
+            $table->boolean('is_published')->default(false);
+            $table->timestamps();
+        });
     }
 
     /**

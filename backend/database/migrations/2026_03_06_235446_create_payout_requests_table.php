@@ -11,16 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-     Schema::create('payout_requests', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-    $table->decimal('amount', 8, 2);
-    $table->string('bank_name'); // Snapshot
-    $table->string('iban'); // Snapshot
-    $table->enum('status', ['pending', 'approved', 'transferred', 'rejected'])->default('pending');
-    $table->text('admin_notes')->nullable();
-    $table->timestamps();
-});                             
+        Schema::create('payout_requests', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->restrictOnDelete();
+            $table->decimal('amount', 8, 2);
+            $table->string('bank_name'); 
+            $table->string('iban'); 
+            $table->enum('status', ['pending', 'approved', 'transferred', 'rejected'])->default('pending');
+            $table->text('admin_notes')->nullable();
+            $table->timestamps();
+        });                             
     }
 
     /**
