@@ -51,7 +51,6 @@ DB::statement('ALTER TABLE bookings ADD CONSTRAINT chk_prices CHECK (session_pri
      */
     public function down(): void
 {
-    DB::statement('ALTER TABLE bookings DROP CONSTRAINT IF EXISTS chk_prices');
     Schema::dropIfExists('bookings');
 }
 };
