@@ -19,6 +19,7 @@ return new class extends Migration
             $table->enum('type', ['class_earnings', 'withdrawal', 'refund_to_parent', 'admin_adjustment']);
             $table->string('description');
             $table->timestamps();
+            $table->index(['wallet_id', 'created_at']);
         });
     }
 

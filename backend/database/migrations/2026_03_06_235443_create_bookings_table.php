@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -41,14 +42,16 @@ return new class extends Migration
     // فهارس مركبة (Composite Indexes) بدلاً من الفهرس الفردي الضعيف
     $table->index(['teacher_id', 'status', 'booking_date']);
     $table->index(['student_id', 'status']);
-});         
+}); 
+DB::statement('ALTER TABLE bookings ADD CONSTRAINT chk_prices CHECK (session_price >= 0 AND discount_amount >= 0 AND net_paid >= 0)');          
     }
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
-    {
-        Schema::dropIfExists('bookings');
-    }
+{
+    DB::statement('ALTER TABLE bookings DROP CONSTRAINT IF EXISTS chk_prices');
+    Schema::dropIfExists('bookings');
+}
 };
