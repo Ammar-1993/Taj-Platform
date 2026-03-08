@@ -36,11 +36,12 @@ return new class extends Migration
     
     $table->enum('status', ['pending_payment', 'scheduled', 'in_progress', 'completed', 'cancelled', 'refunded'])->default('pending_payment');
     
-    $table->timestamps();
+   $table->timestamps();
 
-    // Index لتسريع جلب بيانات الحجوزات بناءً على حالتها
-    $table->index('status');
-        });         
+    // فهارس مركبة (Composite Indexes) بدلاً من الفهرس الفردي الضعيف
+    $table->index(['teacher_id', 'status', 'booking_date']);
+    $table->index(['student_id', 'status']);
+});         
     }
 
     /**

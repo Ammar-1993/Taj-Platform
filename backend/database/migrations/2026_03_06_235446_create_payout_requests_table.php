@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->restrictOnDelete();
             $table->decimal('amount', 8, 2);
             $table->string('bank_name'); 
-            $table->string('iban'); 
+            $table->text('iban'); 
             $table->enum('status', ['pending', 'approved', 'transferred', 'rejected'])->default('pending');
             $table->text('admin_notes')->nullable();
             $table->timestamps();

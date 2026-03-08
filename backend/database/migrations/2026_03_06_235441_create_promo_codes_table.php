@@ -15,8 +15,8 @@ return new class extends Migration
     $table->id();
     $table->string('code')->unique();
     $table->decimal('discount_percentage', 5, 2);
-    $table->integer('max_uses');
-    $table->integer('used_count')->default(0);
+    $table->unsignedInteger('max_uses');
+    $table->unsignedInteger('used_count')->default(0);
     $table->timestamp('expires_at')->nullable();
     $table->timestamps();
 });
