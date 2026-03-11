@@ -12,14 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('promo_codes', function (Blueprint $table) {
-    $table->id();
-    $table->string('code')->unique();
-    $table->decimal('discount_percentage', 5, 2);
-    $table->unsignedInteger('max_uses');
-    $table->unsignedInteger('used_count')->default(0);
-    $table->timestamp('expires_at')->nullable();
-    $table->timestamps();
-});
+            $table->id();
+            $table->string('code')->unique();
+            $table->decimal('discount_percentage', 5, 2);
+            $table->unsignedInteger('max_uses');
+            $table->unsignedInteger('used_count')->default(0);
+            $table->timestamp('expires_at')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**

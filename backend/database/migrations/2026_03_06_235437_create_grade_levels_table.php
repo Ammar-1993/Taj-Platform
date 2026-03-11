@@ -12,12 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('grade_levels', function (Blueprint $table) {
-    $table->id();
-    $table->string('name');
-    $table->decimal('session_price', 8, 2);
-    $table->boolean('is_active')->default(true);
-    $table->timestamps();
-});
+            $table->id();
+            $table->string('name');
+            $table->decimal('session_price', 8, 2);
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
     }
 
     /**
