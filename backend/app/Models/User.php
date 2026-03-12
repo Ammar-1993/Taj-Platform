@@ -11,8 +11,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes, HasRoles;
 
@@ -32,7 +34,15 @@ class User extends Authenticatable
         ];
     }
 
-    // علاقة ولي الأمر بأبنائه
+    // 🔒 جدار الحماية: من يُسمح له بدخول لوحة التحكم؟
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // فقط المستخدم الذي يمتلك دور "admin" يمكنه الدخول
+        return $this->hasRole('admin');
+    }
+
+    // --- العلاقات (كما هي لم تتغير) ---
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(User::class, 'parent_id');
@@ -43,7 +53,6 @@ class User extends Authenticatable
         return $this->hasMany(User::class, 'parent_id');
     }
 
-    // الملفات الشخصية
     public function teacherProfile(): HasOne
     {
         return $this->hasOne(TeacherProfile::class);
@@ -54,13 +63,11 @@ class User extends Authenticatable
         return $this->hasOne(StudentProfile::class);
     }
 
-    // المحفظة
     public function wallet(): HasOne
     {
         return $this->hasOne(Wallet::class);
     }
 
-    // الحجوزات
     public function studentBookings(): HasMany
     {
         return $this->hasMany(Booking::class, 'student_id');
@@ -76,7 +83,6 @@ class User extends Authenticatable
         return $this->hasMany(Booking::class, 'teacher_id');
     }
 
-    // الجدولة والعمليات
     public function teacherSlots(): HasMany
     {
         return $this->hasMany(TeacherSlot::class, 'teacher_id');
