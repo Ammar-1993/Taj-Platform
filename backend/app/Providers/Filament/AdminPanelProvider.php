@@ -27,6 +27,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->font('Cairo') // 🟢 هذه اللمسة ستجعل الخط العربي رائعاً
             ->colors([
                 'primary' => Color::Amber,
             ])
