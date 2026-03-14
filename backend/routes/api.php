@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\DiscoveryController;
 
 // مسارات عامة (لا تحتاج تسجيل دخول)
 Route::prefix('v1/auth')->group(function () {
@@ -20,4 +21,14 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // الملفات الشخصية
     Route::post('/profile/teacher', [ProfileController::class, 'completeTeacherProfile']);
     Route::post('/profile/student', [ProfileController::class, 'completeStudentProfile']);
+});
+
+
+
+// مسارات التصفح والبحث (عامة)
+Route::prefix('v1/discovery')->group(function () {
+    Route::get('/subjects', [DiscoveryController::class, 'subjects']);
+    Route::get('/grade-levels', [DiscoveryController::class, 'gradeLevels']);
+    Route::get('/teachers', [DiscoveryController::class, 'teachers']);
+    Route::get('/teachers/{id}/slots', [DiscoveryController::class, 'teacherSlots']);
 });
