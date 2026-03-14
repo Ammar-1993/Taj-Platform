@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\DiscoveryController;
+use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\WalletController;
 
 // مسارات عامة (لا تحتاج تسجيل دخول)
 Route::prefix('v1/auth')->group(function () {
@@ -21,6 +23,13 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // الملفات الشخصية
     Route::post('/profile/teacher', [ProfileController::class, 'completeTeacherProfile']);
     Route::post('/profile/student', [ProfileController::class, 'completeStudentProfile']);
+
+    // المحفظة والمالية
+    Route::get('/wallet', [WalletController::class, 'index']);
+
+    // الحجوزات
+    Route::get('/bookings', [BookingController::class, 'index']);
+    Route::post('/bookings', [BookingController::class, 'store']);
 });
 
 
