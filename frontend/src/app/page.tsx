@@ -1,101 +1,125 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import api from '@/lib/axios';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    const [teachers, setTeachers] = useState<any[]>([]);
+    const [subjects, setSubjects] = useState<any[]>([]);
+    const [search, setSearch] = useState('');
+    const [subjectId, setSubjectId] = useState('');
+    const [loading, setLoading] = useState(true);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    // جلب المواد والمعلمين عند تحميل الصفحة
+    useEffect(() => {
+        fetchSubjects();
+        fetchTeachers();
+    }, []);
+
+    // إعادة جلب المعلمين عند تغيير الفلاتر (البحث أو المادة)
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            fetchTeachers();
+        }, 500); // تأخير نصف ثانية لتخفيف الضغط على السيرفر أثناء الكتابة
+        return () => clearTimeout(delayDebounceFn);
+    }, [search, subjectId]);
+
+    const fetchSubjects = async () => {
+        try {
+            const res = await api.get('/discovery/subjects');
+            setSubjects(res.data.data);
+        } catch (error) {
+            console.error("خطأ في جلب المواد", error);
+        }
+    };
+
+    const fetchTeachers = async () => {
+        setLoading(true);
+        try {
+            // بناء رابط البحث مع الفلاتر
+            let url = '/discovery/teachers?';
+            if (search) url += `search=${search}&`;
+            if (subjectId) url += `subject_id=${subjectId}`;
+
+            const res = await api.get(url);
+            setTeachers(res.data.data.data); // data الأولى للـ response والثانية للـ pagination
+        } catch (error) {
+            console.error("خطأ في جلب المعلمين", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-gray-50 p-8">
+            <div className="max-w-6xl mx-auto space-y-8">
+                {/* الهيدر والبحث */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-center">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">اختر معلمك وانطلق 🚀</h1>
+                        <p className="text-gray-500 mt-2">نخبة من المعلمين المعتمدين في جميع المواد</p>
+                    </div>
+                    <div className="flex gap-4 w-full md:w-auto">
+                        <input
+                            type="text"
+                            placeholder="ابحث باسم المعلم..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-64"
+                        />
+                        <select
+                            value={subjectId}
+                            onChange={(e) => setSubjectId(e.target.value)}
+                            className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        >
+                            <option value="">جميع المواد</option>
+                            {subjects.map(sub => (
+                                <option key={sub.id} value={sub.id}>{sub.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                {/* شبكة المعلمين */}
+                {loading ? (
+                    <div className="text-center py-20 text-gray-500 text-xl font-semibold animate-pulse">جاري البحث...</div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {teachers.length === 0 ? (
+                            <div className="col-span-full text-center text-gray-500 py-10">لا يوجد معلمين يطابقون بحثك.</div>
+                        ) : (
+                            teachers.map((teacher) => (
+                                <div key={teacher.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xl">
+                                            {teacher.name.charAt(2)}
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-lg">{teacher.name}</h3>
+                                            <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
+                                                {teacher.teacher_profile?.subject?.name}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <p className="text-gray-600 text-sm line-clamp-2 mb-4">
+                                        {teacher.teacher_profile?.bio || 'لا توجد نبذة تعريفية.'}
+                                    </p>
+                                    <div className="flex justify-between items-center border-t pt-4">
+                                        <span className="text-yellow-500 font-bold">⭐ {teacher.teacher_profile?.average_rating}</span>
+                                        <Link 
+                                            href={`/teachers/${teacher.id}`}
+                                            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition"
+                                        >
+                                            احجز الآن
+                                        </Link>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                )}
+            </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+    );
 }
