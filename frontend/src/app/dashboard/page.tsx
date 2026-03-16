@@ -49,25 +49,38 @@ export default function DashboardPage() {
     switch (status) {
       case "scheduled":
         return (
-          <span className="px-2 py-1 text-xs rounded-md bg-blue-100 text-blue-800">
+          <span className="px-2 py-1 text-xs rounded-md bg-blue-100 text-blue-800 font-bold">
             مجدول
+          </span>
+        );
+      case "in_progress":
+        // ✅ تمت إضافة هذه الحالة لتظهر باللون الأصفر الجميل
+        return (
+          <span className="px-2 py-1 text-xs rounded-md bg-yellow-100 text-yellow-800 font-bold animate-pulse">
+            جارية الآن 🔴
           </span>
         );
       case "completed":
         return (
-          <span className="px-2 py-1 text-xs rounded-md bg-green-100 text-green-800">
+          <span className="px-2 py-1 text-xs rounded-md bg-green-100 text-green-800 font-bold">
             مكتمل
           </span>
         );
       case "cancelled":
         return (
-          <span className="px-2 py-1 text-xs rounded-md bg-red-100 text-red-800">
+          <span className="px-2 py-1 text-xs rounded-md bg-red-100 text-red-800 font-bold">
             ملغي
+          </span>
+        );
+      case "refunded":
+        return (
+          <span className="px-2 py-1 text-xs rounded-md bg-purple-100 text-purple-800 font-bold">
+            مسترجع
           </span>
         );
       default:
         return (
-          <span className="px-2 py-1 text-xs rounded-md bg-gray-100 text-gray-800">
+          <span className="px-2 py-1 text-xs rounded-md bg-gray-100 text-gray-800 font-bold">
             {status}
           </span>
         );
@@ -245,9 +258,7 @@ export default function DashboardPage() {
                           {booking.status === "scheduled" && (
                             <button
                               onClick={() =>
-                                alert(
-                                  `سيتم فتح الفصل الافتراضي (Agora) للرابط: ${booking.agora_channel} في المرحلة القادمة!`,
-                                )
+                                router.push(`/classroom/${booking.id}`)
                               }
                               className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition text-xs font-bold border border-indigo-200"
                             >

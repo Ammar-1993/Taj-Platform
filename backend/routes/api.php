@@ -1,14 +1,13 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\ProfileController;
-use App\Http\Controllers\Api\DiscoveryController;
 use App\Http\Controllers\Api\BookingController;
-use App\Http\Controllers\Api\WalletController;
+use App\Http\Controllers\Api\ClassroomController;
+use App\Http\Controllers\Api\DiscoveryController;
 use App\Http\Controllers\Api\PaymentController;
-
-
+use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\WalletController;
+use Illuminate\Support\Facades\Route;
 
 // مسارات عامة (لا تحتاج تسجيل دخول)
 Route::prefix('v1/auth')->group(function () {
@@ -18,7 +17,7 @@ Route::prefix('v1/auth')->group(function () {
 
 // مسارات محمية (تحتاج توكن Sanctum)
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
-    
+
     // المصادقة
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -33,9 +32,10 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // الحجوزات
     Route::get('/bookings', [BookingController::class, 'index']);
     Route::post('/bookings', [BookingController::class, 'store']);
+
+    // مسار دخول الفصل الافتراضي
+    Route::get('/bookings/{id}/classroom', [ClassroomController::class, 'getAccessDetails']);
 });
-
-
 
 // مسارات التصفح والبحث (عامة)
 Route::prefix('v1/discovery')->group(function () {
