@@ -12,3 +12,9 @@ docker-compose exec laravel.test php artisan storage:link
 
 docker-compose up -d
 
+
+docker-compose exec laravel.test tail -n 20 storage/logs/laravel.log
+
+
+docker-compose exec laravel.test php artisan tinker --execute="DB::statement('ALTER TABLE wallet_transactions MODIFY type VARCHAR(50)');"
+
