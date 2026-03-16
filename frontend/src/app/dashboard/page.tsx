@@ -44,6 +44,24 @@ export default function DashboardPage() {
     }
   };
 
+  const handleCompleteClass = async (bookingId: number) => {
+    if (
+      !confirm(
+        "هل أنت متأكد من إنهاء الحصة؟ سيتم إيداع الأرباح في محفظتك الآن.",
+      )
+    )
+      return;
+
+    try {
+      const res = await api.patch(`/bookings/${bookingId}/complete`);
+      alert(res.data.message);
+      // تحديث اللوحة فوراً لتظهر الأرباح في المحفظة!
+      fetchDashboardData();
+    } catch (error: any) {
+      alert(error.response?.data?.message || "حدث خطأ أثناء إنهاء الحصة");
+    }
+  };
+
   // دالة مساعدة لترجمة حالة الحجز
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -254,8 +272,10 @@ export default function DashboardPage() {
                         <td className="px-4 py-3">
                           {getStatusBadge(booking.status)}
                         </td>
-                        <td className="px-4 py-3">
-                          {booking.status === "scheduled" && (
+                        <td className="px-4 py-3 flex gap-2 justify-end">
+                          {/* زر دخول الفصل (يظهر للطالب والمعلم إذا كانت الحصة مجدولة أو قيد التقدم) */}
+                          {(booking.status === "scheduled" ||
+                            booking.status === "in_progress") && (
                             <button
                               onClick={() =>
                                 router.push(`/classroom/${booking.id}`)
@@ -263,6 +283,16 @@ export default function DashboardPage() {
                               className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition text-xs font-bold border border-indigo-200"
                             >
                               دخول الفصل 📹
+                            </button>
+                          )}
+
+                          {/* زر إنهاء الحصة (يظهر للمعلم فقط إذا دخل الحصة وأصبحت قيد التقدم) */}
+                          {isTeacher && booking.status === "in_progress" && (
+                            <button
+                              onClick={() => handleCompleteClass(booking.id)}
+                              className="px-3 py-1 bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition text-xs font-bold border border-green-200"
+                            >
+                              إنهاء وتحصيل الأرباح 💰
                             </button>
                           )}
                         </td>

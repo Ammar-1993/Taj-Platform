@@ -83,4 +83,34 @@ class BookingController extends Controller
             'data' => $bookings
         ]);
     }
+
+    // 3. إنهاء الحصة وتحويل الأرباح للمعلم
+    public function complete(Request $request, $id): JsonResponse
+    {
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+        $booking = \App\Models\Booking::findOrFail($id);
+
+        // حماية: لا يمكن لأحد إنهاء الحصة إلا المعلم صاحب الحصة
+        if ($user->id !== $booking->teacher_id) {
+            return response()->json(['message' => 'غير مصرح لك بإنهاء هذه الحصة'], 403);
+        }
+
+        try {
+            // 🚀 استدعاء المحرك المالي لإنهاء الحصة وتوزيع الأرباح
+            $completedBooking = $this->bookingService->completeBooking($booking);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'تم إنهاء الحصة بنجاح وتحويل الأرباح لمحفظتك! 💰',
+                'data' => $completedBooking
+            ]);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
 }

@@ -35,6 +35,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     // مسار دخول الفصل الافتراضي
     Route::get('/bookings/{id}/classroom', [ClassroomController::class, 'getAccessDetails']);
+
+    Route::patch('/bookings/{id}/complete', [BookingController::class, 'complete']);
 });
 
 // مسارات التصفح والبحث (عامة)
