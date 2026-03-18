@@ -163,9 +163,12 @@ export default function DashboardPage() {
               </div>
 
               {isTeacher ? (
-                <button className="mt-6 w-full py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition">
+                <Link
+                  href="/dashboard/payout"
+                  className="mt-6 flex justify-center w-full py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition"
+                >
                   طلب سحب أرباح
-                </button>
+                </Link>
               ) : (
                 <Link
                   href="/dashboard/top-up"

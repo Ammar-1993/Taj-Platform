@@ -37,6 +37,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/bookings/{id}/classroom', [ClassroomController::class, 'getAccessDetails']);
 
     Route::patch('/bookings/{id}/complete', [BookingController::class, 'complete']);
+
+    Route::post('/wallet/payouts', [WalletController::class, 'requestPayout']);
 });
 
 // مسارات التصفح والبحث (عامة)
