@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\WalletController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\ParentController;
+
 
 // مسارات عامة (لا تحتاج تسجيل دخول)
 Route::prefix('v1/auth')->group(function () {
@@ -39,6 +41,12 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::patch('/bookings/{id}/complete', [BookingController::class, 'complete']);
 
     Route::post('/wallet/payouts', [WalletController::class, 'requestPayout']);
+
+
+    // مسارات إدارة الأبناء (لولي الأمر)
+    Route::get('/parent/children', [ParentController::class, 'getChildren']);
+    Route::post('/parent/children', [ParentController::class, 'storeChild']);
+    Route::put('/parent/children/{id}', [ParentController::class, 'updateChild']);
 });
 
 // مسارات التصفح والبحث (عامة)

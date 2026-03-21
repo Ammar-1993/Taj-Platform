@@ -8,6 +8,11 @@ token:1|noTkwRH9THg5Xb2rPs4MEiXpg5mdx8hgrnvuq6vE3a886a53
 الآن سجل دخولك بحساب الإدارة: admin@taj.com / password123.
 سجل الدخول كمعلم (teacher@taj.com / password123).
 سجل الدخول كطالب (student@taj.com / password123).
+سجل الدخول كولي أمر (parent@taj.com / password123).
+سيتم توجيهك لصفحة الدخول. الآن، سجل دخولك ببيانات الابن الجديد:
+الإيميل: yasser@taj.com
+الباسوورد: password123
+
 
 
 docker-compose exec laravel.test php artisan optimize:clear

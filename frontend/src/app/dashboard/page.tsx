@@ -170,12 +170,20 @@ export default function DashboardPage() {
                   طلب سحب أرباح
                 </Link>
               ) : (
-                <Link
-                  href="/dashboard/top-up"
-                  className="mt-6 block text-center w-full py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition"
-                >
-                  شحن المحفظة
-                </Link>
+                <div className="mt-6 flex gap-2">
+                  <Link
+                    href="/dashboard/top-up"
+                    className="flex-1 text-center py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition"
+                  >
+                    شحن المحفظة
+                  </Link>
+                  <Link
+                    href="/dashboard/children"
+                    className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-medium"
+                  >
+                    إدارة الأبناء
+                  </Link>
+                </div>
               )}
             </div>
 
