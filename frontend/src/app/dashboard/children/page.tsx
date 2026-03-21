@@ -54,6 +54,22 @@ export default function ChildrenManagementPage() {
         }
     };
 
+    const handleTogglePermission = async (childId: number, currentStatus: boolean) => {
+        try {
+            // تحديث الواجهة فوراً (Optimistic UI) لإعطاء سرعة استجابة للمستخدم
+            setChildren(children.map(c => c.id === childId ? {
+                ...c, 
+                student_profile: { ...c.student_profile, can_book_independently: !currentStatus }
+            } : c));
+
+            // إرسال الطلب للسيرفر
+            await api.patch(`/parent/children/${childId}/toggle-permission`);
+        } catch (error: any) {
+            alert('حدث خطأ أثناء تغيير الصلاحية');
+            fetchData(); // إعادة جلب البيانات الصحيحة في حال فشل الطلب
+        }
+    };
+
     if (loading) return <div className="p-8 animate-pulse text-center">جاري التحميل...</div>;
 
     // التأكد من أن المستخدم ولي أمر
@@ -134,11 +150,22 @@ export default function ChildrenManagementPage() {
                                         <p className="text-xs text-gray-500">{child.email}</p>
                                     </div>
                                 </div>
-                                <div className="flex justify-between items-center">
+                                <div className="flex justify-between items-center mb-4">
                                     <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-md text-sm font-medium">
                                         {child.student_profile?.grade_level?.name || 'غير محدد'}
                                     </span>
                                     <button className="text-blue-600 text-sm hover:underline" onClick={() => alert('ميزة التعديل ستفتح قريباً')}>تعديل</button>
+                                </div>
+
+                                {/* 🟢 التحديث الجديد: مفتاح التحكم بالصلاحية */}
+                                <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                                    <span className="text-sm font-semibold text-gray-700">صلاحية الحجز والدفع:</span>
+                                    <button 
+                                        onClick={() => handleTogglePermission(child.id, child.student_profile?.can_book_independently)}
+                                        className={`px-3 py-1 rounded-full text-xs font-bold transition ${child.student_profile?.can_book_independently ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
+                                    >
+                                        {child.student_profile?.can_book_independently ? 'مفعل ✅' : 'معطل ❌'}
+                                    </button>
                                 </div>
                             </div>
                         ))

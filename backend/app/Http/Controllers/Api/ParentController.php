@@ -88,4 +88,28 @@ class ParentController extends Controller
             'data' => $child->load('studentProfile.gradeLevel')
         ]);
     }
+
+    // 4. تفعيل/تعطيل صلاحية الحجز والدفع للابن
+    public function toggleBookingPermission($id): JsonResponse
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // التأكد من أن الابن يتبع لهذا الأب (Security Check)
+        $child = User::where('parent_id', $user->id)->findOrFail($id);
+        $profile = $child->studentProfile;
+
+        if ($profile) {
+            // عكس الحالة الحالية (إذا كان مفعل يعطله، والعكس)
+            $profile->update([
+                'can_book_independently' => !$profile->can_book_independently
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'تم تحديث صلاحية الحجز للابن بنجاح',
+            'data' => $child->load('studentProfile.gradeLevel')
+        ]);
+    }
 }

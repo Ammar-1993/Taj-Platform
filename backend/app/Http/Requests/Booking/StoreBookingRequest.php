@@ -8,13 +8,33 @@ class StoreBookingRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        /** @var \App\Models\User|null $user */
+        /** @var \App\Models\User $user */
         $user = $this->user();
 
-        // مسموح فقط للطلاب أو الآباء بإنشاء حجز
-        return $user && $user->hasAnyRole(['student', 'parent']);
+        // 1. إذا كان المستخدم ولي أمر، مسموح له يحجز لأبنائه
+        if ($user->hasRole('parent')) {
+            return true;
+        }
+
+        // 2. إذا كان المستخدم طالب
+        if ($user->hasRole('student')) {
+            // إذا كان الطالب يتبع لولي أمر، نتحقق من الصلاحية
+            if ($user->parent_id !== null) {
+                return $user->studentProfile && $user->studentProfile->can_book_independently;
+            }
+
+            // إذا كان طالب مستقل (سجل بنفسه بدون أب) مسموح له
+            return true;
+        }
+
+        return false;
     }
-    
+
+    // رسالة مخصصة تظهر إذا حاول الابن الحجز والصلاحية معطلة
+    protected function failedAuthorization()
+    {
+        throw new \Illuminate\Auth\Access\AuthorizationException('عفواً، حسابك غير مصرح له بالحجز والدفع المباشر. يرجى الطلب من ولي الأمر تفعيل الصلاحية.');
+    }
 
     public function rules(): array
     {
@@ -22,10 +42,10 @@ class StoreBookingRequest extends FormRequest
             'teacher_slot_id' => ['required', 'integer', 'exists:teacher_slots,id'],
             'promo_code' => ['nullable', 'string', 'exists:promo_codes,code'],
             // parent_student_id يُستخدم فقط إذا كان الأب هو من يحجز لابنه
-            'parent_student_id' => ['nullable', 'integer', 'exists:users,id'], 
+            'parent_student_id' => ['nullable', 'integer', 'exists:users,id'],
         ];
     }
-    
+
     public function messages(): array
     {
         return [

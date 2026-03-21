@@ -47,6 +47,9 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/parent/children', [ParentController::class, 'getChildren']);
     Route::post('/parent/children', [ParentController::class, 'storeChild']);
     Route::put('/parent/children/{id}', [ParentController::class, 'updateChild']);
+
+
+    Route::patch('/parent/children/{id}/toggle-permission', [ParentController::class, 'toggleBookingPermission']);
 });
 
 // مسارات التصفح والبحث (عامة)
