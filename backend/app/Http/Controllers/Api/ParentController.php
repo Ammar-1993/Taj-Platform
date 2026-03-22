@@ -112,4 +112,39 @@ class ParentController extends Controller
             'data' => $child->load('studentProfile.gradeLevel')
         ]);
     }
+
+    // 5. جلب لوحة المراقبة الشاملة (الحجوزات والسجل المالي للأبناء)
+    public function getDashboardData(): JsonResponse
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // 1. جلب معرّفات (IDs) جميع أبناء هذا الولي
+        $childrenIds = User::where('parent_id', $user->id)->pluck('id');
+
+        // 2. جلب جميع حجوزات الأبناء (مع بيانات الابن والمعلم)
+        $bookings = \App\Models\Booking::whereIn('student_id', $childrenIds)
+            ->with(['student:id,name', 'teacher:id,name', 'teacherSlot'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // 3. حساب إجمالي الإنفاق (مجموع المبالغ المدفوعة للحجوزات المكتملة والمجدولة)
+        $totalSpent = $bookings->whereIn('status', ['completed', 'scheduled', 'in_progress'])->sum('net_paid');
+
+        // 4. جلب محافظ الأبناء مع آخر العمليات المالية (الفواتير)
+        $wallets = \App\Models\Wallet::whereIn('user_id', $childrenIds)
+            ->with(['transactions' => function($query) {
+                $query->orderBy('created_at', 'desc')->limit(10); // آخر 10 عمليات
+            }, 'user:id,name'])
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'total_spent' => $totalSpent,
+                'bookings' => $bookings,
+                'wallets' => $wallets,
+            ]
+        ]);
+    }
 }

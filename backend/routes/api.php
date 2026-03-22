@@ -50,6 +50,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
 
     Route::patch('/parent/children/{id}/toggle-permission', [ParentController::class, 'toggleBookingPermission']);
+
+    Route::get('/parent/dashboard', [ParentController::class, 'getDashboardData']);
 });
 
 // مسارات التصفح والبحث (عامة)
