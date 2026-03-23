@@ -13,12 +13,28 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
     const [bookingLoading, setBookingLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
+    // 🟢 حالات (States) جديدة خاصة بولي الأمر
+    const [children, setChildren] = useState<any[]>([]);
+    const [selectedChildId, setSelectedChildId] = useState<string>('');
+
     const router = useRouter();
-    const { user } = useAuth(); // جلب بيانات الطالب من الـ Context
+    const { user } = useAuth(); // جلب بيانات المستخدم من الـ Context
+
+    // 🟢 التحقق مما إذا كان المستخدم ولي أمر
+    const isParent = user?.roles?.some((r: any) => r.name === 'parent');
 
     useEffect(() => {
         fetchSlots();
     }, []);
+
+    // 🟢 جلب أبناء ولي الأمر إذا كان المستخدم أباً
+    useEffect(() => {
+        if (isParent) {
+            api.get('/parent/children')
+               .then(res => setChildren(res.data.data))
+               .catch(err => console.error("Error fetching children", err));
+        }
+    }, [isParent]);
 
     const fetchSlots = async () => {
         try {
@@ -40,6 +56,13 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
             return;
         }
 
+        // 🟢 تحقق أمني: إذا كان أباً ولم يختر ابناً
+        if (isParent && !selectedChildId) {
+            setMessage({ type: 'error', text: 'الرجاء اختيار الابن الذي سيحضر الحصة أولاً من القائمة أعلاه.' });
+            window.scrollTo({ top: 0, behavior: 'smooth' }); // رفع الشاشة للأعلى ليرى الخطأ
+            return;
+        }
+
         if (!confirm('هل أنت متأكد من حجز هذا الموعد؟ سيتم خصم المبلغ من محفظتك.')) return;
 
         setBookingLoading(true);
@@ -48,7 +71,8 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
         try {
             const res = await api.post('/bookings', {
                 teacher_slot_id: slotId,
-                promo_code: promoCode || null
+                promo_code: promoCode || null,
+                child_id: isParent ? selectedChildId : undefined // 🟢 إرسال رقم الابن للسيرفر
             });
             
             setMessage({ type: 'success', text: res.data.message });
@@ -87,15 +111,36 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
                     </div>
                 )}
 
+                {/* 🟢 القائمة المنسدلة لاختيار الابن (تظهر لولي الأمر فقط) */}
+                {isParent && (
+                    <div className="mb-6 bg-indigo-50 p-5 rounded-xl border border-indigo-100">
+                        <label className="block text-sm font-bold text-indigo-900 mb-2">
+                            👨‍👦 اختر الابن الذي سيحضر الحصة (إلزامي):
+                        </label>
+                        <select 
+                            value={selectedChildId}
+                            onChange={(e) => setSelectedChildId(e.target.value)}
+                            className="w-full border p-3 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                        >
+                            <option value="">-- اضغط لاختيار الابن --</option>
+                            {children.map(child => (
+                                <option key={child.id} value={child.id}>
+                                    {child.name} ({child.student_profile?.grade_level?.name || 'بدون مرحلة'})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+
                 {/* كود الخصم */}
-                <div className="mb-8 bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-center gap-4">
-                    <span className="text-blue-800 font-semibold">هل لديك كود خصم؟</span>
+                <div className="mb-8 bg-blue-50 p-4 rounded-xl border border-blue-100 flex flex-col md:flex-row items-center gap-4">
+                    <span className="text-blue-800 font-semibold whitespace-nowrap">هل لديك كود خصم؟</span>
                     <input 
                         type="text" 
                         placeholder="أدخل الكود هنا" 
                         value={promoCode}
                         onChange={(e) => setPromoCode(e.target.value)}
-                        className="px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                        className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-auto"
                         dir="ltr"
                     />
                 </div>

@@ -138,9 +138,13 @@ class ParentController extends Controller
             }, 'user:id,name'])
             ->get();
 
+     // التأكد من وجود محفظة للأب وجلب رصيدها
+        $parentWallet = $user->wallet()->firstOrCreate(['user_id' => $user->id], ['balance' => 0.00]);
+
         return response()->json([
             'status' => 'success',
             'data' => [
+                'parent_balance' => $parentWallet->balance, // 👈 السطر الجديد (رصيد الأب)
                 'total_spent' => $totalSpent,
                 'bookings' => $bookings,
                 'wallets' => $wallets,

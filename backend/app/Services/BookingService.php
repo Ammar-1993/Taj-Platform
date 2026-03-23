@@ -50,19 +50,19 @@ public function createBooking(\App\Models\User $user, int $slotId, ?string $prom
                 throw new \Exception('يجب تحديد المرحلة الدراسية للطالب أولاً لمعرفة سعر الحصة.');
             }
 
-            $originalPrice = $gradeLevel->session_price;
+            $sessionPrice = $gradeLevel->session_price;
             $discountAmount = 0;
 
             // تطبيق كود الخصم (إن وجد)
             if ($promoCode) {
                 $promo = PromoCode::where('code', $promoCode)->where('is_active', true)->first();
                 if ($promo && $promo->isValid()) {
-                    $discountAmount = ($originalPrice * $promo->discount_percentage) / 100;
+                    $discountAmount = ($sessionPrice * $promo->discount_percentage) / 100;
                     $promo->increment('used_count');
                 }
             }
 
-            $netPrice = $originalPrice - $discountAmount;
+            $netPrice = $sessionPrice - $discountAmount;
 
             // 2. التحقق من رصيد محفظة الممول (الأب أو الطالب نفسه)
             if ($payer->wallet->balance < $netPrice) {
@@ -84,7 +84,7 @@ public function createBooking(\App\Models\User $user, int $slotId, ?string $prom
                 'booked_by_id' => $payer->id, // توثيق من قام بالدفع
                 'teacher_slot_id' => $slot->id,
                 'booking_date' => now(),
-                'original_price' => $originalPrice,
+                'session_price' => $sessionPrice,
                 'discount_amount' => $discountAmount,
                 'net_paid' => $netPrice,
                 'status' => 'scheduled',

@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+// 🟢 هذا هو السطر الذي كان ينقصنا لحل الخطأ!
+import api from '@/lib/axios';
 
 export default function TopUpPage() {
     const { user } = useAuth();
@@ -12,46 +14,33 @@ export default function TopUpPage() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
 
-    // هذه الدالة تحاكي ما ستقوم به بوابة الدفع (ميسر/تاب)
-    // في الواقع، سيقوم الطالب بإدخال رقم بطاقته هنا، ولكن للتبسيط والمحاكاة:
     const handleMockPayment = async () => {
         setIsProcessing(true);
         
         // نحاكي تأخير الشبكة والبنك (ثانيتين)
         setTimeout(async () => {
-            // هنا نحاكي البنك وهو يرسل الـ Webhook إلى السيرفر الخاص بنا (Laravel)
             try {
-                // نرسل الطلب لمسار الـ Webhook كأننا خوادم البنك تماماً!
-               // نرسل الطلب لمسار الـ Webhook كأننا خوادم البنك تماماً!
-                const res = await fetch('http://localhost:8000/api/v1/webhooks/payment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        data: {
-                            id: "pay_test_" + Math.random().toString(36).substr(2, 9),
-                            status: "paid",
-                            amount: amount * 100, // البنك يرسلها بالهللة
-                            metadata: { user_id: user?.id } // نخبر السيرفر من هو صاحب المحفظة
-                        }
-                    })
+                // استخدام axios لضمان المسار الصحيح والتقاط الأخطاء
+                await api.post('/webhooks/payment', {
+                    data: {
+                        id: "pay_test_" + Math.random().toString(36).substring(2, 9),
+                        status: "paid",
+                        amount: amount * 100, // البنك يرسلها بالهللة
+                        metadata: { user_id: user?.id }
+                    }
                 });
-
-                // 🔴 هذا السطر يمنع الكذب: إذا رد السيرفر بخطأ، سيوقف العملية فوراً!
-                if (!res.ok) {
-                    const errorData = await res.json();
-                    throw new Error(errorData.message || 'خطأ داخلي في السيرفر');
-                }
 
                 setSuccessMsg(`تم شحن محفظتك بمبلغ ${amount} ريال بنجاح!`);
                 setIsProcessing(false);
 
-                // العودة للوحة التحكم بعد 3 ثوانٍ
+                // العودة للوحة التحكم بعد 2 ثانية
                 setTimeout(() => {
                     router.push('/dashboard');
-                }, 3000);
+                }, 2000);
 
             } catch (error) {
-                alert('حدث خطأ في الاتصال بالبنك.');
+                console.error(error);
+                alert('حدث خطأ في الاتصال بالبنك أو السيرفر. تحقق من مسار الـ Webhook.');
                 setIsProcessing(false);
             }
         }, 2000);
