@@ -36,14 +36,33 @@ class StoreBookingRequest extends FormRequest
         throw new \Illuminate\Auth\Access\AuthorizationException('عفواً، حسابك غير مصرح له بالحجز والدفع المباشر. يرجى الطلب من ولي الأمر تفعيل الصلاحية.');
     }
 
-    public function rules(): array
+   public function rules(): array
     {
         return [
-            'teacher_slot_id' => ['required', 'integer', 'exists:teacher_slots,id'],
+            'teacher_slot_id' => ['required', 'exists:teacher_slots,id'],
             'promo_code' => ['nullable', 'string', 'exists:promo_codes,code'],
-            // parent_student_id يُستخدم فقط إذا كان الأب هو من يحجز لابنه
-            'parent_student_id' => ['nullable', 'integer', 'exists:users,id'],
+            'child_id' => ['nullable', 'exists:users,id'], // إضافة حقل الابن
         ];
+    }
+
+    // تحقق أمني إضافي مخصص لولي الأمر
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            if ($this->user()->hasRole('parent')) {
+                if (!$this->child_id) {
+                    $validator->errors()->add('child_id', 'يجب اختيار الابن المراد الحجز له.');
+                } else {
+                    $child = \App\Models\User::where('id', $this->child_id)
+                        ->where('parent_id', $this->user()->id)
+                        ->first();
+                        
+                    if (!$child) {
+                        $validator->errors()->add('child_id', 'الابن المختار غير صالح أو لا يتبع لك.');
+                    }
+                }
+            }
+        });
     }
 
     public function messages(): array

@@ -32,10 +32,10 @@ class BookingController extends Controller
         try {
             // 🚀 استدعاء المحرك الهندسي الجبار
             $booking = $this->bookingService->createBooking(
-                $student,
+                $request->user(),
                 $request->teacher_slot_id,
                 $request->promo_code,
-                $user->id // booked_by_id
+                $request->child_id // 👈 تمرير معرّف الابن هنا
             );
 
             // تحميل بيانات المعلم والموعد لعرضها كفاتورة استجابة

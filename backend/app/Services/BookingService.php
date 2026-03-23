@@ -22,82 +22,81 @@ class BookingService
     /**
      * إنشاء حجز جديد (عملية معقدة ومحمية ضد الحجز المزدوج)
      */
-    public function createBooking(User $student, int $teacherSlotId, ?string $promoCodeStr = null, ?int $bookedById = null): Booking
+public function createBooking(\App\Models\User $user, int $slotId, ?string $promoCode = null, ?int $childId = null)
     {
-        // 1. Atomic Lock: منع أي طلبين من دخول هذا الكود لنفس الموعد في نفس الـ 10 ثواني
-        $lock = Cache::lock('booking_slot_' . $teacherSlotId, 10);
+        // 1. تحديد من هو الطالب (الذي سيحضر) ومن هو الممول (الذي سيدفع)
+        $student = $user;
+        $payer = $user;
 
-        if (!$lock->get()) {
-            throw new Exception('جاري حجز هذا الموعد حالياً من قبل شخص آخر. يرجى المحاولة بعد قليل.');
+        if ($user->hasRole('parent')) {
+            if (!$childId) {
+                throw new \Exception('يجب تحديد الابن لحجز الحصة.');
+            }
+            $student = \App\Models\User::findOrFail($childId); // الطالب هو الابن
+            $payer = $user; // الممول هو الأب
         }
 
-        try {
-            return DB::transaction(function () use ($student, $teacherSlotId, $promoCodeStr, $bookedById) {
-                // 2. قفل السجل في قاعدة البيانات (Pessimistic Lock)
-                $slot = TeacherSlot::where('id', $teacherSlotId)->lockForUpdate()->firstOrFail();
+        return DB::transaction(function () use ($student, $payer, $slotId, $promoCode) {
+            // قفل الموعد لمنع الحجز المزدوج
+            $slot = TeacherSlot::where('id', $slotId)->lockForUpdate()->first();
 
-                if ($slot->status !== 'available') {
-                    throw new Exception('عفواً، هذا الموعد لم يعد متاحاً.');
+            if (!$slot || $slot->status !== 'available') {
+                throw new \Exception('عفواً، هذا الموعد لم يعد متاحاً.');
+            }
+
+            // التأكد من أن الطالب لديه مرحلة دراسية محددة لمعرفة السعر
+            $gradeLevel = $student->studentProfile->gradeLevel ?? null;
+            if (!$gradeLevel) {
+                throw new \Exception('يجب تحديد المرحلة الدراسية للطالب أولاً لمعرفة سعر الحصة.');
+            }
+
+            $originalPrice = $gradeLevel->session_price;
+            $discountAmount = 0;
+
+            // تطبيق كود الخصم (إن وجد)
+            if ($promoCode) {
+                $promo = PromoCode::where('code', $promoCode)->where('is_active', true)->first();
+                if ($promo && $promo->isValid()) {
+                    $discountAmount = ($originalPrice * $promo->discount_percentage) / 100;
+                    $promo->increment('used_count');
                 }
+            }
 
-                // 3. جلب سعر الحصة بناءً على مرحلة الطالب
-                // افترضنا أن الطالب يملك Profile مرتبط بـ GradeLevel
-                $studentProfile = $student->studentProfile()->with('gradeLevel')->firstOrFail();
-                $sessionPrice = $studentProfile->gradeLevel->session_price;
-                $discount = 0.00;
-                $promoCodeId = null;
+            $netPrice = $originalPrice - $discountAmount;
 
-                // 4. معالجة كود الخصم (إن وُجد)
-                if ($promoCodeStr) {
-                    $promo = PromoCode::where('code', $promoCodeStr)
-                        ->where(function ($query) {
-                            $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
-                        })
-                        ->lockForUpdate()
-                        ->first();
+            // 2. التحقق من رصيد محفظة الممول (الأب أو الطالب نفسه)
+            if ($payer->wallet->balance < $netPrice) {
+                throw new \Exception('رصيد المحفظة غير كافٍ لإتمام الحجز. يرجى الشحن أولاً.');
+            }
 
-                    if ($promo && $promo->used_count < $promo->max_uses) {
-                        $discount = ($sessionPrice * $promo->discount_percentage) / 100;
-                        $promoCodeId = $promo->id;
-                        $promo->increment('used_count'); // زيادة عداد الاستخدام
-                    } else {
-                        throw new Exception('كود الخصم غير صالح أو انتهت صلاحيته.');
-                    }
-                }
+            // 3. خصم المبلغ من الممول 💰
+            $this->walletService->processTransaction(
+                $payer,
+                -$netPrice,
+                'withdrawal',
+                "خصم لحجز موعد رقم #{$slot->id} للطالب: {$student->name}"
+            );
 
-                $netPaid = $sessionPrice - $discount;
+            // 4. إنشاء الحجز باسم الطالب 🎓
+            $booking = Booking::create([
+                'student_id' => $student->id,
+                'teacher_id' => $slot->teacher_id,
+                'booked_by_id' => $payer->id, // توثيق من قام بالدفع
+                'teacher_slot_id' => $slot->id,
+                'booking_date' => now(),
+                'original_price' => $originalPrice,
+                'discount_amount' => $discountAmount,
+                'net_paid' => $netPrice,
+                'status' => 'scheduled',
+                // إنشاء رابط غرفة افتراضي فريد
+                'agora_channel' => 'taj_' . uniqid() 
+            ]);
 
-                // 5. خصم المبلغ من المحفظة (الرقم سالب للخصم)
-                // نستخدم 'withdrawal' كمصطلح لخصم الرصيد كما صممناه في الجدول
-                $this->walletService->processTransaction(
-                    $student, 
-                    -$netPaid, 
-                    'withdrawal', 
-                    'دفع رسوم حجز حصة مع المعلم ' . $slot->teacher->name
-                );
+            // 5. تحديث حالة الموعد
+            $slot->update(['status' => 'booked']);
 
-                // 6. تغيير حالة الموعد إلى محجوز
-                $slot->update(['status' => 'booked']);
-
-                // 7. إنشاء الحجز
-                return Booking::create([
-                    'student_id' => $student->id,
-                    'booked_by_id' => $bookedById ?? $student->id,
-                    'teacher_id' => $slot->teacher_id,
-                    'teacher_slot_id' => $slot->id,
-                    'promo_code_id' => $promoCodeId,
-                    'booking_date' => $slot->slot_date,
-                    'session_price' => $sessionPrice,
-                    'discount_amount' => $discount,
-                    'net_paid' => $netPaid,
-                    'agora_channel' => uniqid('taj_ch_'), // توليد اسم غرفة فريد لـ Agora
-                    'status' => 'scheduled'
-                ]);
-            });
-        } finally {
-            // الإفراج عن القفل فور الانتهاء أو حدوث خطأ
-            $lock->release();
-        }
+            return $booking;
+        });
     }
 
     /**
