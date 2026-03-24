@@ -24,21 +24,19 @@ class BookingController extends Controller
         /** @var \App\Models\User $user */
         $user = $request->user();
         
-        // تحديد من هو الطالب الفعلي (إذا كان الأب يحجز لابنه، أم الطالب يحجز لنفسه)
+        // تحديد من هو الطالب الفعلي
         $student = $request->has('parent_student_id') && $user->hasRole('parent')
             ? \App\Models\User::findOrFail($request->parent_student_id)
             : $user;
 
         try {
-            // 🚀 استدعاء المحرك الهندسي الجبار
             $booking = $this->bookingService->createBooking(
                 $request->user(),
                 $request->teacher_slot_id,
                 $request->promo_code,
-                $request->child_id // 👈 تمرير معرّف الابن هنا
+                $request->child_id // تمرير معرّف الابن هنا
             );
 
-            // تحميل بيانات المعلم والموعد لعرضها كفاتورة استجابة
             $booking->load(['teacher', 'teacherSlot']);
 
             return response()->json([
@@ -48,7 +46,6 @@ class BookingController extends Controller
             ], 201);
 
         } catch (Exception $e) {
-            // التقاط أي خطأ (رصيد غير كافٍ، موعد محجوز مسبقاً) وإرجاعه بأمان
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage()
@@ -56,7 +53,7 @@ class BookingController extends Controller
         }
     }
 
-    // 2. جلب قائمة حجوزاتي (للطالب أو المعلم)
+    // 2. جلب قائمة حجوزاتي
     public function index(Request $request): JsonResponse
     {
         /** @var \App\Models\User $user */
@@ -70,12 +67,10 @@ class BookingController extends Controller
             $query->where('student_id', $user->id)->orWhere('booked_by_id', $user->id);
         }
 
-        // إمكانية الفلترة حسب الحالة (مثال: ?status=scheduled)
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
 
-        // ترتيب الحجوزات (الأقرب أولاً)
         $bookings = $query->orderBy('booking_date', 'desc')->paginate(10);
 
         return response()->json([
@@ -84,7 +79,7 @@ class BookingController extends Controller
         ]);
     }
 
-    // 3. إنهاء الحصة وتحويل الأرباح للمعلم
+    // 3. إنهاء الحصة وتحويل الأرباح للمعلم (هذه الدالة كانت خارج الـ Class في كودك)
     public function complete(Request $request, $id): JsonResponse
     {
         /** @var \App\Models\User $user */
@@ -97,7 +92,6 @@ class BookingController extends Controller
         }
 
         try {
-            // 🚀 استدعاء المحرك المالي لإنهاء الحصة وتوزيع الأرباح
             $completedBooking = $this->bookingService->completeBooking($booking);
 
             return response()->json([
