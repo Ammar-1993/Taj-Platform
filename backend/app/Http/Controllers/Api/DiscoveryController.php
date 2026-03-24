@@ -25,26 +25,38 @@ class DiscoveryController extends Controller
         return response()->json(['status' => 'success', 'data' => $grades]);
     }
 
-    // 3. محرك بحث المعلمين (مع الفلاتر)
+    // 3. محرك بحث المعلمين (مع الفلاتر والترتيب)
     public function teachers(Request $request): JsonResponse
     {
-        $query = User::role('teacher')
-            ->where('is_active', true)
+        // 🟢 تحديد select('users.*') مهم جداً لتجنب تداخل حقل الـ id عند استخدام join لاحقاً
+        $query = User::select('users.*')
+            ->role('teacher')
+            ->where('users.is_active', true)
             ->with(['teacherProfile.subject']) // Eager Loading لتسريع الاستعلام
             ->whereHas('teacherProfile', function ($q) {
                 $q->where('is_verified', true); // نجلب المعلمين الموثقين فقط
             });
 
         // فلتر حسب المادة
-        if ($request->has('subject_id')) {
+        if ($request->has('subject_id') && $request->subject_id != '') {
             $query->whereHas('teacherProfile', function ($q) use ($request) {
                 $q->where('subject_id', $request->subject_id);
             });
         }
 
         // فلتر البحث بالاسم
-        if ($request->has('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+        if ($request->has('search') && $request->search != '') {
+            $query->where('users.name', 'like', '%' . $request->search . '%');
+        }
+
+        // 🟢 التحديث الجديد: الفلترة والترتيب حسب التقييم
+        if ($request->has('sort_by') && $request->sort_by === 'rating_desc') {
+            // نربط جدول الملف الشخصي لكي نتمكن من الترتيب بناءً على عمود average_rating
+            $query->join('teacher_profiles', 'users.id', '=', 'teacher_profiles.user_id')
+                  ->orderBy('teacher_profiles.average_rating', 'desc');
+        } else {
+            // الترتيب الافتراضي (الأحدث تسجيلاً أولاً)
+            $query->latest('users.created_at');
         }
 
         // نستخدم التصفح (Pagination) لكي لا ينهار السيرفر إذا كان لدينا 1000 معلم
