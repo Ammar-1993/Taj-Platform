@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\WalletController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ParentController;
+use App\Http\Controllers\Api\ReviewController;
 
 
 // مسارات عامة (لا تحتاج تسجيل دخول)
@@ -52,6 +53,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::patch('/parent/children/{id}/toggle-permission', [ParentController::class, 'toggleBookingPermission']);
 
     Route::get('/parent/dashboard', [ParentController::class, 'getDashboardData']);
+
+    Route::post('/reviews', [ReviewController::class, 'store']);
 });
 
 // مسارات التصفح والبحث (عامة)
