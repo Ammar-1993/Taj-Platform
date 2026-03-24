@@ -25,6 +25,9 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
+            ->brandName('منصة تاج')
+            // ->brandLogo(asset('images/logo.png'))
+            // ->brandLogoHeight('3rem')
             ->path('admin')
             ->login()
             ->font('Cairo') // 🟢 هذه اللمسة ستجعل الخط العربي رائعاً
