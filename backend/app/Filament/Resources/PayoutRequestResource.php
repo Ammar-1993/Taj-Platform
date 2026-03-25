@@ -86,14 +86,30 @@ class PayoutRequestResource extends Resource
                     ->visible(fn (PayoutRequest $record): bool => $record->status === 'pending')
                     ->action(fn (PayoutRequest $record) => $record->update(['status' => 'approved'])),
 
-                // 🟢 2. زر تم التحويل (إغلاق الطلب)
+                // 🟢 2. زر تم التحويل (إغلاق الطلب وإرسال إشعار) - ✨ محدث
                 Action::make('transfer')
                     ->label('تم التحويل البنكي')
                     ->icon('heroicon-o-currency-dollar')
                     ->color('success')
                     ->requiresConfirmation()
+                    ->modalHeading('تأكيد التحويل البنكي')
+                    ->modalDescription('هل قمت بتحويل المبلغ فعلياً لحساب المعلم؟ سيتم إغلاق الطلب وإرسال إشعار للمعلم.')
                     ->visible(fn (PayoutRequest $record): bool => $record->status === 'approved')
-                    ->action(fn (PayoutRequest $record) => $record->update(['status' => 'transferred'])),
+                    ->action(function (PayoutRequest $record) {
+                        $record->update(['status' => 'transferred']);
+                        
+                        // 🔔 إرسال إشعار للمعلم (بافتراض أنك أنشأت PayoutProcessedNotification)
+                        if (class_exists(\App\Notifications\PayoutProcessedNotification::class)) {
+                            $record->user->notify(new \App\Notifications\PayoutProcessedNotification($record));
+                        }
+                        
+                        // إشعار نجاح للمدير داخل Filament
+                        \Filament\Notifications\Notification::make()
+                            ->title('تم إغلاق الطلب بنجاح')
+                            ->body('تم تغيير الحالة وإرسال إشعار للمعلم.')
+                            ->success()
+                            ->send();
+                    }),
 
                 // 🔴 3. زر الرفض (وإرجاع المال الفعلي)
                 Action::make('reject')
@@ -115,7 +131,7 @@ class PayoutRequestResource extends Resource
                                 'admin_notes' => $data['admin_notes'],
                             ]);
                             
-                            // 2. إرجاع المبلغ لمحفظة المعلم باستخدام الخدمة المالية التي بنيناها
+                            // 2. إرجاع المبلغ لمحفظة المعلم
                             $walletService = resolve(\App\Services\WalletService::class);
                             $walletService->processTransaction(
                                 $record->user,
@@ -123,10 +139,48 @@ class PayoutRequestResource extends Resource
                                 'deposit', // إيداع
                                 'استرجاع مبلغ طلب سحب مرفوض. السبب: ' . $data['admin_notes']
                             );
+
+                            \Filament\Notifications\Notification::make()
+                                ->title('تم الرفض بنجاح')
+                                ->body('تم إرجاع المبلغ إلى محفظة المعلم.')
+                                ->success()
+                                ->send();
                         });
                     }),
             ])
-            ->bulkActions([]);
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    // 🚀 4. الإجراء الجماعي للمحاسبين (تحويل مجموعة طلبات دفعة واحدة) - ✨ جديد
+                    Tables\Actions\BulkAction::make('markAsTransferredBulk')
+                        ->label('تحديد كـ "تم التحويل"')
+                        ->icon('heroicon-o-currency-dollar')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('تأكيد التحويل الجماعي')
+                        ->modalDescription('سيتم تحويل حالة جميع الطلبات (المعتمدة) المحددة إلى "تم التحويل" وسيتم إرسال إشعار لكل معلم. هل أنت متأكد؟')
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
+                            $processedCount = 0;
+                            foreach ($records as $record) {
+                                // نعالج فقط الطلبات التي تم اعتمادها مسبقاً
+                                if ($record->status === 'approved') {
+                                    $record->update(['status' => 'transferred']);
+                                    
+                                    if (class_exists(\App\Notifications\PayoutProcessedNotification::class)) {
+                                        $record->user->notify(new \App\Notifications\PayoutProcessedNotification($record));
+                                    }
+                                    $processedCount++;
+                                }
+                            }
+                            
+                            \Filament\Notifications\Notification::make()
+                                ->title("تمت العملية بنجاح!")
+                                ->body("تم إغلاق {$processedCount} طلبات وإشعار أصحابها.")
+                                ->success()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+                ]),
+            ]);
     }
 
     public static function getRelations(): array { return []; }
