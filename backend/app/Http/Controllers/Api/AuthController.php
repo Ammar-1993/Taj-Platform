@@ -2,79 +2,89 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
-
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
-    // 1. تسجيل مستخدم جديد
+    /**
+     * تسجيل مستخدم جديد (بوابة الدخول)
+     */
     public function register(RegisterRequest $request): JsonResponse
     {
+        // 1. إنشاء المستخدم الأساسي
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
-            'password' => Hash::make($request->password), // التشفير
+            'password' => Hash::make($request->password),
             'is_active' => true,
         ]);
 
-        // تعيين الصلاحية (طالب، معلم، أب)
+        // 2. تعيين الصلاحية (طالب، معلم، ولي أمر)
         $user->assignRole($request->role);
 
-        // إنشاء محفظة مالية فارغة للمستخدم فور تسجيله
+        // 3. إنشاء محفظة مالية فارغة فوراً لضمان التكامل المالي
         $user->wallet()->create(['balance' => 0.00]);
 
-        // توليد التوكن
+        // 4. توليد التوكن
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'status' => 'success',
-            'message' => 'تم إنشاء الحساب بنجاح',
+            'message' => 'تم إنشاء الحساب بنجاح! مرحباً بك في منصة تاج.',
             'data' => [
-                'user' => $user->load('roles'),
+                'user' => $user->load('roles', 'wallet'), // إرجاع الرولز والمحفظة فوراً
                 'token' => $token
             ]
         ], 201);
     }
 
-    // 2. تسجيل الدخول
+    /**
+     * تسجيل الدخول المركزي
+     */
     public function login(LoginRequest $request): JsonResponse
     {
         $user = User::where('email', $request->email)->first();
 
+        // 1. التحقق من وجود المستخدم وصحة كلمة المرور
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'بيانات الدخول غير صحيحة.'
+                'message' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة.'
             ], 401);
         }
 
+        // 2. التحقق الإداري (هل الحساب موقوف؟)
         if (!$user->is_active) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'حسابك موقوف، يرجى التواصل مع الإدارة.'
+                'message' => 'تم إيقاف حسابك مؤقتاً. يرجى التواصل مع فريق الدعم.'
             ], 403);
         }
 
+        // 3. توليد التوكن
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'status' => 'success',
-            'message' => 'تم تسجيل الدخول بنجاح',
+            'message' => 'تم تسجيل الدخول بنجاح.',
             'data' => [
-                'user' => $user->load('roles', 'studentProfile', 'teacherProfile', 'wallet'),
+                // تحميل جميع العلاقات الهامة دفعة واحدة (Eager Loading) لتسريع Next.js
+                'user' => $user->load(['roles', 'studentProfile', 'teacherProfile', 'wallet']),
                 'token' => $token
             ]
         ]);
     }
 
-    // 3. جلب بيانات المستخدم الحالي
+    /**
+     * جلب بيانات المستخدم الحالي (لاسترجاع الجلسة)
+     */
     public function me(Request $request): JsonResponse
     {
         /** @var \App\Models\User $user */
@@ -82,21 +92,25 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data' => $user->load('roles', 'studentProfile', 'teacherProfile', 'wallet')
+            'data' => $user->load(['roles', 'studentProfile', 'teacherProfile', 'wallet'])
         ]);
     }
 
-    // 4. تسجيل الخروج (إلغاء التوكن)
-    public function logout(Request $request): JsonResponse
+    /**
+     * تسجيل الخروج (إبطال التوكن)
+     */
+  // 2. تسجيل الخروج
+    public function logout(Request $request)
     {
-        /** @var \App\Models\User $user */
-        $user = $request->user();
+        // 🟢 إخبار المحرر بنوع التوكن الدقيق (Sanctum Token)
+        /** @var \Laravel\Sanctum\PersonalAccessToken $token */
+        $token = $request->user()->currentAccessToken();
         
-        $user->tokens()->delete();
+        // التحقق من وجود التوكن قبل حذفه (Best Practice)
+        if ($token) {
+            $token->delete();
+        }
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'تم تسجيل الخروج بنجاح'
-        ]);
+        return response()->json(['message' => 'تم تسجيل الخروج بنجاح.']);
     }
 }
