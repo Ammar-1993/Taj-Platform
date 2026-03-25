@@ -4,13 +4,13 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\ClassroomController;
 use App\Http\Controllers\Api\DiscoveryController;
+use App\Http\Controllers\Api\ParentController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProfileController;
-use App\Http\Controllers\Api\WalletController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\ParentController;
 use App\Http\Controllers\Api\ReviewController;
-
+use App\Http\Controllers\Api\WalletController;
+use App\Http\Controllers\PayoutRequestController;
+use Illuminate\Support\Facades\Route;
 
 // مسارات عامة (لا تحتاج تسجيل دخول)
 Route::prefix('v1/auth')->group(function () {
@@ -21,63 +21,52 @@ Route::prefix('v1/auth')->group(function () {
 // مسارات محمية (تحتاج توكن Sanctum)
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
-    // المصادقة
+    // 1. المصادقة (Authentication)
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
-    // الملفات الشخصية
-    Route::post('/profile/teacher', [ProfileController::class, 'completeTeacherProfile']);
+    // 2. الملفات الشخصية (Profiles)
     Route::post('/profile/student', [ProfileController::class, 'completeStudentProfile']);
-
-    // المحفظة والمالية
-    Route::get('/wallet', [WalletController::class, 'index']);
-
-    // الحجوزات
-    Route::get('/bookings', [BookingController::class, 'index']);
-    Route::post('/bookings', [BookingController::class, 'store']);
-
-    // مسار دخول الفصل الافتراضي
-    Route::get('/bookings/{id}/classroom', [ClassroomController::class, 'getAccessDetails']);
-
-    Route::patch('/bookings/{id}/complete', [BookingController::class, 'complete']);
-
-    Route::post('/wallet/payouts', [WalletController::class, 'requestPayout']);
-
-
-    // مسارات إدارة الأبناء (لولي الأمر)
-    Route::get('/parent/children', [ParentController::class, 'getChildren']);
-    Route::post('/parent/children', [ParentController::class, 'storeChild']);
-    Route::put('/parent/children/{id}', [ParentController::class, 'updateChild']);
-
-
-    Route::patch('/parent/children/{id}/toggle-permission', [ParentController::class, 'toggleBookingPermission']);
-
-    Route::get('/parent/dashboard', [ParentController::class, 'getDashboardData']);
-
-    Route::post('/reviews', [ReviewController::class, 'store']);
-
-
-    // الملفات الشخصية
     Route::get('/profile/teacher', [ProfileController::class, 'getTeacherProfile']);
     Route::post('/profile/teacher', [ProfileController::class, 'completeTeacherProfile']);
 
+    // 3. المحفظة والمالية وطلبات السحب (Wallet & Payouts)
+    Route::get('/wallet', [WalletController::class, 'index']);
+    Route::get('/wallet/payouts', [PayoutRequestController::class, 'index']); // 👈 تم التحديث ليطابق الواجهة الأمامية
+    Route::post('/wallet/payouts', [PayoutRequestController::class, 'store']); // 👈 تم التحديث ليطابق الواجهة الأمامية
 
-    // إدارة جدول مواعيد المعلم
+    // 4. الحجوزات وإدارة الحصص (Bookings & Classes)
+    Route::get('/bookings', [BookingController::class, 'index']);
+    Route::post('/bookings', [BookingController::class, 'store']);
+    Route::get('/bookings/{id}/classroom', [ClassroomController::class, 'getAccessDetails']);
+    Route::patch('/bookings/{id}/complete', [BookingController::class, 'complete']);
+    Route::patch('/bookings/{id}/cancel', [BookingController::class, 'cancel']);
+
+    // 5. التقييمات (Reviews)
+    Route::post('/reviews', [ReviewController::class, 'store']);
+
+    // 6. إدارة جدول مواعيد المعلم (Teacher Slots)
     Route::get('/teacher/slots', [\App\Http\Controllers\Api\TeacherSlotController::class, 'index']);
     Route::post('/teacher/slots', [\App\Http\Controllers\Api\TeacherSlotController::class, 'store']);
     Route::delete('/teacher/slots/{id}', [\App\Http\Controllers\Api\TeacherSlotController::class, 'destroy']);
 
-    // الإلغاء
-    Route::patch('/bookings/{id}/cancel', [BookingController::class, 'cancel']);
-    
-    // الإشعارات
+    // 7. إدارة الأبناء (لولي الأمر) (Parent Management)
+    Route::get('/parent/children', [ParentController::class, 'getChildren']);
+    Route::post('/parent/children', [ParentController::class, 'storeChild']);
+    Route::put('/parent/children/{id}', [ParentController::class, 'updateChild']);
+    Route::patch('/parent/children/{id}/toggle-permission', [ParentController::class, 'toggleBookingPermission']);
+    Route::get('/parent/dashboard', [ParentController::class, 'getDashboardData']);
+
+    // 8. الإشعارات (Notifications)
     Route::get('/notifications', function (\Illuminate\Http\Request $request) {
         return response()->json(['data' => $request->user()->unreadNotifications]);
     });
     Route::post('/notifications/{id}/read', function (\Illuminate\Http\Request $request, $id) {
         $request->user()->notifications()->findOrFail($id)->markAsRead();
+
         return response()->json(['status' => 'success']);
     });
+
 });
 
 // مسارات التصفح والبحث (عامة)
