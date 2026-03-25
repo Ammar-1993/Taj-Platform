@@ -55,6 +55,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/parent/dashboard', [ParentController::class, 'getDashboardData']);
 
     Route::post('/reviews', [ReviewController::class, 'store']);
+
+
+    // الملفات الشخصية
+    Route::get('/profile/teacher', [ProfileController::class, 'getTeacherProfile']);
+    Route::post('/profile/teacher', [ProfileController::class, 'completeTeacherProfile']);
 });
 
 // مسارات التصفح والبحث (عامة)

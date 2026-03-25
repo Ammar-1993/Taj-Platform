@@ -311,6 +311,17 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex gap-3">
+
+            {/* 🟢 التحديث الجديد: زر إكمال الملف الشخصي يظهر للمعلم فقط */}
+            {isTeacher && (
+              <Link
+                href="/dashboard/profile"
+                className="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 text-sm font-bold transition flex items-center gap-1"
+              >
+                إكمال الملف الشخصي 📝
+              </Link>
+            )}
+
             <Link
               href="/"
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition"
