@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Exception;
+use App\Notifications\NewBookingNotification;
 
 class BookingService
 {
@@ -95,6 +96,9 @@ public function createBooking(\App\Models\User $user, int $slotId, ?string $prom
             // 5. تحديث حالة الموعد
             $slot->update(['status' => 'booked']);
 
+            // 6. إرسال إشعار للمعلم
+            $booking->teacher->notify(new NewBookingNotification($booking));
+
             return $booking;
         });
     }
@@ -125,6 +129,40 @@ public function createBooking(\App\Models\User $user, int $slotId, ?string $prom
                     $teacherShare,
                     'class_earnings', // إيداع أرباح
                     'أرباح حصة منتهية رقم #' . $booking->id,
+                    $booking->id
+                );
+            }
+
+            return $booking;
+        });
+    }
+
+    /**
+     * إلغاء الحجز واسترجاع الأموال (Refund)
+     */
+    public function cancelBooking(Booking $booking, \App\Models\User $canceller): Booking
+    {
+        return DB::transaction(function () use ($booking, $canceller) {
+            $booking = Booking::where('id', $booking->id)->lockForUpdate()->firstOrFail();
+
+            if ($booking->status !== 'scheduled') {
+                throw new Exception('لا يمكن إلغاء هذه الحصة في حالتها الحالية.');
+            }
+
+            // 1. تغيير حالة الحجز
+            $booking->update(['status' => 'cancelled']);
+
+            // 2. إعادة الموعد ليكون متاحاً لطلاب آخرين
+            $booking->teacherSlot->update(['status' => 'available']);
+
+            // 3. استرجاع المبلغ لممول الحصة (الطالب أو ولي الأمر) 💰
+            $payer = \App\Models\User::find($booking->booked_by_id);
+            if ($payer) {
+                $this->walletService->processTransaction(
+                    $payer,
+                    $booking->net_paid,
+                    'refund',
+                    "استرجاع مالي لإلغاء الحصة رقم #{$booking->id} مع الأستاذ {$booking->teacher->name}",
                     $booking->id
                 );
             }

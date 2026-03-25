@@ -66,6 +66,18 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/teacher/slots', [\App\Http\Controllers\Api\TeacherSlotController::class, 'index']);
     Route::post('/teacher/slots', [\App\Http\Controllers\Api\TeacherSlotController::class, 'store']);
     Route::delete('/teacher/slots/{id}', [\App\Http\Controllers\Api\TeacherSlotController::class, 'destroy']);
+
+    // الإلغاء
+    Route::patch('/bookings/{id}/cancel', [BookingController::class, 'cancel']);
+    
+    // الإشعارات
+    Route::get('/notifications', function (\Illuminate\Http\Request $request) {
+        return response()->json(['data' => $request->user()->unreadNotifications]);
+    });
+    Route::post('/notifications/{id}/read', function (\Illuminate\Http\Request $request, $id) {
+        $request->user()->notifications()->findOrFail($id)->markAsRead();
+        return response()->json(['status' => 'success']);
+    });
 });
 
 // مسارات التصفح والبحث (عامة)

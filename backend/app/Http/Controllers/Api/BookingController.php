@@ -107,4 +107,27 @@ class BookingController extends Controller
             ], 400);
         }
     }
+
+    // إلغاء الحصة من قبل المعلم
+    public function cancel(Request $request, $id): JsonResponse
+    {
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+        $booking = \App\Models\Booking::findOrFail($id);
+
+        // حماية: المعلم صاحب الحصة فقط من يمكنه الإلغاء
+        if ($user->id !== $booking->teacher_id) {
+            return response()->json(['message' => 'غير مصرح لك بإلغاء هذه الحصة'], 403);
+        }
+
+        try {
+            $cancelledBooking = $this->bookingService->cancelBooking($booking, $user);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'تم إلغاء الحصة وإرجاع المبلغ لمحفظة الطالب بنجاح.',
+            ]);
+        } catch (Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 400);
+        }
+    }
 }

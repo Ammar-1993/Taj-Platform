@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [parentData, setParentData] = useState<any>(null); // ✅ حالة جديدة لبيانات ولي الأمر
   const [dataLoading, setDataLoading] = useState(true);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
 
   // 🟢 حالات التقييم الإلزامي
@@ -47,13 +48,15 @@ export default function DashboardPage() {
         setParentData(res.data.data);
       } else {
         // جلب بيانات المحفظة والحجوزات للطالب أو المعلم بالتوازي
-        const [walletRes, bookingsRes] = await Promise.all([
+        const [walletRes, bookingsRes, notifRes] = await Promise.all([
           api.get("/wallet"),
           api.get("/bookings"),
+          api.get("/notifications"), // 👈 جلب الإشعارات
         ]);
         setWallet(walletRes.data.data);
         const fetchedBookings = bookingsRes.data.data.data;
         setBookings(fetchedBookings);
+        setNotifications(notifRes.data.data || []); // 👈 حفظ الإشعارات
 
         // 🟢 فحص إذا كان الطالب لديه حصة مكتملة بدون تقييم (ليست للمعلم أو ولي الأمر)
         if (!isTeacher && !isParent) {
@@ -69,6 +72,29 @@ export default function DashboardPage() {
       console.error("خطأ في جلب بيانات اللوحة", error);
     } finally {
       setDataLoading(false);
+    }
+  };
+
+  const handleCancelClass = async (bookingId: number) => {
+    if (
+      !confirm("هل أنت متأكد من إلغاء الحصة؟ سيتم إرجاع المبلغ للطالب.")
+    )
+      return;
+    try {
+      const res = await api.patch(`/bookings/${bookingId}/cancel`);
+      alert(res.data.message);
+      fetchDashboardData();
+    } catch (error: any) {
+      alert(error.response?.data?.message || "حدث خطأ أثناء الإلغاء");
+    }
+  };
+
+  const markNotificationAsRead = async (id: string) => {
+    try {
+      await api.post(`/notifications/${id}/read`);
+      setNotifications(notifications.filter((n) => n.id !== id));
+    } catch (error) {
+      console.error("خطأ في قراءة الإشعار", error);
     }
   };
 
@@ -420,6 +446,36 @@ export default function DashboardPage() {
               <h3 className="font-bold text-lg text-gray-900">سجل الحجوزات</h3>
             </div>
 
+            {/* 🔔 صندوق الإشعارات (للمعلم فقط) */}
+            {isTeacher && notifications.length > 0 && (
+              <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl mb-6">
+                <h3 className="font-bold text-yellow-800 mb-3 flex items-center gap-2">
+                  🔔 إشعارات جديدة ({notifications.length})
+                </h3>
+                <div className="space-y-2">
+                  {notifications.map((notif) => (
+                    <div
+                      key={notif.id}
+                      className="bg-white p-3 rounded-lg shadow-sm border border-yellow-100 flex justify-between items-center"
+                    >
+                      <p className="text-sm text-gray-800 font-semibold">
+                        {notif.data.message} -{" "}
+                        <span className="text-blue-600">
+                          {notif.data.booking_date} الساعة {notif.data.time}
+                        </span>
+                      </p>
+                      <button
+                        onClick={() => markNotificationAsRead(notif.id)}
+                        className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md text-gray-600 transition"
+                      >
+                        تحديد كمقروء ✔️
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {bookings.length === 0 ? (
               <div className="text-center py-10">
                 <p className="text-gray-500">ليس لديك أي حجوزات حتى الآن.</p>
@@ -483,6 +539,15 @@ export default function DashboardPage() {
                               className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition text-xs font-bold border border-indigo-200"
                             >
                               دخول الفصل 📹
+                            </button>
+                          )}
+                          {/* 👈 الزر الجديد: إلغاء الحصة */}
+                          {isTeacher && booking.status === "scheduled" && (
+                            <button
+                              onClick={() => handleCancelClass(booking.id)}
+                              className="px-3 py-1 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition text-xs font-bold border border-red-200"
+                            >
+                              إلغاء طارئ ❌
                             </button>
                           )}
                           {isTeacher && booking.status === "in_progress" && (
