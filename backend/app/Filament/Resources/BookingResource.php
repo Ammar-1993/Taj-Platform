@@ -17,46 +17,51 @@ class BookingResource extends Resource
     protected static ?string $modelLabel = 'حجز';
     protected static ?string $pluralModelLabel = 'سجل الحجوزات';
     protected static ?string $navigationGroup = 'العمليات والمالية';
+    protected static ?int $navigationSort = 1;
 
-    // 🔒 منع إنشاء حجوزات من لوحة التحكم (يجب أن تتم عبر التطبيق فقط)
-    public static function canCreate(): bool
-    {
-        return false;
-    }
-
-    // 🔒 منع التعديل على الحجوزات لحماية السجلات المالية
-    public static function canEdit(Model $record): bool
-    {
-        return false;
-    }
+    // 🔒 منع إنشاء وتعديل الحجوزات من الإدارة للحفاظ على النزاهة المالية
+    public static function canCreate(): bool { return false; }
+    public static function canEdit(Model $record): bool { return false; }
 
     public static function form(Form $form): Form
     {
-        return $form->schema([]); // لا نحتاج فورم لأننا منعنا الإضافة والتعديل
+        return $form->schema([]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
+                // 🟢 مخفي افتراضياً لتوفير المساحة
                 Tables\Columns\TextColumn::make('id')
                     ->label('رقم الحجز')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('student.name')
                     ->label('الطالب')
-                    ->searchable(),
+                    ->searchable()
+                    ->weight('bold'),
+
                 Tables\Columns\TextColumn::make('teacher.name')
                     ->label('المعلم')
-                    ->searchable(),
+                    ->searchable()
+                    ->color('primary')
+                    ->weight('bold'),
+
                 Tables\Columns\TextColumn::make('booking_date')
                     ->label('تاريخ الحصة')
-                    ->date()
+                    ->dateTime('Y-m-d h:i A') // عرض التاريخ والوقت بشكل أنيق
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('net_paid')
                     ->label('الصافي المدفوع')
                     ->money('SAR')
-                    ->sortable(),
+                    ->sortable()
+                    ->badge()
+                    ->color('success'),
+
                 Tables\Columns\TextColumn::make('status')
                     ->label('الحالة')
                     ->badge()
@@ -69,21 +74,23 @@ class BookingResource extends Resource
                     }),
             ])
             ->filters([
-                //
+                // فلتر سريع لحالة الحجز
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('تصفية حسب الحالة')
+                    ->options([
+                        'scheduled' => 'مجدول',
+                        'in_progress' => 'قيد التنفيذ',
+                        'completed' => 'مكتمل',
+                        'cancelled' => 'ملغي',
+                    ]),
             ])
             ->actions([
-                // عرض التفاصيل فقط دون تعديل
                 Tables\Actions\ViewAction::make(),
             ])
-            ->bulkActions([
-                // تركناها فارغة عمداً لمنع الحذف الجماعي
-            ]);
+            ->bulkActions([]);
     }
 
-    public static function getRelations(): array
-    {
-        return [];
-    }
+    public static function getRelations(): array { return []; }
 
     public static function getPages(): array
     {

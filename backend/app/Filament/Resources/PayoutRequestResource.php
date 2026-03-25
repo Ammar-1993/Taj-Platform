@@ -9,6 +9,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
+use Illuminate\Support\Facades\DB;
 
 class PayoutRequestResource extends Resource
 {
@@ -17,16 +18,11 @@ class PayoutRequestResource extends Resource
     protected static ?string $modelLabel = 'طلب سحب';
     protected static ?string $pluralModelLabel = 'طلبات السحب';
     protected static ?string $navigationGroup = 'العمليات والمالية';
+    protected static ?int $navigationSort = 2;
 
-    public static function canCreate(): bool
-    {
-        return false; // المعلم هو من يطلب السحب من التطبيق، الإدارة توافق فقط
-    }
+    public static function canCreate(): bool { return false; }
 
-    public static function form(Form $form): Form
-    {
-        return $form->schema([]);
-    }
+    public static function form(Form $form): Form { return $form->schema([]); }
 
     public static function table(Table $table): Table
     {
@@ -34,17 +30,26 @@ class PayoutRequestResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('المعلم (طالب السحب)')
-                    ->searchable(),
+                    ->searchable()
+                    ->weight('bold'),
+
                 Tables\Columns\TextColumn::make('amount')
                     ->label('المبلغ المطلوب')
                     ->money('SAR')
-                    ->sortable(),
+                    ->sortable()
+                    ->badge()
+                    ->color('success'),
+
                 Tables\Columns\TextColumn::make('bank_name')
-                    ->label('اسم البنك'),
+                    ->label('البنك'),
+
+                // 🟢 تم الإخفاء الافتراضي للآيبان لتجنب شريط التمرير المزعج
                 Tables\Columns\TextColumn::make('iban')
-                    ->label('رقم الآيبان (IBAN)')
-                    ->copyable() // إضافة زر لنسخ الايبان بسهولة
-                    ->copyMessage('تم نسخ رقم الآيبان بنجاح'),
+                    ->label('الآيبان (IBAN)')
+                    ->copyable()
+                    ->copyMessage('تم النسخ بنجاح!')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('status')
                     ->label('الحالة')
                     ->badge()
@@ -55,55 +60,76 @@ class PayoutRequestResource extends Resource
                         'rejected' => 'danger',
                         default => 'gray',
                     }),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('تاريخ الطلب')
-                    ->dateTime()
+                    ->since() // عرض "منذ يومين" بدلاً من تاريخ طويل
                     ->sortable(),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('الحالة')
+                    ->options([
+                        'pending' => 'قيد المراجعة',
+                        'approved' => 'معتمد',
+                        'transferred' => 'تم التحويل',
+                        'rejected' => 'مرفوض',
+                    ]),
             ])
             ->actions([
-                // 🟢 زر الموافقة
+                // 🟢 1. زر الاعتماد (موافقة مبدئية)
                 Action::make('approve')
-                    ->label('موافقة')
+                    ->label('اعتماد')
                     ->icon('heroicon-o-check-circle')
-                    ->color('success')
-                    ->requiresConfirmation() // رسالة تأكيد قبل التنفيذ
-                    ->modalHeading('الموافقة على طلب السحب')
-                    ->modalDescription('هل أنت متأكد من الموافقة على تحويل هذا المبلغ للمعلم؟')
+                    ->color('info')
+                    ->requiresConfirmation()
                     ->visible(fn (PayoutRequest $record): bool => $record->status === 'pending')
                     ->action(fn (PayoutRequest $record) => $record->update(['status' => 'approved'])),
 
-                // 🔴 زر الرفض
+                // 🟢 2. زر تم التحويل (إغلاق الطلب)
+                Action::make('transfer')
+                    ->label('تم التحويل البنكي')
+                    ->icon('heroicon-o-currency-dollar')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn (PayoutRequest $record): bool => $record->status === 'approved')
+                    ->action(fn (PayoutRequest $record) => $record->update(['status' => 'transferred'])),
+
+                // 🔴 3. زر الرفض (وإرجاع المال الفعلي)
                 Action::make('reject')
-                    ->label('رفض')
+                    ->label('رفض وإرجاع الرصيد')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->requiresConfirmation()
-                    ->modalHeading('رفض طلب السحب')
                     ->form([
                         \Filament\Forms\Components\Textarea::make('admin_notes')
-                            ->label('سبب الرفض')
+                            ->label('سبب الرفض (سيظهر للمعلم)')
                             ->required(),
                     ])
                     ->visible(fn (PayoutRequest $record): bool => $record->status === 'pending')
                     ->action(function (PayoutRequest $record, array $data) {
-                        $record->update([
-                            'status' => 'rejected',
-                            'admin_notes' => $data['admin_notes'],
-                        ]);
-                        // ملاحظة: في بيئة الإنتاج، يجب هنا استدعاء WalletService 
-                        // لإرجاع المبلغ لمحفظة المعلم لأنه تم رفض سحبه.
+                        DB::transaction(function () use ($record, $data) {
+                            // 1. تحديث حالة الطلب
+                            $record->update([
+                                'status' => 'rejected',
+                                'admin_notes' => $data['admin_notes'],
+                            ]);
+                            
+                            // 2. إرجاع المبلغ لمحفظة المعلم باستخدام الخدمة المالية التي بنيناها
+                            $walletService = resolve(\App\Services\WalletService::class);
+                            $walletService->processTransaction(
+                                $record->user,
+                                $record->amount,
+                                'deposit', // إيداع
+                                'استرجاع مبلغ طلب سحب مرفوض. السبب: ' . $data['admin_notes']
+                            );
+                        });
                     }),
             ])
             ->bulkActions([]);
     }
 
-    public static function getRelations(): array
-    {
-        return [];
-    }
+    public static function getRelations(): array { return []; }
 
     public static function getPages(): array
     {

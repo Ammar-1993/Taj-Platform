@@ -25,37 +25,44 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->label('الاسم الكامل')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('email')
-                    ->label('البريد الإلكتروني')
-                    ->email()
-                    ->required()
-                    ->unique(ignoreRecord: true)
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('phone')
-                    ->label('رقم الجوال')
-                    ->tel()
-                    ->unique(ignoreRecord: true)
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('password')
-                    ->label('كلمة المرور')
-                    ->password()
-                    ->dehydrateStateUsing(fn ($state) => Hash::make($state))
-                    ->dehydrated(fn ($state) => filled($state))
-                    ->required(fn (string $context): bool => $context === 'create')
-                    ->maxLength(255),
-                Forms\Components\Select::make('roles')
-                    ->label('الصلاحية (الدور)')
-                    ->relationship('roles', 'name')
-                    ->multiple()
-                    ->preload()
-                    ->searchable(),
-                Forms\Components\Toggle::make('is_active')
-                    ->label('حساب نشط')
-                    ->default(true),
+                Forms\Components\Section::make('البيانات الأساسية للمستخدم')
+                    ->schema([
+                        Forms\Components\TextInput::make('name')
+                            ->label('الاسم الكامل')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('email')
+                            ->label('البريد الإلكتروني')
+                            ->email()
+                            ->required()
+                            ->unique(ignoreRecord: true)
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('phone')
+                            ->label('رقم الجوال')
+                            ->tel()
+                            ->unique(ignoreRecord: true)
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('password')
+                            ->label('كلمة المرور')
+                            ->password()
+                            ->dehydrateStateUsing(fn ($state) => Hash::make($state))
+                            ->dehydrated(fn ($state) => filled($state))
+                            ->required(fn (string $context): bool => $context === 'create')
+                            ->maxLength(255),
+                    ])->columns(2), // عمودين لتنسيق أجمل
+
+                Forms\Components\Section::make('الصلاحيات والحالة')
+                    ->schema([
+                        Forms\Components\Select::make('roles')
+                            ->label('الصلاحية (الدور)')
+                            ->relationship('roles', 'name')
+                            ->multiple()
+                            ->preload()
+                            ->searchable(),
+                        Forms\Components\Toggle::make('is_active')
+                            ->label('حساب نشط (يمكنه تسجيل الدخول)')
+                            ->default(true),
+                    ])->columns(2),
             ]);
     }
 
@@ -65,13 +72,22 @@ class UserResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label('الاسم')
-                    ->searchable(),
+                    ->searchable()
+                    ->weight('bold'),
+
+                // 🟢 مخفي افتراضياً لمنع شريط التمرير الأفقي
                 Tables\Columns\TextColumn::make('email')
                     ->label('البريد الإلكتروني')
-                    ->searchable(),
+                    ->searchable()
+                    ->copyable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                // 🟢 مخفي افتراضياً
                 Tables\Columns\TextColumn::make('phone')
                     ->label('الجوال')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('roles.name')
                     ->label('الدور')
                     ->badge()
@@ -82,16 +98,18 @@ class UserResource extends Resource
                         'parent' => 'warning',
                         default => 'gray',
                     }),
+
                 Tables\Columns\ToggleColumn::make('is_active')
                     ->label('نشط'),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('تاريخ التسجيل')
-                    ->dateTime()
+                    ->dateTime('Y-m-d')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\TrashedFilter::make(), // فلتر المحذوفات (Soft Deletes)
+                Tables\Filters\TrashedFilter::make()->label('المحذوفات'),
                 Tables\Filters\SelectFilter::make('role')
                     ->label('تصفية حسب الدور')
                     ->relationship('roles', 'name'),
@@ -109,10 +127,7 @@ class UserResource extends Resource
             ]);
     }
 
-    public static function getRelations(): array
-    {
-        return [];
-    }
+    public static function getRelations(): array { return []; }
 
     public static function getPages(): array
     {
@@ -123,7 +138,6 @@ class UserResource extends Resource
         ];
     }
 
-    // تفعيل إظهار المحذوفات في الاستعلام
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
