@@ -208,6 +208,12 @@ export default function DashboardPage() {
               >
                 إدارة الأبناء 👨‍👩‍👧‍👦
               </Link>
+              <Link
+                href="/dashboard/support"
+                className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition border border-blue-100"
+              >
+                الدعم الفني 🛟
+              </Link>
               <button
                 onClick={logout}
                 className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition"
@@ -349,6 +355,13 @@ export default function DashboardPage() {
             )}
 
             <Link
+              href="/dashboard/support"
+              className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 text-sm font-medium transition border border-blue-100"
+            >
+              الدعم الفني 🛟
+            </Link>
+
+            <Link
               href="/"
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition"
             >
@@ -438,6 +451,19 @@ export default function DashboardPage() {
                   ))}
                 </ul>
               )}
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+              <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                مركز المساعدة 🛟
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">هل تواجه مشكلة؟ فريق الدعم متاح لمساعدتك في أي وقت.</p>
+              <Link
+                href="/dashboard/support"
+                className="w-full flex justify-center items-center py-3 bg-blue-50 text-blue-700 rounded-xl text-sm font-bold hover:bg-blue-100 transition border border-blue-100"
+              >
+                فتح تذكرة دعم فني
+              </Link>
             </div>
           </div>
 
