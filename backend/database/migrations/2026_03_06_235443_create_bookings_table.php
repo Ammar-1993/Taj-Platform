@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('teacher_id')->constrained('users')->restrictOnDelete();
 
             // الجدار الفولاذي
-            $table->foreignId('teacher_slot_id')->unique()->constrained()->restrictOnDelete();
+            $table->foreignId('teacher_slot_id')->constrained()->restrictOnDelete();
 
             $table->foreignId('promo_code_id')->nullable()->constrained()->nullOnDelete();
             $table->boolean('is_free_trial')->default(false);
