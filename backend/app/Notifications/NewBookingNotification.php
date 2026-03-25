@@ -27,7 +27,7 @@ class NewBookingNotification extends Notification
         return [
             'booking_id' => $this->booking->id,
             'student_name' => $this->booking->student->name,
-            'booking_date' => $this->booking->booking_date,
+            'booking_date' => \Carbon\Carbon::parse($this->booking->booking_date)->format('Y-m-d'),
             'time' => substr($this->booking->teacherSlot->start_time, 0, 5),
             'message' => "حجز جديد! قام الطالب {$this->booking->student->name} بحجز حصة معك."
         ];

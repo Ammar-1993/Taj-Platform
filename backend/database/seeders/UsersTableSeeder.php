@@ -48,7 +48,7 @@ class UsersTableSeeder extends Seeder
 
         // 3. حساب الطالب (Student) مع ملفه ومحفظته المشحونة
         $student = User::create([
-            'name' => 'الطالب خالد',
+            'name' => 'خالد',
             'email' => 'student@taj.com',
             'phone' => '0500000003',
             'password' => $password,
