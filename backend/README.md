@@ -40,3 +40,5 @@ docker-compose exec laravel.test php artisan tinker --execute="\$t = App\Models\
 http://localhost:8000/admin
 
 docker-compose exec laravel.test php artisan make:filament-user
+
+docker-compose exec laravel.test php artisan tinker
