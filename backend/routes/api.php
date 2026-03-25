@@ -11,6 +11,9 @@ use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\PayoutRequestController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Api\TeacherSlotController;
+use App\Models\SupportTicket;
 
 // مسارات عامة (لا تحتاج تسجيل دخول)
 Route::prefix('v1/auth')->group(function () {
@@ -46,9 +49,9 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('/reviews', [ReviewController::class, 'store']);
 
     // 6. إدارة جدول مواعيد المعلم (Teacher Slots)
-    Route::get('/teacher/slots', [\App\Http\Controllers\Api\TeacherSlotController::class, 'index']);
-    Route::post('/teacher/slots', [\App\Http\Controllers\Api\TeacherSlotController::class, 'store']);
-    Route::delete('/teacher/slots/{id}', [\App\Http\Controllers\Api\TeacherSlotController::class, 'destroy']);
+    Route::get('/teacher/slots', [TeacherSlotController::class, 'index']);
+    Route::post('/teacher/slots', [TeacherSlotController::class, 'store']);
+    Route::delete('/teacher/slots/{id}', [TeacherSlotController::class, 'destroy']);
 
     // 7. إدارة الأبناء (لولي الأمر) (Parent Management)
     Route::get('/parent/children', [ParentController::class, 'getChildren']);
@@ -58,13 +61,39 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/parent/dashboard', [ParentController::class, 'getDashboardData']);
 
     // 8. الإشعارات (Notifications)
-    Route::get('/notifications', function (\Illuminate\Http\Request $request) {
+    Route::get('/notifications', function (Request $request) {
         return response()->json(['data' => $request->user()->unreadNotifications]);
     });
-    Route::post('/notifications/{id}/read', function (\Illuminate\Http\Request $request, $id) {
+    Route::post('/notifications/{id}/read', function (Request $request, $id) {
         $request->user()->notifications()->findOrFail($id)->markAsRead();
 
         return response()->json(['status' => 'success']);
+    });
+
+    // 9. نظام التذاكر والدعم الفني
+    Route::post('/support-tickets', function (Request $request) {
+        $request->validate([
+            'subject' => 'required|string|max:255',
+            'description' => 'required|string',
+            'booking_id' => 'nullable|exists:bookings,id',
+        ]);
+
+        $ticket = SupportTicket::create([
+            'user_id' => $request->user()->id,
+            'booking_id' => $request->booking_id,
+            'subject' => $request->subject,
+            'description' => $request->description,
+            'status' => 'open',
+        ]);
+
+        return response()->json(['status' => 'success', 'message' => 'تم استلام تذكرتك بنجاح، سيقوم فريق الدعم بمراجعتها والرد عليك قريباً.']);
+    });
+
+    // جلب تذاكر المستخدم لعرضها له
+    Route::get('/support-tickets', function (Request $request) {
+        return response()->json([
+            'data' => SupportTicket::where('user_id', $request->user()->id)->latest()->get(),
+        ]);
     });
 
 });
@@ -82,5 +111,5 @@ Route::prefix('v1/discovery')->group(function () {
 
 // مسارات عامة (V1)
 Route::prefix('v1')->group(function () {
-    Route::post('/webhooks/payment', [\App\Http\Controllers\Api\PaymentController::class, 'webhook']);
+    Route::post('/webhooks/payment', [PaymentController::class, 'webhook']);
 });
