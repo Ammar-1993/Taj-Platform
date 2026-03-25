@@ -60,6 +60,12 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // الملفات الشخصية
     Route::get('/profile/teacher', [ProfileController::class, 'getTeacherProfile']);
     Route::post('/profile/teacher', [ProfileController::class, 'completeTeacherProfile']);
+
+
+    // إدارة جدول مواعيد المعلم
+    Route::get('/teacher/slots', [\App\Http\Controllers\Api\TeacherSlotController::class, 'index']);
+    Route::post('/teacher/slots', [\App\Http\Controllers\Api\TeacherSlotController::class, 'store']);
+    Route::delete('/teacher/slots/{id}', [\App\Http\Controllers\Api\TeacherSlotController::class, 'destroy']);
 });
 
 // مسارات التصفح والبحث (عامة)

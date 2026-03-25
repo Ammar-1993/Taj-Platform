@@ -312,13 +312,13 @@ export default function DashboardPage() {
           </div>
           <div className="flex gap-3">
 
-            {/* 🟢 التحديث الجديد: زر إكمال الملف الشخصي يظهر للمعلم فقط */}
+            {/* 🟢 زر إكمال الملف الشخصي يظهر للمعلم فقط - حجم صغير */}
             {isTeacher && (
               <Link
                 href="/dashboard/profile"
-                className="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 text-sm font-bold transition flex items-center gap-1"
+                className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 text-xs font-bold transition flex items-center gap-1 border border-indigo-100"
               >
-                إكمال الملف الشخصي 📝
+                إكمال الملف الشخصي
               </Link>
             )}
 
@@ -351,12 +351,20 @@ export default function DashboardPage() {
               </div>
 
               {isTeacher ? (
-                <Link
-                  href="/dashboard/payout"
-                  className="mt-6 flex justify-center w-full py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition"
-                >
-                  طلب سحب أرباح
-                </Link>
+                <div className="mt-6 flex gap-2">
+                  <Link
+                    href="/dashboard/schedule"
+                    className="flex-1 flex justify-center items-center py-2 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-bold transition"
+                  >
+                    إدارة الجدول 📅
+                  </Link>
+                  <Link
+                    href="/dashboard/payout"
+                    className="flex-1 flex justify-center items-center py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition border border-white/10"
+                  >
+                    طلب سحب
+                  </Link>
+                </div>
               ) : (
                 <div className="mt-6 flex gap-2">
                   <Link
