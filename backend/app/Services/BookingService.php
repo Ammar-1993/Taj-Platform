@@ -145,7 +145,7 @@ public function createBooking(\App\Models\User $user, int $slotId, ?string $prom
         return DB::transaction(function () use ($booking, $canceller) {
             $booking = Booking::where('id', $booking->id)->lockForUpdate()->firstOrFail();
 
-            if ($booking->status !== 'scheduled') {
+            if (!in_array($booking->status, ['scheduled', 'in_progress'])) {
                 throw new Exception('لا يمكن إلغاء هذه الحصة في حالتها الحالية.');
             }
 
