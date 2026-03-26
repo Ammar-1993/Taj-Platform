@@ -22,7 +22,7 @@ export default function LoginPage() {
 
         try {
             // ملاحظة: مسار الـ API هنا يجب أن يطابق الموجود في routes/api.php
-            const response = await api.post('/login', { email, password });
+            const response = await api.post('/auth/login', { email, password });
             
             // استخراج التوكن وبيانات المستخدم من الاستجابة المُحدثة
             const { token, user } = response.data.data;
