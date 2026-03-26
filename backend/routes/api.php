@@ -8,12 +8,12 @@ use App\Http\Controllers\Api\ParentController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\TeacherSlotController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\PayoutRequestController;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Api\TeacherSlotController;
 use App\Models\SupportTicket;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 // مسارات عامة (لا تحتاج تسجيل دخول)
 Route::prefix('v1/auth')->group(function () {
@@ -107,6 +107,18 @@ Route::prefix('v1/discovery')->group(function () {
 
     // // مسار استقبال إشعارات الدفع (Webhooks) من البنك
     // Route::post('/webhooks/payment', [PaymentController::class, 'webhook']);
+
+    // مسارات عامة (لا تتطلب تسجيل دخول)
+    Route::post('/login', [\App\Http\Controllers\Api\AuthController::class, 'login']);
+    // Route::post('/register/teacher', [\App\Http\Controllers\Api\AuthController::class, 'registerTeacher']);
+
+    // مسار لجلب المواد الدراسية النشطة لقائمة التسجيل
+    Route::get('/public/subjects', function () {
+        return response()->json([
+            'data' => \App\Models\Subject::where('is_active', true)->get(),
+        ]);
+    });
+
 });
 
 // مسارات عامة (V1)
