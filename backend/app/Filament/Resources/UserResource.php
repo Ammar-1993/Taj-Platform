@@ -56,6 +56,13 @@ class UserResource extends Resource
                         Forms\Components\Select::make('roles')
                             ->label('الصلاحية (الدور)')
                             ->relationship('roles', 'name')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => match ($record->name) {
+                                'admin' => 'مدير نظام',
+                                'teacher' => 'معلم',
+                                'student' => 'طالب',
+                                'parent' => 'ولي أمر',
+                                default => $record->name,
+                            })
                             ->multiple()
                             ->preload()
                             ->searchable(),
@@ -91,6 +98,13 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('roles.name')
                     ->label('الدور')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'admin' => 'مدير نظام',
+                        'teacher' => 'معلم',
+                        'student' => 'طالب',
+                        'parent' => 'ولي أمر',
+                        default => $state,
+                    })
                     ->color(fn (string $state): string => match ($state) {
                         'admin' => 'danger',
                         'teacher' => 'success',
@@ -112,7 +126,14 @@ class UserResource extends Resource
                 Tables\Filters\TrashedFilter::make()->label('المحذوفات'),
                 Tables\Filters\SelectFilter::make('role')
                     ->label('تصفية حسب الدور')
-                    ->relationship('roles', 'name'),
+                    ->relationship('roles', 'name')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => match ($record->name) {
+                        'admin' => 'مدير نظام',
+                        'teacher' => 'معلم',
+                        'student' => 'طالب',
+                        'parent' => 'ولي أمر',
+                        default => $record->name,
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
