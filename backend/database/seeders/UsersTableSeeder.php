@@ -134,6 +134,8 @@ class UsersTableSeeder extends Seeder
             'email' => 'yasser@taj.com',
             'phone' => '0500000007',
             'password' => $password,
+
+            'parent_id' => $parent->id, // ربط الابن بولي الأمر مباشرة
             'is_active' => true,
         ]);
         $child1->assignRole('student');
@@ -149,6 +151,7 @@ class UsersTableSeeder extends Seeder
             'email' => 'mona@taj.com',
             'phone' => '0500000008',
             'password' => $password,
+            'parent_id' => $parent->id, // ربط الابنة بولي الأمر مباشرة
             'is_active' => true,
         ]);
         $child2->assignRole('student');
@@ -157,12 +160,5 @@ class UsersTableSeeder extends Seeder
             'can_book_independently' => false
         ]);
         $child2->wallet()->create(['balance' => 0.00]);
-
-        // د. ربط الأبناء بولي الأمر (في الجدول الوسيط)
-        // نفترض وجود جدول parent_student (parent_id, student_id)
-        DB::table('parent_student')->insert([
-            ['parent_id' => $parent->id, 'student_id' => $child1->id, 'created_at' => now(), 'updated_at' => now()],
-            ['parent_id' => $parent->id, 'student_id' => $child2->id, 'created_at' => now(), 'updated_at' => now()],
-        ]);
     }
 }
