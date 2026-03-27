@@ -27,7 +27,7 @@ export default function StudentRegisterPage() {
 
         try {
             // إرسال الطلب للبوابة الموحدة مع تحديد دور "الطالب"
-            const res = await api.post('auth/register', {
+            const res = await api.post('/auth/register', {
                 name,
                 email,
                 phone,
