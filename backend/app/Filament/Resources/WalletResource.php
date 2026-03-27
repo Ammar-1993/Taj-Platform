@@ -42,7 +42,15 @@ class WalletResource extends Resource
                 Tables\Columns\TextColumn::make('user.roles.name')
                     ->label('نوع الحساب')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'admin' => 'مدير نظام',
+                        'teacher' => 'معلم',
+                        'student' => 'طالب',
+                        'parent' => 'ولي أمر',
+                        default => $state,
+                    })
                     ->color(fn (string $state): string => match ($state) {
+                        'admin' => 'danger',
                         'teacher' => 'success',
                         'student' => 'info',
                         'parent' => 'warning',
@@ -66,6 +74,13 @@ class WalletResource extends Resource
                 Tables\Filters\SelectFilter::make('role')
                     ->label('تصفية حسب نوع الحساب')
                     ->relationship('user.roles', 'name')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => match ($record->name) {
+                        'admin' => 'مدير نظام',
+                        'teacher' => 'معلم',
+                        'student' => 'طالب',
+                        'parent' => 'ولي أمر',
+                        default => $record->name,
+                    })
             ])
             ->actions([])
             ->bulkActions([]);
