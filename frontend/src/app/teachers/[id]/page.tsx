@@ -32,7 +32,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
         if (isParent) {
             api.get('/parent/children')
                .then(res => setChildren(res.data.data))
-               .catch(err => console.error("Error fetching children", err));
+               .catch(err => console.error("حدث خطأ في استدعاء بيانات الأبناء", err));
         }
     }, [isParent]);
 

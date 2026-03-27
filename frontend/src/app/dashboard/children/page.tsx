@@ -30,7 +30,7 @@ export default function ChildrenManagementPage() {
             setChildren(childrenRes.data.data);
             setGradeLevels(gradesRes.data.data);
         } catch (error) {
-            console.error("Error fetching data", error);
+            console.error("حدث خطأ أثناء جلب البيانات", error);
         } finally {
             setLoading(false);
         }
