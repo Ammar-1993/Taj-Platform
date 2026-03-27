@@ -54,9 +54,8 @@ public function createBooking(\App\Models\User $user, int $slotId, ?string $prom
             $sessionPrice = $gradeLevel->session_price;
             $discountAmount = 0;
 
-            // تطبيق كود الخصم (إن وجد)
             if ($promoCode) {
-                $promo = PromoCode::where('code', $promoCode)->where('is_active', true)->first();
+                $promo = PromoCode::where('code', $promoCode)->first();
                 if ($promo && $promo->isValid()) {
                     $discountAmount = ($sessionPrice * $promo->discount_percentage) / 100;
                     $promo->increment('used_count');

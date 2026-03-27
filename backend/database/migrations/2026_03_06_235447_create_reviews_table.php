@@ -20,7 +20,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // 🟢 التعديل هنا: وضع القيد بعد إنشاء الجدول
         DB::statement('ALTER TABLE reviews ADD CONSTRAINT chk_rating_range CHECK (rating >= 1 AND rating <= 5)');
     }
 

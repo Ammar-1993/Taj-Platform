@@ -22,7 +22,6 @@ return new class extends Migration
             $table->index(['teacher_id', 'slot_date', 'status']);
         });
 
-        // 🟢 التعديل هنا: وضع القيد بعد إنشاء الجدول
         DB::statement('ALTER TABLE teacher_slots ADD CONSTRAINT chk_time_logic CHECK (end_time > start_time)');
     }
 

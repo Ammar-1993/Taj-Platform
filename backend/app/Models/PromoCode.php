@@ -19,6 +19,19 @@ class PromoCode extends Model
         ];
     }
 
+    public function isValid(): bool
+    {
+        if ($this->expires_at && $this->expires_at->isPast()) {
+            return false;
+        }
+
+        if ($this->used_count >= $this->max_uses) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
