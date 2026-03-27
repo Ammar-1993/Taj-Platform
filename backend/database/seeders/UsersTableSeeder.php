@@ -13,7 +13,7 @@ class UsersTableSeeder extends Seeder
     public function run(): void
     {
         // كلمة المرور الموحدة لجميع الحسابات التجريبية
-        $password = Hash::make('password123');
+        $password = Hash::make('12345678');
 
         // ==========================================
         // 1. حسابات الإدارة (Admins)
@@ -76,23 +76,48 @@ class UsersTableSeeder extends Seeder
             ['slot_date' => Carbon::tomorrow()->toDateString(), 'start_time' => '18:00:00', 'end_time' => '19:00:00', 'status' => 'available'],
         ]);
 
-        // ج. معلم فيزياء (غير موثق - بانتظار موافقة الإدارة)
+        // ج. معلم فيزياء (موثق ونشط)
         $teacher3 = User::create([
             'name' => 'أ. عمر خالد',
             'email' => 'omar@taj.com',
             'phone' => '0500000004',
             'password' => $password,
-            'is_active' => true, // الحساب نشط لكن البروفايل غير موثق
+            'is_active' => true,
         ]);
         $teacher3->assignRole('teacher');
         $teacher3->teacherProfile()->create([
             'subject_id' => 3, // نفترض 3 = فيزياء
             'bio' => 'شغوف بتعليم الفيزياء وربطها بالواقع العملي والتجارب العلمية.',
-            'is_verified' => false, // 🛑 لاختبار شاشة طلبات الانضمام في Filament
-            'average_rating' => 0,
-            'reviews_count' => 0
+            'is_verified' => true,
+            'average_rating' => 4.5,
+            'reviews_count' => 5
         ]);
-        $teacher3->wallet()->create(['balance' => 0.00]);
+        $teacher3->wallet()->create(['balance' => 100.00]);
+        $teacher3->teacherSlots()->createMany([
+            ['slot_date' => Carbon::tomorrow()->toDateString(), 'start_time' => '15:00:00', 'end_time' => '16:00:00', 'status' => 'available'],
+        ]);
+
+        // د. معلم كيمياء (موثق ونشط)
+        $teacher4 = User::create([
+            'name' => 'أ. فهد ناصر',
+            'email' => 'fahad@taj.com',
+            'phone' => '0500000009',
+            'password' => $password,
+            'is_active' => true,
+        ]);
+        $teacher4->assignRole('teacher');
+        $teacher4->teacherProfile()->create([
+            'subject_id' => 4, // نفترض 4 = كيمياء
+            'bio' => 'معلم كيمياء متخصص في تبسيط التفاعلات وتجارب المعمل للطلاب.',
+            'is_verified' => true,
+            'average_rating' => 4.9,
+            'reviews_count' => 12
+        ]);
+        $teacher4->wallet()->create(['balance' => 0.00]);
+        $teacher4->teacherSlots()->createMany([
+            ['slot_date' => Carbon::tomorrow()->toDateString(), 'start_time' => '19:00:00', 'end_time' => '20:00:00', 'status' => 'available'],
+            ['slot_date' => Carbon::now()->addDays(2)->toDateString(), 'start_time' => '17:00:00', 'end_time' => '18:00:00', 'status' => 'available'],
+        ]);
 
 
         // ==========================================
