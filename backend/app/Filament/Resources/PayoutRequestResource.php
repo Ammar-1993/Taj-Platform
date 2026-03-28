@@ -59,6 +59,13 @@ class PayoutRequestResource extends Resource
                         'transferred' => 'success',
                         'rejected' => 'danger',
                         default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'pending' => 'قيد المراجعة',
+                        'approved' => 'معتمد',
+                        'transferred' => 'تم التحويل',
+                        'rejected' => 'مرفوض',
+                        default => $state,
                     }),
 
                 Tables\Columns\TextColumn::make('created_at')

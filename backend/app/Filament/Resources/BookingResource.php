@@ -44,6 +44,14 @@ class BookingResource extends Resource
                         'completed' => 'success',
                         'cancelled', 'refunded' => 'danger',
                         default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'scheduled' => 'مجدول',
+                        'in_progress' => 'قيد التنفيذ',
+                        'completed' => 'مكتمل',
+                        'cancelled' => 'ملغي',
+                        'refunded' => 'مسترجع',
+                        default => $state,
                     }),
             ])
             ->defaultSort('created_at', 'desc')
