@@ -3,19 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\PayoutRequest;
-use App\Services\WalletService;
+use App\Services\PayoutService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 
 class PayoutRequestController extends Controller
 {
-    protected WalletService $walletService;
+    protected PayoutService $payoutService;
 
-    // حقن خدمة المحفظة للتعامل مع الرصيد
-    public function __construct(WalletService $walletService)
+    public function __construct(PayoutService $payoutService)
     {
-        $this->walletService = $walletService;
+        $this->payoutService = $payoutService;
     }
 
     /**
@@ -47,34 +46,13 @@ class PayoutRequestController extends Controller
         /** @var \App\Models\User $user */
         $user = $request->user();
 
-        // 2. التحقق من الرصيد المتاح (Security Check)
-        if ($user->wallet->balance < $request->amount) {
-            return response()->json([
-                'message' => 'رصيدك الحالي غير كافٍ لإتمام هذا الطلب.'
-            ], 400);
-        }
-
         try {
-            DB::beginTransaction();
-
-            // 3. خصم (تجميد) المبلغ من المحفظة فوراً لمنع السحب المزدوج
-            $this->walletService->processTransaction(
+            $payout = $this->payoutService->requestPayout(
                 $user,
-                -$request->amount,
-                'withdrawal',
-                'تجميد رصيد لطلب سحب أرباح (قيد المراجعة الإدارية)'
+                (float) $request->amount,
+                $request->bank_name,
+                $request->iban
             );
-
-            // 4. إنشاء الطلب (Laravel سيقوم بتشفير الـ IBAN تلقائياً بفضل الـ Cast الخاص بك)
-            $payout = PayoutRequest::create([
-                'user_id' => $user->id,
-                'amount' => $request->amount,
-                'bank_name' => $request->bank_name,
-                'iban' => $request->iban,
-                'status' => 'pending'
-            ]);
-
-            DB::commit();
 
             return response()->json([
                 'status' => 'success',
@@ -82,11 +60,10 @@ class PayoutRequestController extends Controller
                 'data' => $payout
             ], 201);
 
-        } catch (\Exception $e) {
-            DB::rollBack();
+        } catch (Exception $e) {
             return response()->json([
-                'message' => 'حدث خطأ غير متوقع أثناء معالجة الطلب.'
-            ], 500);
+                'message' => $e->getMessage()
+            ], 400); // Badrequest for logic failure
         }
     }
 
