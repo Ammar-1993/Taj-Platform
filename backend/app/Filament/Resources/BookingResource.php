@@ -8,23 +8,38 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Model;
-use Filament\Tables\Actions\Action; // 🟢 استدعاء كلاس الأكشن
+use Illuminate\Database\Eloquent\Model; // 🟢 استدعاء كلاس الأكشن
 
 class BookingResource extends Resource
 {
     protected static ?string $model = Booking::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
+
     protected static ?string $modelLabel = 'حجز';
+
     protected static ?string $pluralModelLabel = 'سجل الحجوزات';
+
     protected static ?string $navigationGroup = 'العمليات والمالية';
+
     protected static ?int $navigationSort = 1;
 
-    public static function canCreate(): bool { return false; }
-    public static function canEdit(Model $record): bool { return false; }
+    public static function canCreate(): bool
+    {
+        return false;
+    }
 
-    public static function form(Form $form): Form { return $form->schema([]); }
+    public static function canEdit(Model $record): bool
+    {
+        return false;
+    }
+
+    public static function form(Form $form): Form
+    {
+        return $form->schema([]);
+    }
 
     public static function table(Table $table): Table
     {
@@ -88,7 +103,7 @@ class BookingResource extends Resource
                         try {
                             // 1. استدعاء المحرك المالي الذي بنيناه سابقاً لضمان دقة العمليات
                             $bookingService = app(\App\Services\BookingService::class);
-                            
+
                             // نمرر المستخدم الحالي (المدير) كمنفذ لعملية الإلغاء
                             $bookingService->cancelBooking($record, \Illuminate\Support\Facades\Auth::user());
 
@@ -112,7 +127,10 @@ class BookingResource extends Resource
             ->bulkActions([]);
     }
 
-    public static function getRelations(): array { return []; }
+    public static function getRelations(): array
+    {
+        return [];
+    }
 
     public static function getPages(): array
     {
