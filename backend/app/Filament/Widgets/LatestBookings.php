@@ -46,6 +46,9 @@ class LatestBookings extends BaseWidget
                     ->dateTime('Y-m-d H:i')
                     ->sortable(),
             ])
-            ->paginated(false); // نلغي التصفح لأننا نعرض 5 فقط
+            ->paginated(false) // نلغي التصفح لأننا نعرض 10 فقط
+            ->emptyStateHeading('لا توجد حجوزات بعد')
+            ->emptyStateDescription('ستظهر هنا أحدث الحجوزات فور إنشائها.')
+            ->emptyStateIcon('heroicon-o-calendar');
     }
 }
