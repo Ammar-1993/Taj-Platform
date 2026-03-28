@@ -7,18 +7,18 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
-use Filament\View\PanelsRenderHook;
-use Illuminate\Support\HtmlString;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\MaxWidth;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -29,6 +29,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->brandName('منصة تاج')
+            ->brandLogo(fn () => new HtmlString('<div class="flex items-center gap-2"><span class="text-2xl">👑</span><span class="text-xl font-bold">منصة تاج التعليمية</span></div>'))
             // ->brandLogo(asset('images/logo.png'))
             // ->brandLogoHeight('3rem')
             ->path('admin')
@@ -54,6 +55,15 @@ class AdminPanelProvider extends PanelProvider
                             display: none; /* Chrome, Safari, Edge */
                         }
                     </style>
+                ')
+            )
+            ->renderHook(
+                PanelsRenderHook::TOPBAR_START,
+                fn (): HtmlString => new HtmlString('
+                    <div class="flex items-center gap-2 px-2 py-1 group cursor-default">
+                        <span class="text-2xl drop-shadow-sm group-hover:scale-110 transition-transform">👑</span>
+                        <span class="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-indigo-400">منصة تاج التعليمية</span>
+                    </div>
                 ')
             )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
