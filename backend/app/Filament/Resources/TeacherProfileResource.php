@@ -34,15 +34,15 @@ class TeacherProfileResource extends Resource
             ->schema([
                 Forms\Components\Section::make('البيانات الأساسية')
                     ->schema([
-                        Forms\Components\TextInput::make('user.name')
+                        Forms\Components\Placeholder::make('teacher_name')
                             ->label('اسم المعلم')
-                            ->disabled(),
-                        Forms\Components\TextInput::make('user.email')
+                            ->content(fn ($record) => $record?->user?->name ?? 'غير معروف'),
+                        Forms\Components\Placeholder::make('teacher_email')
                             ->label('البريد الإلكتروني')
-                            ->disabled(),
-                        Forms\Components\TextInput::make('subject.name')
+                            ->content(fn ($record) => $record?->user?->email ?? 'غير معروف'),
+                        Forms\Components\Placeholder::make('subject_name')
                             ->label('المادة المراد تدريسها')
-                            ->disabled(),
+                            ->content(fn ($record) => $record?->subject?->name ?? 'غير محدد'),
                         Forms\Components\Textarea::make('bio')
                             ->label('النبذة التعريفية (كما كتبها المعلم)')
                             ->disabled()
