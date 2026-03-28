@@ -24,7 +24,8 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ pendingReview, onSucce
       });
       alert("تم إرسال التقييم بنجاح! شكراً لك.");
       onSuccess();
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
       alert(error.response?.data?.message || "حدث خطأ أثناء التقييم");
     } finally {
       setIsSubmittingReview(false);
@@ -35,15 +36,15 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ pendingReview, onSucce
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl relative animate-fade-in-up">
+      <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative animate-fade-in-up border border-gray-100">
         {/* زر الإغلاق الاختياري */}
         {/* <button onClick={onClose} className="absolute top-4 left-4 text-gray-400 hover:text-gray-600">×</button> */}
 
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+          <div className="w-20 h-20 bg-gradient-to-br from-amber-100 to-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl shadow-lg">
             ⭐
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">كيف كانت حصتك؟</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900">كيف كانت حصتك؟</h2>
           <p className="text-gray-500 mt-2">
             يرجى تقييم حصتك مع الأستاذ{" "}
             <span className="font-bold text-blue-600">
@@ -76,7 +77,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ pendingReview, onSucce
         <button
           onClick={submitReview}
           disabled={isSubmittingReview}
-          className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition disabled:opacity-50"
+          className="w-full bg-gradient-to-l from-indigo-600 to-purple-600 text-white font-extrabold py-3.5 rounded-xl hover:shadow-xl transition-all duration-200 disabled:opacity-50 hover:-translate-y-0.5"
         >
           {isSubmittingReview ? "جاري الإرسال..." : "إرسال التقييم"}
         </button>

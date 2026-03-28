@@ -30,77 +30,102 @@ export const StudentTeacherDashboard: React.FC<StudentTeacherDashboardProps> = (
       const res = await api.patch(`/bookings/${bookingId}/cancel`);
       alert(res.data.message);
       onRefresh();
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
       alert(error.response?.data?.message || "حدث خطأ أثناء الإلغاء");
     }
   };
 
   const handleCompleteClass = async (bookingId: number) => {
     if (!confirm("هل أنت متأكد من إنهاء الحصة؟ سيتم إيداع الأرباح في محفظتك الآن.")) return;
-
     try {
       const res = await api.patch(`/bookings/${bookingId}/complete`);
       alert(res.data.message);
       onRefresh();
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
       alert(error.response?.data?.message || "حدث خطأ أثناء إنهاء الحصة");
     }
   };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* ============ SIDEBAR ============ */}
       <div className="lg:col-span-1 space-y-6">
-        <div className="bg-gradient-to-br from-blue-600 to-blue-800 p-6 rounded-2xl shadow-md text-white">
-          <h3 className="text-blue-100 text-sm font-medium">رصيد المحفظة الحالي</h3>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-4xl font-extrabold">{wallet?.balance || "0.00"}</span>
-            <span className="text-blue-200">ريال</span>
+
+        {/* 💰 Wallet Card — Premium Gradient */}
+        <div className="animate-fade-in-up-delay relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-violet-700 p-6 rounded-3xl shadow-xl text-white">
+          {/* Decorative Pattern */}
+          <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white blur-2xl"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-violet-300 blur-2xl"></div>
           </div>
 
-          {isTeacher ? (
-            <div className="mt-6 flex gap-2">
-              <Link
-                href="/dashboard/schedule"
-                className="flex-1 flex justify-center items-center py-2 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-bold transition"
-              >
-                إدارة الجدول 📅
-              </Link>
-              <Link
-                href="/dashboard/payout"
-                className="flex-1 flex justify-center items-center py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition border border-white/10"
-              >
-                طلب سحب
-              </Link>
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xl">💳</span>
+              <h3 className="text-purple-200 text-sm font-bold">رصيد المحفظة</h3>
             </div>
-          ) : (
-            <div className="mt-6 flex gap-2">
-              <Link
-                href="/dashboard/top-up"
-                className="flex-1 text-center py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition"
-              >
-                شحن المحفظة
-              </Link>
+            <div className="mt-3 flex items-baseline gap-2">
+              <span className="text-5xl font-black tracking-tight">{wallet?.balance || "0.00"}</span>
+              <span className="text-purple-200 text-lg font-medium">ريال</span>
             </div>
-          )}
+
+            {isTeacher ? (
+              <div className="mt-6 flex gap-2">
+                <Link
+                  href="/dashboard/schedule"
+                  className="flex-1 flex justify-center items-center py-2.5 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold transition-all duration-200 backdrop-blur-sm border border-white/10 hover:-translate-y-0.5"
+                >
+                  إدارة الجدول 📅
+                </Link>
+                <Link
+                  href="/dashboard/payout"
+                  className="flex-1 flex justify-center items-center py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition-all duration-200 backdrop-blur-sm border border-white/10 hover:-translate-y-0.5"
+                >
+                  طلب سحب 💸
+                </Link>
+              </div>
+            ) : (
+              <div className="mt-6">
+                <Link
+                  href="/dashboard/top-up"
+                  className="w-full flex justify-center items-center py-2.5 bg-white/20 hover:bg-white/30 rounded-xl text-sm font-bold transition-all duration-200 backdrop-blur-sm border border-white/10 hover:-translate-y-0.5"
+                >
+                  شحن المحفظة ⚡
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <h3 className="font-bold text-gray-900 mb-4">آخر العمليات المالية</h3>
+        {/* 📊 Transaction History */}
+        <div className="animate-fade-in-up-delay-2 bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-lg border border-gray-100/80">
+          <h3 className="font-extrabold text-gray-900 mb-4 flex items-center gap-2">
+            <span className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center text-sm">📊</span>
+            آخر العمليات المالية
+          </h3>
           {wallet?.transactions?.data?.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center">لا توجد عمليات سابقة</p>
+            <div className="text-center py-6">
+              <div className="text-4xl mb-2">🏦</div>
+              <p className="text-gray-400 text-sm">لا توجد عمليات سابقة</p>
+            </div>
           ) : (
-            <ul className="space-y-3">
+            <ul className="space-y-2">
               {wallet?.transactions?.data?.slice(0, 5).map((tx) => (
-                <li key={tx.id} className="flex justify-between items-center text-sm border-b pb-2 last:border-0">
-                  <div>
-                    <p className="font-medium text-gray-800">
-                      {tx.type === "withdrawal" ? "خصم حجز/تجميد" : "إيداع/أرباح"}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(tx.created_at).toLocaleDateString()}
-                    </p>
+                <li key={tx.id} className="flex justify-between items-center text-sm p-3 rounded-xl bg-gray-50/80 hover:bg-gray-100 transition-all duration-200 group">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2 h-8 rounded-full ${tx.type === "withdrawal" ? "bg-red-400" : "bg-emerald-400"}`}></div>
+                    <div>
+                      <p className="font-bold text-gray-800">
+                        {tx.type === "withdrawal" ? "خصم حجز/تجميد" : "إيداع/أرباح"}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {new Date(tx.created_at).toLocaleDateString("ar-SA")}
+                      </p>
+                    </div>
                   </div>
-                  <span className={`font-bold ${tx.type === "withdrawal" ? "text-red-500" : "text-green-500"}`}>
+                  <span className={`font-black text-base ${tx.type === "withdrawal" ? "text-red-500" : "text-emerald-500"}`}>
                     {tx.type === "withdrawal" ? "-" : "+"}
                     {tx.amount}
                   </span>
@@ -110,37 +135,47 @@ export const StudentTeacherDashboard: React.FC<StudentTeacherDashboardProps> = (
           )}
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">مركز المساعدة 🛟</h3>
-          <p className="text-sm text-gray-500 mb-4">هل تواجه مشكلة؟ فريق الدعم متاح لمساعدتك في أي وقت.</p>
+        {/* 🛟 Support Center */}
+        <div className="animate-fade-in-up-delay-2 bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-lg border border-gray-100/80">
+          <h3 className="font-extrabold text-gray-900 mb-3 flex items-center gap-2">
+            <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-sm">🛟</span>
+            مركز المساعدة
+          </h3>
+          <p className="text-sm text-gray-500 mb-4 leading-relaxed">هل تواجه مشكلة؟ فريق الدعم متاح لمساعدتك في أي وقت.</p>
           <Link
             href="/dashboard/support"
-            className="w-full flex justify-center items-center py-3 bg-blue-50 text-blue-700 rounded-xl text-sm font-bold hover:bg-blue-100 transition border border-blue-100"
+            className="w-full flex justify-center items-center py-3 bg-gradient-to-l from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5"
           >
             فتح تذكرة دعم فني
           </Link>
         </div>
       </div>
 
-      <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      {/* ============ MAIN CONTENT ============ */}
+      <div className="lg:col-span-2 animate-fade-in-up-delay bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-lg border border-gray-100/80">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="font-bold text-lg text-gray-900">سجل الحجوزات</h3>
+          <h3 className="font-extrabold text-xl text-gray-900 flex items-center gap-2">
+            <span className="w-9 h-9 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center text-base">📋</span>
+            سجل الحجوزات
+          </h3>
         </div>
 
+        {/* 🔔 Notifications for Teachers */}
         {isTeacher && notifications.length > 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl mb-6">
-            <h3 className="font-bold text-yellow-800 mb-3 flex items-center gap-2">
-              🔔 إشعارات جديدة ({notifications.length})
+          <div className="bg-gradient-to-l from-amber-50 to-yellow-50 border border-amber-200/60 p-5 rounded-2xl mb-6">
+            <h3 className="font-extrabold text-amber-800 mb-3 flex items-center gap-2">
+              <span className="w-7 h-7 bg-amber-200 rounded-lg flex items-center justify-center text-sm">🔔</span>
+              إشعارات جديدة ({notifications.length})
             </h3>
             <div className="space-y-2">
               {notifications.map((notif) => (
-                <div key={notif.id} className="bg-white p-3 rounded-lg shadow-sm border border-yellow-100 flex justify-between items-center">
-                  <p className="text-sm text-gray-800 font-semibold">
-                    {notif.data.message} - <span className="text-blue-600">{notif.data.booking_date} الساعة {notif.data.time}</span>
+                <div key={notif.id} className="bg-white/90 p-3 rounded-xl shadow-sm border border-amber-100 flex justify-between items-center hover:shadow-md transition-all duration-200">
+                  <p className="text-sm text-gray-800 font-bold">
+                    {notif.data.message} - <span className="text-indigo-600">{notif.data.booking_date} الساعة {notif.data.time}</span>
                   </p>
                   <button
                     onClick={() => markNotificationAsRead(notif.id)}
-                    className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md text-gray-600 transition"
+                    className="text-xs bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg text-amber-700 transition-all duration-200 font-bold"
                   >
                     تحديد كمقروء ✔️
                   </button>
@@ -150,68 +185,85 @@ export const StudentTeacherDashboard: React.FC<StudentTeacherDashboardProps> = (
           </div>
         )}
 
+        {/* Bookings Content */}
         {bookings.length === 0 ? (
-          <div className="text-center py-10">
-            <p className="text-gray-500">ليس لديك أي حجوزات حتى الآن.</p>
+          <div className="text-center py-16">
+            <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-5 text-4xl">
+              📚
+            </div>
+            <h4 className="text-xl font-extrabold text-gray-800 mb-2">ليس لديك أي حجوزات حتى الآن</h4>
+            <p className="text-gray-400 text-sm mb-6">ابدأ رحلتك التعليمية بحجز حصتك الأولى مع نخبة المعلمين</p>
             {!isTeacher && (
-              <Link href="/" className="inline-block mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                احجز حصتك الأولى
+              <Link href="/" className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-l from-indigo-600 to-purple-600 text-white rounded-xl font-bold hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5 text-sm">
+                احجز حصتك الأولى 🚀
               </Link>
             )}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-right">
-              <thead className="text-xs text-gray-500 bg-gray-50 border-b">
-                <tr>
-                  <th className="px-4 py-3 rounded-tr-lg">رقم</th>
-                  <th className="px-4 py-3">{isTeacher ? "الطالب" : "المعلم"}</th>
-                  <th className="px-4 py-3">التاريخ والوقت</th>
-                  <th className="px-4 py-3">المبلغ</th>
-                  <th className="px-4 py-3">الحالة</th>
-                  <th className="px-4 py-3 rounded-tl-lg">الإجراء</th>
+              <thead>
+                <tr className="bg-gradient-to-l from-gray-50 to-slate-50 border-b border-gray-200">
+                  <th className="px-4 py-3.5 text-xs font-extrabold text-gray-500 uppercase tracking-wider rounded-tr-xl">رقم</th>
+                  <th className="px-4 py-3.5 text-xs font-extrabold text-gray-500 uppercase tracking-wider">{isTeacher ? "الطالب" : "المعلم"}</th>
+                  <th className="px-4 py-3.5 text-xs font-extrabold text-gray-500 uppercase tracking-wider">التاريخ والوقت</th>
+                  <th className="px-4 py-3.5 text-xs font-extrabold text-gray-500 uppercase tracking-wider">المبلغ</th>
+                  <th className="px-4 py-3.5 text-xs font-extrabold text-gray-500 uppercase tracking-wider">الحالة</th>
+                  <th className="px-4 py-3.5 text-xs font-extrabold text-gray-500 uppercase tracking-wider rounded-tl-xl">الإجراء</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-gray-100">
                 {bookings.map((booking) => (
-                  <tr key={booking.id} className="border-b hover:bg-gray-50 transition">
-                    <td className="px-4 py-3 font-medium">#{booking.id}</td>
-                    <td className="px-4 py-3 text-gray-800 font-semibold">
-                      {isTeacher ? booking.student?.name : booking.teacher?.name}
+                  <tr key={booking.id} className="hover:bg-indigo-50/50 transition-all duration-200 group">
+                    <td className="px-4 py-4 font-bold text-indigo-600">#{booking.id}</td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl flex items-center justify-center text-indigo-600 font-extrabold text-sm">
+                          {(isTeacher ? booking.student?.name : booking.teacher?.name)?.charAt(0) || "?"}
+                        </div>
+                        <span className="font-bold text-gray-800">
+                          {isTeacher ? booking.student?.name : booking.teacher?.name}
+                        </span>
+                      </div>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="text-gray-900">{booking.booking_date.substring(0, 10)}</div>
-                      <div className="text-xs text-gray-500">
+                    <td className="px-4 py-4">
+                      <div className="font-bold text-gray-800">{booking.booking_date.substring(0, 10)}</div>
+                      <div className="text-xs text-gray-400 mt-0.5">
                         {booking.teacher_slot?.start_time.substring(0, 5)}
                       </div>
                     </td>
-                    <td className="px-4 py-3 font-bold text-gray-700">{booking.net_paid} SAR</td>
-                    <td className="px-4 py-3">{getStatusBadge(booking.status)}</td>
-                    <td className="px-4 py-3 flex gap-2 justify-end">
-                      {(booking.status === "scheduled" || booking.status === "in_progress") && (
-                        <button
-                          onClick={() => router.push(`/classroom/${booking.id}`)}
-                          className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition text-xs font-bold border border-indigo-200"
-                        >
-                          دخول الفصل 📹
-                        </button>
-                      )}
-                      {isTeacher && booking.status === "scheduled" && (
-                        <button
-                          onClick={() => handleCancelClass(booking.id)}
-                          className="px-3 py-1 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition text-xs font-bold border border-red-200"
-                        >
-                          إلغاء طارئ ❌
-                        </button>
-                      )}
-                      {isTeacher && booking.status === "in_progress" && (
-                        <button
-                          onClick={() => handleCompleteClass(booking.id)}
-                          className="px-3 py-1 bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition text-xs font-bold border border-green-200"
-                        >
-                          إنهاء وتحصيل الأرباح 💰
-                        </button>
-                      )}
+                    <td className="px-4 py-4">
+                      <span className="font-black text-gray-800">{booking.net_paid}</span>
+                      <span className="text-xs text-gray-400 mr-1">ريال</span>
+                    </td>
+                    <td className="px-4 py-4">{getStatusBadge(booking.status)}</td>
+                    <td className="px-4 py-4">
+                      <div className="flex gap-2 justify-end">
+                        {(booking.status === "scheduled" || booking.status === "in_progress") && (
+                          <button
+                            onClick={() => router.push(`/classroom/${booking.id}`)}
+                            className="px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-all duration-200 text-xs font-bold hover:shadow-md hover:-translate-y-0.5"
+                          >
+                            دخول الفصل 📹
+                          </button>
+                        )}
+                        {isTeacher && booking.status === "scheduled" && (
+                          <button
+                            onClick={() => handleCancelClass(booking.id)}
+                            className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-all duration-200 text-xs font-bold hover:shadow-md hover:-translate-y-0.5"
+                          >
+                            إلغاء طارئ ❌
+                          </button>
+                        )}
+                        {isTeacher && booking.status === "in_progress" && (
+                          <button
+                            onClick={() => handleCompleteClass(booking.id)}
+                            className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-all duration-200 text-xs font-bold hover:shadow-md hover:-translate-y-0.5"
+                          >
+                            إنهاء وتحصيل 💰
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

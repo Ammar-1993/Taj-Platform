@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Tajawal } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 
-const inter = Inter({ subsets: ["latin"] });
+const tajawal = Tajawal({
+  subsets: ["arabic", "latin"],
+  weight: ["200", "300", "400", "500", "700", "800", "900"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "منصة تاج التعليمية",
@@ -18,7 +22,7 @@ export default function RootLayout({
   return (
     // استخدام dir="rtl" لدعم اللغة العربية
     <html lang="ar" dir="rtl">
-      <body className={inter.className}>
+      <body className={tajawal.className}>
         <AuthProvider>
           {children}
         </AuthProvider>
