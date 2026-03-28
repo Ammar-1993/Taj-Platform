@@ -54,11 +54,15 @@ export default function TeacherRegisterPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex justify-center items-center">
-            <div className="max-w-xl w-full bg-white p-8 sm:p-10 rounded-3xl shadow-xl border border-gray-100">
+        <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex justify-center items-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 opacity-20 pointer-events-none">
+                <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-emerald-200 blur-3xl"></div>
+                <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-green-200 blur-3xl"></div>
+            </div>
+            <div className="max-w-xl w-full bg-white/80 backdrop-blur-sm p-8 sm:p-10 rounded-3xl shadow-2xl border border-gray-100/80 animate-fade-in-up">
                 
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-extrabold text-gray-900 mb-2">إنشاء حساب معلم 👨‍🏫</h1>
+                    <h1 className="text-3xl font-black text-gray-900 mb-2">إنشاء حساب معلم 👨‍🏫</h1>
                     <p className="text-gray-500">الخطوة الأولى: أنشئ حسابك الأساسي لتتمكن من الدخول للمنصة.</p>
                 </div>
 
@@ -74,26 +78,26 @@ export default function TeacherRegisterPage() {
 
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-1">الاسم الكامل (كما في الهوية) *</label>
-                            <input type="text" required value={name} onChange={e => setName(e.target.value)} className="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-green-500 focus:ring-0 outline-none transition" />
+                            <input type="text" required value={name} onChange={e => setName(e.target.value)} className="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white" />
                         </div>
                         
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-1">البريد الإلكتروني *</label>
-                            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} className="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-green-500 focus:ring-0 outline-none transition" dir="ltr" />
+                            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} className="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white" dir="ltr" />
                         </div>
                         
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-1">رقم الجوال *</label>
-                            <input type="tel" required value={phone} onChange={e => setPhone(e.target.value)} className="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-green-500 focus:ring-0 outline-none transition" dir="ltr" placeholder="05XXXXXXXX" />
+                            <input type="tel" required value={phone} onChange={e => setPhone(e.target.value)} className="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white" dir="ltr" placeholder="05XXXXXXXX" />
                         </div>
                         
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-1">كلمة المرور *</label>
-                            <input type="password" required minLength={8} value={password} onChange={e => setPassword(e.target.value)} className="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-green-500 focus:ring-0 outline-none transition" />
+                            <input type="password" required minLength={8} value={password} onChange={e => setPassword(e.target.value)} className="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white" />
                         </div>
 
                         <div className="pt-4">
-                            <button type="submit" disabled={loading} className="w-full bg-green-600 text-white font-bold py-4 rounded-xl hover:bg-green-700 transition disabled:opacity-50 shadow-lg">
+                            <button type="submit" disabled={loading} className="w-full bg-gradient-to-l from-green-600 to-emerald-600 text-white font-extrabold py-4 rounded-xl hover:shadow-xl transition-all duration-200 disabled:opacity-50 shadow-lg hover:-translate-y-0.5">
                                 {loading ? 'جاري إنشاء الحساب...' : 'إنشاء الحساب 🚀'}
                             </button>
                         </div>

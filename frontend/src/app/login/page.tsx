@@ -41,22 +41,22 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div className="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
             
             {/* أشكال تجميلية في الخلفية */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 opacity-30 pointer-events-none">
-                <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-blue-100 blur-3xl"></div>
-                <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-indigo-100 blur-3xl"></div>
+                <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-indigo-200 blur-3xl"></div>
+                <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-purple-200 blur-3xl"></div>
             </div>
 
-            <div className="w-full max-w-md">
+            <div className="w-full max-w-md animate-fade-in-up">
                 
                 {/* الهيدر */}
                 <div className="text-center mb-10">
-                    <Link href="/" className="inline-block mb-4 text-4xl hover:scale-110 transition-transform">
+                    <Link href="/" className="inline-block mb-4 text-5xl hover:scale-110 transition-transform duration-200 drop-shadow-lg animate-subtle-pulse">
                         👑
                     </Link>
-                    <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">
                         مرحباً بعودتك!
                     </h2>
                     <p className="mt-3 text-gray-500">
@@ -65,7 +65,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* صندوق تسجيل الدخول */}
-                <div className="bg-white/80 backdrop-blur-md p-8 sm:p-10 rounded-3xl shadow-xl border border-white/50 relative z-10">
+                <div className="bg-white/80 backdrop-blur-md p-8 sm:p-10 rounded-3xl shadow-2xl border border-white/50 relative z-10">
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         
                         {error && (
@@ -82,7 +82,7 @@ export default function LoginPage() {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-left"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-left"
                                     placeholder="name@example.com"
                                     dir="ltr"
                                 />
@@ -91,7 +91,7 @@ export default function LoginPage() {
                             <div>
                                 <div className="flex items-center justify-between mb-2">
                                     <label className="block text-sm font-bold text-gray-700">كلمة المرور</label>
-                                    <Link href="#" className="text-xs font-bold text-blue-600 hover:text-blue-500 transition-colors">
+                                    <Link href="#" className="text-xs font-bold text-indigo-600 hover:text-indigo-500 transition-colors">
                                         نسيت كلمة المرور؟
                                     </Link>
                                 </div>
@@ -100,7 +100,7 @@ export default function LoginPage() {
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-left tracking-widest"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-left tracking-widest"
                                     placeholder="••••••••"
                                     dir="ltr"
                                 />
@@ -111,7 +111,7 @@ export default function LoginPage() {
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full flex justify-center py-4 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                                className="w-full flex justify-center py-4 px-4 border border-transparent text-sm font-extrabold rounded-xl text-white bg-gradient-to-l from-indigo-600 to-purple-600 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
                             >
                                 {isLoading ? (
                                     <span className="flex items-center gap-2">
@@ -128,7 +128,7 @@ export default function LoginPage() {
                 <div className="mt-8 text-center">
                     <p className="text-gray-600 text-sm">
                         ليس لديك حساب؟ {' '}
-                        <Link href="/register" className="font-bold text-blue-600 hover:text-blue-800 transition-colors">
+                        <Link href="/register" className="font-bold text-indigo-600 hover:text-indigo-800 transition-colors">
                             أنشئ حساباً جديداً الآن
                         </Link>
                     </p>
