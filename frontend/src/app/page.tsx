@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '@/lib/axios';
 import { User, Subject } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Home() {
     const [teachers, setTeachers] = useState<User[]>([]);
@@ -12,6 +13,8 @@ export default function Home() {
     const [subjectId, setSubjectId] = useState('');
     const [sortBy, setSortBy] = useState('');
     const [loading, setLoading] = useState(true);
+
+    const { user, loading: authLoading } = useAuth();
 
     useEffect(() => {
         fetchSubjects();
@@ -70,12 +73,23 @@ export default function Home() {
                             <p className="text-indigo-200 text-base md:text-lg font-medium mt-1">نخبة من المعلمين المعتمدين في جميع المواد — اختر معلمك وانطلق</p>
                         </div>
                         <div className="flex gap-2">
-                            <Link href="/login" className="px-5 py-2.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-xl text-sm font-bold transition-all duration-200 border border-white/20 hover:shadow-lg hover:-translate-y-0.5">
-                                تسجيل الدخول
-                            </Link>
-                            <Link href="/register" className="px-5 py-2.5 bg-white text-indigo-700 rounded-xl text-sm font-extrabold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
-                                إنشاء حساب
-                            </Link>
+                            {authLoading ? (
+                                <div className="h-10 w-24 bg-white/20 animate-pulse rounded-xl"></div>
+                            ) : user ? (
+                                <Link href="/dashboard" className="px-5 py-2.5 bg-white text-indigo-700 rounded-xl text-sm font-extrabold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2">
+                                    <span>لوحة التحكم</span>
+                                    <span>🏠</span>
+                                </Link>
+                            ) : (
+                                <>
+                                    <Link href="/login" className="px-5 py-2.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-xl text-sm font-bold transition-all duration-200 border border-white/20 hover:shadow-lg hover:-translate-y-0.5">
+                                        تسجيل الدخول
+                                    </Link>
+                                    <Link href="/register" className="px-5 py-2.5 bg-white text-indigo-700 rounded-xl text-sm font-extrabold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+                                        إنشاء حساب
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
