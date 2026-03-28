@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '@/lib/axios';
+import { User, Subject } from '@/types';
 
 export default function Home() {
-    const [teachers, setTeachers] = useState<any[]>([]);
-    const [subjects, setSubjects] = useState<any[]>([]);
+    const [teachers, setTeachers] = useState<User[]>([]);
+    const [subjects, setSubjects] = useState<Subject[]>([]);
     const [search, setSearch] = useState('');
     const [subjectId, setSubjectId] = useState('');
     const [sortBy, setSortBy] = useState(''); // 🟢 1. حالة الترتيب الجديدة

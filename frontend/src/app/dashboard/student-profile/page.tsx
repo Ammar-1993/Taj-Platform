@@ -5,12 +5,13 @@ import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { GradeLevel } from '@/types';
 
 export default function StudentProfilePage() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     
-    const [gradeLevels, setGradeLevels] = useState<any[]>([]);
+    const [gradeLevels, setGradeLevels] = useState<GradeLevel[]>([]);
     const [gradeLevelId, setGradeLevelId] = useState('');
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,8 +25,8 @@ export default function StudentProfilePage() {
                 setGradeLevels(res.data.data);
                 
                 // إذا كان الطالب قد حدد مرحلته مسبقاً، نقوم بتحديدها في القائمة
-                if (user?.studentProfile?.grade_level_id) {
-                    setGradeLevelId(user.studentProfile.grade_level_id.toString());
+                if (user?.student_profile?.grade_level_id) {
+                    setGradeLevelId(user.student_profile.grade_level_id.toString());
                 }
             } catch (error) {
                 console.error("خطأ في جلب المراحل الدراسية", error);
@@ -57,7 +58,8 @@ export default function StudentProfilePage() {
                 router.push('/dashboard');
             }, 2000);
             
-        } catch (error: any) {
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
             setMessage({ 
                 type: 'error', 
                 text: error.response?.data?.message || 'حدث خطأ أثناء الحفظ. يرجى المحاولة مرة أخرى.' 
@@ -72,7 +74,7 @@ export default function StudentProfilePage() {
     }
 
     // حماية الصفحة: التأكد أن من يزورها هو طالب فقط
-    if (!user?.roles?.some((r: any) => r.name === 'student')) {
+    if (!user?.roles?.some((r) => r.name === 'student')) {
         return (
             <div className="min-h-screen flex flex-col justify-center items-center bg-gray-50 p-6 text-center">
                 <div className="text-6xl mb-4">🛑</div>

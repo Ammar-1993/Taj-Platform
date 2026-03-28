@@ -32,8 +32,9 @@ export default function LoginPage() {
             
             // توجيه المستخدم للوحة التحكم
             router.push('/dashboard');
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'حدث خطأ غير متوقع أثناء تسجيل الدخول.');
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setError(error.response?.data?.message || 'حدث خطأ غير متوقع أثناء تسجيل الدخول.');
         } finally {
             setIsLoading(false);
         }

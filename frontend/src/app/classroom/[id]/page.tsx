@@ -24,7 +24,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     const [isEnding, setIsEnding] = useState(false); // Enhanced: Loading state for ending class
 
     // Derived State
-    const isTeacher = user?.roles?.some((r: any) => r.name === 'teacher');
+    const isTeacher = user?.roles?.some((r) => r.name === 'teacher');
 
     useEffect(() => {
         const fetchAccess = async () => {
@@ -35,8 +35,9 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 setUid(res.data.data.uid);
                 setUserRole(res.data.data.role); // Sets 'host' or 'audience' based on backend logic
                 setLoading(false);
-            } catch (err: any) {
-                setError(err.response?.data?.message || 'فشل الاتصال بالغرفة الافتراضية');
+            } catch (err: unknown) {
+                const error = err as { response?: { data?: { message?: string } } };
+                setError(error.response?.data?.message || 'فشل الاتصال بالغرفة الافتراضية');
                 setLoading(false);
             }
         };
@@ -75,7 +76,8 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
             setTimeout(() => {
                 router.push('/dashboard');
             }, 1500);
-        } catch (error: any) {
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
             alert(error.response?.data?.message || "حدث خطأ أثناء إنهاء الحصة");
             setIsEnding(false);
         }

@@ -45,8 +45,9 @@ export default function TeacherRegisterPage() {
                 router.push('/dashboard');
             }, 2000);
 
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'تأكد من صحة البيانات. قد يكون الإيميل أو الجوال مستخدماً.');
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setError(error.response?.data?.message || 'تأكد من صحة البيانات. قد يكون الإيميل أو الجوال مستخدماً.');
         } finally {
             setLoading(false);
         }

@@ -4,24 +4,25 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/axios';
 import { useAuth } from '@/context/AuthContext';
+import { User, TeacherSlot } from '@/types';
 
 export default function TeacherProfile({ params }: { params: { id: string } }) {
     const [teacherName, setTeacherName] = useState('');
-    const [slots, setSlots] = useState<any>({});
+    const [slots, setSlots] = useState<{ [date: string]: TeacherSlot[] }>({});
     const [promoCode, setPromoCode] = useState('');
     const [loading, setLoading] = useState(true);
     const [bookingLoading, setBookingLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
     // 🟢 حالات (States) جديدة خاصة بولي الأمر
-    const [children, setChildren] = useState<any[]>([]);
+    const [children, setChildren] = useState<User[]>([]);
     const [selectedChildId, setSelectedChildId] = useState<string>('');
 
     const router = useRouter();
     const { user } = useAuth(); // جلب بيانات المستخدم من الـ Context
 
     // 🟢 التحقق مما إذا كان المستخدم ولي أمر
-    const isParent = user?.roles?.some((r: any) => r.name === 'parent');
+    const isParent = user?.roles?.some((r) => r.name === 'parent');
 
     useEffect(() => {
         fetchSlots();
@@ -85,7 +86,8 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
                 router.push('/dashboard');
             }, 3000);
 
-        } catch (error: any) {
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
             setMessage({ 
                 type: 'error', 
                 text: error.response?.data?.message || 'حدث خطأ غير متوقع' 
@@ -150,13 +152,13 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
                     <div className="text-center py-10 text-gray-500 font-semibold bg-gray-50 rounded-lg">عفواً، لا توجد مواعيد متاحة حالياً لهذا المعلم.</div>
                 ) : (
                     <div className="space-y-8">
-                        {Object.entries(slots).map(([date, daySlots]: [string, any]) => (
+                        {Object.entries(slots).map(([date, daySlots]) => (
                             <div key={date}>
                                 <h3 className="text-xl font-bold mb-4 bg-gray-100 p-2 rounded-lg px-4 border-r-4 border-blue-600">
                                     🗓️ {date}
                                 </h3>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                    {daySlots.map((slot: any) => (
+                                    {daySlots.map((slot: TeacherSlot) => (
                                         <button
                                             key={slot.id}
                                             onClick={() => handleBooking(slot.id)}

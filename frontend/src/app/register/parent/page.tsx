@@ -44,8 +44,9 @@ export default function ParentRegisterPage() {
                 router.push('/dashboard');
             }, 2000);
 
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'تأكد من صحة البيانات. قد يكون الإيميل أو الجوال مسجلاً مسبقاً.');
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setError(error.response?.data?.message || 'تأكد من صحة البيانات. قد يكون الإيميل أو الجوال مسجلاً مسبقاً.');
         } finally {
             setLoading(false);
         }

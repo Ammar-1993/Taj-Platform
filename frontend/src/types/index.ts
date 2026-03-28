@@ -3,6 +3,17 @@ export interface Role {
   name: string;
 }
 
+export interface GradeLevel {
+  id: number;
+  name: string;
+  session_price?: string;
+}
+
+export interface Subject {
+  id: number;
+  name: string;
+}
+
 export interface TeacherProfile {
   id: number;
   user_id: number;
@@ -11,10 +22,7 @@ export interface TeacherProfile {
   is_verified: boolean;
   average_rating: number;
   reviews_count: number;
-  subject?: {
-    id: number;
-    name: string;
-  };
+  subject?: Subject;
 }
 
 export interface StudentProfile {
@@ -53,8 +61,8 @@ export interface User {
   is_active?: boolean;
   roles: Role[];
   wallet?: Wallet;
-  studentProfile?: StudentProfile;
-  teacherProfile?: TeacherProfile;
+  student_profile?: StudentProfile;
+  teacher_profile?: TeacherProfile;
 }
 
 export interface TeacherSlot {
