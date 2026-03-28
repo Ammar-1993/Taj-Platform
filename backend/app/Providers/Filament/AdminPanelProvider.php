@@ -7,9 +7,12 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Support\HtmlString;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\MaxWidth;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -32,8 +35,27 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->font('Cairo') // 🟢 هذه اللمسة ستجعل الخط العربي رائعاً
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Indigo,
+                'gray' => Color::Slate,
             ])
+            ->spa() // 🚀 التحميل الفوري بدون تحديث الصفحة
+            ->sidebarCollapsibleOnDesktop() // 📏 تحسين استغلال الشاشة الجانبية
+            ->maxContentWidth(MaxWidth::Full) // 🖥️ تمديد المحتوى لاستغلال الشاشات الكبيرة
+            ->globalSearchKeyBindings(['command+k', 'ctrl+k']) // ⌨️ اختصارات بحث لوحة المفاتيح
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn (): HtmlString => new HtmlString('
+                    <style>
+                        /* إخفاء شريط التمرير مع الحفاظ على وظيفة التمرير */
+                        * {
+                            scrollbar-width: none; /* Firefox */
+                        }
+                        *::-webkit-scrollbar {
+                            display: none; /* Chrome, Safari, Edge */
+                        }
+                    </style>
+                ')
+            )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([

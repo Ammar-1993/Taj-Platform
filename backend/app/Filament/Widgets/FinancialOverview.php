@@ -7,11 +7,12 @@ use App\Models\PayoutRequest;
 use App\Models\Wallet;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Carbon;
 
 class FinancialOverview extends BaseWidget
 {
-    // ترتيب الودجت في الصفحة الرئيسية (ليكون في الأعلى)
-    protected static ?int $sort = 1;
+    // ترتيب الودجت: الصف الثالث بعد الرسم البياني
+    protected static ?int $sort = 3;
 
     protected function getStats(): array
     {
@@ -24,12 +25,19 @@ class FinancialOverview extends BaseWidget
         // 3. إجمالي طلبات السحب المعلقة التي تحتاج موافقة
         $pendingPayouts = PayoutRequest::where('status', 'pending')->sum('amount');
 
+        // إنشاء بيانات الرسم البياني الجانبي (Sparkline) لآخر 7 أيام
+        $salesSparkline = collect(range(6, 0))->map(function ($daysAgo) {
+            return Booking::where('status', 'completed')
+                ->whereDate('booking_date', Carbon::now()->subDays($daysAgo)->toDateString())
+                ->sum('net_paid');
+        })->toArray();
+
         return [
             Stat::make('إجمالي المبيعات (الحصص المكتملة)', number_format($totalSales, 2) . ' SAR')
-                ->description('إجمالي ما تم دفعه للحصص المنتهية بنجاح')
+                ->description('إجمالي المقبوضات للحصص المنجزة')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('success')
-                ->chart([7, 10, 15, 20, 25, $totalSales]), 
+                ->chart($salesSparkline), // بيانت ديناميكية 100%
 
             Stat::make('إجمالي أرصدة المحافظ (التزامات)', number_format($totalWalletsBalance, 2) . ' SAR')
                 ->description('مجموع الأموال المتاحة حالياً في محافظ المستخدمين')

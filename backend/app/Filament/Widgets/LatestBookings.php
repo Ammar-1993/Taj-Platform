@@ -9,14 +9,14 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class LatestBookings extends BaseWidget
 {
-    protected static ?int $sort = 2; // يظهر تحت الإحصائيات
+    protected static ?int $sort = 4; // الصف الأخير في لوحة التحكم
     protected int | string | array $columnSpan = 'full'; // يأخذ عرض الشاشة بالكامل
 
     public function table(Table $table): Table
     {
         return $table
             ->query(
-                Booking::query()->latest()->limit(5) // نجلب أحدث 5 حجوزات فقط
+                Booking::query()->latest()->limit(10) // أحدث 10 حجوزات
             )
             ->heading('أحدث الحجوزات في المنصة')
             ->columns([
