@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect } from "react";
@@ -9,13 +8,14 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { ParentDashboard } from "@/components/dashboard/ParentDashboard";
 import { StudentTeacherDashboard } from "@/components/dashboard/StudentTeacherDashboard";
 import { ReviewModal } from "@/components/dashboard/ReviewModal";
+import { Role } from "@/types";
 
 export default function DashboardPage() {
   const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
 
-  const isTeacher = user?.roles?.some((r: any) => r.name === "teacher") || false;
-  const isParent = user?.roles?.some((r: any) => r.name === "parent") || false;
+  const isTeacher = user?.roles?.some((r: Role) => r.name === "teacher") || false;
+  const isParent = user?.roles?.some((r: Role) => r.name === "parent") || false;
 
   const {
     wallet,
@@ -57,7 +57,7 @@ export default function DashboardPage() {
         />
 
         {isParent ? (
-          <ParentDashboard user={user} parentData={parentData} />
+          <ParentDashboard parentData={parentData} />
         ) : (
           <StudentTeacherDashboard
             isTeacher={isTeacher}

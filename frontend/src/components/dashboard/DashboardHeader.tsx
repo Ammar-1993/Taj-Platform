@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import Link from "next/link";
+import { User } from "@/types";
 
 interface DashboardHeaderProps {
-  user: any;
+  user: User;
   isTeacher: boolean;
   isParent: boolean;
   logout: () => void;

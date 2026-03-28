@@ -1,14 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/axios";
+import { User, Wallet, Booking, AppNotification, ParentDashboardData } from "@/types";
 
-export const useDashboardData = (user: any, isParent: boolean, isTeacher: boolean) => {
-  const [wallet, setWallet] = useState<any>(null);
-  const [bookings, setBookings] = useState<any[]>([]);
-  const [parentData, setParentData] = useState<any>(null);
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [pendingReview, setPendingReview] = useState<any>(null);
-  const [dataLoading, setDataLoading] = useState(true);
+export const useDashboardData = (user: User | null, isParent: boolean, isTeacher: boolean) => {
+  const [wallet, setWallet] = useState<Wallet | null>(null);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [parentData, setParentData] = useState<ParentDashboardData | null>(null);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [pendingReview, setPendingReview] = useState<Booking | null>(null);
+  const [dataLoading, setDataLoading] = useState<boolean>(true);
 
   const fetchDashboardData = useCallback(async () => {
     if (!user) return;
@@ -25,13 +25,13 @@ export const useDashboardData = (user: any, isParent: boolean, isTeacher: boolea
         ]);
         
         setWallet(walletRes.data.data);
-        const fetchedBookings = bookingsRes.data.data.data;
+        const fetchedBookings: Booking[] = bookingsRes.data.data.data;
         setBookings(fetchedBookings);
         setNotifications(notifRes.data.data || []);
 
         if (!isTeacher && !isParent) {
           const unreviewedBooking = fetchedBookings.find(
-            (b: any) => b.status === "completed" && !b.review,
+            (b) => b.status === "completed" && !b.review,
           );
           if (unreviewedBooking) {
             setPendingReview(unreviewedBooking);

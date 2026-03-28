@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState } from "react";
 import api from "@/lib/axios";
+import { Booking } from "@/types";
 
 interface ReviewModalProps {
-  pendingReview: any;
+  pendingReview: Booking | null;
   onSuccess: () => void;
   onClose: () => void;
 }
@@ -15,6 +14,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ pendingReview, onSucce
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   const submitReview = async () => {
+    if (!pendingReview) return;
     setIsSubmittingReview(true);
     try {
       await api.post("/reviews", {

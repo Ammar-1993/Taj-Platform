@@ -1,15 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getStatusBadge } from "./utils";
 import api from "@/lib/axios";
+import { Wallet, Booking, AppNotification } from "@/types";
 
 interface StudentTeacherDashboardProps {
   isTeacher: boolean;
-  wallet: any;
-  bookings: any[];
-  notifications: any[];
+  wallet: Wallet | null;
+  bookings: Booking[];
+  notifications: AppNotification[];
   markNotificationAsRead: (id: string) => void;
   onRefresh: () => void;
 }
@@ -90,7 +90,7 @@ export const StudentTeacherDashboard: React.FC<StudentTeacherDashboardProps> = (
             <p className="text-gray-500 text-sm text-center">لا توجد عمليات سابقة</p>
           ) : (
             <ul className="space-y-3">
-              {wallet?.transactions?.data?.slice(0, 5).map((tx: any) => (
+              {wallet?.transactions?.data?.slice(0, 5).map((tx) => (
                 <li key={tx.id} className="flex justify-between items-center text-sm border-b pb-2 last:border-0">
                   <div>
                     <p className="font-medium text-gray-800">
@@ -181,7 +181,9 @@ export const StudentTeacherDashboard: React.FC<StudentTeacherDashboardProps> = (
                     </td>
                     <td className="px-4 py-3">
                       <div className="text-gray-900">{booking.booking_date.substring(0, 10)}</div>
-                      <div className="text-xs text-gray-500">{booking.teacher_slot?.start_time.substring(0, 5)}</div>
+                      <div className="text-xs text-gray-500">
+                        {booking.teacher_slot?.start_time.substring(0, 5)}
+                      </div>
                     </td>
                     <td className="px-4 py-3 font-bold text-gray-700">{booking.net_paid} SAR</td>
                     <td className="px-4 py-3">{getStatusBadge(booking.status)}</td>
