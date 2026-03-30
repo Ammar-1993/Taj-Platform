@@ -29,7 +29,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->brandName('منصة تاج')
-            ->brandLogo(fn () => new HtmlString('<div class="flex items-center gap-2"><span class="text-2xl">👑</span><span class="text-xl font-bold">منصة تاج التعليمية</span></div>'))
+            ->brandLogo(fn () => new HtmlString('<div class="flex items-center gap-2"><span class="text-2xl">👑</span><span class="text-xl font-bold"></span></div>'))
             // ->brandLogo(asset('images/logo.png'))
             // ->brandLogoHeight('3rem')
             ->path('admin')
