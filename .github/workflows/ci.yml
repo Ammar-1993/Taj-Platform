@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  phpunit:
+    name: PHP Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP with Xdebug
+        uses: shivammathur/setup-php@v3
+        with:
+          php-version: '8.3'
+          coverage: xdebug
+          extensions: mbstring, bcmath, ctype, curl, dom, fileinfo, gd, iconv, json, mbstring, openssl, pdo, pdo_mysql, pdo_sqlite, tokenizer, xml, zip
+          ini-values: |
+            memory_limit=2G
+            post_max_size=128M
+            upload_max_filesize=128M
+            xdebug.mode=coverage
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest --optimize-autoloader
+
+      - name: Set up environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+          php artisan migrate --force
+
+      - name: Run PHP Unit tests with coverage
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+          APP_ENV: testing
+          APP_DEBUG: 'true'
+        run: php artisan test --coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phpunit-coverage
+          path: storage/tests/coverage

@@ -42,3 +42,16 @@ http://localhost:8000/admin
 docker-compose exec laravel.test php artisan make:filament-user
 
 docker-compose exec laravel.test php artisan tinker
+
+🧾 Test command used
+docker-compose exec laravel.test php artisan test --filter BookingServiceUnitTest (passes)
+docker-compose exec laravel.test php artisan test (all tests pass)
+
+Backend Test:
+docker-compose exec laravel.test php artisan test
+
+docker-compose exec laravel.test php artisan test --filter BookingServiceUnitTest
+
+
+Frontend Test:
+
