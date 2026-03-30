@@ -41,3 +41,28 @@ jobs:
         flags: backend
         name: codecov-umbrella
         fail_ci_if_error: false
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Run frontend tests
+      run: |
+        cd frontend
+        npm test -- --coverage --coverageReporters=cobertura --coverageReporters=lcov
+
+    - name: Upload frontend coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./frontend/coverage/cobertura-coverage.xml
+        flags: frontend
+        name: codecov-umbrella
+        fail_ci_if_error: false

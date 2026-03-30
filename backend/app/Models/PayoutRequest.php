@@ -5,9 +5,33 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property float $amount
+ * @property string $bank_name
+ * @property string $iban
+ * @property string $status
+ * @property string|null $admin_notes
+ * @property \Carbon\Carbon|null $processed_at
+ * @property string|null $notes
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ */
 class PayoutRequest extends Model
 {
     protected $guarded = ['id'];
+
+    protected $fillable = [
+        'user_id',
+        'amount',
+        'bank_name',
+        'iban',
+        'status',
+        'admin_notes',
+        'processed_at',
+        'notes',
+    ];
 
     protected function casts(): array
     {
