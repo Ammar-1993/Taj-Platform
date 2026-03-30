@@ -2,50 +2,42 @@ name: CI
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [ main, develop ]
   pull_request:
-    branches: [main, master, develop]
+    branches: [ main, develop ]
 
 jobs:
-  phpunit:
-    name: PHP Unit Tests
+  test:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Setup PHP with Xdebug
-        uses: shivammathur/setup-php@v3
-        with:
-          php-version: '8.3'
-          coverage: xdebug
-          extensions: mbstring, bcmath, ctype, curl, dom, fileinfo, gd, iconv, json, mbstring, openssl, pdo, pdo_mysql, pdo_sqlite, tokenizer, xml, zip
-          ini-values: |
-            memory_limit=2G
-            post_max_size=128M
-            upload_max_filesize=128M
-            xdebug.mode=coverage
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-      - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress --no-suggest --optimize-autoloader
+    - name: Build and start containers
+      run: docker-compose up -d --build
 
-      - name: Set up environment
-        run: |
-          cp .env.example .env
-          php artisan key:generate --ansi
-          php artisan migrate --force
+    - name: Wait for services to be ready
+      run: |
+        docker-compose exec -T laravel.test php artisan migrate --force
+        sleep 10
 
-      - name: Run PHP Unit tests with coverage
-        env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: ':memory:'
-          APP_ENV: testing
-          APP_DEBUG: 'true'
-        run: php artisan test --coverage
+    - name: Run tests
+      run: docker-compose exec -T laravel.test php artisan test
 
-      - name: Upload coverage report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: phpunit-coverage
-          path: storage/tests/coverage
+    - name: Run tests with coverage
+      run: docker-compose exec -T -e XDEBUG_MODE=coverage laravel.test php artisan test --coverage-clover=coverage.xml
+
+    - name: Copy coverage report
+      run: docker cp $(docker-compose ps -q laravel.test):/var/www/html/coverage.xml ./coverage.xml
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: backend
+        name: codecov-umbrella
+        fail_ci_if_error: false
