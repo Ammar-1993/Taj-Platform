@@ -1,0 +1,50 @@
+name: Deploy Laravel Backend 🚀
+
+on:
+  push:
+    branches:
+      - main # يعمل الملف فقط عند الرفع على فرع main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          # password: ${{ secrets.SERVER_PASSWORD }} # استخدم هذا إذا لم يكن لديك SSH Key
+          script: |
+            cd /var/www/taj-backend
+            
+            # 1. تفعيل وضع الصيانة (اختياري)
+            # php artisan down || true
+
+            # 2. سحب آخر التحديثات
+            git pull origin main
+            
+            # 3. تثبيت الحزم الجديدة
+            composer install --no-interaction --prefer-dist --optimize-autoloader
+            
+            # 4. تحديث قاعدة البيانات (بدون أسئلة تأكيدية)
+            php artisan migrate --force
+            
+            # 5. تنظيف وتحديث الكاش لتسريع النظام
+            php artisan optimize:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            
+            # 6. إعادة تشغيل الطوابير (مهم جداً للإشعارات والرسائل)
+            php artisan queue:restart
+            
+            # 7. إيقاف وضع الصيانة
+            # php artisan up
+            
+            echo "✅ Backend Deployed Successfully!"
