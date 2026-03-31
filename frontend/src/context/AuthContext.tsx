@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 import api from '@/lib/axios';
-import { User } from '@/types';
+import { User } from '@/types'; // تأكد من أن واجهة User مُعرفة في هذا المسار
 
 interface AuthContextType {
     user: User | null;
@@ -12,7 +12,8 @@ interface AuthContextType {
     logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+// 🟢 التحديث 1: إعطاء قيمة افتراضية undefined لحماية الـ Context لاحقاً
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
@@ -21,38 +22,53 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         const fetchUser = async () => {
             const token = Cookies.get('auth_token');
-            if (token) {
-                try {
-                    const response = await api.get('/auth/me');
-                    setUser(response.data.data);
-                } catch (error) {
-                    console.error("انتهت صلاحية الجلسة أو التوكن غير صالح", error);
-                    Cookies.remove('auth_token');
-                    setUser(null);
-                }
+            
+            // إذا لم يكن هناك توكن، أوقف التحميل فوراً ووفر استهلاك السيرفر
+            if (!token) {
+                setLoading(false);
+                return;
             }
-            setLoading(false);
+
+            try {
+                // 🟢 التحديث 2: استخدام مسارات V1 الموحدة
+                const response = await api.get('/v1/auth/me');
+                setUser(response.data.data);
+            } catch (error) {
+                console.warn("انتهت صلاحية الجلسة أو التوكن غير صالح", error);
+                Cookies.remove('auth_token');
+                setUser(null);
+            } finally {
+                // 🟢 التحديث 3: ضمان إيقاف التحميل سواء نجح الطلب أو فشل
+                setLoading(false);
+            }
         };
+
         fetchUser();
     }, []);
 
     const login = (token: string, userData: User) => {
+        // 🟢 تحصين الكوكي (Security Hardening)
         Cookies.set('auth_token', token, { 
             expires: 7, 
-            secure: process.env.NODE_ENV === 'production', 
-            sameSite: 'strict' 
+            secure: process.env.NODE_ENV === 'production', // يعمل عبر HTTPS فقط في الإنتاج
+            sameSite: 'strict' // يمنع إرسال الكوكي عبر روابط خارجية (حماية من CSRF)
         });
+        
         setUser(userData);
     };
 
     const logout = async () => {
         try {
-            await api.post('/auth/logout');
+            // إتلاف التوكن من جهة الخادم (Best Practice)
+            await api.post('/v1/auth/logout');
         } catch (e) {
-            console.error("فشل تسجيل الخروج من الخادم", e);
+            console.warn("فشل تسجيل الخروج من الخادم، سيتم مسح الجلسة محلياً", e);
         } finally {
+            // التنظيف المحلي في كل الأحوال
             Cookies.remove('auth_token');
             setUser(null);
+            
+            // إعادة توجيه المستخدم وتفريغ الذاكرة (Full Reload)
             window.location.href = '/login';
         }
     };
@@ -64,4 +80,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 };
 
-export const useAuth = () => useContext(AuthContext);
+// 🟢 التحديث 4: حماية الـ Hook من الاستخدام الخاطئ
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error("يجب استخدام useAuth بداخل AuthProvider حصراً!");
+    }
+    return context;
+};
