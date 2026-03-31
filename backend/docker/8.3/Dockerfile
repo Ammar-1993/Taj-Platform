@@ -15,14 +15,18 @@ RUN apt-get update \
     && echo "deb [signed-by=/etc/apt/keyrings/ppa_ondrej_php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu jammy main" > /etc/apt/sources.list.d/ppa_ondrej_php.list \
     && apt-get update \
     && apt-get install -y php8.3-cli php8.3-dev \
-       php8.3-mysql php8.3-mbstring php8.3-xml php8.3-zip php8.3-curl php8.3-intl php8.3-xdebug \
+       php8.3-mysql php8.3-mbstring php8.3-xml php8.3-zip php8.3-curl php8.3-intl \
     && curl -sLS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# إعداد الصلاحيات (Render يتطلب مرونة في اليوزر)
 RUN groupadd --force -g $WWWUSER sail
 RUN useradd -ms /bin/bash --no-user-group -g $WWWUSER -u 1337 sail
 
-EXPOSE 80
+# نسخ ملفات المشروع (مهم جداً للإنتاج)
+COPY . .
+RUN composer install --no-dev --optimize-autoloader
 
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"]
+# 🟢 التعديل الجوهري: جعل المنفذ ديناميكياً ليتناسب مع Render
+CMD php artisan serve --host=0.0.0.0 --port=${PORT:-80}
