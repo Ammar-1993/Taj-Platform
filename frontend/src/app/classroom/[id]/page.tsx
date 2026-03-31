@@ -41,7 +41,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         const fetchAccess = async () => {
             try {
                 // 🟢 استخدام مسار V1 الموحد
-                const res = await api.get(`/v1/bookings/${params.id}/classroom`);
+                const res = await api.get(`/bookings/${params.id}/classroom`);
                 const data = res.data.data;
                 
                 setChannelName(data.channel_name);
@@ -83,7 +83,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         setIsEnding(true);
         try {
             // 🟢 استخدام مسار V1 الموحد
-            await api.patch(`/v1/bookings/${params.id}/complete`);
+            await api.patch(`/bookings/${params.id}/complete`);
             alert("تم إنهاء الحصة بنجاح! وتم إيداع الأرباح. 💰");
             
             setInCall(false); 
@@ -103,7 +103,8 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     // ⚙️ إعدادات مكتبة Agora
     const rtcProps = {
         // 🟢 أمان: استخدام المتغيرات البيئية بدلاً من كشف الـ App ID في الكود
-        appId: process.env.NEXT_PUBLIC_AGORA_APP_ID || '', 
+        // appId: process.env.NEXT_PUBLIC_AGORA_APP_ID || '', 
+        appId: '039c4b2d111b488f8069bb00c583aa04',
         channel: channelName,
         token: agoraToken, // 🟢 إضافة التوكن للحماية
         uid: uid,

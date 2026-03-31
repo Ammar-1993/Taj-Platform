@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             try {
                 // 🟢 التحديث 2: استخدام مسارات V1 الموحدة
-                const response = await api.get('/v1/auth/me');
+                const response = await api.get('/auth/me');
                 setUser(response.data.data);
             } catch (error) {
                 console.warn("انتهت صلاحية الجلسة أو التوكن غير صالح", error);
@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const logout = async () => {
         try {
             // إتلاف التوكن من جهة الخادم (Best Practice)
-            await api.post('/v1/auth/logout');
+            await api.post('/auth/logout');
         } catch (e) {
             console.warn("فشل تسجيل الخروج من الخادم، سيتم مسح الجلسة محلياً", e);
         } finally {
