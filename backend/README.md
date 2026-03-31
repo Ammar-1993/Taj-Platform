@@ -5,13 +5,13 @@ docker-compose exec laravel.test php artisan migrate:fresh --seed
 token:1|noTkwRH9THg5Xb2rPs4MEiXpg5mdx8hgrnvuq6vE3a886a53
 
 
-الآن سجل دخولك بحساب الإدارة: admin@taj.com / password123.
-سجل الدخول كمعلم (teacher@taj.com / password123).
-سجل الدخول كطالب (student@taj.com / password123).
-سجل الدخول كولي أمر (parent@taj.com / password123).
+الآن سجل دخولك بحساب الإدارة: admin@taj.com / 12345678.
+سجل الدخول كمعلم (teacher@taj.com / 12345678).
+سجل الدخول كطالب (student@taj.com / 12345678).
+سجل الدخول كولي أمر (parent@taj.com / 12345678).
 سيتم توجيهك لصفحة الدخول. الآن، سجل دخولك ببيانات الابن الجديد:
 الإيميل: yasser@taj.com
-الباسوورد: password123
+الباسوورد: 12345678
 
 
 
