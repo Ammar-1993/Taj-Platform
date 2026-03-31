@@ -40,6 +40,14 @@ class LatestBookings extends BaseWidget
                         'completed' => 'success',
                         'cancelled', 'refunded' => 'danger',
                         default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'scheduled' => 'مجدول',
+                        'in_progress' => 'قيد التنفيذ',
+                        'completed' => 'مكتمل',
+                        'cancelled' => 'ملغي',
+                        'refunded' => 'مسترجع',
+                        default => $state,
                     }),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('وقت الحجز')
