@@ -52,6 +52,12 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user, isTeache
               >
                 الدعم الفني 🛟
               </Link>
+              <Link
+                href="/"
+                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-sm font-medium transition-all duration-200 border border-white/10 hover:shadow-lg hover:-translate-y-0.5"
+              >
+                الرئيسية
+              </Link>
             </>
           ) : (
             <>
