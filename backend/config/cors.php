@@ -16,12 +16,16 @@ return [
     */
 
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    
 
     'allowed_methods' => ['*'],
 
     // 🟢 التعديل الأمني 1: السماح فقط للواجهة الأمامية الخاصة بك بالاتصال بالخادم
     // في بيئة التطوير سيعمل على localhost:3000، وفي الإنتاج سيأخذ الرابط من ملف .env
-    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:3000')],
+    'allowed_origins' => [
+        env('FRONTEND_URL', 'http://localhost:3000'),
+        'https://taj-platform.vercel.app', // 🟢 أضفنا رابط منصتك الحي هنا صراحةً
+    ],
 
     'allowed_origins_patterns' => [],
 
