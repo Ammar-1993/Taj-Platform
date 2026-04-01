@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\PayoutRequestController;
 use App\Models\SupportTicket;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -26,11 +27,11 @@ Route::prefix('v1')->group(function () {
     // ==========================================
     // مسارات غير محمية (Public Routes)
     // ==========================================
-    
+
     // 1. المصادقة (Auth)
     Route::prefix('auth')->group(function () {
         Route::post('/register', [AuthController::class, 'register']);
-        
+
         // 🟢 التعديل الأمني هنا: إضافة throttle:login لتقييد محاولات الدخول الخاطئة
         Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
     });
@@ -50,7 +51,6 @@ Route::prefix('v1')->group(function () {
         ]);
     });
     Route::post('/webhooks/payment', [PaymentController::class, 'webhook']);
-
 
     // ==========================================
     // مسارات محمية (Protected Routes) - تتطلب Sanctum Token
@@ -99,6 +99,7 @@ Route::prefix('v1')->group(function () {
         });
         Route::post('/notifications/{id}/read', function (Request $request, $id) {
             $request->user()->notifications()->findOrFail($id)->markAsRead();
+
             return response()->json(['status' => 'success']);
         });
 
@@ -128,5 +129,23 @@ Route::prefix('v1')->group(function () {
         });
 
     }); // نهاية مجموعة auth:sanctum
+
+    // 🟢 مسار مؤقت لتجهيز قاعدة البيانات (احذفه بعد الانتهاء)
+    Route::get('/setup-database', function () {
+        try {
+            // 1. تنفيذ الجداول
+            Artisan::call('migrate', ['--force' => true]);
+
+            // 2. زرع البيانات الوهمية
+            Artisan::call('db:seed', ['--force' => true]);
+
+            return response()->json([
+                'message' => 'تم بناء الجداول وزرع البيانات بنجاح! 🚀',
+                'output' => Artisan::output(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    });
 
 }); // نهاية مجموعة v1
