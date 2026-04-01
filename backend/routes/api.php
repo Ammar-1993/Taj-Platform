@@ -132,20 +132,4 @@ Route::prefix('v1')->group(function () {
 
 }); // نهاية مجموعة v1
 
-// 🟢 مسار مؤقت لتجهيز قاعدة البيانات (احذفه بعد الانتهاء)
-Route::get('/setup-database', function () {
-    try {
-        // 1. تنفيذ الجداول
-        Artisan::call('migrate', ['--force' => true]);
 
-        // 2. زرع البيانات الوهمية
-        Artisan::call('db:seed', ['--force' => true]);
-
-        return response()->json([
-            'message' => 'تم بناء الجداول وزرع البيانات بنجاح! 🚀',
-            'output' => Artisan::output(),
-        ]);
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
-});
