@@ -29,4 +29,4 @@ COPY . .
 RUN composer install --no-dev --optimize-autoloader
 
 # 🟢 التعديل الجوهري: جعل المنفذ ديناميكياً ليتناسب مع Render
-CMD php artisan storage:link && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-80}
+CMD php artisan optimize:clear && php artisan storage:link && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-80}
