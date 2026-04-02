@@ -7,17 +7,24 @@ import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
 import axios from 'axios';
 
-// استيراد مكتبة Agora بشكل ديناميكي وإيقاف الرندرة من جهة الخادم (SSR)
-// لأن مكتبات WebRTC تعتمد على كائن 'window' الموجود في المتصفح فقط.
-const AgoraUIKit = dynamic(() => import('agora-react-uikit'), { ssr: false });
+// 🟢 التعديل السحري: استدعاء مكوننا المحلي بشكل ديناميكي وإيقاف SSR تماماً
+// مع إضافة رسالة تحميل جميلة أثناء فتح الكاميرا
+const AgoraCall = dynamic(() => import('@/components/classroom/AgoraCall'), { 
+    ssr: false,
+    loading: () => (
+        <div className="flex flex-col items-center justify-center h-full space-y-4">
+            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-white font-bold animate-pulse">جاري تشغيل الكاميرا وإعداد الاتصال... 🎥</p>
+        </div>
+    )
+});
 
 export default function ClassroomPage({ params }: { params: { id: string } }) {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     
-    // إدارة حالات المكون (State Management)
     const [channelName, setChannelName] = useState('');
-    const [agoraToken, setAgoraToken] = useState<string | null>(null); // 🟢 إضافة حالة التوكن للأمان
+    const [agoraToken, setAgoraToken] = useState<string | null>(null);
     const [uid, setUid] = useState<number>(0);
     const [userRole, setUserRole] = useState<'host' | 'audience'>('audience');
     
@@ -26,21 +33,17 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     const [inCall, setInCall] = useState(false);
     const [isEnding, setIsEnding] = useState(false);
 
-    // تحديد صلاحية المستخدم الحالي
     const isTeacher = user?.roles?.some((r) => r.name === 'teacher');
 
-    // 1. حماية المسار: التأكد من تسجيل الدخول
     useEffect(() => {
         if (!authLoading && !user) {
             router.replace('/login');
         }
     }, [user, authLoading, router]);
 
-    // 2. جلب بيانات الوصول للغرفة الافتراضية
     useEffect(() => {
         const fetchAccess = async () => {
             try {
-                // 🟢 استخدام مسار V1 الموحد
                 const res = await api.get(`/bookings/${params.id}/classroom`);
                 const data = res.data.data;
                 
@@ -48,7 +51,6 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 setUid(data.uid);
                 setUserRole(data.role === 'host' ? 'host' : 'audience');
                 
-                // إذا كان الباك-إند يرسل توكن (وهو الممارسات الأمنية الصحيحة)، نقوم بحفظه
                 if (data.token) {
                     setAgoraToken(data.token);
                 }
@@ -67,22 +69,18 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         if (user) fetchAccess();
     }, [params.id, user]);
 
-    // 🚪 دالة المغادرة المؤقتة / العادية
     const handleLeave = () => {
         setInCall(false); 
-        // 🟢 استخدام replace لمنع المستخدم من العودة للغرفة عبر زر "الخلف"
         setTimeout(() => {
             router.replace('/dashboard');
         }, 1000);
     };
 
-    // 🔴 دالة إنهاء الحصة بالكامل (للمعلم فقط)
     const handleCompleteClass = async () => {
         if (!confirm("هل أنت متأكد من إنهاء الحصة؟ سيتم إغلاق الغرفة وإيداع الأرباح في محفظتك.")) return;
         
         setIsEnding(true);
         try {
-            // 🟢 استخدام مسار V1 الموحد
             await api.patch(`/bookings/${params.id}/complete`);
             alert("تم إنهاء الحصة بنجاح! وتم إيداع الأرباح. 💰");
             
@@ -100,24 +98,20 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         }
     };
 
-    // ⚙️ إعدادات مكتبة Agora
     const rtcProps = {
-        // 🟢 أمان: استخدام المتغيرات البيئية بدلاً من كشف الـ App ID في الكود
-        // appId: process.env.NEXT_PUBLIC_AGORA_APP_ID || '', 
         appId: '039c4b2d111b488f8069bb00c583aa04',
         channel: channelName,
-        token: agoraToken, // 🟢 إضافة التوكن للحماية
+        token: agoraToken,
         uid: uid,
         role: userRole, 
-        layout: 1, // Grid layout
-        disableRtm: true, // إيقاف الدردشة المدمجة لتبسيط الواجهة حالياً
+        layout: 1,
+        disableRtm: true,
     };
 
     const callbacks = {
         EndCall: () => handleLeave(),
     };
 
-    // واجهات التحميل والخطأ
     if (authLoading || loading) return (
         <div className="h-screen flex items-center justify-center font-bold text-xl animate-pulse bg-gray-900 text-white" dir="rtl">
             جاري تجهيز الفصل الافتراضي وتشفير الاتصال... 🔒
@@ -135,11 +129,8 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         </div>
     );
 
-    // واجهة الفصل الافتراضي
     return (
         <div className="h-screen w-full bg-gray-900 flex flex-col" dir="rtl">
-            
-            {/* 🟢 الشريط العلوي الذكي */}
             <div className="bg-gray-800 text-white p-4 flex flex-col sm:flex-row justify-between items-center shadow-md border-b border-gray-700 gap-4">
                 <div className="flex items-center gap-3">
                     <div className={`w-3 h-3 rounded-full animate-pulse ${inCall ? 'bg-red-500' : 'bg-green-500'}`}></div>
@@ -176,10 +167,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 </div>
             </div>
             
-            {/* منطقة العرض الرئيسية */}
             <div className="flex-1 w-full relative flex flex-col md:flex-row">
-                
-                {/* 1. حاوية الفيديو */}
                 <div className="flex-1 relative bg-black flex items-center justify-center">
                     {!inCall ? (
                         <div className="flex flex-col items-center justify-center space-y-6 p-8 text-center animate-fade-in-up">
@@ -196,11 +184,10 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                             </button>
                         </div>
                     ) : (
-                        <AgoraUIKit rtcProps={rtcProps as any} callbacks={callbacks} />
+                        <AgoraCall rtcProps={rtcProps} callbacks={callbacks} />
                     )}
                 </div>
 
-                {/* 2. شريط أدوات المعلم الجانبي */}
                 {isTeacher && inCall && (
                     <div className="w-full md:w-72 bg-gray-800 border-r border-gray-700 p-6 flex flex-col gap-5 shadow-inner">
                         <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">أدوات التحكم السريعة</h3>
