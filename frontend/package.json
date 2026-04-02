@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "agora-react-uikit": "^1.2.0",
+    "agora-rtc-sdk-ng": "^4.24.3",
     "axios": "^1.13.6",
     "js-cookie": "^3.0.5",
     "next": "14.2.35",
