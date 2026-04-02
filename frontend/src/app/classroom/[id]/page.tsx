@@ -99,7 +99,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     };
 
     const rtcProps = {
-        appId: '039c4b2d111b488f8069bb00c583aa04',
+        appId: '3ebe5a81032c4451ab8479d10894cc99',
         channel: channelName,
         token: agoraToken,
         uid: uid,
