@@ -34,8 +34,6 @@ docker-compose exec laravel.test php artisan tinker --execute="DB::statement('AL
 
 اكتب في مربع كود الخصم: TAJ2026.
 
-docker-compose exec laravel.test php artisan tinker --execute="\$t = App\Models\User::where('email', 'teacher@taj.com')->first(); App\Models\TeacherSlot::create(['teacher_id' => \$t->id, 'slot_date' => now()->addDays(1)->format('Y-m-d'), 'start_time' => '10:00:00', 'end_time' => '11:00:00', 'status' => 'available']); App\Models\TeacherSlot::create(['teacher_id' => \$t->id, 'slot_date' => now()->addDays(1)->format('Y-m-d'), 'start_time' => '12:00:00', 'end_time' => '13:00:00', 'status' => 'available']); App\Models\TeacherSlot::create(['teacher_id' => \$t->id, 'slot_date' => now()->addDays(2)->format('Y-m-d'), 'start_time' => '15:00:00', 'end_time' => '16:00:00', 'status' => 'available']); App\Models\TeacherSlot::create(['teacher_id' => \$t->id, 'slot_date' => now()->addDays(3)->format('Y-m-d'), 'start_time' => '18:00:00', 'end_time' => '19:00:00', 'status' => 'available']);"
-
 
 http://localhost:8000/admin
 
