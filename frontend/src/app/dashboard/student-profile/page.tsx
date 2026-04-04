@@ -68,74 +68,112 @@ export default function StudentProfilePage() {
     };
 
     if (authLoading || loading) {
-        return <div className="min-h-screen flex justify-center items-center font-bold text-gray-500 animate-pulse">جاري تجهيز إعداداتك... ⚙️</div>;
+        return (
+            <div className="min-h-screen relative overflow-hidden bg-gray-50/50 flex justify-center items-center">
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-10">
+                    <div className="absolute top-[10%] -left-20 w-96 h-96 rounded-full bg-indigo-300 blur-[120px]"></div>
+                    <div className="absolute bottom-[20%] -right-20 w-[600px] h-[600px] rounded-full bg-purple-200 blur-[150px]"></div>
+                </div>
+                <div className="relative z-10 flex flex-col items-center gap-4">
+                    <div className="w-16 h-16 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+                    <p className="font-black text-gray-400 animate-pulse">جاري تجهيز إعداداتك...</p>
+                </div>
+            </div>
+        );
     }
 
     // حماية الصفحة: التأكد أن من يزورها هو طالب فقط
     if (!user?.roles?.some((r) => r.name === 'student')) {
         return (
-            <div className="min-h-screen flex flex-col justify-center items-center bg-gray-50 p-6 text-center">
-                <div className="text-6xl mb-4">🛑</div>
-                <h2 className="text-2xl font-bold text-red-600 mb-2">عذراً، هذه الصفحة مخصصة للطلاب فقط.</h2>
-                <Link href="/dashboard" className="text-blue-600 font-bold hover:underline mt-4">العودة للوحة التحكم</Link>
+            <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 flex flex-col justify-center items-center text-center">
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-10">
+                    <div className="absolute top-[10%] -left-20 w-96 h-96 rounded-full bg-indigo-300 blur-[120px]"></div>
+                </div>
+                <div className="relative z-10 bg-white/80 backdrop-blur-md p-10 rounded-[2.5rem] shadow-xl border border-white/50 max-w-md w-full">
+                    <div className="text-6xl mb-6">🛑</div>
+                    <h2 className="text-2xl font-black text-rose-600 mb-2">عذراً، هذه الصفحة للطلاب فقط.</h2>
+                    <p className="text-gray-500 font-bold mb-8">ليس لديك الصلاحيات الكافية للوصول لهذه الإعدادات.</p>
+                    <Link href="/dashboard" className="inline-block px-8 py-3 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-200">
+                        العودة للوحة التحكم
+                    </Link>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex justify-center items-center">
-            <div className="max-w-2xl w-full space-y-6">
+        <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 md:p-8 flex justify-center items-center">
+            {/* Decorative Background Elements */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-0 opacity-20">
+                <div className="absolute top-[10%] -left-20 w-96 h-96 rounded-full bg-indigo-300 blur-[120px]"></div>
+                <div className="absolute bottom-[20%] -right-20 w-[600px] h-[600px] rounded-full bg-purple-200 blur-[150px]"></div>
+            </div>
+
+            <div className="relative z-10 max-w-2xl w-full space-y-8 tracking-tight">
                 
                 {/* بطاقة الترحيب */}
-                <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-center">
-                    <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
+                <div className="bg-white/80 backdrop-blur-md p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-white/50 text-center animate-fade-in-up">
+                    <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 rounded-[2rem] flex items-center justify-center text-5xl mx-auto mb-8 shadow-inner animate-subtle-pulse">
                         🎓
                     </div>
-                    <h1 className="text-2xl font-extrabold text-gray-900 mb-2">
+                    <h1 className="text-3xl font-black text-gray-900 mb-3">
                         مرحباً بك يا {user?.name.split(' ')[0]}!
                     </h1>
-                    <p className="text-gray-500 text-sm">
-                        خطوة واحدة تفصلك عن بدء التعلم. يرجى تحديد مرحلتك الدراسية ليتمكن النظام من عرض المعلمين والأسعار المناسبة لك.
+                    <p className="text-gray-500 text-base font-medium leading-relaxed max-w-md mx-auto font-bold">
+                        خطوة واحدة تفصلك عن بدء التعلم. يرجى تحديد مرحلتك الدراسية ليتمكن النظام من تخصيص تجربتك وعرض الأسعار المناسبة لك.
                     </p>
                 </div>
 
                 {/* نموذج الإعدادات */}
-                <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                <div className="bg-white/90 backdrop-blur-md p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-white/50 animate-fade-in-up-delay">
                     
                     {message.text && (
-                        <div className={`p-4 rounded-xl font-bold text-center mb-6 text-sm ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                            {message.text}
+                        <div className={`p-4 rounded-2xl font-bold text-center mb-8 shadow-sm animate-bounce-subtle ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+                            {message.type === 'success' ? '✅ ' : '❌ '}{message.text}
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">اختر مرحلتك الدراسية الحالية *</label>
-                            <select 
-                                required 
-                                value={gradeLevelId} 
-                                onChange={(e) => setGradeLevelId(e.target.value)} 
-                                className="w-full border-2 border-gray-200 p-4 rounded-xl focus:ring-blue-500 focus:border-blue-500 outline-none bg-white transition text-gray-800 font-medium cursor-pointer"
-                            >
-                                <option value="" disabled>-- اضغط هنا لاختيار المرحلة --</option>
-                                {gradeLevels.map(grade => (
-                                    <option key={grade.id} value={grade.id}>
-                                        {grade.name} (سعر الحصة: {grade.session_price} ريال)
-                                    </option>
-                                ))}
-                            </select>
-                            <div className="mt-3 flex items-start gap-2 text-xs text-gray-500">
-                                <span>💡</span>
-                                <p>هذا الاختيار سيضمن لك الحصول على التسعيرة الموحدة لحصصك مع جميع المعلمين في المنصة.</p>
+                    <form onSubmit={handleSubmit} className="space-y-8">
+                        <div className="space-y-4">
+                            <label className="block text-sm font-black text-gray-700 mb-2 mr-1">اختر مرحلتك الدراسية الحالية *</label>
+                            <div className="relative">
+                                <select 
+                                    required 
+                                    value={gradeLevelId} 
+                                    onChange={(e) => setGradeLevelId(e.target.value)} 
+                                    className="w-full bg-gray-50/50 border-2 border-gray-100 p-5 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 font-black cursor-pointer appearance-none"
+                                >
+                                    <option value="" disabled>-- اضغط هنا لاختيار المرحلة --</option>
+                                    {gradeLevels.map(grade => (
+                                        <option key={grade.id} value={grade.id}>
+                                            {grade.name} (سعر الحصة: {grade.session_price} ريال)
+                                        </option>
+                                    ))}
+                                </select>
+                                <div className="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
+                            </div>
+                            <div className="mt-4 flex items-start gap-3 text-xs bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/50 text-indigo-700 font-black leading-relaxed">
+                                <span className="text-lg">💡</span>
+                                <p>هذا الاختيار سيضمن لك الحصول على التسعيرة الموحدة لحصصك مع جميع المعلمين في المنصة حسب المرحلة المختارة.</p>
                             </div>
                         </div>
 
                         <button 
                             type="submit" 
                             disabled={isSubmitting || !gradeLevelId} 
-                            className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition disabled:opacity-50 shadow-lg mt-4"
+                            className="w-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 text-white font-black py-4.5 rounded-[1.5rem] hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] transition-all duration-300 disabled:opacity-50 hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 text-lg shadow-xl"
                         >
-                            {isSubmitting ? 'جاري الحفظ...' : 'حفظ الإعدادات وبدء التعلم 🚀'}
+                            {isSubmitting ? (
+                                <>
+                                    <span className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                    جاري الحفظ...
+                                </>
+                            ) : (
+                                <>
+                                    <span>حفظ الإعدادات وبدء التعلم</span>
+                                    <span>🚀</span>
+                                </>
+                            )}
                         </button>
                     </form>
                 </div>

@@ -84,30 +84,62 @@ export default function TeacherProfilePage() {
     if (!user?.roles?.some((r: any) => r.name === 'teacher')) return <div className="p-8 text-center text-red-500 font-bold">هذه الصفحة للمعلمين فقط.</div>;
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-            <div className="max-w-3xl mx-auto space-y-6">
+        <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 md:p-8">
+            {/* Decorative Background Elements */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-0 opacity-20">
+                <div className="absolute top-[10%] -left-20 w-96 h-96 rounded-full bg-indigo-300 blur-[120px]"></div>
+                <div className="absolute bottom-[20%] -right-20 w-[600px] h-[600px] rounded-full bg-purple-200 blur-[150px]"></div>
+            </div>
+
+            <div className="relative z-10 max-w-4xl mx-auto space-y-8 tracking-tight">
                 
-                <PageHeader
-                    title="الملف الشخصي والتوثيق 📁"
-                    subtitle="أكمل بياناتك وارفع مستنداتك للبدء في استقبال الطلاب."
-                />
+                <div className="bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-white/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fade-in-up">
+                    <div>
+                        <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
+                            <span className="text-4xl animate-subtle-pulse">📁</span>
+                            الملف الشخصي والتوثيق
+                        </h1>
+                        <p className="text-gray-500 text-sm mt-2 font-medium">أكمل بياناتك وارفع مستنداتك للبدء في استقبال الطلاب والتدريس.</p>
+                    </div>
+                    <Link
+                        href="/dashboard"
+                        className="px-5 py-2.5 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all duration-200 flex items-center gap-2 hover:-translate-y-0.5"
+                    >
+                        <span>العودة للوحة التحكم</span>
+                        <span>🏠</span>
+                    </Link>
+                </div>
 
                 {/* شريط حالة التوثيق */}
-                {profile ? (
-                    profile.is_verified ? (
-                        <div className="bg-green-100 text-green-800 p-4 rounded-xl font-bold flex items-center gap-2">
-                            ✅ حسابك موثق ونشط. أنت تظهر الآن في نتائج بحث الطلاب.
-                        </div>
+                <div className="animate-fade-in-up-delay">
+                    {profile ? (
+                        profile.is_verified ? (
+                            <div className="bg-emerald-50/80 backdrop-blur-sm text-emerald-800 p-5 rounded-[2rem] font-bold flex items-center gap-4 border border-emerald-100 shadow-lg shadow-emerald-500/5">
+                                <div className="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg">✅</div>
+                                <div>
+                                    <h4 className="text-lg">حسابك موثق ونشط!</h4>
+                                    <p className="text-emerald-600/80 text-xs font-medium mt-0.5">أنت تظهر الآن في نتائج بحث الطلاب ويمكنك استقبال الحجوزات.</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="bg-amber-50/80 backdrop-blur-sm text-amber-800 p-5 rounded-[2rem] font-bold flex items-center gap-4 border border-amber-100 shadow-lg shadow-amber-500/5">
+                                <div className="w-12 h-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg animate-pulse">⏳</div>
+                                <div>
+                                    <h4 className="text-lg">حسابك قيد المراجعة الإدارية</h4>
+                                    <p className="text-amber-600/80 text-xs font-medium mt-0.5">سيتم تنشيط ملفك فور التحقق من مستنداتك المرفوعة.</p>
+                                </div>
+                            </div>
+                        )
                     ) : (
-                        <div className="bg-yellow-100 text-yellow-800 p-4 rounded-xl font-bold flex items-center gap-2">
-                            ⏳ حسابك قيد المراجعة الإدارية. سيتم تنشيطه فور التحقق من مستنداتك.
+                        <div className="bg-indigo-50/80 backdrop-blur-sm text-indigo-800 p-5 rounded-[2rem] font-bold flex items-center gap-4 border border-indigo-100 shadow-lg shadow-indigo-500/5">
+                            <div className="w-12 h-12 bg-indigo-500 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg">ℹ️</div>
+                            <div>
+                                <h4 className="text-lg">مرحباً بك في فريق تاج!</h4>
+                                <p className="text-indigo-600/80 text-xs font-medium mt-0.5">يرجى إكمال بياناتك ورفع المستندات المطلوبة أدناه لتقديم طلب الانضمام.</p>
+                            </div>
                         </div>
-                    )
-                ) : (
-                    <div className="bg-blue-100 text-blue-800 p-4 rounded-xl font-bold flex items-center gap-2">
-                        ℹ️ يرجى إكمال بياناتك ورفع المستندات أدناه لتقديم طلب الانضمام.
-                    </div>
-                )}
+                    )}
+                </div>
 
                 {message.text && (
                     <div className={`p-4 rounded-lg font-bold text-center ${message.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
@@ -115,64 +147,107 @@ export default function TeacherProfilePage() {
                     </div>
                 )}
 
-                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">المادة التي تدرسها *</label>
-                            <select 
-                                required 
-                                value={subjectId} 
-                                onChange={(e) => setSubjectId(e.target.value)} 
-                                className="w-full border-2 border-gray-100 p-3 rounded-xl focus:ring-blue-500 outline-none bg-white"
-                            >
-                                <option value="">-- اختر المادة --</option>
-                                {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">نبذة تعريفية (Bio) *</label>
-                            <textarea 
-                                required 
-                                minLength={10}
-                                value={bio} 
-                                onChange={(e) => setBio(e.target.value)} 
-                                placeholder="اكتب نبذة عن خبراتك وطريقتك في التدريس لجذب الطلاب..."
-                                className="w-full border-2 border-gray-100 p-3 rounded-xl focus:ring-blue-500 outline-none h-32 resize-none"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
-                            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 border-dashed">
-                                <label className="block text-sm font-bold text-gray-700 mb-2">📄 صورة الهوية الوطنية {profile?.national_id_path ? '(مرفوعة مسبقاً)' : '*'}</label>
-                                <input 
-                                    type="file" 
-                                    accept=".jpg,.jpeg,.png,.pdf"
-                                    required={!profile?.national_id_path}
-                                    onChange={(e) => setNationalIdFile(e.target.files?.[0] || null)}
-                                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" 
-                                />
+                <div className="bg-white/90 backdrop-blur-md p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-white/50 animate-fade-in-up-delay-2">
+                    <form onSubmit={handleSubmit} className="space-y-8">
+                        
+                        <div className="space-y-6">
+                            <h3 className="text-xl font-black text-gray-900 flex items-center gap-3 mb-2 underline underline-offset-8 decoration-indigo-100">
+                                <span className="text-2xl">👤</span>
+                                المعلومات الأساسية
+                            </h3>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">المادة التي تدرسها *</label>
+                                    <div className="relative">
+                                        <select 
+                                            required 
+                                            value={subjectId} 
+                                            onChange={(e) => setSubjectId(e.target.value)} 
+                                            className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 text-sm font-bold text-gray-700 appearance-none cursor-pointer"
+                                        >
+                                            <option value="">-- اختر المادة --</option>
+                                            {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                        </select>
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 border-dashed">
-                                <label className="block text-sm font-bold text-gray-700 mb-2">🎓 الشهادة الجامعية / الأكاديمية {profile?.degree_path ? '(مرفوعة مسبقاً)' : '*'}</label>
-                                <input 
-                                    type="file" 
-                                    accept=".jpg,.jpeg,.png,.pdf"
-                                    required={!profile?.degree_path}
-                                    onChange={(e) => setDegreeFile(e.target.files?.[0] || null)}
-                                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" 
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">نبذة تعريفية (Bio) *</label>
+                                <textarea 
+                                    required 
+                                    minLength={10}
+                                    value={bio} 
+                                    onChange={(e) => setBio(e.target.value)} 
+                                    placeholder="اكتب نبذة عن خبراتك وطريقتك في التدريس لجذب الطلاب..."
+                                    className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none h-40 resize-none transition-all duration-200 font-medium placeholder:text-gray-300"
                                 />
                             </div>
                         </div>
-                        <p className="text-xs text-gray-400 text-center">صيغ الملفات المقبولة: JPG, PNG, PDF. الحد الأقصى للحجم: 5 ميجابايت.</p>
+
+                        <div className="space-y-6 pt-4 border-t border-gray-50">
+                            <h3 className="text-xl font-black text-gray-900 flex items-center gap-3 mb-2 underline underline-offset-8 decoration-purple-100">
+                                <span className="text-2xl">📑</span>
+                                المستندات المهنية
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="group bg-indigo-50/50 p-6 rounded-3xl border-2 border-dashed border-indigo-100 hover:border-indigo-300 hover:bg-indigo-50 transition-all duration-300 relative overflow-hidden">
+                                     <div className="absolute -top-10 -right-10 w-24 h-24 bg-white/20 rounded-full blur-2xl group-hover:blur-xl transition-all"></div>
+                                     <label className="block text-sm font-black text-indigo-900 mb-3 flex items-center gap-2">
+                                        📄 صورة الهوية الوطنية
+                                        {profile?.national_id_path && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">مرفوعة مسبقاً</span>}
+                                     </label>
+                                     <input 
+                                        type="file" 
+                                        accept=".jpg,.jpeg,.png,.pdf"
+                                        required={!profile?.national_id_path}
+                                        onChange={(e) => setNationalIdFile(e.target.files?.[0] || null)}
+                                        className="w-full text-xs text-indigo-400 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 file:transition-all cursor-pointer" 
+                                     />
+                                </div>
+
+                                <div className="group bg-purple-50/50 p-6 rounded-3xl border-2 border-dashed border-purple-100 hover:border-purple-300 hover:bg-purple-50 transition-all duration-300 relative overflow-hidden">
+                                     <div className="absolute -top-10 -right-10 w-24 h-24 bg-white/20 rounded-full blur-2xl group-hover:blur-xl transition-all"></div>
+                                     <label className="block text-sm font-black text-purple-900 mb-3 flex items-center gap-2">
+                                        🎓 الشهادة الجامعية
+                                        {profile?.degree_path && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">مرفوعة مسبقاً</span>}
+                                     </label>
+                                     <input 
+                                        type="file" 
+                                        accept=".jpg,.jpeg,.png,.pdf"
+                                        required={!profile?.degree_path}
+                                        onChange={(e) => setDegreeFile(e.target.files?.[0] || null)}
+                                        className="w-full text-xs text-purple-400 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-purple-600 file:text-white hover:file:bg-purple-700 file:transition-all cursor-pointer" 
+                                     />
+                                </div>
+                            </div>
+                            
+                            <div className="text-center">
+                                <p className="text-[10px] text-gray-400 font-bold bg-gray-50 inline-block px-4 py-1.5 rounded-full border border-gray-100">
+                                    الصيغ المقبولة: <span className="text-indigo-500">JPG, PNG, PDF</span> • الحد الأقصى: <span className="text-indigo-500">5 ميجابايت</span>
+                                </p>
+                            </div>
+                        </div>
 
                         <button 
                             type="submit" 
                             disabled={isSubmitting} 
-                            className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition disabled:opacity-50"
+                            className="w-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 text-white font-black py-4.5 rounded-[1.5rem] hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] transition-all duration-300 disabled:opacity-50 hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 text-lg shadow-xl"
                         >
-                            {isSubmitting ? 'جاري رفع المستندات...' : 'إرسال طلب الانضمام والتوثيق'}
+                            {isSubmitting ? (
+                                <>
+                                    <span className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                    جاري المعالجة...
+                                </>
+                            ) : (
+                                <>
+                                    <span>إرسال طلب الانضمام والتوثيق</span>
+                                    <span>🚀</span>
+                                </>
+                            )}
                         </button>
                     </form>
                 </div>

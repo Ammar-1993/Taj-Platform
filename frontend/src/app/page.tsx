@@ -82,6 +82,10 @@ export default function Home() {
                                 </Link>
                             ) : (
                                 <>
+                                    <Link href="/faq" className="px-5 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-sm font-bold transition-all duration-200 border border-white/10 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2">
+                                        <span>الأسئلة الشائعة</span>
+                                        <span>💡</span>
+                                    </Link>
                                     <Link href="/login" className="px-5 py-2.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-xl text-sm font-bold transition-all duration-200 border border-white/20 hover:shadow-lg hover:-translate-y-0.5">
                                         تسجيل الدخول
                                     </Link>

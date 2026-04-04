@@ -78,14 +78,31 @@ export default function PayoutPage() {
     if (!user) return null;
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-            <div className="max-w-6xl mx-auto space-y-6">
+        <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 md:p-8">
+            {/* Decorative Background Elements */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-0 opacity-20">
+                <div className="absolute top-[10%] -left-20 w-96 h-96 rounded-full bg-indigo-300 blur-[120px]"></div>
+                <div className="absolute bottom-[20%] -right-20 w-[600px] h-[600px] rounded-full bg-purple-200 blur-[150px]"></div>
+            </div>
+
+            <div className="relative z-10 max-w-7xl mx-auto space-y-8 tracking-tight">
                 
-                {/* الهيدر */}
-                <PageHeader
-                    title="سحب الأرباح 💸"
-                    subtitle="اطلب تحويل أرباحك إلى حسابك البنكي بكل سهولة."
-                />
+                <div className="bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-white/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fade-in-up">
+                    <div>
+                        <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
+                            <span className="text-4xl animate-subtle-pulse">💸</span>
+                            سحب الأرباح والأرصدة
+                        </h1>
+                        <p className="text-gray-500 text-sm mt-2 font-medium leading-relaxed">اطلب تحويل أرباحك إلى حسابك البنكي بكل سهولة وأمان.</p>
+                    </div>
+                    <Link
+                        href="/dashboard"
+                        className="px-5 py-2.5 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all duration-200 flex items-center gap-2 hover:-translate-y-0.5"
+                    >
+                        <span>العودة للوحة التحكم</span>
+                        <span>🏠</span>
+                    </Link>
+                </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     
@@ -93,27 +110,39 @@ export default function PayoutPage() {
                     <div className="lg:col-span-1 space-y-6">
                         
                         {/* بطاقة الرصيد */}
-                        <div className="bg-gradient-to-br from-green-600 to-green-800 p-6 rounded-2xl shadow-md text-white">
-                            <h3 className="text-green-100 text-sm font-medium">الرصيد القابل للسحب</h3>
-                            <div className="mt-2 flex items-baseline gap-2">
-                                <span className="text-4xl font-extrabold">{walletInfo?.balance || '0.00'}</span>
-                                <span className="text-green-200">ريال</span>
+                        <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-600 to-green-800 p-8 rounded-[2.5rem] shadow-2xl text-white animate-fade-in-up-delay">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl group-hover:blur-xl transition-all"></div>
+                            <h3 className="text-emerald-100 text-sm font-black flex items-center gap-2">
+                                <span className="text-lg">💰</span>
+                                الرصيد القابل للسحب
+                            </h3>
+                            <div className="mt-4 flex items-baseline gap-3">
+                                <span className="text-5xl font-black tracking-tighter shadow-sm">{walletInfo?.balance || '0.00'}</span>
+                                <span className="text-emerald-200 font-bold text-xl uppercase">SAR</span>
+                            </div>
+                            <div className="mt-6 h-1 w-full bg-white/20 rounded-full overflow-hidden">
+                                <div className="h-full bg-white/40 w-2/3 animate-shimmer"></div>
                             </div>
                         </div>
 
                         {/* نموذج الطلب */}
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                            <h3 className="font-bold text-gray-900 mb-4">تقديم طلب جديد</h3>
+                        <div className="bg-white/90 backdrop-blur-md p-8 rounded-[2.5rem] shadow-xl border border-white/50 animate-fade-in-up-delay-2">
+                            <h3 className="font-black text-xl text-gray-900 mb-6 flex items-center gap-3">
+                                <span className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-lg shadow-inner">
+                                    📩
+                                </span>
+                                تقديم طلب جديد
+                            </h3>
                             
                             {message.text && (
-                                <div className={`p-3 mb-4 rounded-lg text-sm font-bold ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                    {message.text}
+                                <div className={`p-4 mb-6 rounded-2xl text-sm font-bold shadow-sm animate-bounce-subtle ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+                                    {message.type === 'success' ? '✅ ' : '❌ '}{message.text}
                                 </div>
                             )}
 
-                            <form onSubmit={handlePayoutSubmit} className="space-y-4">
+                            <form onSubmit={handlePayoutSubmit} className="space-y-6">
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">المبلغ المراد سحبه (ريال):</label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">المبلغ المراد سحبه (ريال):</label>
                                     <input 
                                         type="number" 
                                         min="50"
@@ -123,86 +152,117 @@ export default function PayoutPage() {
                                         value={amount} 
                                         onChange={(e) => setAmount(Number(e.target.value))}
                                         placeholder="الحد الأدنى 50 ريال"
-                                        className="w-full border-2 border-gray-100 p-3 rounded-xl focus:ring-green-500 outline-none transition" 
+                                        className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 outline-none transition-all duration-200 font-bold placeholder:text-gray-300" 
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">اسم البنك:</label>
-                                    <select
-                                        required
-                                        value={bankName}
-                                        onChange={(e) => setBankName(e.target.value)}
-                                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-green-500 outline-none bg-white transition"
-                                    >
-                                        <option value="">-- اختر البنك --</option>
-                                        <option value="البنك الأهلي السعودي">البنك الأهلي السعودي</option>
-                                        <option value="مصرف الراجحي">مصرف الراجحي</option>
-                                        <option value="بنك الرياض">بنك الرياض</option>
-                                        <option value="بنك الإنماء">بنك الإنماء</option>
-                                        <option value="بنك البلاد">بنك البلاد</option>
-                                        <option value="أخرى">أخرى</option>
-                                    </select>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">اسم البنك:</label>
+                                    <div className="relative">
+                                        <select
+                                            required
+                                            value={bankName}
+                                            onChange={(e) => setBankName(e.target.value)}
+                                            className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 outline-none transition-all duration-200 text-sm font-bold text-gray-700 appearance-none cursor-pointer"
+                                        >
+                                            <option value="">-- اختر البنك --</option>
+                                            <option value="البنك الأهلي السعودي">البنك الأهلي السعودي</option>
+                                            <option value="مصرف الراجحي">مصرف الراجحي</option>
+                                            <option value="بنك الرياض">بنك الرياض</option>
+                                            <option value="بنك الإنماء">بنك الإنماء</option>
+                                            <option value="بنك البلاد">بنك البلاد</option>
+                                            <option value="أخرى">أخرى</option>
+                                        </select>
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
+                                    </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">رقم الآيبان (IBAN):</label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">رقم الآيبان (IBAN):</label>
                                     <input 
                                         type="text" 
                                         required 
                                         value={iban} 
                                         onChange={(e) => setIban(e.target.value.toUpperCase())}
-                                        placeholder="SA0000000000000000000000"
+                                        placeholder="SA00 0000 0000 ..."
                                         maxLength={24}
                                         dir="ltr"
-                                        className="w-full border-2 border-gray-100 p-3 rounded-xl focus:ring-green-500 outline-none text-left transition" 
+                                        className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 outline-none text-left tracking-widest transition-all duration-200 font-black placeholder:text-gray-300" 
                                     />
                                 </div>
                                 
                                 <button 
                                     type="submit" 
                                     disabled={isSubmitting || (amount !== '' && amount > walletInfo?.balance) || walletInfo?.balance < 50}
-                                    className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition disabled:opacity-50 mt-2"
+                                    className="w-full bg-gradient-to-r from-emerald-600 via-emerald-700 to-green-800 text-white font-black py-4.5 rounded-[1.5rem] hover:shadow-[0_12px_40px_rgba(16,185,129,0.3)] transition-all duration-300 disabled:opacity-50 mt-2 hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 text-lg shadow-xl"
                                 >
-                                    {isSubmitting ? 'جاري الإرسال...' : 'إرسال طلب السحب'}
+                                    {isSubmitting ? (
+                                        <>
+                                            <span className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                            جاري المعالجة...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>إرسال طلب السحب</span>
+                                            <span>📤</span>
+                                        </>
+                                    )}
                                 </button>
                                 {walletInfo?.balance < 50 && (
-                                    <p className="text-xs text-red-500 text-center font-bold">عفواً، رصيدك أقل من الحد الأدنى للسحب (50 ريال).</p>
+                                    <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-[10px] text-rose-600 font-bold text-center flex items-center gap-2 justify-center">
+                                         <span>⚠️ رصيدك أقل من الحد الأدنى (50 ريال)</span>
+                                    </div>
                                 )}
                             </form>
                         </div>
                     </div>
 
-                    {/* القسم الثاني: سجل الطلبات السابقة */}
-                    <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
-                        <h3 className="font-bold text-lg text-gray-900 mb-6">سجل طلبات السحب 📝</h3>
+                    {/* سجل طلبات السحب المحدث (Card Collection) */}
+                    <div className="lg:col-span-2 bg-white/80 backdrop-blur-md p-8 md:p-10 rounded-[3rem] shadow-xl border border-white/50 h-fit animate-fade-in-up-delay-3">
+                        <h3 className="font-extrabold text-2xl text-gray-900 mb-8 flex items-center gap-3 underline underline-offset-8 decoration-indigo-100">
+                             <span className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center text-lg shadow-inner">
+                                    📈
+                             </span>
+                             سجل المعاملات المالية
+                        </h3>
                         
                         {payouts.length === 0 ? (
-                            <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 text-gray-500 font-medium">
-                                لم تقم بتقديم أي طلب سحب حتى الآن.
+                            <div className="text-center py-20 bg-gray-50/50 rounded-3xl border-4 border-dashed border-gray-100 text-gray-400 font-black flex flex-col items-center gap-4">
+                                <div className="text-7xl opacity-20">📭</div>
+                                <span>لم تقم بتقديم أي طلب سحب حتى الآن.</span>
+                                <p className="text-xs font-bold leading-relaxed">سيتم عرض جميع طلباتك وحالتها المالية هنا فور إرسالها.</p>
                             </div>
                         ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm text-right">
-                                    <thead className="text-xs text-gray-500 bg-gray-50 border-b">
-                                        <tr>
-                                            <th className="px-4 py-3">رقم الطلب</th>
-                                            <th className="px-4 py-3">التاريخ</th>
-                                            <th className="px-4 py-3">المبلغ</th>
-                                            <th className="px-4 py-3">البنك</th>
-                                            <th className="px-4 py-3">الحالة</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {payouts.map((payout) => (
-                                            <tr key={payout.id} className="border-b hover:bg-gray-50 transition">
-                                                <td className="px-4 py-3 font-medium text-gray-900">#{payout.id}</td>
-                                                <td className="px-4 py-3 text-gray-500">{new Date(payout.created_at).toLocaleDateString('ar-SA')}</td>
-                                                <td className="px-4 py-3 font-bold text-green-600">{payout.amount} SAR</td>
-                                                <td className="px-4 py-3 text-gray-700">{payout.bank_name}</td>
-                                                <td className="px-4 py-3">{renderStatusBadge(payout.status)}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                            <div className="space-y-6">
+                                {payouts.map((payout) => (
+                                    <div key={payout.id} className="group relative overflow-hidden bg-white/50 hover:bg-white transition-all duration-300 border-2 border-gray-50 rounded-[2rem] p-7 shadow-sm hover:shadow-xl hover:-translate-y-1">
+                                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                                            <div className="flex items-center gap-6">
+                                                <div className="w-16 h-16 bg-gradient-to-br from-indigo-50 to-emerald-50 rounded-[1.5rem] flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform duration-300">
+                                                    🏦
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center gap-3">
+                                                        <h4 className="font-black text-gray-900 text-lg group-hover:text-emerald-700 transition-colors">طلب سحب #{payout.id}</h4>
+                                                        <span className="text-[10px] bg-indigo-50 text-indigo-600 px-3 py-0.5 rounded-full font-black uppercase tracking-widest">Transaction</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-4 text-xs font-bold text-gray-400">
+                                                        <span className="flex items-center gap-1.5 italic">📅 {new Date(payout.created_at).toLocaleDateString('ar-SA')}</span>
+                                                        <span className="flex items-center gap-1.5">🏢 {payout.bank_name}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-row md:flex-col items-center md:items-end gap-6 md:gap-2 w-full md:w-auto pt-4 md:pt-0 border-t md:border-0 border-gray-100 mt-2 md:mt-0">
+                                                <div className="text-2xl font-black text-emerald-600 flex items-baseline gap-1.5">
+                                                    <span>{payout.amount}</span>
+                                                    <span className="text-xs font-bold text-emerald-400">SAR</span>
+                                                </div>
+                                                <div>{renderStatusBadge(payout.status)}</div>
+                                            </div>
+                                        </div>
+                                        <div className={`absolute bottom-0 left-0 h-1.5 w-full rounded-full opacity-20 ${
+                                            payout.status === 'pending' ? 'bg-amber-400 animate-pulse' : payout.status === 'approved' ? 'bg-emerald-400' : 'bg-rose-400'
+                                        }`}></div>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>

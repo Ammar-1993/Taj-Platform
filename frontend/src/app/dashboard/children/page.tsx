@@ -81,18 +81,33 @@ export default function ChildrenManagementPage() {
     if (!isParent) return <div className="p-8 text-center text-red-500 font-bold">هذه الصفحة مخصصة لأولياء الأمور فقط.</div>;
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-            <div className="max-w-5xl mx-auto space-y-6">
+        <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 md:p-8 flex items-start justify-center">
+            {/* Decorative Background Elements */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-0 opacity-20">
+                <div className="absolute top-[10%] -left-20 w-96 h-96 rounded-full bg-indigo-300 blur-[120px]"></div>
+                <div className="absolute bottom-[20%] -right-20 w-[600px] h-[600px] rounded-full bg-purple-200 blur-[150px]"></div>
+            </div>
+
+            <div className="relative z-10 max-w-6xl w-full space-y-8 tracking-tight">
                 
-                <PageHeader
-                    title="إدارة الأبناء 👨‍👩‍👧‍👦"
-                    subtitle="أضف حسابات أبنائك لتتمكن من حجز الحصص لهم ومتابعتهم."
-                    actions={
-                        <button onClick={() => setShowForm(!showForm)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition">
-                            {showForm ? 'إلغاء الإضافة' : '+ إضافة ابن جديد'}
+                <div className="bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-white/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fade-in-up">
+                    <div>
+                        <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
+                            <span className="text-4xl animate-subtle-pulse">👨‍👩‍👧‍👦</span>
+                            إدارة أفراد العائلة
+                        </h1>
+                        <p className="text-gray-500 text-sm mt-2 font-medium leading-relaxed">أضف حسابات أبنائك لتتمكن من حجز الحصص لهم ومتابعة تقدمهم.</p>
+                    </div>
+                    <div className="flex gap-3">
+                        <button 
+                            onClick={() => setShowForm(!showForm)} 
+                            className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all duration-300 shadow-md flex items-center gap-2 hover:-translate-y-0.5 ${showForm ? 'bg-rose-50 text-rose-600 hover:bg-rose-100' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'}`}
+                        >
+                            <span>{showForm ? 'إلغاء الإضافة' : 'إضافة ابن جديد'}</span>
+                            <span>{showForm ? '✕' : '+'}</span>
                         </button>
-                    }
-                />
+                    </div>
+                </div>
 
                 {message.text && (
                     <div className={`p-4 rounded-lg font-bold text-center ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -100,72 +115,122 @@ export default function ChildrenManagementPage() {
                     </div>
                 )}
 
-                {/* فورم الإضافة */}
+                {/* فورم الإضافة المحدث */}
                 {showForm && (
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-blue-100">
-                        <h3 className="font-bold text-lg mb-4 text-blue-800">بيانات الابن الجديد</h3>
-                        <form onSubmit={handleAddChild} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm mb-1 text-gray-700">اسم الابن</label>
-                                <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full border p-2 rounded-lg" placeholder="مثال: أحمد" />
+                    <div className="bg-white/90 backdrop-blur-md p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-white/50 animate-fade-in-up-delay">
+                        <h3 className="font-black text-xl text-indigo-900 mb-8 flex items-center gap-3">
+                             <span className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center text-lg shadow-inner">
+                                🧑‍🎓
+                             </span>
+                             إنشاء حساب جديد للابن
+                        </h3>
+                        <form onSubmit={handleAddChild} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-bold mb-2 text-gray-700 mr-1">اسم الابن الكامل *</label>
+                                    <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 font-bold text-gray-700" placeholder="مثال: أحمد محمد" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold mb-2 text-gray-700 mr-1">البريد الإلكتروني (للدخول) *</label>
+                                    <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 font-bold text-gray-700 tracking-tight" dir="ltr" placeholder="child@taj-platform.com" />
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-sm mb-1 text-gray-700">البريد الإلكتروني (للدخول)</label>
-                                <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full border p-2 rounded-lg" dir="ltr" placeholder="ahmed@taj.com" />
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-bold mb-2 text-gray-700 mr-1">كلمة المرور *</label>
+                                    <input type="password" required minLength={6} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 font-bold text-gray-700" dir="ltr" placeholder="••••••••" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold mb-2 text-gray-700 mr-1">المرحلة الدراسية *</label>
+                                    <div className="relative">
+                                        <select required value={formData.grade_level_id} onChange={e => setFormData({...formData, grade_level_id: e.target.value})} className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 font-bold text-gray-700 appearance-none cursor-pointer">
+                                            <option value="">-- اختر المرحلة --</option>
+                                            {gradeLevels.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                                        </select>
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-sm mb-1 text-gray-700">كلمة المرور</label>
-                                <input type="password" required minLength={6} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full border p-2 rounded-lg" dir="ltr" />
-                            </div>
-                            <div>
-                                <label className="block text-sm mb-1 text-gray-700">المرحلة الدراسية</label>
-                                <select required value={formData.grade_level_id} onChange={e => setFormData({...formData, grade_level_id: e.target.value})} className="w-full border p-2 rounded-lg bg-white">
-                                    <option value="">-- اختر المرحلة --</option>
-                                    {gradeLevels.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-                                </select>
-                            </div>
-                            <div className="md:col-span-2 mt-2">
-                                <button type="submit" disabled={isSubmitting} className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50">
-                                    {isSubmitting ? 'جاري الحفظ...' : 'حفظ بيانات الابن'}
+                            <div className="md:col-span-2 mt-4">
+                                <button type="submit" disabled={isSubmitting} className="w-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 text-white font-black py-4.5 rounded-[1.5rem] hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] transition-all duration-300 disabled:opacity-50 hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 shadow-xl">
+                                    {isSubmitting ? (
+                                        <>
+                                            <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                            جاري المعالجة...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>إضافة الابن للعائلة</span>
+                                            <span>🧑‍🎓</span>
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </form>
                     </div>
                 )}
 
-                {/* قائمة الأبناء */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* قائمة الأبناء (Grid) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {children.length === 0 ? (
-                        <div className="col-span-full bg-white p-10 rounded-2xl border text-center text-gray-500">
-                            لا يوجد أبناء مضافين حالياً. ابدأ بإضافة حساب لابنك.
+                        <div className="col-span-full bg-white/50 backdrop-blur-md p-24 rounded-[3rem] border-4 border-dashed border-gray-100/50 text-center text-gray-400 font-black flex flex-col items-center gap-6 animate-fade-in-up-delay-2">
+                            <div className="text-8xl opacity-10">🏕️</div>
+                            <p className="text-xl">لا يوجد أفراد عائلة مضافين حالياً.</p>
+                            <p className="text-sm font-bold opacity-60">ابدأ بإضافة حسابات أبنائك لتتمكن من حجز حصصهم الدراسية.</p>
                         </div>
                     ) : (
-                        children.map(child => (
-                            <div key={child.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
-                                <div className="flex items-center gap-4 mb-4 border-b pb-4">
-                                    <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-xl">
+                        children.map((child, idx) => (
+                            <div key={child.id} className="group relative bg-white/80 backdrop-blur-md p-8 rounded-[2.5rem] shadow-xl border border-white/50 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 animate-fade-in-up" style={{ animationDelay: `${idx * 150}ms` }}>
+                                {/* Decorative background blurs inside card */}
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full -mr-10 -mt-10 blur-2xl group-hover:bg-indigo-500/10 transition-colors"></div>
+                                
+                                <div className="flex flex-col items-center gap-5 mb-8 text-center">
+                                    <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 via-indigo-50 to-purple-50 text-indigo-600 rounded-[2rem] flex items-center justify-center text-4xl font-black shadow-inner group-hover:scale-110 transition-transform duration-300 ring-8 ring-indigo-50/30">
                                         {child.name.charAt(0)}
                                     </div>
-                                    <div>
-                                        <h3 className="font-bold text-lg text-gray-900">{child.name}</h3>
-                                        <p className="text-xs text-gray-500">{child.email}</p>
+                                    <div className="space-y-1">
+                                        <h3 className="font-black text-xl text-gray-900 group-hover:text-indigo-700 transition-colors">{child.name}</h3>
+                                        <p className="text-xs text-gray-400 font-bold opacity-60 tracking-tight">{child.email}</p>
                                     </div>
                                 </div>
-                                <div className="flex justify-between items-center mb-4">
-                                    <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-md text-sm font-medium">
-                                        {child.student_profile?.grade_level?.name || 'غير محدد'}
-                                    </span>
-                                    <button className="text-blue-600 text-sm hover:underline" onClick={() => toast('ميزة التعديل ستفتح قريباً', { icon: '🛠️' })}>تعديل</button>
-                                </div>
 
-                                {/* 🟢 التحديث الجديد: مفتاح التحكم بالصلاحية */}
-                                <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                                    <span className="text-sm font-semibold text-gray-700">صلاحية الحجز والدفع:</span>
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center bg-gray-50/50 p-4 rounded-2xl border border-gray-100 shadow-sm">
+                                        <span className="text-[10px] font-black uppercase text-gray-400">المرحلة الدراسية</span>
+                                        <span className="bg-white/50 backdrop-blur-sm text-indigo-700 px-4 py-1.5 rounded-xl text-sm font-black shadow-sm ring-1 ring-indigo-100/50">
+                                            {child.student_profile?.grade_level?.name || 'غير محدد'}
+                                        </span>
+                                    </div>
+
+                                    {/* 🟢 صلاحيات الحجز */}
+                                    <div className="bg-gray-50/80 p-5 rounded-3xl border-2 border-white shadow-inner">
+                                        <div className="flex items-center justify-between gap-4">
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="text-xs font-black text-gray-800">إذن الحجز المباشر</span>
+                                                <p className="text-[9px] text-gray-400 font-bold leading-tight">تفعيل إمكانية حجز الحصص والدفع بشكل مستقل.</p>
+                                            </div>
+                                            <button 
+                                                onClick={() => handleTogglePermission(child.id, child.student_profile?.can_book_independently)}
+                                                className={`min-w-[80px] px-3 py-2.5 rounded-2xl text-[10px] font-black transition-all duration-300 shadow-sm flex items-center justify-center gap-1.5 ${
+                                                    child.student_profile?.can_book_independently 
+                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100' 
+                                                        : 'bg-rose-50 text-rose-700 border border-rose-100 hover:bg-rose-100'
+                                                }`}
+                                            >
+                                                {child.student_profile?.can_book_independently ? (
+                                                    <><span className="text-xs">✓</span> مـفـعـل</>
+                                                ) : (
+                                                    <><span className="text-xs">✕</span> مـعـطـل</>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
                                     <button 
-                                        onClick={() => handleTogglePermission(child.id, child.student_profile?.can_book_independently)}
-                                        className={`px-3 py-1 rounded-full text-xs font-bold transition ${child.student_profile?.can_book_independently ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
+                                        className="w-full py-2.5 text-xs font-black text-indigo-600 hover:text-indigo-800 transition-colors opacity-40 hover:opacity-100" 
+                                        onClick={() => toast('ميزة التعديل ستفتح قريباً', { icon: '🛠️' })}
                                     >
-                                        {child.student_profile?.can_book_independently ? 'مفعل ✅' : 'معطل ❌'}
+                                        تعديل بيانات الحساب
                                     </button>
                                 </div>
                             </div>
