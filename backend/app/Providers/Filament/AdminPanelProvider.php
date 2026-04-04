@@ -55,6 +55,15 @@ class AdminPanelProvider extends PanelProvider
                         *::-webkit-scrollbar {
                             display: none; /* Chrome, Safari, Edge */
                         }
+                        /* جعل حقول الإيميل وكلمة المرور تبدأ من اليسار */
+                        input[type="email"], input[type="password"] {
+                            direction: ltr !important;
+                            text-align: left !important;
+                        }
+                        .fi-panels-login-page .fi-fo-field-wrp-label {
+                            justify-content: flex-start !important;
+                            text-align: left !important;
+                        }
                     </style>
                 ')
             )
