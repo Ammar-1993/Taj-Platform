@@ -19,6 +19,16 @@
 
 ---
 
+## 🌐 Live Beta Access
+
+The platform is currently available in a live beta version. You can explore the environments using the links below:
+
+- **🎓 Frontend Application (Students & Teachers):** [Live Demo](https://taj-platform.vercel.app/)
+- **👑 Admin Dashboard Panel:** [Admin Login](https://taj-backend-t4ki.onrender.com/admin/login) 
+- **⚙️ Backend API Base URL:** [API Server](https://taj-backend-t4ki.onrender.com/)
+
+---
+
 ## ✨ Key Features
 
 - **🎓 Roles & Access Management:** Full RBAC (Role-Based Access Control) using Spatie Permissions. Distinct portals for Students, Verified Teachers (e.g., Chemistry, Physics), and Admins.
