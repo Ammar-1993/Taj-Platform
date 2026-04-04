@@ -14,7 +14,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   if (!parentData) return null;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Sidebar: Wallet */}
       <div className="lg:col-span-1 space-y-6">
         {/* 💰 Parent Wallet Card */}
@@ -92,7 +92,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
       </div>
 
       {/* Bookings Table */}
-      <div className="lg:col-span-2 animate-fade-in-up-delay bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-lg border border-gray-100/80">
+      <div className="lg:col-span-3 animate-fade-in-up-delay bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-lg border border-gray-100/80">
         <h3 className="font-extrabold text-xl text-gray-900 mb-6 flex items-center gap-2">
           <span className="w-9 h-9 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center text-base">
             📅

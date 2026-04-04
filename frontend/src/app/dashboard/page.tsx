@@ -48,7 +48,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen p-4 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         <DashboardHeader
           user={user}
           isTeacher={isTeacher}
