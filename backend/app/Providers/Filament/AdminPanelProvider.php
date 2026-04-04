@@ -41,6 +41,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->spa() // 🚀 التحميل الفوري بدون تحديث الصفحة
             ->sidebarCollapsibleOnDesktop() // 📏 تحسين استغلال الشاشة الجانبية
+            ->sidebarWidth('13rem')
             ->maxContentWidth(MaxWidth::Full) // 🖥️ تمديد المحتوى لاستغلال الشاشات الكبيرة
             ->globalSearchKeyBindings(['command+k', 'ctrl+k']) // ⌨️ اختصارات بحث لوحة المفاتيح
             ->renderHook(
