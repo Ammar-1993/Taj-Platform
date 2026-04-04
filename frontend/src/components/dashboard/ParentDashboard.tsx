@@ -32,10 +32,10 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
               </h3>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-5xl font-black tracking-tight">
+              <span className="text-4xl sm:text-5xl font-black tracking-tight">
                 {parentData.parent_balance || "0.00"}
               </span>
-              <span className="text-purple-200 text-lg font-medium">ريال</span>
+              <span className="text-purple-200 text-base sm:text-lg font-medium">ريال</span>
             </div>
 
             <Link
@@ -116,20 +116,20 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-right">
               <thead>
-                <tr className="bg-gradient-to-l from-gray-50 to-slate-50 border-b border-gray-200">
-                  <th className="px-4 py-3.5 text-xs font-extrabold text-gray-500 uppercase tracking-wider rounded-tr-xl">
+                <tr className="bg-gradient-to-l from-gray-50/50 to-slate-50/50 border-b border-gray-100">
+                  <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider rounded-tr-2xl text-right">
                     الابن
                   </th>
-                  <th className="px-4 py-3.5 text-xs font-extrabold text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
                     المعلم
                   </th>
-                  <th className="px-4 py-3.5 text-xs font-extrabold text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
                     التاريخ والوقت
                   </th>
-                  <th className="px-4 py-3.5 text-xs font-extrabold text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
                     التكلفة
                   </th>
-                  <th className="px-4 py-3.5 text-xs font-extrabold text-gray-500 uppercase tracking-wider rounded-tl-xl">
+                  <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider rounded-tl-2xl text-right">
                     الحالة
                   </th>
                 </tr>

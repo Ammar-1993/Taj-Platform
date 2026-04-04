@@ -42,21 +42,24 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user, isTeache
             <>
               <Link
                 href="/dashboard/children"
-                className="px-4 py-2.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-xl text-sm font-bold transition-all duration-200 border border-white/20 hover:shadow-lg hover:-translate-y-0.5"
+                className="px-4 py-2 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border border-white/20 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2"
               >
-                إدارة الأبناء 👨‍👩‍👧‍👦
+                <span>إدارة الأبناء</span>
+                <span>👨‍👩‍👧‍👦</span>
               </Link>
               <Link
                 href="/dashboard/support"
-                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-sm font-medium transition-all duration-200 border border-white/10 hover:shadow-lg hover:-translate-y-0.5"
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border border-white/10 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2"
               >
-                الدعم الفني 🛟
+                <span>الدعم الفني</span>
+                <span>🛟</span>
               </Link>
               <Link
                 href="/"
-                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-sm font-medium transition-all duration-200 border border-white/10 hover:shadow-lg hover:-translate-y-0.5"
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border border-white/10 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2"
               >
-                الرئيسية
+                <span>الرئيسية</span>
+                <span>🏠</span>
               </Link>
             </>
           ) : (
@@ -64,31 +67,35 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user, isTeache
               {isTeacher && (
                 <Link
                   href="/dashboard/profile"
-                  className="px-4 py-2.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-xl text-sm font-bold transition-all duration-200 border border-white/20 hover:shadow-lg hover:-translate-y-0.5"
+                  className="px-4 py-2 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border border-white/20 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2"
                 >
-                  إكمال الملف الشخصي ✏️
+                  <span>إكمال الملف الشخصي</span>
+                  <span>✏️</span>
                 </Link>
               )}
               <Link
                 href="/dashboard/support"
-                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-sm font-medium transition-all duration-200 border border-white/10 hover:shadow-lg hover:-translate-y-0.5"
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border border-white/10 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2"
               >
-                الدعم الفني 🛟
+                <span>الدعم الفني</span>
+                <span>🛟</span>
               </Link>
               <Link
                 href="/"
-                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-sm font-medium transition-all duration-200 border border-white/10 hover:shadow-lg hover:-translate-y-0.5"
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border border-white/10 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2"
               >
-                الرئيسية
+                <span>الرئيسية</span>
+                <span>🏠</span>
               </Link>
             </>
           )}
 
           <button
             onClick={logout}
-            className="px-4 py-2.5 bg-red-500/20 hover:bg-red-500/40 backdrop-blur-sm rounded-xl text-sm font-bold transition-all duration-200 border border-red-400/20 text-red-100 hover:text-white hover:shadow-lg hover:-translate-y-0.5"
+            className="px-4 py-2 bg-rose-500/20 hover:bg-rose-500/30 backdrop-blur-sm rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border border-rose-400/30 text-rose-50 && hover:text-white hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2"
           >
-            تسجيل الخروج
+            <span>تسجيل الخروج</span>
+            <span>🚪</span>
           </button>
         </div>
       </div>

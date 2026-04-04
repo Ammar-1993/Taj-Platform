@@ -89,10 +89,10 @@ export const StudentTeacherDashboard: React.FC<
                 </h3>
               </div>
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="text-5xl font-black tracking-tight">
+                <span className="text-4xl sm:text-5xl font-black tracking-tight">
                   {wallet?.balance || "0.00"}
                 </span>
-                <span className="text-purple-200 text-lg font-medium">
+                <span className="text-purple-200 text-base sm:text-lg font-medium">
                   ريال
                 </span>
               </div>
@@ -103,11 +103,11 @@ export const StudentTeacherDashboard: React.FC<
                     href="/dashboard/schedule"
                     className="flex-1 flex justify-center items-center py-2.5 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold transition-all duration-200 backdrop-blur-sm border border-white/10 hover:-translate-y-0.5"
                   >
-                    إدارة الجدول 📅
+                    إدارة الجدول 🗓️
                   </Link>
                   <Link
                     href="/dashboard/payout"
-                    className="flex-1 flex justify-center items-center py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition-all duration-200 backdrop-blur-sm border border-white/10 hover:-translate-y-0.5"
+                    className="flex-1 flex justify-center items-center py-2.5 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold transition-all duration-200 backdrop-blur-sm border border-white/10 hover:-translate-y-0.5"
                   >
                     طلب سحب 💸
                   </Link>
@@ -147,7 +147,7 @@ export const StudentTeacherDashboard: React.FC<
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-2 h-8 rounded-full ${tx.type === "withdrawal" ? "bg-red-400" : "bg-emerald-400"}`}
+                        className={`w-1.5 h-8 rounded-full ${tx.type === "withdrawal" ? "bg-red-500" : "bg-emerald-500"}`}
                       ></div>
                       <div>
                         <p className="font-bold text-gray-800">
@@ -261,23 +261,23 @@ export const StudentTeacherDashboard: React.FC<
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-right">
                 <thead>
-                  <tr className="bg-gradient-to-l from-gray-50 to-slate-50 border-b border-gray-200">
-                    <th className="px-4 py-3.5 text-xs font-extrabold text-gray-500 uppercase tracking-wider rounded-tr-xl">
+                  <tr className="bg-gradient-to-l from-gray-50/50 to-slate-50/50 border-b border-gray-100">
+                    <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider rounded-tr-2xl text-right">
                       رقم
                     </th>
-                    <th className="px-4 py-3.5 text-xs font-extrabold text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
                       {isTeacher ? "الطالب" : "المعلم"}
                     </th>
-                    <th className="px-4 py-3.5 text-xs font-extrabold text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
                       التاريخ والوقت
                     </th>
-                    <th className="px-4 py-3.5 text-xs font-extrabold text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
                       المبلغ
                     </th>
-                    <th className="px-4 py-3.5 text-xs font-extrabold text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
                       الحالة
                     </th>
-                    <th className="px-4 py-3.5 text-xs font-extrabold text-gray-500 uppercase tracking-wider rounded-tl-xl">
+                    <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider rounded-tl-2xl text-right">
                       الإجراء
                     </th>
                   </tr>
