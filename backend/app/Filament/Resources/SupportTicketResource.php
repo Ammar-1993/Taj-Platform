@@ -155,6 +155,20 @@ class SupportTicketResource extends Resource
                             ->success()
                             ->send();
                     }),
+
+                Action::make('mark_resolved')
+                    ->label('إغلاق بدون رد')
+                    ->icon('heroicon-o-check')
+                    ->color('gray')
+                    ->requiresConfirmation()
+                    ->visible(fn (SupportTicket $record): bool => in_array($record->status, ['open', 'in_progress']) && empty($record->admin_reply))
+                    ->action(function (SupportTicket $record) {
+                        $record->update(['status' => 'resolved']);
+                        \Filament\Notifications\Notification::make()
+                            ->title('تم إغلاق التذكرة ✅')
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->bulkActions([]);
     }

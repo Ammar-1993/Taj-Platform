@@ -79,6 +79,34 @@ class BookingResource extends Resource
                         'completed' => 'مكتمل',
                         'cancelled' => 'ملغي',
                     ]),
+                Tables\Filters\Filter::make('booking_date')
+                    ->form([
+                        Forms\Components\DatePicker::make('booked_from')
+                            ->label('تاريخ الحصة من'),
+                        Forms\Components\DatePicker::make('booked_until')
+                            ->label('تاريخ الحصة إلى'),
+                    ])
+                    ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
+                        return $query
+                            ->when(
+                                $data['booked_from'],
+                                fn (\Illuminate\Database\Eloquent\Builder $query, $date): \Illuminate\Database\Eloquent\Builder => $query->whereDate('booking_date', '>=', $date),
+                            )
+                            ->when(
+                                $data['booked_until'],
+                                fn (\Illuminate\Database\Eloquent\Builder $query, $date): \Illuminate\Database\Eloquent\Builder => $query->whereDate('booking_date', '<=', $date),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['booked_from'] ?? null) {
+                            $indicators['booked_from'] = 'من: ' . \Carbon\Carbon::parse($data['booked_from'])->toFormattedDateString();
+                        }
+                        if ($data['booked_until'] ?? null) {
+                            $indicators['booked_until'] = 'إلى: ' . \Carbon\Carbon::parse($data['booked_until'])->toFormattedDateString();
+                        }
+                        return $indicators;
+                    }),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()->label('تفاصيل'),

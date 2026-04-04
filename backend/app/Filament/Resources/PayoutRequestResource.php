@@ -91,7 +91,23 @@ class PayoutRequestResource extends Resource
                     ->color('info')
                     ->requiresConfirmation()
                     ->visible(fn (PayoutRequest $record): bool => $record->status === 'pending')
-                    ->action(fn (PayoutRequest $record) => $record->update(['status' => 'approved'])),
+                    ->action(function (PayoutRequest $record) {
+                        $record->update(['status' => 'approved']);
+                        // 🔔 إشعار المعلم بالموافقة المبدئية
+                        \Illuminate\Support\Facades\DB::table('notifications')->insert([
+                            'id' => \Illuminate\Support\Str::uuid(),
+                            'type' => 'App\Notifications\PayoutApprovedNotification',
+                            'notifiable_type' => 'App\Models\User',
+                            'notifiable_id' => $record->user_id,
+                            'data' => json_encode([
+                                'type' => 'payout_approved',
+                                'message' => "تم اعتماد طلب السحب بمبلغ {$record->amount} ريال وسوف يتم تحويله قريباً.",
+                                'time' => now()->format('Y-m-d h:i A')
+                            ]),
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }),
 
                 // 🟢 2. زر تم التحويل (إغلاق الطلب وإرسال إشعار) - ✨ محدث
                 Action::make('transfer')
@@ -146,6 +162,21 @@ class PayoutRequestResource extends Resource
                                 'deposit', // إيداع
                                 'استرجاع مبلغ طلب سحب مرفوض. السبب: ' . $data['admin_notes']
                             );
+
+                            // 🔔 إشعار المعلم بالرفض
+                            \Illuminate\Support\Facades\DB::table('notifications')->insert([
+                                'id' => \Illuminate\Support\Str::uuid(),
+                                'type' => 'App\Notifications\PayoutRejectedNotification',
+                                'notifiable_type' => 'App\Models\User',
+                                'notifiable_id' => $record->user_id,
+                                'data' => json_encode([
+                                    'type' => 'payout_rejected',
+                                    'message' => "تم رفض طلب السحب وإرجاع المبلغ لمحفظتك. السبب: {$data['admin_notes']}",
+                                    'time' => now()->format('Y-m-d h:i A')
+                                ]),
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
 
                             \Filament\Notifications\Notification::make()
                                 ->title('تم الرفض بنجاح')

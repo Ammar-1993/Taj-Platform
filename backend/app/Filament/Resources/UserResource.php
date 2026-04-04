@@ -136,6 +136,25 @@ class UserResource extends Resource
                     }),
             ])
             ->actions([
+                Tables\Actions\Action::make('wallet')
+                    ->label('المحفظة')
+                    ->icon('heroicon-o-wallet')
+                    ->color('info')
+                    ->modalHeading(fn (User $record) => 'محفظة ' . $record->name)
+                    ->infolist([
+                        \Filament\Infolists\Components\TextEntry::make('wallet.balance')
+                            ->label('الرصيد المتاح')
+                            ->money('SAR')
+                            ->size(\Filament\Infolists\Components\TextEntry\TextEntrySize::Large)
+                            ->weight('bold')
+                            ->color('success'),
+                        \Filament\Infolists\Components\TextEntry::make('wallet.pending_balance')
+                            ->label('الرصيد المعلق')
+                            ->money('SAR')
+                            ->color('warning'),
+                    ])
+                    ->modalSubmitAction(false)
+                    ->modalCancelAction(fn (\Filament\Actions\StaticAction $action) => $action->label('إغلاق')),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
                 Tables\Actions\RestoreAction::make(),
@@ -148,7 +167,11 @@ class UserResource extends Resource
             ]);
     }
 
-    public static function getRelations(): array { return []; }
+    public static function getRelations(): array { 
+        return [
+            UserResource\RelationManagers\StudentBookingsRelationManager::class,
+        ]; 
+    }
 
     public static function getPages(): array
     {
