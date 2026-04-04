@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { showApiError } from '@/hooks/useApiError';
 
-const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID;
+const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID || '039c4b2d111b488f8069bb00c583aa04';
 
 // استدعاء مكون الكاميرا الآمن من SSR
 const AgoraCall = dynamic(() => import('@/components/classroom/AgoraCall'), { 
@@ -128,7 +128,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
             // نعطي شاشة المعلم ID مختلف (مثلاً رقم المعلم + 10000) لكي لا يتعارض مع كاميرته
             const screenUid = uid + 10000; 
 
-            await client.join(AGORA_APP_ID!, channelName, agoraToken, screenUid);
+            await client.join(AGORA_APP_ID, channelName, agoraToken, screenUid);
 
             // 2. طلب إذن مشاركة الشاشة من المتصفح
             // نمرر "disable" للصوت لتجنب صدى الصوت، سنكتفي بمايكروفون الكاميرا
