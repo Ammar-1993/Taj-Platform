@@ -72,24 +72,24 @@ export default function Home() {
                             </div>
                             <p className="text-indigo-200 text-base md:text-lg font-medium mt-1">نخبة من المعلمين المعتمدين في جميع المواد — اختر معلمك وانطلق</p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-3">
                             {authLoading ? (
-                                <div className="h-10 w-24 bg-white/20 animate-pulse rounded-xl"></div>
+                                <div className="h-10 w-24 bg-white/20 animate-pulse rounded-2xl"></div>
                             ) : user ? (
-                                <Link href="/dashboard" className="px-5 py-2.5 bg-white text-indigo-700 rounded-xl text-sm font-extrabold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2">
+                                <Link href="/dashboard" className="px-6 py-3 bg-white text-indigo-700 rounded-2xl text-sm font-black transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 flex items-center gap-2 shadow-xl">
                                     <span>لوحة التحكم</span>
                                     <span>🏠</span>
                                 </Link>
                             ) : (
                                 <>
-                                    <Link href="/faq" className="px-5 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-sm font-bold transition-all duration-200 border border-white/10 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2">
+                                    <Link href="/faq" className="px-5 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-2xl text-sm font-bold transition-all duration-300 border border-white/10 hover:shadow-xl hover:-translate-y-1 flex items-center gap-2">
                                         <span>الأسئلة الشائعة</span>
                                         <span>💡</span>
                                     </Link>
-                                    <Link href="/login" className="px-5 py-2.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-xl text-sm font-bold transition-all duration-200 border border-white/20 hover:shadow-lg hover:-translate-y-0.5">
+                                    <Link href="/login" className="px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-2xl text-sm font-black transition-all duration-300 border border-white/20 hover:shadow-xl hover:-translate-y-1">
                                         تسجيل الدخول
                                     </Link>
-                                    <Link href="/register" className="px-5 py-2.5 bg-white text-indigo-700 rounded-xl text-sm font-extrabold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+                                    <Link href="/register" className="px-6 py-3 bg-white text-indigo-700 rounded-2xl text-sm font-black transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 shadow-xl">
                                         إنشاء حساب
                                     </Link>
                                 </>
@@ -98,22 +98,23 @@ export default function Home() {
                     </div>
                 </div>
 
-                {/* Search & Filters */}
-                <div className="animate-fade-in-up-delay bg-white/80 backdrop-blur-sm p-4 md:p-5 rounded-2xl shadow-lg border border-gray-100/80 flex flex-col md:flex-row gap-3 justify-between items-center">
-                    <div className="w-full md:flex-1">
+                {/* Modernized Search & Filters */}
+                <div className="animate-fade-in-up-delay bg-white/90 backdrop-blur-md p-5 rounded-[2rem] shadow-xl border border-white/50 flex flex-col md:flex-row gap-4 justify-between items-center">
+                    <div className="w-full md:flex-1 relative group">
+                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500 transition-colors">🔍</span>
                         <input
                             type="text"
-                            placeholder="🔍 ابحث باسم المعلم..."
+                            placeholder="ابحث باسم المعلم..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="px-4 py-3 bg-gray-50/80 border-2 border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none w-full transition-all duration-200 focus:bg-white"
+                            className="pr-12 pl-4 py-4 bg-gray-50/50 border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none w-full transition-all duration-300 focus:bg-white font-bold placeholder:text-gray-400"
                         />
                     </div>
                     <div className="w-full md:w-1/4">
                         <select
                             value={subjectId}
                             onChange={(e) => setSubjectId(e.target.value)}
-                            className="px-4 py-3 bg-gray-50/80 border-2 border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none w-full transition-all duration-200 cursor-pointer focus:bg-white"
+                            className="px-5 py-4 bg-gray-50/50 border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none w-full transition-all duration-300 cursor-pointer focus:bg-white font-bold text-gray-700 appearance-none"
                         >
                             <option value="">جميع المواد</option>
                             {subjects.map(sub => (
@@ -125,7 +126,7 @@ export default function Home() {
                         <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
-                            className="px-4 py-3 bg-indigo-50/80 border-2 border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none w-full transition-all duration-200 text-indigo-900 font-bold cursor-pointer"
+                            className="px-5 py-4 bg-indigo-50/50 border-2 border-indigo-100 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none w-full transition-all duration-300 text-indigo-900 font-extrabold cursor-pointer appearance-none"
                         >
                             <option value="">الترتيب الافتراضي</option>
                             <option value="rating_desc">⭐ الأعلى تقييماً</option>
@@ -167,19 +168,19 @@ export default function Home() {
                                         {teacher.teacher_profile?.bio || 'لا توجد نبذة تعريفية.'}
                                     </p>
 
-                                    <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-                                        <div className="flex flex-col">
-                                            <span className="text-amber-500 font-extrabold flex items-center gap-1 text-base">
+                                    <div className="flex justify-between items-center pt-5 border-t border-gray-100">
+                                        <div className="flex flex-col gap-0.5">
+                                            <span className="text-amber-500 font-black flex items-center gap-1.5 text-lg">
                                                 ⭐ {teacher.teacher_profile?.average_rating || '0.00'}
                                             </span>
-                                            <span className="text-xs text-gray-400 font-medium">
+                                            <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">
                                                 ({teacher.teacher_profile?.reviews_count || 0} تقييم)
                                             </span>
                                         </div>
                                         
                                         <Link 
                                             href={`/teachers/${teacher.id}`}
-                                            className="bg-gradient-to-l from-indigo-600 to-purple-600 text-white px-5 py-2.5 rounded-xl text-sm font-extrabold hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5"
+                                            className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 text-white px-6 py-3 rounded-2xl text-xs font-black hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] transition-all duration-300 hover:-translate-y-1 shadow-lg active:scale-95"
                                         >
                                             احجز الآن
                                         </Link>
