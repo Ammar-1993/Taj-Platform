@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
-// 🟢 هذا هو السطر الذي كان ينقصنا لحل الخطأ!
 import api from '@/lib/axios';
+import PageHeader from '@/components/ui/PageHeader';
+import toast from 'react-hot-toast';
+import { showApiError } from '@/hooks/useApiError';
 
 export default function TopUpPage() {
     const { user } = useAuth();
@@ -38,9 +40,9 @@ export default function TopUpPage() {
                     router.push('/dashboard');
                 }, 2000);
 
-            } catch (error) {
+            } catch (error: unknown) {
                 console.error(error);
-                alert('حدث خطأ في الاتصال بالبنك أو السيرفر. تحقق من مسار الـ Webhook.');
+                showApiError(error, 'حدث خطأ في الاتصال بالبنك أو السيرفر. تحقق من مسار الـ Webhook.');
                 setIsProcessing(false);
             }
         }, 2000);
@@ -50,11 +52,12 @@ export default function TopUpPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-            <div className="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                <div className="flex justify-between items-center mb-8 border-b pb-4">
-                    <h1 className="text-2xl font-bold text-gray-900">شحن المحفظة البنكية 💳</h1>
-                    <Link href="/dashboard" className="text-blue-600 hover:underline">العودة للوحة</Link>
-                </div>
+            <div className="max-w-2xl mx-auto space-y-6">
+                <PageHeader
+                    title="شحن المحفظة البنكية 💳"
+                    subtitle="أضف رصيداً لمحفظتك لتتمكن من حجز الحصص لأبنائك."
+                />
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
 
                 {successMsg ? (
                     <div className="bg-green-100 text-green-800 p-6 rounded-xl text-center font-bold text-lg animate-pulse">
@@ -100,6 +103,7 @@ export default function TopUpPage() {
                         <p className="text-center text-xs text-gray-400 mt-4">هذه بيئة اختبار آمنة. لن يتم خصم مبالغ حقيقية.</p>
                     </div>
                 )}
+                </div>
             </div>
         </div>
     );

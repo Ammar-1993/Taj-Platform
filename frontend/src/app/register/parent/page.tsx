@@ -5,6 +5,8 @@ import api from '@/lib/axios';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import DecorativeBackground from '@/components/ui/DecorativeBackground';
+import { showApiError } from '@/hooks/useApiError';
 
 export default function ParentRegisterPage() {
     const router = useRouter();
@@ -44,9 +46,8 @@ export default function ParentRegisterPage() {
                 router.push('/dashboard');
             }, 2000);
 
-        } catch (err: unknown) {
-            const error = err as { response?: { data?: { message?: string } } };
-            setError(error.response?.data?.message || 'تأكد من صحة البيانات. قد يكون الإيميل أو الجوال مسجلاً مسبقاً.');
+        } catch (error: unknown) {
+            showApiError(error, 'تأكد من صحة البيانات. قد يكون الإيميل أو الجوال مسجلاً مسبقاً.');
         } finally {
             setLoading(false);
         }
@@ -54,10 +55,7 @@ export default function ParentRegisterPage() {
 
     return (
         <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex justify-center items-center relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 opacity-20 pointer-events-none">
-                <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-purple-200 blur-3xl"></div>
-                <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-violet-200 blur-3xl"></div>
-            </div>
+            <DecorativeBackground colorFrom="purple" colorTo="violet" opacity="opacity-20" />
             <div className="max-w-xl w-full bg-white/80 backdrop-blur-sm p-8 sm:p-10 rounded-3xl shadow-2xl border border-gray-100/80 animate-fade-in-up">
                 
                 <div className="text-center mb-8">

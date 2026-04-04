@@ -6,6 +6,9 @@ import api from "@/lib/axios";
 import { useAuth } from "@/context/AuthContext";
 import { User, TeacherSlot } from "@/types";
 import { formatTimeTo12h } from "@/lib/utils";
+import toast from "react-hot-toast";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { showApiError } from "@/hooks/useApiError";
 
 export default function TeacherProfile({ params }: { params: { id: string } }) {
   const [teacherName, setTeacherName] = useState("");
@@ -53,52 +56,56 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
     }
   };
 
-  const handleBooking = async (slotId: number) => {
+  // حالة مربع تأكيد الحجز
+  const [bookingConfirm, setBookingConfirm] = useState<{ isOpen: boolean; slotId: number }>({
+    isOpen: false,
+    slotId: 0,
+  });
+
+  const handleBookingRequest = (slotId: number) => {
     // التحقق من تسجيل الدخول أولاً
     if (!user) {
-      alert("يجب عليك تسجيل الدخول أولاً لإتمام الحجز.");
+      toast.error("يجب عليك تسجيل الدخول أولاً لإتمام الحجز.");
       router.push("/login");
       return;
     }
 
-    // 🟢 تحقق أمني: إذا كان أباً ولم يختر ابناً
+    // تحقق أمني: إذا كان أباً ولم يختر ابناً
     if (isParent && !selectedChildId) {
       setMessage({
         type: "error",
         text: "الرجاء اختيار الابن الذي سيحضر الحصة أولاً من القائمة أعلاه.",
       });
-      window.scrollTo({ top: 0, behavior: "smooth" }); // رفع الشاشة للأعلى ليرى الخطأ
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
-    if (!confirm("هل أنت متأكد من حجز هذا الموعد؟ سيتم خصم المبلغ من محفظتك."))
-      return;
+    setBookingConfirm({ isOpen: true, slotId });
+  };
 
+  const handleBooking = async () => {
+    setBookingConfirm({ isOpen: false, slotId: 0 });
     setBookingLoading(true);
     setMessage({ type: "", text: "" });
 
     try {
       const res = await api.post("/bookings", {
-        teacher_slot_id: slotId,
+        teacher_slot_id: bookingConfirm.slotId,
         promo_code: promoCode || null,
-        child_id: isParent ? selectedChildId : undefined, // 🟢 إرسال رقم الابن للسيرفر
+        child_id: isParent ? selectedChildId : undefined,
       });
 
       setMessage({ type: "success", text: res.data.message });
-
-      // تحديث الأوقات لإخفاء الموعد المحجوز
+      toast.success(res.data.message || "تم الحجز بنجاح!");
       fetchSlots();
 
-      // إعادة التوجيه للوحة التحكم بعد 3 ثوانٍ
       setTimeout(() => {
         router.push("/dashboard");
       }, 3000);
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setMessage({
-        type: "error",
-        text: error.response?.data?.message || "حدث خطأ غير متوقع",
-      });
+      const errorMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "حدث خطأ غير متوقع";
+      setMessage({ type: "error", text: errorMsg });
+      toast.error(errorMsg);
     } finally {
       setBookingLoading(false);
     }
@@ -192,7 +199,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
                   {daySlots.map((slot: TeacherSlot) => (
                     <button
                       key={slot.id}
-                      onClick={() => handleBooking(slot.id)}
+                      onClick={() => handleBookingRequest(slot.id)}
                       disabled={bookingLoading}
                       className="border-2 border-indigo-100 hover:border-indigo-500 bg-white hover:bg-indigo-50 text-indigo-900 font-bold py-3 px-4 rounded-xl transition-all duration-200 flex flex-col items-center justify-center gap-1 disabled:opacity-50 hover:shadow-md hover:-translate-y-0.5"
                     >
@@ -208,6 +215,17 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={bookingConfirm.isOpen}
+        title="تأكيد الحجز"
+        message="هل أنت متأكد من حجز هذا الموعد؟ سيتم خصم المبلغ من محفظتك."
+        confirmText="تأكيد الحجز"
+        variant="info"
+        isLoading={bookingLoading}
+        onConfirm={handleBooking}
+        onCancel={() => setBookingConfirm({ isOpen: false, slotId: 0 })}
+      />
     </div>
   );
 }

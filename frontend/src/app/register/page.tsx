@@ -1,16 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import DecorativeBackground from "@/components/ui/DecorativeBackground";
 
 export default function RegisterHubPage() {
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center relative overflow-hidden">
-      {/* Decorative Background */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 opacity-20 pointer-events-none">
-        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-indigo-200 blur-3xl"></div>
-        <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-purple-200 blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-blue-100 blur-3xl"></div>
-      </div>
+      <DecorativeBackground colorFrom="indigo" colorTo="purple" />
 
       <div className="text-center max-w-3xl mb-12 animate-fade-in-up">
         <Link

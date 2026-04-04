@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
 import Link from 'next/link';
+import PageHeader from '@/components/ui/PageHeader';
+import toast from 'react-hot-toast';
+import { showApiError } from '@/hooks/useApiError';
 
 export default function ChildrenManagementPage() {
     const { user } = useAuth();
@@ -44,11 +47,12 @@ export default function ChildrenManagementPage() {
         try {
             await api.post('/parent/children', formData);
             setMessage({ type: 'success', text: 'تم إضافة الابن بنجاح!' });
+            toast.success('تم إضافة الابن بنجاح! 🎉');
             setFormData({ name: '', email: '', password: '', grade_level_id: '' });
             setShowForm(false);
             fetchData(); // تحديث القائمة
-        } catch (error: any) {
-            setMessage({ type: 'error', text: error.response?.data?.message || 'حدث خطأ أثناء الإضافة' });
+        } catch (error: unknown) {
+            showApiError(error, 'حدث خطأ أثناء الإضافة');
         } finally {
             setIsSubmitting(false);
         }
@@ -64,8 +68,8 @@ export default function ChildrenManagementPage() {
 
             // إرسال الطلب للسيرفر
             await api.patch(`/parent/children/${childId}/toggle-permission`);
-        } catch (error: any) {
-            alert('حدث خطأ أثناء تغيير الصلاحية');
+        } catch (error: unknown) {
+            showApiError(error, 'حدث خطأ أثناء تغيير الصلاحية');
             fetchData(); // إعادة جلب البيانات الصحيحة في حال فشل الطلب
         }
     };
@@ -80,18 +84,15 @@ export default function ChildrenManagementPage() {
         <div className="min-h-screen bg-gray-50 p-4 md:p-8">
             <div className="max-w-5xl mx-auto space-y-6">
                 
-                <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">إدارة الأبناء 👨‍👩‍👧‍👦</h1>
-                        <p className="text-gray-500 text-sm mt-1">أضف حسابات أبنائك لتتمكن من حجز الحصص لهم ومتابعتهم.</p>
-                    </div>
-                    <div className="flex gap-3">
-                        <Link href="/dashboard" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition">العودة للوحة</Link>
+                <PageHeader
+                    title="إدارة الأبناء 👨‍👩‍👧‍👦"
+                    subtitle="أضف حسابات أبنائك لتتمكن من حجز الحصص لهم ومتابعتهم."
+                    actions={
                         <button onClick={() => setShowForm(!showForm)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition">
                             {showForm ? 'إلغاء الإضافة' : '+ إضافة ابن جديد'}
                         </button>
-                    </div>
-                </div>
+                    }
+                />
 
                 {message.text && (
                     <div className={`p-4 rounded-lg font-bold text-center ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -154,7 +155,7 @@ export default function ChildrenManagementPage() {
                                     <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-md text-sm font-medium">
                                         {child.student_profile?.grade_level?.name || 'غير محدد'}
                                     </span>
-                                    <button className="text-blue-600 text-sm hover:underline" onClick={() => alert('ميزة التعديل ستفتح قريباً')}>تعديل</button>
+                                    <button className="text-blue-600 text-sm hover:underline" onClick={() => toast('ميزة التعديل ستفتح قريباً', { icon: '🛠️' })}>تعديل</button>
                                 </div>
 
                                 {/* 🟢 التحديث الجديد: مفتاح التحكم بالصلاحية */}

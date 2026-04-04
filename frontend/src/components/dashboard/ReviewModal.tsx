@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import api from "@/lib/axios";
 import { Booking } from "@/types";
+import toast from "react-hot-toast";
+import { showApiError } from "@/hooks/useApiError";
 
 interface ReviewModalProps {
   pendingReview: Booking | null;
@@ -22,11 +24,10 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ pendingReview, onSucce
         rating: rating,
         comment: comment,
       });
-      alert("تم إرسال التقييم بنجاح! شكراً لك.");
+      toast.success("تم إرسال التقييم بنجاح! شكراً لك. ⭐");
       onSuccess();
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || "حدث خطأ أثناء التقييم");
+      showApiError(err, "حدث خطأ أثناء التقييم");
     } finally {
       setIsSubmittingReview(false);
     }

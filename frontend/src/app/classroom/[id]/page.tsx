@@ -6,6 +6,11 @@ import api from '@/lib/axios';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
 import axios from 'axios';
+import toast from 'react-hot-toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import { showApiError } from '@/hooks/useApiError';
+
+const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID || '039c4b2d111b488f8069bb00c583aa04';
 
 // استدعاء مكون الكاميرا الآمن من SSR
 const AgoraCall = dynamic(() => import('@/components/classroom/AgoraCall'), { 
@@ -85,15 +90,17 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     };
 
     // 🔴 دالة إنهاء الحصة
+    const [showEndConfirm, setShowEndConfirm] = useState(false);
+
     const handleCompleteClass = async () => {
-        if (!confirm("هل أنت متأكد من إنهاء الحصة؟ سيتم إغلاق الغرفة وإيداع الأرباح في محفظتك.")) return;
+        setShowEndConfirm(false);
         setIsEnding(true);
         try {
             await api.patch(`/bookings/${params.id}/complete`);
-            alert("تم إنهاء الحصة بنجاح! وتم إيداع الأرباح. 💰");
+            toast.success("تم إنهاء الحصة بنجاح! وتم إيداع الأرباح. 💰");
             await handleLeave();
         } catch (err: unknown) {
-            alert("حدث خطأ أثناء إنهاء الحصة");
+            showApiError(err, "حدث خطأ أثناء إنهاء الحصة");
             setIsEnding(false);
         }
     };
@@ -121,7 +128,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
             // نعطي شاشة المعلم ID مختلف (مثلاً رقم المعلم + 10000) لكي لا يتعارض مع كاميرته
             const screenUid = uid + 10000; 
 
-            await client.join('039c4b2d111b488f8069bb00c583aa04', channelName, agoraToken, screenUid);
+            await client.join(AGORA_APP_ID, channelName, agoraToken, screenUid);
 
             // 2. طلب إذن مشاركة الشاشة من المتصفح
             // نمرر "disable" للصوت لتجنب صدى الصوت، سنكتفي بمايكروفون الكاميرا
@@ -148,12 +155,12 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
 
         } catch (error) {
             console.error("Screen share error:", error);
-            alert("تم إلغاء مشاركة الشاشة أو حدث خطأ.");
+            toast.error("تم إلغاء مشاركة الشاشة أو حدث خطأ.");
         }
     };
 
     const rtcProps = {
-        appId: '039c4b2d111b488f8069bb00c583aa04',
+        appId: AGORA_APP_ID,
         channel: channelName,
         token: agoraToken,
         uid: uid,
@@ -192,7 +199,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                     {isTeacher ? (
                         <>
                             <button onClick={handleLeave} className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition">خروج مؤقت 🚪</button>
-                            <button onClick={handleCompleteClass} disabled={isEnding} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-bold shadow-lg transition disabled:opacity-50">
+                            <button onClick={() => setShowEndConfirm(true)} disabled={isEnding} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-bold shadow-lg transition disabled:opacity-50">
                                 {isEnding ? 'جاري الإنهاء...' : 'إنهاء الحصة وتحصيل الأرباح 🔴'}
                             </button>
                         </>
@@ -254,6 +261,17 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                     </div>
                 )}
             </div>
+
+            <ConfirmDialog
+                isOpen={showEndConfirm}
+                title="إنهاء الحصة"
+                message="هل أنت متأكد من إنهاء الحصة؟ سيتم إغلاق الغرفة وإيداع الأرباح في محفظتك."
+                confirmText="إنهاء وتحصيل"
+                variant="danger"
+                isLoading={isEnding}
+                onConfirm={handleCompleteClass}
+                onCancel={() => setShowEndConfirm(false)}
+            />
         </div>
     );
 }

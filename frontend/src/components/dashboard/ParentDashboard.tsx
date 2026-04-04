@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { getStatusBadge } from "./utils";
+import StatusBadge from "@/components/ui/StatusBadge";
 import { ParentDashboardData } from "@/types";
 import { formatTimeTo12h } from "@/lib/utils";
 
@@ -168,7 +168,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                       <span className="text-xs text-gray-400 mr-1">ريال</span>
                     </td>
                     <td className="px-4 py-4">
-                      {getStatusBadge(booking.status)}
+                    <StatusBadge status={booking.status} />
                     </td>
                   </tr>
                 ))}

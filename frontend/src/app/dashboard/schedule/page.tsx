@@ -5,6 +5,10 @@ import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/axios";
 import Link from "next/link";
 import { formatTimeTo12h } from "@/lib/utils";
+import PageHeader from "@/components/ui/PageHeader";
+import toast from "react-hot-toast";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { showApiError } from "@/hooks/useApiError";
 
 export default function TeacherSchedulePage() {
   const { user } = useAuth();
@@ -59,14 +63,17 @@ export default function TeacherSchedulePage() {
     }
   };
 
-  const handleDeleteSlot = async (id: number) => {
-    if (!confirm("هل أنت متأكد من حذف هذا الموعد؟")) return;
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; slotId: number }>({ isOpen: false, slotId: 0 });
 
+  const handleDeleteSlot = async () => {
     try {
-      await api.delete(`/teacher/slots/${id}`);
+      await api.delete(`/teacher/slots/${deleteConfirm.slotId}`);
+      toast.success("تم حذف الموعد بنجاح.");
       fetchSlots();
-    } catch (error: any) {
-      alert(error.response?.data?.message || "لا يمكن حذف الموعد.");
+    } catch (error: unknown) {
+      showApiError(error, "لا يمكن حذف الموعد.");
+    } finally {
+      setDeleteConfirm({ isOpen: false, slotId: 0 });
     }
   };
 
@@ -89,22 +96,10 @@ export default function TeacherSchedulePage() {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              إدارة جدول المواعيد 📅
-            </h1>
-            <p className="text-gray-500 text-sm mt-1">
-              أضف أوقات فراغك ليتمكن الطلاب من الحجز معك.
-            </p>
-          </div>
-          <Link
-            href="/dashboard"
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200"
-          >
-            العودة للوحة
-          </Link>
-        </div>
+        <PageHeader
+          title="إدارة جدول المواعيد 📅"
+          subtitle="أضف أوقات فراغك ليتمكن الطلاب من الحجز معك."
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* عمود إضافة المواعيد */}
@@ -228,7 +223,7 @@ export default function TeacherSchedulePage() {
 
                             {slot.status === "available" && (
                               <button
-                                onClick={() => handleDeleteSlot(slot.id)}
+                                onClick={() => setDeleteConfirm({ isOpen: true, slotId: slot.id })}
                                 className="text-red-500 hover:text-white hover:bg-red-500 p-2 rounded-md transition"
                                 title="حذف الموعد"
                               >
@@ -246,6 +241,16 @@ export default function TeacherSchedulePage() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={deleteConfirm.isOpen}
+        title="حذف الموعد"
+        message="هل أنت متأكد من حذف هذا الموعد؟ لن يمكن التراجع عن هذا الإجراء."
+        confirmText="حذف الموعد"
+        variant="danger"
+        onConfirm={handleDeleteSlot}
+        onCancel={() => setDeleteConfirm({ isOpen: false, slotId: 0 })}
+      />
     </div>
   );
 }

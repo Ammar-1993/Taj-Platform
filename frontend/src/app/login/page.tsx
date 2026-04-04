@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/axios';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import DecorativeBackground from '@/components/ui/DecorativeBackground';
+import { showApiError } from '@/hooks/useApiError';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -32,9 +34,8 @@ export default function LoginPage() {
             
             // توجيه المستخدم للوحة التحكم
             router.push('/dashboard');
-        } catch (err: unknown) {
-            const error = err as { response?: { data?: { message?: string } } };
-            setError(error.response?.data?.message || 'حدث خطأ غير متوقع أثناء تسجيل الدخول.');
+        } catch (error: unknown) {
+            showApiError(error, 'حدث خطأ غير متوقع أثناء تسجيل الدخول.');
         } finally {
             setIsLoading(false);
         }
@@ -43,11 +44,8 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
             
-            {/* أشكال تجميلية في الخلفية */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 opacity-30 pointer-events-none">
-                <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-indigo-200 blur-3xl"></div>
-                <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-purple-200 blur-3xl"></div>
-            </div>
+            {/* خلفية تجميلية */}
+            <DecorativeBackground colorFrom="indigo" colorTo="purple" opacity="opacity-30" />
 
             <div className="w-full max-w-md animate-fade-in-up">
                 

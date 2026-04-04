@@ -6,6 +6,8 @@ import api from '@/lib/axios';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { GradeLevel } from '@/types';
+import toast from 'react-hot-toast';
+import { showApiError } from '@/hooks/useApiError';
 
 export default function StudentProfilePage() {
     const { user, loading: authLoading } = useAuth();
@@ -58,12 +60,8 @@ export default function StudentProfilePage() {
                 router.push('/dashboard');
             }, 2000);
             
-        } catch (err: unknown) {
-            const error = err as { response?: { data?: { message?: string } } };
-            setMessage({ 
-                type: 'error', 
-                text: error.response?.data?.message || 'حدث خطأ أثناء الحفظ. يرجى المحاولة مرة أخرى.' 
-            });
+        } catch (error: unknown) {
+            showApiError(error, 'حدث خطأ أثناء الحفظ. يرجى المحاولة مرة أخرى.');
         } finally {
             setIsSubmitting(false);
         }

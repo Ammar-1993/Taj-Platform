@@ -5,6 +5,9 @@ import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import PageHeader from '@/components/ui/PageHeader';
+import toast from 'react-hot-toast';
+import { showApiError } from '@/hooks/useApiError';
 
 export default function TeacherProfilePage() {
     const { user } = useAuth();
@@ -70,8 +73,8 @@ export default function TeacherProfilePage() {
             
             // العودة للوحة بعد 3 ثواني
             setTimeout(() => router.push('/dashboard'), 3000);
-        } catch (error: any) {
-            setMessage({ type: 'error', text: error.response?.data?.message || 'حدث خطأ أثناء الرفع' });
+        } catch (error: unknown) {
+            showApiError(error, 'حدث خطأ أثناء الرفع');
         } finally {
             setIsSubmitting(false);
         }
@@ -84,13 +87,10 @@ export default function TeacherProfilePage() {
         <div className="min-h-screen bg-gray-50 p-4 md:p-8">
             <div className="max-w-3xl mx-auto space-y-6">
                 
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">الملف الشخصي والتوثيق 📁</h1>
-                        <p className="text-gray-500 text-sm mt-1">أكمل بياناتك وارفع مستنداتك للبدء في استقبال الطلاب.</p>
-                    </div>
-                    <Link href="/dashboard" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">العودة للوحة</Link>
-                </div>
+                <PageHeader
+                    title="الملف الشخصي والتوثيق 📁"
+                    subtitle="أكمل بياناتك وارفع مستنداتك للبدء في استقبال الطلاب."
+                />
 
                 {/* شريط حالة التوثيق */}
                 {profile ? (

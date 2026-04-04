@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
 import Link from 'next/link';
+import PageHeader from '@/components/ui/PageHeader';
+import StatusBadge from '@/components/ui/StatusBadge';
+import toast from 'react-hot-toast';
+import { showApiError } from '@/hooks/useApiError';
 
 export default function PayoutPage() {
     const { user } = useAuth();
@@ -59,25 +63,15 @@ export default function PayoutPage() {
             
             // تحديث الرصيد والجدول فوراً بدون الحاجة لتحديث الصفحة
             fetchData(); 
-        } catch (error: any) {
-            setMessage({ 
-                type: 'error', 
-                text: error.response?.data?.message || 'تأكد من صحة البيانات وألا يقل المبلغ عن 50 ريال.' 
-            });
+        } catch (error: unknown) {
+            showApiError(error, 'تأكد من صحة البيانات وألا يقل المبلغ عن 50 ريال.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    // دالة لعرض حالة الطلب بشكل أنيق (تتضمن الحالة الجديدة transferred)
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case 'pending': return <span className="px-2 py-1 text-xs rounded-md bg-yellow-100 text-yellow-800 font-bold">قيد المراجعة ⏳</span>;
-            case 'approved': return <span className="px-2 py-1 text-xs rounded-md bg-green-100 text-green-800 font-bold">معتمد ✅</span>;
-            case 'transferred': return <span className="px-2 py-1 text-xs rounded-md bg-blue-100 text-blue-800 font-bold">تم التحويل 🏦</span>;
-            case 'rejected': return <span className="px-2 py-1 text-xs rounded-md bg-red-100 text-red-800 font-bold">مرفوض ❌</span>;
-            default: return status;
-        }
+    const renderStatusBadge = (status: string) => {
+        return <StatusBadge status={status} />;
     };
 
     if (loading) return <div className="p-8 text-center animate-pulse font-bold text-gray-500">جاري تحميل المحفظة والسجل المالي...</div>;
@@ -88,13 +82,10 @@ export default function PayoutPage() {
             <div className="max-w-6xl mx-auto space-y-6">
                 
                 {/* الهيدر */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">سحب الأرباح 💸</h1>
-                        <p className="text-gray-500 text-sm mt-1">اطلب تحويل أرباحك إلى حسابك البنكي بكل سهولة.</p>
-                    </div>
-                    <Link href="/dashboard" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition">العودة للوحة</Link>
-                </div>
+                <PageHeader
+                    title="سحب الأرباح 💸"
+                    subtitle="اطلب تحويل أرباحك إلى حسابك البنكي بكل سهولة."
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     
@@ -207,7 +198,7 @@ export default function PayoutPage() {
                                                 <td className="px-4 py-3 text-gray-500">{new Date(payout.created_at).toLocaleDateString('ar-SA')}</td>
                                                 <td className="px-4 py-3 font-bold text-green-600">{payout.amount} SAR</td>
                                                 <td className="px-4 py-3 text-gray-700">{payout.bank_name}</td>
-                                                <td className="px-4 py-3">{getStatusBadge(payout.status)}</td>
+                                                <td className="px-4 py-3">{renderStatusBadge(payout.status)}</td>
                                             </tr>
                                         ))}
                                     </tbody>

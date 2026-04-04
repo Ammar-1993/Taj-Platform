@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Tajawal } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import ToastProvider from "@/components/ui/ToastProvider";
 
 const tajawal = Tajawal({
   subsets: ["arabic", "latin"],
@@ -24,6 +25,7 @@ export default function RootLayout({
     <html lang="ar" dir="rtl">
       <body className={tajawal.className}>
         <AuthProvider>
+          <ToastProvider />
           {children}
         </AuthProvider>
       </body>

@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
 import Link from 'next/link';
+import PageHeader from '@/components/ui/PageHeader';
+import StatusBadge from '@/components/ui/StatusBadge';
+import toast from 'react-hot-toast';
+import { showApiError } from '@/hooks/useApiError';
 
 export default function SupportPage() {
     const { user } = useAuth();
@@ -58,25 +62,15 @@ export default function SupportPage() {
             setBookingId('');
             
             fetchData(); // تحديث قائمة التذاكر فوراً
-        } catch (error: any) {
-            setMessage({ 
-                type: 'error', 
-                text: error.response?.data?.message || 'حدث خطأ أثناء إرسال التذكرة.' 
-            });
+        } catch (error: unknown) {
+            showApiError(error, 'حدث خطأ أثناء إرسال التذكرة.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    // دالة لتنسيق شارة الحالة
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case 'open': return <span className="px-2 py-1 text-xs rounded-md bg-red-100 text-red-800 font-bold">مفتوحة ⏳</span>;
-            case 'in_progress': return <span className="px-2 py-1 text-xs rounded-md bg-yellow-100 text-yellow-800 font-bold">قيد المعالجة 🔄</span>;
-            case 'resolved': 
-            case 'closed': return <span className="px-2 py-1 text-xs rounded-md bg-green-100 text-green-800 font-bold">تم الحل ✅</span>;
-            default: return status;
-        }
+    const renderStatusBadge = (status: string) => {
+        return <StatusBadge status={status} />;
     };
 
     if (loading) return <div className="p-8 text-center animate-pulse font-bold text-gray-500">جاري تحميل مركز المساعدة...</div>;
@@ -86,14 +80,10 @@ export default function SupportPage() {
         <div className="min-h-screen bg-gray-50 p-4 md:p-8">
             <div className="max-w-6xl mx-auto space-y-6">
                 
-                {/* الهيدر */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">مركز المساعدة والدعم 🛟</h1>
-                        <p className="text-gray-500 text-sm mt-1">نحن هنا لمساعدتك. ارفع تذكرة وسنقوم بحل مشكلتك في أسرع وقت.</p>
-                    </div>
-                    <Link href="/dashboard" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition">العودة للوحة</Link>
-                </div>
+                <PageHeader
+                    title="مركز المساعدة والدعم 🛟"
+                    subtitle="نحن هنا لمساعدتك. ارفع تذكرة وسنقوم بحل مشكلتك في أسرع وقت."
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     
@@ -182,7 +172,7 @@ export default function SupportPage() {
                                                     {ticket.booking_id && <span className="text-blue-600 font-bold mr-2"> | 📌 مرتبطة بحجز #{ticket.booking_id}</span>}
                                                 </p>
                                             </div>
-                                            <div>{getStatusBadge(ticket.status)}</div>
+                                            <div>{renderStatusBadge(ticket.status)}</div>
                                         </div>
                                         
                                         <p className="text-sm text-gray-700 bg-white p-3 rounded-lg border border-gray-100">
