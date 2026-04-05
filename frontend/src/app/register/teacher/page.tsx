@@ -15,6 +15,7 @@ export default function TeacherRegisterPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     // Form Data States (البيانات الأساسية فقط)
     const [name, setName] = useState('');
@@ -60,7 +61,8 @@ export default function TeacherRegisterPage() {
             <div className="max-w-xl w-full bg-white/80 backdrop-blur-sm p-8 sm:p-10 rounded-3xl shadow-2xl border border-gray-100/80 animate-fade-in-up">
                 
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-black text-gray-900 mb-2">إنشاء حساب معلم 👨‍🏫</h1>
+                    <div className="text-5xl mb-4 drop-shadow-lg">👨‍🏫</div>
+                    <h1 className="text-3xl font-black text-gray-900 mb-2">إنشاء حساب معلم</h1>
                     <p className="text-gray-500">الخطوة الأولى: أنشئ حسابك الأساسي لتتمكن من الدخول للمنصة.</p>
                 </div>
 
@@ -76,22 +78,51 @@ export default function TeacherRegisterPage() {
 
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-1">الاسم الكامل (كما في الهوية) *</label>
-                            <input type="text" required value={name} onChange={e => setName(e.target.value)} className="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white" />
+                            <div className="relative group">
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-emerald-500 transition-colors">👤</span>
+                                <input type="text" required value={name} onChange={e => setName(e.target.value)} className="w-full border-2 border-gray-200 rounded-xl py-3 pr-10 pl-4 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white" />
+                            </div>
                         </div>
                         
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-1">البريد الإلكتروني *</label>
-                            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} className="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white" dir="ltr" />
+                            <div className="relative group">
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-emerald-500 transition-colors">📧</span>
+                                <input type="email" required value={email} onChange={e => setEmail(e.target.value)} className="w-full border-2 border-gray-200 rounded-xl py-3 pr-10 pl-4 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white" dir="ltr" />
+                            </div>
                         </div>
                         
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-1">رقم الجوال *</label>
-                            <input type="tel" required value={phone} onChange={e => setPhone(e.target.value)} className="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white" dir="ltr" placeholder="05XXXXXXXX" />
+                            <div className="relative group">
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-emerald-500 transition-colors">📱</span>
+                                <input type="tel" required value={phone} onChange={e => setPhone(e.target.value)} className="w-full border-2 border-gray-200 rounded-xl py-3 pr-10 pl-4 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white" dir="ltr" placeholder="05XXXXXXXX" />
+                            </div>
                         </div>
                         
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-1">كلمة المرور *</label>
-                            <input type="password" required minLength={8} value={password} onChange={e => setPassword(e.target.value)} className="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white" />
+                            <div className="relative group">
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-emerald-500 transition-colors">🔒</span>
+                                <input 
+                                    type={showPassword ? 'text' : 'password'} 
+                                    required 
+                                    minLength={8} 
+                                    value={password} 
+                                    onChange={e => setPassword(e.target.value)} 
+                                    className="w-full border-2 border-gray-200 rounded-xl py-3 pr-10 pl-12 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white text-left font-bold tracking-widest" 
+                                    dir="ltr"
+                                    placeholder="••••••••"
+                                />
+                                <button 
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-600 transition-colors"
+                                    title={showPassword ? 'إخفاء' : 'عرض'}
+                                >
+                                    {showPassword ? '👁️‍🗨️' : '👁️'}
+                                </button>
+                            </div>
                         </div>
 
                         <div className="pt-4">

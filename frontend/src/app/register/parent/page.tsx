@@ -15,6 +15,7 @@ export default function ParentRegisterPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -76,22 +77,51 @@ export default function ParentRegisterPage() {
 
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-1">اسم ولي الأمر *</label>
-                            <input type="text" required value={name} onChange={e => setName(e.target.value)} placeholder="الاسم الثنائي أو الثلاثي" className="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white" />
+                            <div className="relative group">
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-purple-500 transition-colors">👤</span>
+                                <input type="text" required value={name} onChange={e => setName(e.target.value)} placeholder="الاسم الثنائي أو الثلاثي" className="w-full border-2 border-gray-200 rounded-xl py-3 pr-10 pl-4 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white" />
+                            </div>
                         </div>
                         
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-1">البريد الإلكتروني *</label>
-                            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="parent@example.com" className="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white" dir="ltr" />
+                            <div className="relative group">
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-purple-500 transition-colors">📧</span>
+                                <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="parent@example.com" className="w-full border-2 border-gray-200 rounded-xl py-3 pr-10 pl-4 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white" dir="ltr" />
+                            </div>
                         </div>
                         
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-1">رقم الجوال *</label>
-                            <input type="tel" required value={phone} onChange={e => setPhone(e.target.value)} placeholder="05XXXXXXXX" className="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white" dir="ltr" />
+                            <div className="relative group">
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-purple-500 transition-colors">📱</span>
+                                <input type="tel" required value={phone} onChange={e => setPhone(e.target.value)} placeholder="05XXXXXXXX" className="w-full border-2 border-gray-200 rounded-xl py-3 pr-10 pl-4 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white" dir="ltr" />
+                            </div>
                         </div>
                         
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-1">كلمة المرور *</label>
-                            <input type="password" required minLength={8} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white" />
+                            <div className="relative group">
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-purple-500 transition-colors">🔒</span>
+                                <input 
+                                    type={showPassword ? 'text' : 'password'} 
+                                    required 
+                                    minLength={8} 
+                                    value={password} 
+                                    onChange={e => setPassword(e.target.value)} 
+                                    placeholder="••••••••" 
+                                    className="w-full border-2 border-gray-200 rounded-xl py-3 pr-10 pl-12 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white text-left font-bold tracking-widest" 
+                                    dir="ltr"
+                                />
+                                <button 
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-600 transition-colors"
+                                    title={showPassword ? 'إخفاء' : 'عرض'}
+                                >
+                                    {showPassword ? '👁️‍🗨️' : '👁️'}
+                                </button>
+                            </div>
                         </div>
 
                         <div className="pt-4">
