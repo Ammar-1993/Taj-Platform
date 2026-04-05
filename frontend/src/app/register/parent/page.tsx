@@ -98,7 +98,7 @@ export default function ParentRegisterPage() {
                 اسم ولي الأمر *
               </label>
               <div className="relative group">
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-purple-500 transition-colors">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-purple-500 transition-colors">
                   👤
                 </span>
                 <input
@@ -107,7 +107,7 @@ export default function ParentRegisterPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="الاسم الثنائي أو الثلاثي"
-                  className="w-full border-2 border-gray-200 rounded-xl py-3 pr-10 pl-4 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white"
+                  className="w-full border-2 border-gray-200 rounded-xl py-3 pl-10 pr-4 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white"
                 />
               </div>
             </div>
@@ -117,7 +117,7 @@ export default function ParentRegisterPage() {
                 البريد الإلكتروني *
               </label>
               <div className="relative group">
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-purple-500 transition-colors">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-purple-500 transition-colors">
                   📧
                 </span>
                 <input
@@ -126,7 +126,7 @@ export default function ParentRegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="parent@taj.com"
-                  className="w-full border-2 border-gray-200 rounded-xl py-3 pr-10 pl-4 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white"
+                  className="w-full border-2 border-gray-200 rounded-xl py-3 pl-10 pr-4 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white"
                   dir="ltr"
                 />
               </div>
@@ -137,7 +137,7 @@ export default function ParentRegisterPage() {
                 رقم الجوال *
               </label>
               <div className="relative group">
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-purple-500 transition-colors">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-purple-500 transition-colors">
                   📱
                 </span>
                 <input
@@ -146,7 +146,7 @@ export default function ParentRegisterPage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="05XXXXXXXX"
-                  className="w-full border-2 border-gray-200 rounded-xl py-3 pr-10 pl-4 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white"
+                  className="w-full border-2 border-gray-200 rounded-xl py-3 pl-10 pr-4 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white"
                   dir="ltr"
                 />
               </div>
@@ -157,7 +157,7 @@ export default function ParentRegisterPage() {
                 كلمة المرور *
               </label>
               <div className="relative group">
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-purple-500 transition-colors">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-purple-500 transition-colors">
                   🔒
                 </span>
                 <input
@@ -167,13 +167,13 @@ export default function ParentRegisterPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full border-2 border-gray-200 rounded-xl py-3 pr-10 pl-12 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white text-left font-bold tracking-widest"
+                  className="w-full border-2 border-gray-200 rounded-xl py-3 pl-10 pr-12 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white text-left font-bold tracking-widest"
                   dir="ltr"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-600 transition-colors"
                   title={showPassword ? "إخفاء" : "عرض"}
                 >
                   {showPassword ? "👁️‍🗨️" : "👁️"}

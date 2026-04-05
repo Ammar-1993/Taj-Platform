@@ -83,7 +83,7 @@ export default function LoginPage() {
                   البريد الإلكتروني
                 </label>
                 <div className="relative group">
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lg text-gray-400">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg text-gray-400">
                     📧
                   </span>
                   <input
@@ -91,7 +91,7 @@ export default function LoginPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pr-12 pl-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-left"
+                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-left"
                     placeholder="name@taj.com"
                     dir="ltr"
                   />
@@ -111,7 +111,7 @@ export default function LoginPage() {
                   </Link>
                 </div>
                 <div className="relative group">
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lg text-gray-400">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg text-gray-400">
                     🔒
                   </span>
                   <input
@@ -119,14 +119,14 @@ export default function LoginPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pr-12 pl-12 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-left tracking-widest"
+                    className="w-full pl-12 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-left tracking-widest"
                     placeholder="••••••••"
                     dir="ltr"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-colors"
                   >
                     {showPassword ? "👁️‍🗨️" : "👁️"}
                   </button>

@@ -13,6 +13,8 @@ use Filament\Support\Colors\Color;
 use Filament\Support\Enums\MaxWidth;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets;
+use App\Filament\Auth\CustomLogin;
+
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -33,7 +35,8 @@ class AdminPanelProvider extends PanelProvider
             // ->brandLogo(asset('images/logo.png'))
             // ->brandLogoHeight('3rem')
             ->path('admin')
-            ->login()
+            ->login(CustomLogin::class)
+
             ->font('Cairo') // 🟢 هذه اللمسة ستجعل الخط العربي رائعاً
             ->colors([
                 'primary' => Color::Indigo,
