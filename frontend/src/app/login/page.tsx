@@ -13,6 +13,7 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     
     const router = useRouter();
     const { login } = useAuth(); // نفترض أن دالة login في الكونتكست تعالج حفظ التوكن
@@ -75,15 +76,18 @@ export default function LoginPage() {
                         <div className="space-y-5">
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">البريد الإلكتروني</label>
-                                <input
-                                    type="email"
-                                    required
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-left"
-                                    placeholder="name@example.com"
-                                    dir="ltr"
-                                />
+                                <div className="relative group">
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lg text-gray-400">📧</span>
+                                    <input
+                                        type="email"
+                                        required
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="w-full pr-12 pl-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-left"
+                                        placeholder="name@example.com"
+                                        dir="ltr"
+                                    />
+                                </div>
                             </div>
                             
                             <div>
@@ -93,15 +97,25 @@ export default function LoginPage() {
                                         نسيت كلمة المرور؟
                                     </Link>
                                 </div>
-                                <input
-                                    type="password"
-                                    required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-left tracking-widest"
-                                    placeholder="••••••••"
-                                    dir="ltr"
-                                />
+                                <div className="relative group">
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lg text-gray-400">🔒</span>
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        required
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="w-full pr-12 pl-12 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-left tracking-widest"
+                                        placeholder="••••••••"
+                                        dir="ltr"
+                                    />
+                                    <button 
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-colors"
+                                    >
+                                        {showPassword ? '👁️‍🗨️' : '👁️'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
