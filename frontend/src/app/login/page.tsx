@@ -141,7 +141,7 @@ export default function LoginPage() {
                     <p className="text-gray-600 text-sm">
                         ليس لديك حساب؟ {' '}
                         <Link href="/register" className="font-bold text-indigo-600 hover:text-indigo-800 transition-colors">
-                            أنشئ حساباً جديداً الآن
+                            أنشئ حساباً جديداً 
                         </Link>
                     </p>
                 </div>
