@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Auth\CustomLogin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -13,8 +14,6 @@ use Filament\Support\Colors\Color;
 use Filament\Support\Enums\MaxWidth;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets;
-use App\Filament\Auth\CustomLogin;
-
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -31,7 +30,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->brandName('منصة تاج')
-            ->brandLogo(fn () => new HtmlString('<div class="flex items-center gap-2"><span class="text-2xl">مرحباً بكم في</span><span class="text-xl font-bold"></span></div>'))
+            ->brandLogo(fn () => new HtmlString('<div class="flex items-center gap-2"><span class="text-2xl">مرحباً بك </span><span class="text-xl font-bold"></span></div>'))
             // ->brandLogo(asset('images/logo.png'))
             // ->brandLogoHeight('3rem')
             ->path('admin')
