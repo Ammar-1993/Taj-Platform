@@ -6,7 +6,7 @@
             
             <div class="flex-1">
                 <h2 class="grid flex-1 text-base font-semibold leading-6 text-gray-950 dark:text-white">
-                    مرحباً بك في لوحة تحكم منصة تاج التعليمية 👑
+                    مرحباً بك في منصة تاج التعليمية 👑
                 </h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400">
                     أهلاً بك، {{ auth()->user()->name }}
