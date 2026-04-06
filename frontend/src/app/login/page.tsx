@@ -180,7 +180,7 @@ export default function LoginPage() {
               href="/register"
               className="font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
             >
-              أنشئ حساباً جديداً
+              أنشئ حساباً جديدا
             </Link>
           </p>
         </div>
