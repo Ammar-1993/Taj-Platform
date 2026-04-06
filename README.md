@@ -136,5 +136,5 @@ npm run test
 ---
 
 <div align="center">
-  <p>Built with ❤️ by the Taj Platform Team.</p>
+  <p>Developed by ❤️ Engineer Ammar Al-Najjar</p>
 </div>
