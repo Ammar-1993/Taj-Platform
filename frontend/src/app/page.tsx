@@ -79,15 +79,9 @@ export default function Home() {
           </div>
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="w-full md:w-auto text-center md:text-right">
-              <div className="flex items-center justify-center md:justify-start gap-3 mb-3">
-                <Crown
-                  size={40}
-                  className="text-yellow-400 drop-shadow-md animate-subtle-pulse"
-                  strokeWidth={2.5}
-                />
-                <h1 className="text-3xl md:text-4xl font-black tracking-tight">
-                  منصة تاج التعليمية
-                </h1>
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-4xl drop-shadow-lg animate-subtle-pulse">👑</span>
+                <h1 className="text-3xl md:text-4xl font-black tracking-tight">منصة تاج التعليمية</h1>
               </div>
               <p className="text-indigo-200 text-base md:text-lg font-medium mt-1">
                 نخبة من المعلمين المعتمدين في جميع المواد — اختر معلمك وانطلق
