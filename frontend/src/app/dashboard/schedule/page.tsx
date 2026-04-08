@@ -3,16 +3,17 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/axios";
-import Link from "next/link";
 import { formatTimeTo12h } from "@/lib/utils";
 import PageHeader from "@/components/ui/PageHeader";
+import DecorativeBackground from "@/components/ui/DecorativeBackground";
 import toast from "react-hot-toast";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { showApiError } from "@/hooks/useApiError";
+import { TeacherSlot } from '@/types';
 
 export default function TeacherSchedulePage() {
   const { user } = useAuth();
-  const [slots, setSlots] = useState<any>({});
+  const [slots, setSlots] = useState<Record<string, TeacherSlot[]>>({});
   const [loading, setLoading] = useState(true);
 
   // حالة الفورم
@@ -53,10 +54,11 @@ export default function TeacherSchedulePage() {
       setStartTime(""); // تصفير الوقت لتسهيل الإضافة التالية
       setEndTime("");
       fetchSlots(); // تحديث الجدول فوراً
-    } catch (error: any) {
+    } catch (error: unknown) {
+      showApiError(error, "حدث خطأ غير متوقع");
       setMessage({
         type: "error",
-        text: error.response?.data?.message || "حدث خطأ غير متوقع",
+        text: "حدث خطأ غير متوقع",
       });
     } finally {
       setIsSubmitting(false);
@@ -83,7 +85,7 @@ export default function TeacherSchedulePage() {
         جاري تحميل الجدول...
       </div>
     );
-  if (!user?.roles?.some((r: any) => r.name === "teacher"))
+  if (!user?.roles?.some((r) => r.name === "teacher"))
     return (
       <div className="p-8 text-center text-red-500 font-bold">
         هذه الصفحة للمعلمين فقط.
@@ -95,30 +97,16 @@ export default function TeacherSchedulePage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 md:p-8">
-      {/* Decorative Background Elements */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-0 opacity-20">
-        <div className="absolute top-[10%] -left-20 w-96 h-96 rounded-full bg-indigo-300 blur-[120px]"></div>
-        <div className="absolute bottom-[20%] -right-20 w-[600px] h-[600px] rounded-full bg-purple-200 blur-[150px]"></div>
-      </div>
+      <DecorativeBackground />
 
       <div className="relative z-10 max-w-7xl mx-auto space-y-8 tracking-tight">
         
-        <div className="bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-white/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fade-in-up">
-            <div>
-                <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
-                    <span className="text-4xl animate-subtle-pulse">📅</span>
-                    إدارة جدول المواعيد
-                </h1>
-                <p className="text-gray-500 text-sm mt-2 font-medium">أضف أوقات فراغك ليتمكن الطلاب من حجز حصصهم معك بسهولة.</p>
-            </div>
-            <Link
-                href="/dashboard"
-                className="px-5 py-2.5 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all duration-200 flex items-center gap-2 hover:-translate-y-0.5"
-            >
-                <span>العودة للوحة التحكم</span>
-                <span>🏠</span>
-            </Link>
-        </div>
+        <PageHeader
+          title="إدارة جدول المواعيد"
+          subtitle="أضف أوقات فراغك ليتمكن الطلاب من حجز حصصهم معك بسهولة."
+          backHref="/dashboard"
+          backLabel="العودة للوحة التحكم"
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* عمود إضافة المواعيد */}
@@ -216,7 +204,7 @@ export default function TeacherSchedulePage() {
             ) : (
               <div className="space-y-10">
                 {Object.entries(slots).map(
-                  ([dayDate, daySlots]: [string, any]) => (
+                  ([dayDate, daySlots]: [string, TeacherSlot[]]) => (
                     <div
                       key={dayDate}
                       className="relative bg-white/40 p-6 rounded-[2rem] border-2 border-gray-50 shadow-sm"
@@ -227,7 +215,7 @@ export default function TeacherSchedulePage() {
                         </span>
                       </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {daySlots.map((slot: any) => (
+                        {daySlots.map((slot) => (
                           <div
                             key={slot.id}
                             className={`group relative overflow-hidden backdrop-blur-sm p-4.5 rounded-[1.5rem] border-2 flex flex-col gap-2 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${

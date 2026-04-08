@@ -3,18 +3,26 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
-import Link from 'next/link';
 import PageHeader from '@/components/ui/PageHeader';
+import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import StatusBadge from '@/components/ui/StatusBadge';
-import toast from 'react-hot-toast';
 import { showApiError } from '@/hooks/useApiError';
+import { Wallet } from '@/types';
 
 export default function PayoutPage() {
     const { user } = useAuth();
     
     // حالات جلب البيانات
-    const [walletInfo, setWalletInfo] = useState<any>(null);
-    const [payouts, setPayouts] = useState<any[]>([]);
+    type PayoutRequest = {
+      id: number;
+      amount: string;
+      bank_name: string;
+      status: string;
+      created_at: string;
+    };
+
+    const [walletInfo, setWalletInfo] = useState<Wallet | null>(null);
+    const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
     const [loading, setLoading] = useState(true);
 
     // حالات نموذج السحب
@@ -23,6 +31,8 @@ export default function PayoutPage() {
     const [iban, setIban] = useState('SA');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
+
+    const walletBalance = walletInfo ? Number(walletInfo.balance) : 0;
 
     // جلب الرصيد المباشر وسجل الطلبات عند فتح الصفحة
     useEffect(() => {
@@ -79,30 +89,16 @@ export default function PayoutPage() {
 
     return (
         <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 md:p-8">
-            {/* Decorative Background Elements */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-0 opacity-20">
-                <div className="absolute top-[10%] -left-20 w-96 h-96 rounded-full bg-indigo-300 blur-[120px]"></div>
-                <div className="absolute bottom-[20%] -right-20 w-[600px] h-[600px] rounded-full bg-purple-200 blur-[150px]"></div>
-            </div>
+            <DecorativeBackground />
 
             <div className="relative z-10 max-w-7xl mx-auto space-y-8 tracking-tight">
                 
-                <div className="bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-white/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fade-in-up">
-                    <div>
-                        <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
-                            <span className="text-4xl animate-subtle-pulse">💸</span>
-                            سحب الأرباح والأرصدة
-                        </h1>
-                        <p className="text-gray-500 text-sm mt-2 font-medium leading-relaxed">اطلب تحويل أرباحك إلى حسابك البنكي بكل سهولة وأمان.</p>
-                    </div>
-                    <Link
-                        href="/dashboard"
-                        className="px-5 py-2.5 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all duration-200 flex items-center gap-2 hover:-translate-y-0.5"
-                    >
-                        <span>العودة للوحة التحكم</span>
-                        <span>🏠</span>
-                    </Link>
-                </div>
+                <PageHeader
+                    title="سحب الأرباح والأرصدة"
+                    subtitle="اطلب تحويل أرباحك إلى حسابك البنكي بكل سهولة وأمان."
+                    backHref="/dashboard"
+                    backLabel="العودة للوحة التحكم"
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     
@@ -191,7 +187,11 @@ export default function PayoutPage() {
                                 
                                 <button 
                                     type="submit" 
-                                    disabled={isSubmitting || (amount !== '' && amount > walletInfo?.balance) || walletInfo?.balance < 50}
+                                    disabled={
+                                        isSubmitting ||
+                                        (amount !== '' && amount > walletBalance) ||
+                                        walletBalance < 50
+                                    }
                                     className="w-full bg-gradient-to-r from-emerald-600 via-emerald-700 to-green-800 text-white font-black py-4.5 rounded-[1.5rem] hover:shadow-[0_12px_40px_rgba(16,185,129,0.3)] transition-all duration-300 disabled:opacity-50 mt-2 hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 text-lg shadow-xl"
                                 >
                                     {isSubmitting ? (
@@ -206,7 +206,7 @@ export default function PayoutPage() {
                                         </>
                                     )}
                                 </button>
-                                {walletInfo?.balance < 50 && (
+                                {walletBalance < 50 && (
                                     <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-[10px] text-rose-600 font-bold text-center flex items-center gap-2 justify-center">
                                          <span>⚠️ رصيدك أقل من الحد الأدنى (50 ريال)</span>
                                     </div>

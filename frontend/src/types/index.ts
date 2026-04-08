@@ -23,6 +23,8 @@ export interface TeacherProfile {
   average_rating: number;
   reviews_count: number;
   subject?: Subject;
+  national_id_path?: string;
+  degree_path?: string;
 }
 
 export interface StudentProfile {
@@ -30,6 +32,7 @@ export interface StudentProfile {
   user_id: number;
   grade_level_id: number;
   is_active: boolean;
+  can_book_independently?: boolean;
   grade_level?: {
     id: number;
     name: string;

@@ -3,10 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import Link from 'next/link';
 import api from '@/lib/axios';
 import PageHeader from '@/components/ui/PageHeader';
-import toast from 'react-hot-toast';
+import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import { showApiError } from '@/hooks/useApiError';
 
 export default function TopUpPage() {
@@ -52,30 +51,16 @@ export default function TopUpPage() {
 
     return (
     <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 md:p-8 flex items-center justify-center">
-        {/* Decorative Background Elements */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-0 opacity-20">
-            <div className="absolute top-[10%] -left-20 w-96 h-96 rounded-full bg-indigo-300 blur-[120px]"></div>
-            <div className="absolute bottom-[20%] -right-20 w-[600px] h-[600px] rounded-full bg-purple-200 blur-[150px]"></div>
-        </div>
+        <DecorativeBackground />
 
         <div className="relative z-10 max-w-2xl w-full space-y-8 tracking-tight">
             
-            <div className="bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-white/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fade-in-up">
-                <div>
-                    <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
-                        <span className="text-4xl animate-subtle-pulse">💳</span>
-                        شحن المحفظة
-                    </h1>
-                    <p className="text-gray-500 text-sm mt-2 font-medium">أضف رصيداً لتتمكن من حجز الحصص لأبنائك بسهولة.</p>
-                </div>
-                <Link
-                    href="/dashboard"
-                    className="px-5 py-2.5 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all duration-200 flex items-center gap-2 hover:-translate-y-0.5"
-                >
-                    <span>العودة</span>
-                    <span>🏠</span>
-                </Link>
-            </div>
+            <PageHeader
+                title="شحن المحفظة"
+                subtitle="أضف رصيداً لتتمكن من حجز الحصص لأبنائك بسهولة."
+                backHref="/dashboard"
+                backLabel="العودة للوحة التحكم"
+            />
 
             <div className="bg-white/90 backdrop-blur-md p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-white/50 animate-fade-in-up-delay">
 

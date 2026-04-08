@@ -3,18 +3,18 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/ui/PageHeader';
-import toast from 'react-hot-toast';
+import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import { showApiError } from '@/hooks/useApiError';
+import { Subject, TeacherProfile } from '@/types';
 
 export default function TeacherProfilePage() {
     const { user } = useAuth();
     const router = useRouter();
     
-    const [subjects, setSubjects] = useState<any[]>([]);
-    const [profile, setProfile] = useState<any>(null);
+    const [subjects, setSubjects] = useState<Subject[]>([]);
+    const [profile, setProfile] = useState<TeacherProfile | null>(null);
     const [loading, setLoading] = useState(true);
     
     // حالات الفورم
@@ -81,34 +81,20 @@ export default function TeacherProfilePage() {
     };
 
     if (loading) return <div className="p-8 text-center animate-pulse font-bold">جاري تحميل الملف الشخصي...</div>;
-    if (!user?.roles?.some((r: any) => r.name === 'teacher')) return <div className="p-8 text-center text-red-500 font-bold">هذه الصفحة للمعلمين فقط.</div>;
+    if (!user?.roles?.some((r) => r.name === 'teacher')) return <div className="p-8 text-center text-red-500 font-bold">هذه الصفحة للمعلمين فقط.</div>;
 
     return (
         <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 md:p-8">
-            {/* Decorative Background Elements */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-0 opacity-20">
-                <div className="absolute top-[10%] -left-20 w-96 h-96 rounded-full bg-indigo-300 blur-[120px]"></div>
-                <div className="absolute bottom-[20%] -right-20 w-[600px] h-[600px] rounded-full bg-purple-200 blur-[150px]"></div>
-            </div>
+            <DecorativeBackground />
 
             <div className="relative z-10 max-w-4xl mx-auto space-y-8 tracking-tight">
                 
-                <div className="bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-white/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fade-in-up">
-                    <div>
-                        <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
-                            <span className="text-4xl animate-subtle-pulse">📁</span>
-                            الملف الشخصي والتوثيق
-                        </h1>
-                        <p className="text-gray-500 text-sm mt-2 font-medium">أكمل بياناتك وارفع مستنداتك للبدء في استقبال الطلاب والتدريس.</p>
-                    </div>
-                    <Link
-                        href="/dashboard"
-                        className="px-5 py-2.5 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all duration-200 flex items-center gap-2 hover:-translate-y-0.5"
-                    >
-                        <span>العودة للوحة التحكم</span>
-                        <span>🏠</span>
-                    </Link>
-                </div>
+                <PageHeader
+                    title="الملف الشخصي والتوثيق"
+                    subtitle="أكمل بياناتك وارفع مستنداتك للبدء في استقبال الطلاب والتدريس."
+                    backHref="/dashboard"
+                    backLabel="العودة للوحة التحكم"
+                />
 
                 {/* شريط حالة التوثيق */}
                 <div className="animate-fade-in-up-delay">

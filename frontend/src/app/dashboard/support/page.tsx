@@ -3,18 +3,28 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
-import Link from 'next/link';
 import PageHeader from '@/components/ui/PageHeader';
+import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import StatusBadge from '@/components/ui/StatusBadge';
-import toast from 'react-hot-toast';
 import { showApiError } from '@/hooks/useApiError';
+import { Booking } from '@/types';
 
 export default function SupportPage() {
     const { user } = useAuth();
     
     // حالات جلب البيانات
-    const [tickets, setTickets] = useState<any[]>([]);
-    const [bookings, setBookings] = useState<any[]>([]);
+    type SupportTicket = {
+      id: number;
+      subject: string;
+      description: string;
+      status: string;
+      booking_id?: number;
+      admin_reply?: string;
+      updated_at: string;
+    };
+
+    const [tickets, setTickets] = useState<SupportTicket[]>([]);
+    const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(true);
 
     // حالات نموذج الإرسال
@@ -51,7 +61,7 @@ export default function SupportPage() {
         setMessage({ type: '', text: '' });
 
         try {
-            const payload: any = { subject, description };
+            const payload: Record<string, unknown> = { subject, description };
             if (bookingId) payload.booking_id = bookingId;
 
             const res = await api.post('/support-tickets', payload);
@@ -78,30 +88,16 @@ export default function SupportPage() {
 
     return (
         <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 md:p-8">
-            {/* Decorative Background Elements */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-0 opacity-20">
-                <div className="absolute top-[10%] -left-20 w-96 h-96 rounded-full bg-indigo-300 blur-[120px]"></div>
-                <div className="absolute bottom-[20%] -right-20 w-[500px] h-[500px] rounded-full bg-purple-200 blur-[150px]"></div>
-            </div>
+            <DecorativeBackground />
 
             <div className="relative z-10 max-w-7xl mx-auto space-y-8 tracking-tight">
                 
-                <div className="bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-white/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fade-in-up">
-                    <div>
-                        <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
-                            <span className="text-4xl animate-subtle-pulse">🛟</span>
-                            مركز المساعدة والدعم
-                        </h1>
-                        <p className="text-gray-500 text-sm mt-2 font-medium leading-relaxed">نحن هنا لمساعدتك. ارفع تذكرة وسنقوم بحل مشكلتك في أسرع وقت.</p>
-                    </div>
-                    <Link
-                        href="/dashboard"
-                        className="px-5 py-2.5 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all duration-200 flex items-center gap-2 hover:-translate-y-0.5"
-                    >
-                        <span>العودة للوحة التحكم</span>
-                        <span>🏠</span>
-                    </Link>
-                </div>
+                <PageHeader
+                    title="مركز المساعدة والدعم"
+                    subtitle="نحن هنا لمساعدتك. ارفع تذكرة وسنقوم بحل مشكلتك في أسرع وقت."
+                    backHref="/dashboard"
+                    backLabel="العودة للوحة التحكم"
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     
@@ -143,7 +139,7 @@ export default function SupportPage() {
                                             className="w-full px-4 py-4 bg-gray-50/50 border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 text-sm font-bold text-gray-700 appearance-none cursor-pointer"
                                         >
                                             <option value="">-- شكوى عامة --</option>
-                                            {bookings.map((b: any) => (
+                                            {bookings.map((b: Booking) => (
                                                 <option key={b.id} value={b.id}>
                                                     حجز #{b.id} مع {b.teacher?.name} ({new Date(b.booking_date).toLocaleDateString('ar-SA')})
                                                 </option>
