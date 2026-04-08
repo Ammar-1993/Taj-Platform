@@ -57,6 +57,12 @@ export interface WalletTransaction {
   created_at: string;
 }
 
+export interface ApiResponse<T> {
+  data: T;
+  message?: string;
+  [key: string]: unknown;
+}
+
 export interface User {
   id: number;
   name: string;
@@ -99,6 +105,22 @@ export interface Booking {
   teacher?: User;
   teacher_slot?: TeacherSlot;
   review?: Review;
+}
+
+export interface SupportTicket {
+  id: number;
+  subject: string;
+  description: string;
+  status: string;
+  booking_id?: number;
+  admin_reply?: string;
+  updated_at: string;
+}
+
+export interface SupportTicketCreatePayload {
+  subject: string;
+  description: string;
+  booking_id?: string;
 }
 
 export interface AppNotification {

@@ -9,6 +9,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { showApiError } from '@/hooks/useApiError';
+import type { IAgoraRTCClient, ILocalVideoTrack } from 'agora-rtc-sdk-ng';
 
 const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID || '039c4b2d111b488f8069bb00c583aa04';
 
@@ -39,8 +40,8 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
 
     // 🟢 حالات مشاركة الشاشة (العميل المزدوج)
     const [isSharing, setIsSharing] = useState(false);
-    const [screenClient, setScreenClient] = useState<any>(null);
-    const [screenTrack, setScreenTrack] = useState<any>(null);
+    const [screenClient, setScreenClient] = useState<IAgoraRTCClient | null>(null);
+    const [screenTrack, setScreenTrack] = useState<ILocalVideoTrack | null>(null);
 
     const isTeacher = user?.roles?.some((r) => r.name === 'teacher');
 

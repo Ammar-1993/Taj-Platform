@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/ui/PageHeader';
 import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import { showApiError } from '@/hooks/useApiError';
-import { Subject, TeacherProfile } from '@/types';
+import { ApiResponse, Subject, TeacherProfile } from '@/types';
 
 export default function TeacherProfilePage() {
     const { user } = useAuth();
@@ -32,16 +32,16 @@ export default function TeacherProfilePage() {
     const fetchData = async () => {
         try {
             const [subjectsRes, profileRes] = await Promise.all([
-                api.get('/discovery/subjects'),
-                api.get('/profile/teacher')
+                api.get<ApiResponse<Subject[]>>('/discovery/subjects'),
+                api.get<ApiResponse<TeacherProfile>>('/profile/teacher')
             ]);
             
-            setSubjects(subjectsRes.data.data);
+            setSubjects(subjectsRes.data.data || []);
             
-            if (profileRes.data.data) {
+            if (profileRes.data?.data) {
                 const p = profileRes.data.data;
                 setProfile(p);
-                setSubjectId(p.subject_id?.toString() || '');
+                setSubjectId(p.subject_id.toString());
                 setBio(p.bio || '');
             }
         } catch (error) {

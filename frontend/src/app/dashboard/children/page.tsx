@@ -7,7 +7,7 @@ import PageHeader from '@/components/ui/PageHeader';
 import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import toast from 'react-hot-toast';
 import { showApiError } from '@/hooks/useApiError';
-import { GradeLevel, User } from '@/types';
+import { ApiResponse, GradeLevel, User } from '@/types';
 
 export default function ChildrenManagementPage() {
     const { user } = useAuth();
@@ -28,11 +28,11 @@ export default function ChildrenManagementPage() {
     const fetchData = async () => {
         try {
             const [childrenRes, gradesRes] = await Promise.all([
-                api.get('/parent/children'),
-                api.get('/discovery/grade-levels')
+                api.get<ApiResponse<User[]>>('/parent/children'),
+                api.get<ApiResponse<GradeLevel[]>>('/discovery/grade-levels')
             ]);
-            setChildren(childrenRes.data.data);
-            setGradeLevels(gradesRes.data.data);
+            setChildren(childrenRes.data.data || []);
+            setGradeLevels(gradesRes.data.data || []);
         } catch (error) {
             console.error("حدث خطأ أثناء جلب البيانات", error);
         } finally {

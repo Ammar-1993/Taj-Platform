@@ -7,22 +7,11 @@ import PageHeader from '@/components/ui/PageHeader';
 import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { showApiError } from '@/hooks/useApiError';
-import { Booking } from '@/types';
+import { ApiResponse, Booking, SupportTicket, SupportTicketCreatePayload } from '@/types';
 
 export default function SupportPage() {
     const { user } = useAuth();
     
-    // حالات جلب البيانات
-    type SupportTicket = {
-      id: number;
-      subject: string;
-      description: string;
-      status: string;
-      booking_id?: number;
-      admin_reply?: string;
-      updated_at: string;
-    };
-
     const [tickets, setTickets] = useState<SupportTicket[]>([]);
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(true);
@@ -42,8 +31,8 @@ export default function SupportPage() {
         try {
             // جلب التذاكر السابقة وجلب الحجوزات (لربط الشكوى بحجز معين)
             const [ticketsRes, bookingsRes] = await Promise.all([
-                api.get('/support-tickets'),
-                api.get('/bookings') // نفترض أن هذا المسار موجود مسبقاً لجلب حجوزات الطالب
+                api.get<ApiResponse<SupportTicket[]>>('/support-tickets'),
+                api.get<ApiResponse<{ data: Booking[] }>>('/bookings') // نفترض أن هذا المسار موجود مسبقاً لجلب حجوزات الطالب
             ]);
             
             setTickets(ticketsRes.data.data || []);
@@ -61,12 +50,12 @@ export default function SupportPage() {
         setMessage({ type: '', text: '' });
 
         try {
-            const payload: Record<string, unknown> = { subject, description };
+            const payload: SupportTicketCreatePayload = { subject, description };
             if (bookingId) payload.booking_id = bookingId;
 
-            const res = await api.post('/support-tickets', payload);
+            const res = await api.post<ApiResponse<SupportTicket>>('/support-tickets', payload);
             
-            setMessage({ type: 'success', text: res.data.message });
+            setMessage({ type: 'success', text: res.data.message || 'تم إرسال التذكرة بنجاح.' });
             setSubject('');
             setDescription('');
             setBookingId('');
