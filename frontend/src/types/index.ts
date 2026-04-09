@@ -83,6 +83,23 @@ export interface TeacherSlot {
   status: "available" | "booked";
 }
 
+export type SlotsByDate = Record<string, TeacherSlot[]>;
+
+export interface TeacherProfileFormData {
+  subject_id: string;
+  bio: string;
+  national_id?: File | null;
+  degree?: File | null;
+}
+
+export interface PayoutRequest {
+  id: number;
+  amount: string;
+  bank_name: string;
+  status: string;
+  created_at: string;
+}
+
 export interface Review {
   id: number;
   booking_id: number;

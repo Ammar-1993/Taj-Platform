@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/ui/PageHeader';
 import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import { showApiError } from '@/hooks/useApiError';
-import { ApiResponse, Subject, TeacherProfile } from '@/types';
+import { ApiResponse, Subject, TeacherProfile, TeacherProfileFormData } from '@/types';
 
 export default function TeacherProfilePage() {
     const { user } = useAuth();
@@ -65,10 +65,23 @@ export default function TeacherProfilePage() {
         if (degreeFile) formData.append('degree', degreeFile);
 
         try {
-            const res = await api.post('/profile/teacher', formData, {
+            const payload: TeacherProfileFormData = {
+                subject_id: subjectId,
+                bio,
+                national_id: nationalIdFile,
+                degree: degreeFile,
+            };
+
+            const formData = new FormData();
+            formData.append('subject_id', payload.subject_id);
+            formData.append('bio', payload.bio);
+            if (payload.national_id) formData.append('national_id', payload.national_id);
+            if (payload.degree) formData.append('degree', payload.degree);
+
+            const res = await api.post<ApiResponse<TeacherProfile>>('/profile/teacher', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            setMessage({ type: 'success', text: res.data.message });
+            setMessage({ type: 'success', text: res.data.message || 'تم حفظ الملف الشخصي بنجاح.' });
             setProfile(res.data.data); // تحديث الحالة
             
             // العودة للوحة بعد 3 ثواني

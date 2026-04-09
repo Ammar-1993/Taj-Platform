@@ -9,6 +9,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { showApiError } from '@/hooks/useApiError';
+import { ApiResponse } from '@/types';
 import type { IAgoraRTCClient, ILocalVideoTrack } from 'agora-rtc-sdk-ng';
 
 const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID || '039c4b2d111b488f8069bb00c583aa04';
@@ -54,7 +55,13 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     useEffect(() => {
         const fetchAccess = async () => {
             try {
-                const res = await api.get(`/bookings/${params.id}/classroom`);
+                type AccessPayload = {
+                    channel_name: string;
+                    uid: number;
+                    role: string;
+                    token?: string;
+                };
+                const res = await api.get<ApiResponse<AccessPayload>>(`/bookings/${params.id}/classroom`);
                 const data = res.data.data;
                 
                 setChannelName(data.channel_name);

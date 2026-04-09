@@ -9,11 +9,11 @@ import DecorativeBackground from "@/components/ui/DecorativeBackground";
 import toast from "react-hot-toast";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { showApiError } from "@/hooks/useApiError";
-import { TeacherSlot } from '@/types';
+import { ApiResponse, SlotsByDate, TeacherSlot } from '@/types';
 
 export default function TeacherSchedulePage() {
   const { user } = useAuth();
-  const [slots, setSlots] = useState<Record<string, TeacherSlot[]>>({});
+  const [slots, setSlots] = useState<SlotsByDate>({});
   const [loading, setLoading] = useState(true);
 
   // حالة الفورم
@@ -29,8 +29,8 @@ export default function TeacherSchedulePage() {
 
   const fetchSlots = async () => {
     try {
-      const res = await api.get("/teacher/slots");
-      setSlots(res.data.data);
+      const res = await api.get<ApiResponse<SlotsByDate>>("/teacher/slots");
+      setSlots(res.data.data || {});
     } catch (error) {
       console.error("خطأ في جلب الجدول", error);
     } finally {

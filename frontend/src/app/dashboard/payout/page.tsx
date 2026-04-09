@@ -7,20 +7,11 @@ import PageHeader from '@/components/ui/PageHeader';
 import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { showApiError } from '@/hooks/useApiError';
-import { Wallet } from '@/types';
+import { ApiResponse, PayoutRequest, Wallet } from '@/types';
 
 export default function PayoutPage() {
     const { user } = useAuth();
     
-    // حالات جلب البيانات
-    type PayoutRequest = {
-      id: number;
-      amount: string;
-      bank_name: string;
-      status: string;
-      created_at: string;
-    };
-
     const [walletInfo, setWalletInfo] = useState<Wallet | null>(null);
     const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
     const [loading, setLoading] = useState(true);
@@ -42,11 +33,11 @@ export default function PayoutPage() {
     const fetchData = async () => {
         try {
             const [walletRes, payoutsRes] = await Promise.all([
-                api.get('/wallet'),
-                api.get('/wallet/payouts')
+                api.get<ApiResponse<Wallet>>('/wallet'),
+                api.get<ApiResponse<PayoutRequest[]>>('/wallet/payouts')
             ]);
             setWalletInfo(walletRes.data.data);
-            setPayouts(payoutsRes.data.data);
+            setPayouts(payoutsRes.data.data || []);
         } catch (error) {
             console.error("خطأ في جلب البيانات المالية", error);
         } finally {
@@ -60,13 +51,13 @@ export default function PayoutPage() {
         setMessage({ type: '', text: '' });
 
         try {
-            const res = await api.post('/wallet/payouts', {
+            const res = await api.post<ApiResponse<unknown>>('/wallet/payouts', {
                 amount: Number(amount),
                 bank_name: bankName,
                 iban: iban
             });
             
-            setMessage({ type: 'success', text: res.data.message });
+            setMessage({ type: 'success', text: res.data.message || 'تم إرسال طلب السحب.' });
             setAmount('');
             setBankName('');
             setIban('SA');
@@ -272,3 +263,4 @@ export default function PayoutPage() {
         </div>
     );
 }
+
