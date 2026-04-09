@@ -7,6 +7,18 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import DecorativeBackground from "@/components/ui/DecorativeBackground";
 import { showApiError } from "@/hooks/useApiError";
+import {
+  User as UserIcon,
+  Mail,
+  Phone,
+  Lock,
+  Eye,
+  EyeOff,
+  Loader2,
+  AlertTriangle,
+  CheckCircle,
+  ArrowRight,
+} from "lucide-react";
 
 export default function StudentRegisterPage() {
   const router = useRouter();
@@ -35,165 +47,197 @@ export default function StudentRegisterPage() {
         email,
         phone,
         password,
-        role: "student", // 🟢 تحديد الصلاحية كطالب
+        role: "student",
       });
 
-      setSuccessMsg(res.data.message);
+      setSuccessMsg("تم إنشاء حسابك بنجاح!");
 
       // تسجيل الدخول تلقائياً
       login(res.data.data.token, res.data.data.user);
 
-      // 🟢 التوجيه الذكي: نرسله مباشرة لصفحة إعداد الملف لاختيار "المرحلة الدراسية"
+      // التوجيه الذكي لصفحة إعداد الملف لاختيار "المرحلة الدراسية"
       setTimeout(() => {
         router.push("/dashboard/student-profile");
       }, 2000);
     } catch (error: unknown) {
       showApiError(
         error,
-        "تأكد من صحة البيانات. قد يكون الإيميل أو الجوال مسجلاً مسبقاً.",
+        "تأكد من صحة البيانات. قد يكون الإيميل أو الجوال مسجلاً مسبقاً."
       );
+      setError("تأكد من صحة البيانات أو أن الحساب غير مسجل مسبقاً.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex justify-center items-center relative overflow-hidden">
-      {/* Decorative Background */}
-      <DecorativeBackground/>
-      <div className="max-w-xl w-full bg-white/80 backdrop-blur-sm p-8 sm:p-10 rounded-3xl shadow-2xl border border-gray-100/80 animate-fade-in-up">
-        <div className="text-center mb-8">
-          <div className="text-5xl mb-4 drop-shadow-lg">🎓</div>
-          <h1 className="text-3xl font-black text-gray-900 mb-2">
+    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 flex justify-center items-center relative overflow-hidden bg-slate-50">
+      
+      {/* خلفية تجميلية - تم إصلاح الاستدعاء */}
+      <DecorativeBackground />
+
+      <div className="max-w-xl w-full bg-white/80 backdrop-blur-xl p-6 sm:p-8 rounded-[2rem] shadow-[0_20px_50px_rgba(8,_112,_184,_0.07)] border border-white relative z-10 animate-fade-in-up">
+        
+        <div className="text-center mb-6">
+          {/* الشعار قابل للنقر ويوجه لتسجيل الدخول */}
+          <Link
+            href="/login"
+            className="inline-block text-5xl mb-3 hover:scale-110 transition-transform duration-300 drop-shadow-xl cursor-pointer"
+            title="الذهاب لصفحة تسجيل الدخول"
+          >
+            🎓
+          </Link>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight mb-1.5">
             إنشاء حساب طالب
           </h1>
-          <p className="text-gray-500">
-            انضم الآن وابدأ رحلة التفوق مع نخبة المعلمين.
+          <p className="text-gray-500 text-sm font-medium">
+            انضم الآن وابدأ رحلة التفوق مع نخبة المعلمين في منصة تاج.
           </p>
         </div>
 
         {successMsg ? (
-          <div className="bg-blue-50 border-2 border-blue-500 p-6 rounded-2xl text-center">
-            <div className="text-4xl mb-4">✅</div>
-            <h3 className="text-xl font-bold text-blue-800 mb-2">
-              تم إنشاء حسابك بنجاح!
+          <div className="bg-indigo-50 border border-indigo-100 p-6 rounded-[2rem] text-center animate-fade-in-up shadow-sm">
+            <CheckCircle className="w-14 h-14 text-indigo-500 mx-auto mb-3 animate-subtle-pulse" />
+            <h3 className="text-xl font-black text-indigo-800 mb-2">
+              {successMsg}
             </h3>
-            <p className="text-blue-700">
+            <p className="text-indigo-600 text-sm font-medium flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
               جاري توجيهك لاختيار مرحلتك الدراسية...
             </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-red-50 text-red-700 font-bold p-4 rounded-xl border border-red-200 text-sm">
-                {error}
+              <div className="flex items-center gap-3 bg-red-50 border border-red-100 text-red-600 p-3 rounded-xl text-sm font-bold animate-fade-in-up">
+                <AlertTriangle className="w-5 h-5 shrink-0" />
+                <span>{error}</span>
               </div>
             )}
 
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">
-                اسم الطالب *
-              </label>
-              <div className="relative group">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-indigo-500 transition-colors">
-                  👤
-                </span>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="الاسم الثنائي أو الثلاثي"
-                  className="w-full border-2 border-gray-200 rounded-xl py-3 pl-10 pr-4 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white text-right"
-                />
+            {/* استخدام Grid لوضع الحقول بجانب بعضها في الشاشات المتوسطة والكبيرة */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              
+              {/* حقل الاسم (يأخذ العرض كاملاً) */}
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">
+                  اسم الطالب *
+                </label>
+                <div className="relative group">
+                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors">
+                    <UserIcon className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="الاسم الثنائي أو الثلاثي"
+                    className="w-full pr-10 pl-4 py-2.5 bg-gray-50/50 hover:bg-gray-50 border-2 border-transparent focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 rounded-xl outline-none transition-all duration-300 font-medium placeholder:text-gray-400 text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* حقل البريد الإلكتروني (يأخذ نصف العرض) */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">
+                  البريد الإلكتروني *
+                </label>
+                <div className="relative group">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors">
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="student@taj.com"
+                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 hover:bg-gray-50 border-2 border-transparent focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 rounded-xl outline-none transition-all duration-300 text-left font-medium placeholder:text-gray-400 text-sm"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+
+              {/* حقل رقم الجوال (يأخذ نصف العرض) */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">
+                  رقم الجوال *
+                </label>
+                <div className="relative group">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors">
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="05XXXXXXXX"
+                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 hover:bg-gray-50 border-2 border-transparent focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 rounded-xl outline-none transition-all duration-300 text-left font-medium placeholder:text-gray-400 text-sm"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+
+              {/* حقل كلمة المرور (يأخذ العرض كاملاً) */}
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">
+                  كلمة المرور *
+                </label>
+                <div className="relative group">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    minLength={8}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-10 pr-10 py-2.5 bg-gray-50/50 hover:bg-gray-50 border-2 border-transparent focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 rounded-xl outline-none transition-all duration-300 text-left tracking-widest font-medium placeholder:tracking-normal placeholder:text-gray-400 text-sm"
+                    dir="ltr"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-colors p-1"
+                    title={showPassword ? "إخفاء كلمة المرور" : "عرض كلمة المرور"}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">
-                البريد الإلكتروني *
-              </label>
-              <div className="relative group">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-indigo-500 transition-colors">
-                  📧
-                </span>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="student@taj.com"
-                  className="w-full border-2 border-gray-200 rounded-xl py-3 pl-10 pr-4 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white text-left"
-                  dir="ltr"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">
-                رقم الجوال *
-              </label>
-              <div className="relative group">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-indigo-500 transition-colors">
-                  📱
-                </span>
-                <input
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="05XXXXXXXX"
-                  className="w-full border-2 border-gray-200 rounded-xl py-3 pl-10 pr-4 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white text-left"
-                  dir="ltr"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">
-                كلمة المرور *
-              </label>
-              <div className="relative group">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg text-gray-400 group-focus-within:text-indigo-500 transition-colors">
-                  🔒
-                </span>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  minLength={8}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full border-2 border-gray-200 rounded-xl py-3 pl-10 pr-12 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-200 bg-gray-50/80 focus:bg-white text-left font-bold tracking-widest"
-                  dir="ltr"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-colors"
-                  title={showPassword ? "إخفاء" : "عرض"}
-                >
-                  {showPassword ? "👁️‍🗨️" : "👁️"}
-                </button>
-              </div>
-            </div>
-
-            <div className="pt-4">
+            <div className="pt-2">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-l from-indigo-600 to-purple-600 text-white font-extrabold py-4 rounded-xl hover:shadow-xl transition-all duration-200 disabled:opacity-50 shadow-lg hover:-translate-y-0.5"
+                className="group relative w-full flex justify-center py-3.5 px-4 text-sm font-black rounded-xl text-white bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:shadow-[0_10px_20px_rgba(99,102,241,0.3)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-300 transform hover:-translate-y-0.5"
               >
-                {loading ? "جاري إنشاء الحساب..." : "يلا نبدأ 🚀"}
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    جاري إنشاء الحساب...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    يلا نبدأ
+                    <ArrowRight className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:-translate-x-1 transition-all" />
+                  </span>
+                )}
               </button>
             </div>
 
             <div className="text-center mt-4">
               <Link
                 href="/register"
-                className="text-sm text-gray-500 hover:text-gray-900 font-medium"
+                className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-700 font-bold transition-colors"
               >
-                ← العودة لاختيار نوع الحساب
+                <ArrowRight className="w-3.5 h-3.5" />
+                العودة لاختيار نوع الحساب
               </Link>
             </div>
           </form>
