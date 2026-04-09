@@ -8,7 +8,7 @@ import { User, TeacherSlot } from "@/types";
 import { formatTimeTo12h } from "@/lib/utils";
 import toast from "react-hot-toast";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import { showApiError } from "@/hooks/useApiError";
+// import { showApiError } from "@/hooks/useApiError";
 
 export default function TeacherProfile({ params }: { params: { id: string } }) {
   const [teacherName, setTeacherName] = useState("");

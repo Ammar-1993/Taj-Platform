@@ -6,7 +6,7 @@ import DecorativeBackground from "@/components/ui/DecorativeBackground";
 export default function RegisterHubPage() {
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center relative overflow-hidden">
-      <DecorativeBackground colorFrom="indigo" colorTo="purple" />
+      <DecorativeBackground />
 
       <div className="text-center max-w-3xl mb-12 animate-fade-in-up">
         <Link

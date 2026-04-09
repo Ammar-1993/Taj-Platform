@@ -60,11 +60,7 @@ export default function StudentRegisterPage() {
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex justify-center items-center relative overflow-hidden">
       {/* Decorative Background */}
-      <DecorativeBackground
-        colorFrom="indigo"
-        colorTo="blue"
-        opacity="opacity-20"
-      />
+      <DecorativeBackground/>
       <div className="max-w-xl w-full bg-white/80 backdrop-blur-sm p-8 sm:p-10 rounded-3xl shadow-2xl border border-gray-100/80 animate-fade-in-up">
         <div className="text-center mb-8">
           <div className="text-5xl mb-4 drop-shadow-lg">🎓</div>

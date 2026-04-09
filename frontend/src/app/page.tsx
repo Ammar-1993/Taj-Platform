@@ -1,14 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import api from "@/lib/axios";
 import { User, Subject } from "@/types";
 import { useAuth } from "@/context/AuthContext";
-import { ChevronDown } from "lucide-react";
-
 import {
-  Crown,
+  ChevronDown,
   Home as HomeIcon,
   HelpCircle,
   LogIn,
@@ -30,27 +28,17 @@ export default function Home() {
 
   const { user, loading: authLoading } = useAuth();
 
-  useEffect(() => {
-    fetchSubjects();
-  }, []);
-
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      fetchTeachers();
-    }, 500);
-    return () => clearTimeout(delayDebounceFn);
-  }, [search, subjectId, sortBy]);
-
-  const fetchSubjects = async () => {
+  // 🟢 الطريقة الاحترافية: استخدام useCallback لمنع تحذيرات React
+  const fetchSubjects = useCallback(async () => {
     try {
       const res = await api.get("/discovery/subjects");
       setSubjects(res.data.data);
     } catch (error) {
       console.error("خطأ في جلب المواد", error);
     }
-  };
+  }, []);
 
-  const fetchTeachers = async () => {
+  const fetchTeachers = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get("/discovery/teachers", {
@@ -66,7 +54,21 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, subjectId, sortBy]);
+
+  // استدعاء جلب المواد مرة واحدة عند تحميل الصفحة
+  useEffect(() => {
+    fetchSubjects();
+  }, [fetchSubjects]);
+
+  // استدعاء جلب المعلمين مع تأخير (Debounce) ذكي
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchTeachers();
+    }, 500);
+    
+    return () => clearTimeout(delayDebounceFn);
+  }, [fetchTeachers]);
 
   return (
     <div className="min-h-screen p-4 md:p-8 bg-gray-50/50">
@@ -79,17 +81,15 @@ export default function Home() {
           </div>
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="w-full md:w-auto text-center md:text-right">
-              <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
                 <span className="text-4xl drop-shadow-lg animate-subtle-pulse">👑</span>
                 <h1 className="text-3xl md:text-4xl font-black tracking-tight">منصة تاج التعليمية</h1>
               </div>
               <p className="text-indigo-200 text-base md:text-lg font-medium mt-1">
-                نخبة من المعلمين المعتمدين في جميع المواد — اختر معلمك وانطلق
-                نحو التفوق.
+                نخبة من المعلمين المعتمدين في جميع المواد — اختر معلمك وانطلق نحو التفوق.
               </p>
             </div>
 
-            {/* 🟢 تم تحديث حاوية الأزرار هنا لتكون في صف واحد ومتجاوبة */}
             <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-1.5 sm:gap-2 md:gap-3 mt-2 md:mt-0">
               {authLoading ? (
                 <div className="h-10 md:h-12 w-full md:w-32 bg-white/20 animate-pulse rounded-xl md:rounded-2xl"></div>
@@ -99,10 +99,7 @@ export default function Home() {
                   className="flex-1 md:flex-none flex justify-center items-center gap-1.5 md:gap-2 px-4 md:px-6 py-2.5 md:py-3.5 bg-white text-indigo-700 rounded-xl md:rounded-2xl text-xs md:text-sm font-black transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 shadow-xl whitespace-nowrap"
                 >
                   <span>لوحة التحكم</span>
-                  <HomeIcon
-                    className="w-4 h-4 md:w-[18px] md:h-[18px]"
-                    strokeWidth={2.5}
-                  />
+                  <HomeIcon className="w-4 h-4 md:w-[18px] md:h-[18px]" strokeWidth={2.5} />
                 </Link>
               ) : (
                 <>
@@ -124,10 +121,7 @@ export default function Home() {
                     href="/register"
                     className="flex-1 md:flex-none flex items-center justify-center gap-1 md:gap-2 px-1 sm:px-2 md:px-6 py-2.5 md:py-3 bg-white text-indigo-700 rounded-xl md:rounded-2xl text-[10px] sm:text-xs md:text-sm font-black transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 shadow-xl whitespace-nowrap"
                   >
-                    <UserPlus
-                      className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-[18px] md:h-[18px]"
-                      strokeWidth={2.5}
-                    />
+                    <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-[18px] md:h-[18px]" strokeWidth={2.5} />
                     <span>إنشاء حساب</span>
                   </Link>
                 </>
@@ -151,6 +145,7 @@ export default function Home() {
               className="pr-12 pl-4 py-4 bg-gray-50/50 hover:bg-gray-50 border-2 border-transparent focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 rounded-2xl outline-none w-full transition-all duration-300 focus:bg-white font-bold placeholder:text-gray-400"
             />
           </div>
+          
           {/* حقل اختيار المادة */}
           <div className="w-full md:w-1/4 relative group">
             <BookOpen
@@ -187,7 +182,6 @@ export default function Home() {
               className="pr-12 pl-10 py-4 bg-indigo-50/50 hover:bg-indigo-50 border-2 border-transparent focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 rounded-2xl outline-none w-full transition-all duration-300 text-indigo-900 font-extrabold cursor-pointer appearance-none"
             >
               <option value="">الترتيب الافتراضي</option>
-              {/* أزلنا الإيموجي لأن الأيقونة الخارجية تؤدي الغرض بشكل أجمل وأكثر رسمية */}
               <option value="rating_desc">الأعلى تقييماً</option>
             </select>
             <ChevronDown
