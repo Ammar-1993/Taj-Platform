@@ -10,17 +10,15 @@
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
         body { 
             font-family: 'Tajawal', sans-serif; 
-            overflow: hidden; /* لمنع التمرير بسبب الأشكال الخلفية */
+            overflow: hidden; 
         }
         
-        /* حركات الدخول */
         .animate-fade-in-up { animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(40px) scale(0.95); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* حركة الطفو للشعار 👑 */
         .animate-float { animation: float 6s ease-in-out infinite; }
         @keyframes float {
             0% { transform: translateY(0px) rotate(3deg); }
@@ -28,7 +26,6 @@
             100% { transform: translateY(0px) rotate(3deg); }
         }
 
-        /* حركة الخلفية المضيئة (Mesh Gradient) */
         .animate-blob { animation: blob 10s infinite alternate; }
         @keyframes blob {
             0% { transform: translate(0px, 0px) scale(1); }
@@ -70,14 +67,14 @@
         </div>
 
         <div class="space-y-5">
-            <a href="https://taj-platform.vercel.app" class="group relative flex items-center justify-center gap-3 w-full p-0.5 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 transition-all duration-300 hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] hover:-translate-y-1">
+            <a href="https://taj-platform.vercel.app" target="_blank" rel="noopener noreferrer" class="group relative flex items-center justify-center gap-3 w-full p-0.5 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 transition-all duration-300 hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] hover:-translate-y-1">
                 <div class="flex items-center justify-center gap-3 w-full px-6 py-4 bg-white/10 backdrop-blur-sm rounded-[15px] text-white font-black text-lg transition-all duration-300 group-hover:bg-transparent">
                     <span>الذهاب للمنصة الرئيسية</span>
                     <i data-lucide="rocket" class="w-6 h-6 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300"></i>
                 </div>
             </a>
             
-            <a href="/admin" class="group flex items-center justify-center gap-3 w-full px-6 py-4 bg-white/50 backdrop-blur-md border-2 border-indigo-50/50 text-indigo-900 font-bold rounded-2xl hover:bg-white hover:border-indigo-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <a href="/admin" target="_blank" rel="noopener noreferrer" class="group flex items-center justify-center gap-3 w-full px-6 py-4 bg-white/50 backdrop-blur-md border-2 border-indigo-50/50 text-indigo-900 font-bold rounded-2xl hover:bg-white hover:border-indigo-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                 <span>دخول الإدارة (Filament)</span>
                 <i data-lucide="shield-check" class="w-5 h-5 text-indigo-400 group-hover:text-indigo-600 group-hover:scale-110 transition-all"></i>
             </a>
