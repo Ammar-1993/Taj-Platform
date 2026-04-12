@@ -6,7 +6,6 @@ import api from "@/lib/axios";
 import { User, Subject } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import {
-  ChevronDown,
   Home as HomeIcon,
   HelpCircle,
   LogIn,

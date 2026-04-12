@@ -34,6 +34,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     if (asChild && React.isValidElement(props.children)) {
       return React.cloneElement(props.children as React.ReactElement, {
         className: cn(computedClassName, (props.children.props as { className?: string }).className),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ref: ref as any,
       });
     }
