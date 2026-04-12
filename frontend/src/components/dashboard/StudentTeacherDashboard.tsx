@@ -76,10 +76,11 @@ export const StudentTeacherDashboard: React.FC<
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ============ SIDEBAR ============ */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* 💰 Wallet Card — Premium Gradient */}
+        <div className="lg:col-span-1">
+          <div className="space-y-6 sticky top-28">
+            {/* 💰 Wallet Card — Premium Gradient */}
           <div className="animate-fade-in-up-delay relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-violet-700 p-6 rounded-3xl shadow-xl text-white">
             {/* Decorative Pattern */}
             <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
@@ -192,10 +193,11 @@ export const StudentTeacherDashboard: React.FC<
               </Link>
             </Button>
           </Card>
+          </div>
         </div>
 
         {/* ============ MAIN CONTENT ============ */}
-        <Card className="lg:col-span-3 animate-fade-in-up-delay p-6 border-gray-100/80 bg-white/80 backdrop-blur-sm">
+        <Card className="lg:col-span-2 animate-fade-in-up-delay p-6 border-gray-100/80 bg-white/80 backdrop-blur-sm">
           <div className="flex justify-between items-center mb-6">
             <h3 className="font-extrabold text-xl text-gray-900 flex items-center gap-2">
               <span className="w-9 h-9 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">

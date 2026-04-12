@@ -17,10 +17,11 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   if (!parentData) return null;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Sidebar: Wallet */}
-      <div className="lg:col-span-1 space-y-6">
-        {/* 💰 Parent Wallet Card */}
+      <div className="lg:col-span-1">
+        <div className="space-y-6 sticky top-28">
+          {/* 💰 Parent Wallet Card */}
         <div className="animate-fade-in-up-delay relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-violet-700 p-6 rounded-3xl shadow-xl text-white">
           <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
             <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white blur-2xl"></div>
@@ -89,12 +90,13 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                 ))
               )}
             </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Bookings Table */}
-      <Card className="lg:col-span-3 animate-fade-in-up-delay p-6 border-gray-100/80 bg-white/80 backdrop-blur-sm">
+      <Card className="lg:col-span-2 animate-fade-in-up-delay p-6 border-gray-100/80 bg-white/80 backdrop-blur-sm">
         <h3 className="font-extrabold text-xl text-gray-900 mb-6 flex items-center gap-2">
           <span className="w-9 h-9 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
             <Calendar className="w-5 h-5" />
