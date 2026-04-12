@@ -17,6 +17,10 @@ import {
   Star,
   SearchX,
 } from "lucide-react";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
+import { Card, CardHeader, CardContent, CardFooter, CardDescription, CardTitle } from "@/components/ui/Card";
 
 export default function Home() {
   const [teachers, setTeachers] = useState<User[]>([]);
@@ -94,36 +98,32 @@ export default function Home() {
               {authLoading ? (
                 <div className="h-10 md:h-12 w-full md:w-32 bg-white/20 animate-pulse rounded-xl md:rounded-2xl"></div>
               ) : user ? (
-                <Link
-                  href="/dashboard"
-                  className="flex-1 md:flex-none flex justify-center items-center gap-1.5 md:gap-2 px-4 md:px-6 py-2.5 md:py-3.5 bg-white text-indigo-700 rounded-xl md:rounded-2xl text-xs md:text-sm font-black transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 shadow-xl whitespace-nowrap"
-                >
-                  <span>لوحة التحكم</span>
-                  <HomeIcon className="w-4 h-4 md:w-[18px] md:h-[18px]" strokeWidth={2.5} />
-                </Link>
+                <Button asChild variant="default" className="flex-1 md:flex-none py-3.5 bg-white text-indigo-700 hover:bg-gray-50">
+                  <Link href="/dashboard">
+                    <span>لوحة التحكم</span>
+                    <HomeIcon className="w-5 h-5 ml-2" strokeWidth={2.5} />
+                  </Link>
+                </Button>
               ) : (
                 <>
-                  <Link
-                    href="/faq"
-                    className="flex-1 md:flex-none flex items-center justify-center gap-1 md:gap-2 px-1 sm:px-2 md:px-5 py-2.5 md:py-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl md:rounded-2xl text-[10px] sm:text-xs md:text-sm font-bold transition-all duration-300 border border-white/10 hover:shadow-xl hover:-translate-y-1 whitespace-nowrap"
-                  >
-                    <HelpCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-[18px] md:h-[18px]" />
-                    <span>الأسئلة الشائعة</span>
-                  </Link>
-                  <Link
-                    href="/login"
-                    className="flex-1 md:flex-none flex items-center justify-center gap-1 md:gap-2 px-1 sm:px-2 md:px-6 py-2.5 md:py-3 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl md:rounded-2xl text-[10px] sm:text-xs md:text-sm font-black transition-all duration-300 border border-white/20 hover:shadow-xl hover:-translate-y-1 whitespace-nowrap"
-                  >
-                    <LogIn className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-[18px] md:h-[18px]" />
-                    <span>تسجيل الدخول</span>
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="flex-1 md:flex-none flex items-center justify-center gap-1 md:gap-2 px-1 sm:px-2 md:px-6 py-2.5 md:py-3 bg-white text-indigo-700 rounded-xl md:rounded-2xl text-[10px] sm:text-xs md:text-sm font-black transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 shadow-xl whitespace-nowrap"
-                  >
-                    <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-[18px] md:h-[18px]" strokeWidth={2.5} />
-                    <span>إنشاء حساب</span>
-                  </Link>
+                  <Button asChild variant="outline" className="flex-1 md:flex-none border-white/20 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md">
+                    <Link href="/faq">
+                      <HelpCircle className="w-4 h-4 ml-2" />
+                      <span>الأسئلة الشائعة</span>
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="flex-1 md:flex-none border-white/20 bg-white/20 hover:bg-white/30 text-white backdrop-blur-md">
+                    <Link href="/login">
+                      <LogIn className="w-4 h-4 ml-2" />
+                      <span>تسجيل الدخول</span>
+                    </Link>
+                  </Button>
+                  <Button asChild variant="default" className="flex-1 md:flex-none bg-white text-indigo-700 hover:bg-gray-50 shadow-xl">
+                    <Link href="/register">
+                      <UserPlus className="w-4 h-4 ml-2" strokeWidth={2.5} />
+                      <span>إنشاء حساب</span>
+                    </Link>
+                  </Button>
                 </>
               )}
             </div>
@@ -132,30 +132,22 @@ export default function Home() {
 
         {/* Modernized Search & Filters */}
         <div className="animate-fade-in-up-delay bg-white/90 backdrop-blur-md p-5 rounded-[2rem] shadow-lg border border-white/50 flex flex-col md:flex-row gap-4 justify-between items-center">
-          <div className="w-full md:flex-1 relative group">
-            <Search
-              size={20}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors"
-            />
-            <input
+          <div className="w-full md:flex-1 relative">
+            <Input
               type="text"
               placeholder="ابحث باسم المعلم..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pr-12 pl-4 py-4 bg-gray-50/50 hover:bg-gray-50 border-2 border-transparent focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 rounded-2xl outline-none w-full transition-all duration-300 focus:bg-white font-bold placeholder:text-gray-400"
+              icon={<Search size={20} />}
             />
           </div>
           
           {/* حقل اختيار المادة */}
-          <div className="w-full md:w-1/4 relative group">
-            <BookOpen
-              size={20}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors pointer-events-none"
-            />
-            <select
+          <div className="w-full md:w-1/4 relative">
+            <Select
               value={subjectId}
               onChange={(e) => setSubjectId(e.target.value)}
-              className="pr-12 pl-10 py-4 bg-gray-50/50 hover:bg-gray-50 border-2 border-transparent focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 rounded-2xl outline-none w-full transition-all duration-300 cursor-pointer focus:bg-white font-bold text-gray-700 appearance-none"
+              icon={<BookOpen size={20} />}
             >
               <option value="">جميع المواد</option>
               {subjects.map((sub) => (
@@ -163,31 +155,19 @@ export default function Home() {
                   {sub.name}
                 </option>
               ))}
-            </select>
-            <ChevronDown
-              size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-            />
+            </Select>
           </div>
 
           {/* حقل الترتيب */}
-          <div className="w-full md:w-1/4 relative group">
-            <ListFilter
-              size={20}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-indigo-400 group-focus-within:text-indigo-600 transition-colors pointer-events-none"
-            />
-            <select
+          <div className="w-full md:w-1/4 relative">
+            <Select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="pr-12 pl-10 py-4 bg-indigo-50/50 hover:bg-indigo-50 border-2 border-transparent focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 rounded-2xl outline-none w-full transition-all duration-300 text-indigo-900 font-extrabold cursor-pointer appearance-none"
+              icon={<ListFilter size={20} />}
             >
               <option value="">الترتيب الافتراضي</option>
               <option value="rating_desc">الأعلى تقييماً</option>
-            </select>
-            <ChevronDown
-              size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-400 pointer-events-none"
-            />
+            </Select>
           </div>
         </div>
 
@@ -212,31 +192,31 @@ export default function Home() {
               </div>
             ) : (
               teachers.map((teacher, index) => (
-                <div
+                <Card
                   key={teacher.id}
-                  className="animate-fade-in-up bg-white p-6 rounded-3xl shadow-sm hover:shadow-xl border border-gray-100 hover:border-indigo-100 transition-all duration-300 hover:-translate-y-1.5 group flex flex-col"
+                  className="animate-fade-in-up hover:border-indigo-100 hover:-translate-y-1.5 group flex flex-col"
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
-                  <div className="flex items-center gap-4 mb-5">
-                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100/50 rounded-2xl flex items-center justify-center text-indigo-600 font-black text-xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                  <CardHeader className="flex flex-row items-center gap-4 mb-1 pb-2">
+                    <div className="w-16 h-16 shrink-0 bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100/50 rounded-2xl flex items-center justify-center text-indigo-600 font-black text-xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
                       {teacher.name.charAt(0)}
                     </div>
                     <div>
-                      <h3 className="font-extrabold text-lg text-gray-900 mb-1.5">
+                      <CardTitle className="text-lg text-gray-900 mb-1.5">
                         {teacher.name}
-                      </h3>
+                      </CardTitle>
                       <span className="inline-flex items-center gap-1.5 text-xs text-indigo-700 bg-indigo-50/80 px-2.5 py-1 rounded-lg font-bold">
                         <BookOpen size={14} />
                         {teacher.teacher_profile?.subject?.name || "غير محدد"}
                       </span>
                     </div>
-                  </div>
-
-                  <p className="text-gray-500 text-sm line-clamp-2 mb-6 h-10 leading-relaxed flex-1">
-                    {teacher.teacher_profile?.bio || "لا توجد نبذة تعريفية."}
-                  </p>
-
-                  <div className="flex justify-between items-center pt-5 border-t border-gray-50">
+                  </CardHeader>
+                  <CardContent className="flex-1">
+                    <CardDescription className="line-clamp-2 h-10 leading-relaxed text-xs">
+                      {teacher.teacher_profile?.bio || "لا توجد نبذة تعريفية."}
+                    </CardDescription>
+                  </CardContent>
+                  <CardFooter className="flex justify-between items-center pt-5 border-t border-gray-50 mt-auto">
                     <div className="flex flex-col gap-1">
                       <span className="text-amber-500 font-black flex items-center gap-1.5 text-lg">
                         <Star size={18} className="fill-amber-500" />
@@ -246,15 +226,13 @@ export default function Home() {
                         ({teacher.teacher_profile?.reviews_count || 0} تقييم)
                       </span>
                     </div>
-
-                    <Link
-                      href={`/teachers/${teacher.id}`}
-                      className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 text-white px-6 py-3 rounded-2xl text-xs font-black hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] transition-all duration-300 hover:-translate-y-1 shadow-lg active:scale-95"
-                    >
-                      احجز الآن
-                    </Link>
-                  </div>
-                </div>
+                    <Button asChild variant="default" className="px-6 rounded-2xl">
+                      <Link href={`/teachers/${teacher.id}`}>
+                        احجز الآن
+                      </Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
               ))
             )}
           </div>

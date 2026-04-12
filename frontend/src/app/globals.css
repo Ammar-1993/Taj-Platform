@@ -2,77 +2,93 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #f8fafc; /* slate-50 */
-  --foreground: #0f172a; /* slate-900 */
-}
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222.2 84% 4.9%;
 
-/* إخفاء شريط التمرير مع الحفاظ على وظيفة التمرير */
-* {
-  scrollbar-width: none; /* Firefox */
-}
-*::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Edge */
-}
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+ 
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+ 
+    --primary: 243 75% 59%;
+    --primary-foreground: 210 40% 98%;
+ 
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+ 
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+ 
+    --accent: 214.3 31.8% 91.4%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+ 
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-body {
-  color: var(--foreground);
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
-}
-
-/* أنيميشن دخول العناصر من الأسفل */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 243 75% 59%;
+ 
+    --radius: 0.75rem;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  
+  /* إخفاء شريط التمرير مع الحفاظ على وظيفة التمرير */
+  * {
+    scrollbar-width: none; /* Firefox */
+  }
+  *::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
   }
 }
 
-/* أنيميشن نبض خفيف */
-@keyframes subtlePulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.85; }
-}
-
+/* Animations */
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
   .animate-fade-in-up {
-    animation: fadeInUp 0.5s ease-out both;
+    animation: fadeInUp 0.6s ease-out forwards;
   }
   .animate-fade-in-up-delay {
-    animation: fadeInUp 0.5s ease-out 0.1s both;
+    animation: fadeInUp 0.6s ease-out 0.1s forwards;
+    opacity: 0;
   }
   .animate-fade-in-up-delay-2 {
-    animation: fadeInUp 0.5s ease-out 0.2s both;
+    animation: fadeInUp 0.6s ease-out 0.2s forwards;
+    opacity: 0;
+  }
+  .animate-fade-in-up-delay-3 {
+    animation: fadeInUp 0.6s ease-out 0.3s forwards;
+    opacity: 0;
   }
   .animate-subtle-pulse {
     animation: subtlePulse 3s ease-in-out infinite;
   }
-}
-
-@layer utilities {
-  .animate-fade-in-up {
-    animation: fade-in-up 0.6s ease-out forwards;
-  }
-  .animate-fade-in-up-delay {
-    animation: fade-in-up 0.6s ease-out 0.1s forwards;
-    opacity: 0;
-  }
-  .animate-fade-in-up-delay-2 {
-    animation: fade-in-up 0.6s ease-out 0.2s forwards;
-    opacity: 0;
+  .animate-bounce-subtle {
+    animation: subtleBounce 2s ease-in-out infinite;
   }
 }
 
-@keyframes fade-in-up {
+@keyframes fadeInUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes subtlePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.95; transform: scale(0.98); }
+}
+
+@keyframes subtleBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }

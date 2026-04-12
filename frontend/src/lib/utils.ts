@@ -1,3 +1,7 @@
+export function cn(...inputs: (string | undefined | null | false)[]) {
+  return inputs.filter(Boolean).join(" ");
+}
+
 /**
  * يحول الوقت من تنسيق 24 ساعة (مثلاً 14:30) إلى تنسيق 12 ساعة بالعربي (مثلاً 02:30 مساءً)
  */

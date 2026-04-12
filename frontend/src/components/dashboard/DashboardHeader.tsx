@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { Users, LifeBuoy, Home as HomeIcon, Pencil, LogOut } from "lucide-react";
 import { User } from "@/types";
 
 interface DashboardHeaderProps {
@@ -45,21 +46,21 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user, isTeache
                 className="px-4 py-2 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border border-white/20 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2"
               >
                 <span>إدارة الأبناء</span>
-                <span>👨‍👩‍👧‍👦</span>
+                <Users className="w-4 h-4" />
               </Link>
               <Link
                 href="/dashboard/support"
                 className="px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border border-white/10 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2"
               >
                 <span>الدعم الفني</span>
-                <span>🛟</span>
+                <LifeBuoy className="w-4 h-4" />
               </Link>
               <Link
                 href="/"
                 className="px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border border-white/10 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2"
               >
                 <span>الرئيسية</span>
-                <span>🏠</span>
+                <HomeIcon className="w-4 h-4" />
               </Link>
             </>
           ) : (
@@ -70,7 +71,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user, isTeache
                   className="px-4 py-2 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border border-white/20 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2"
                 >
                   <span>إكمال الملف الشخصي</span>
-                  <span>✏️</span>
+                  <Pencil className="w-4 h-4" />
                 </Link>
               )}
               <Link
@@ -78,24 +79,24 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user, isTeache
                 className="px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border border-white/10 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2"
               >
                 <span>الدعم الفني</span>
-                <span>🛟</span>
+                <LifeBuoy className="w-4 h-4" />
               </Link>
               <Link
                 href="/"
                 className="px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border border-white/10 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2"
               >
                 <span>الرئيسية</span>
-                <span>🏠</span>
+                <HomeIcon className="w-4 h-4" />
               </Link>
             </>
           )}
 
           <button
             onClick={logout}
-            className="px-4 py-2 bg-rose-500/20 hover:bg-rose-500/30 backdrop-blur-sm rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border border-rose-400/30 text-rose-50 && hover:text-white hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2"
+            className="px-4 py-2 bg-rose-500/20 hover:bg-rose-500/30 backdrop-blur-sm rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border border-rose-400/30 text-rose-50 hover:text-white hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2"
           >
             <span>تسجيل الخروج</span>
-            <span>🚪</span>
+            <LogOut className="w-4 h-4" />
           </button>
         </div>
       </div>

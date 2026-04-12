@@ -8,6 +8,9 @@ import Link from "next/link";
 import DecorativeBackground from "@/components/ui/DecorativeBackground";
 import { showApiError } from "@/hooks/useApiError";
 import { Mail, Lock, Eye, EyeOff, Loader2, AlertTriangle, ArrowRight } from "lucide-react";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -64,8 +67,9 @@ export default function LoginPage() {
         </div>
 
         {/* صندوق تسجيل الدخول (Glassmorphism) */}
-        <div className="bg-white/80 backdrop-blur-xl p-6 sm:p-8 rounded-[2rem] shadow-[0_20px_50px_rgba(8,_112,_184,_0.07)] border border-white relative">
-          <form className="space-y-5" onSubmit={handleSubmit}>
+        <Card className="bg-white/80 backdrop-blur-xl shadow-[0_20px_50px_rgba(8,_112,_184,_0.07)] border-white relative">
+          <CardContent className="p-6 sm:p-8">
+            <form className="space-y-5" onSubmit={handleSubmit}>
             
             {error && (
               <div className="flex items-center gap-3 bg-red-50 border border-red-100 text-red-600 p-3 rounded-xl text-sm font-bold animate-fade-in-up">
@@ -81,20 +85,15 @@ export default function LoginPage() {
                 <label className="block text-sm font-bold text-gray-700 mb-1.5">
                   البريد الإلكتروني
                 </label>
-                <div className="relative group">
-                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors">
-                    <Mail className="w-4 h-4" />
-                  </div>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 hover:bg-gray-50 border-2 border-transparent focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 rounded-xl outline-none transition-all duration-300 text-left font-medium placeholder:text-gray-400 text-sm"
-                    placeholder="name@taj.com"
-                    dir="ltr"
-                  />
-                </div>
+                <Input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@taj.com"
+                  dir="ltr"
+                  icon={<Mail className="w-4 h-4" />}
+                />
               </div>
 
               {/* حقل كلمة المرور */}
@@ -137,10 +136,10 @@ export default function LoginPage() {
 
             {/* زر الإرسال */}
             <div className="pt-2">
-              <button
+              <Button
                 type="submit"
                 disabled={isLoading}
-                className="group relative w-full flex justify-center py-3.5 px-4 text-sm font-black rounded-xl text-white bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:shadow-[0_10px_20px_rgba(99,102,241,0.3)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-300 transform hover:-translate-y-0.5"
+                className="w-full"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
@@ -153,10 +152,11 @@ export default function LoginPage() {
                     <ArrowRight className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:-translate-x-1 transition-all" />
                   </span>
                 )}
-              </button>
+              </Button>
             </div>
           </form>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* رابط إنشاء حساب جديد */}
         <div className="mt-6 text-center bg-white/40 backdrop-blur-sm py-3 rounded-xl border border-white/50 shadow-sm">
