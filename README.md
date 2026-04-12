@@ -39,11 +39,9 @@
 
 Explore the live environments hosted in our beta phase:
 
-| Portal | URL |
-|---|---|
-| **🎓 Frontend (Students & Teachers)** | <a href="https://taj-platform.vercel.app/" target="_blank">Live Demo</a> |
-| **👑 Admin Dashboard Panel** | <a href="https://taj-backend-t4ki.onrender.com/admin/login" target="_blank">Admin Login</a> |
-| **⚙️ Backend API Base URL** | <a href="https://taj-backend-t4ki.onrender.com/" target="_blank">API Server</a> |
+- **🎓 Frontend (Students & Teachers)**: <a href="https://taj-platform.vercel.app/" target="_blank" rel="noopener noreferrer">Live Demo</a>
+- **👑 Admin Dashboard Panel**: <a href="https://taj-backend-t4ki.onrender.com/admin/login" target="_blank" rel="noopener noreferrer">Admin Login</a>
+- **⚙️ Backend API Base URL**: <a href="https://taj-backend-t4ki.onrender.com/" target="_blank" rel="noopener noreferrer">API Server</a>
 
 ---
 
