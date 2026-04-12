@@ -8,6 +8,11 @@ import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { showApiError } from '@/hooks/useApiError';
 import { ApiResponse, Booking, SupportTicket, SupportTicketCreatePayload } from '@/types';
+import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { PenSquare, CheckCircle2, XCircle, Send, FolderOpen, Inbox, Pin, Headphones, Loader2 } from "lucide-react";
 
 export default function SupportPage() {
     const { user } = useAuth();
@@ -72,7 +77,17 @@ export default function SupportPage() {
         return <StatusBadge status={status} />;
     };
 
-    if (loading) return <div className="p-8 text-center animate-pulse font-bold text-gray-500">جاري تحميل مركز المساعدة...</div>;
+    if (loading) return (
+        <div className="p-8 min-h-screen">
+             <div className="max-w-7xl mx-auto space-y-8">
+                 <Skeleton className="h-10 w-1/3" />
+                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Skeleton className="h-[400px] rounded-3xl" />
+                    <Skeleton className="h-[600px] rounded-3xl lg:col-span-2" />
+                 </div>
+             </div>
+        </div>
+    );
     if (!user) return null;
 
     return (
@@ -92,30 +107,30 @@ export default function SupportPage() {
                     
                     {/* القسم الأول: نموذج فتح تذكرة جديدة */}
                     <div className="lg:col-span-1 space-y-6">
-                        <div className="bg-white/90 backdrop-blur-md p-8 rounded-[2rem] shadow-xl border border-white/50 animate-fade-in-up-delay">
+                        <Card className="bg-white/90 backdrop-blur-md rounded-[2rem] border-white/50 animate-fade-in-up-delay p-8">
                             <h3 className="font-black text-xl text-gray-900 mb-6 flex items-center gap-3">
-                                <span className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center text-lg shadow-inner">
-                                    📝
+                                <span className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner">
+                                    <PenSquare className="w-5 h-5" />
                                 </span>
                                 فتح تذكرة جديدة
                             </h3>
                             
                             {message.text && (
-                                <div className={`p-4 mb-6 rounded-2xl text-sm font-bold shadow-sm animate-bounce-subtle ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
-                                    {message.type === 'success' ? '✅ ' : '❌ '}{message.text}
+                                <div className={`p-4 mb-6 rounded-2xl text-sm font-bold shadow-sm flex items-center gap-2 animate-bounce-subtle ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+                                    {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                                    <span>{message.text}</span>
                                 </div>
                             )}
 
                             <form onSubmit={handleSubmitTicket} className="space-y-5">
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">موضوع المشكلة:</label>
-                                    <input 
+                                    <Input 
                                         type="text" 
                                         required 
                                         value={subject} 
                                         onChange={(e) => setSubject(e.target.value)}
                                         placeholder="مثال: المعلم لم يحضر الحصة"
-                                        className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 placeholder:text-gray-300" 
                                     />
                                 </div>
 
@@ -150,29 +165,39 @@ export default function SupportPage() {
                                     ></textarea>
                                 </div>
                                 
-                                <button 
+                                <Button 
                                     type="submit" 
                                     disabled={isSubmitting || !subject || !description}
-                                    className="w-full bg-gradient-to-r from-indigo-600 to-indigo-800 text-white font-black py-4 rounded-2xl hover:shadow-[0_8px_30px_rgb(79,70,229,0.3)] transition-all duration-300 disabled:opacity-50 mt-4 hover:-translate-y-1 active:scale-95"
+                                    className="w-full h-14 bg-gradient-to-r from-indigo-600 to-indigo-800 hover:shadow-[0_8px_30px_rgb(79,70,229,0.3)] text-lg rounded-[1.5rem]"
                                 >
-                                    {isSubmitting ? 'جاري الإرسال...' : 'إرسال التذكرة 🚀'}
-                                </button>
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                                            جاري الإرسال...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>إرسال التذكرة</span>
+                                            <Send className="w-5 h-5 mr-3" />
+                                        </>
+                                    )}
+                                </Button>
                             </form>
-                        </div>
+                        </Card>
                     </div>
 
                     {/* القسم الثاني: سجل التذاكر وردود الإدارة */}
-                    <div className="lg:col-span-2 bg-white/80 backdrop-blur-md p-8 rounded-[2rem] shadow-xl border border-white/50 h-fit animate-fade-in-up-delay">
+                    <Card className="lg:col-span-2 bg-white/80 backdrop-blur-md rounded-[2rem] border-white/50 h-fit animate-fade-in-up-delay p-8">
                         <h3 className="font-extrabold text-2xl text-gray-900 mb-8 flex items-center gap-3 underline underline-offset-8 decoration-indigo-100">
-                             <span className="w-10 h-10 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-lg shadow-inner">
-                                    📂
+                             <span className="w-10 h-10 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center shadow-inner">
+                                    <FolderOpen className="w-5 h-5" />
                              </span>
                              تذاكري السابقة
                         </h3>
                         
                         {tickets.length === 0 ? (
                             <div className="text-center py-20 bg-gray-50/50 rounded-3xl border-4 border-dashed border-gray-100 text-gray-400 font-bold flex flex-col items-center gap-4">
-                                <div className="text-6xl opacity-20">📭</div>
+                                <Inbox className="w-16 h-16 text-gray-300" />
                                 <span>لم تقم بفتح أي تذكرة دعم فني حتى الآن.</span>
                             </div>
                         ) : (
@@ -187,7 +212,7 @@ export default function SupportPage() {
                                                     <span className="text-xs text-gray-400 font-medium italic">آخر تحديث: {new Date(ticket.updated_at).toLocaleDateString('ar-SA')}</span>
                                                     {ticket.booking_id && (
                                                         <span className="text-xs bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full font-bold flex items-center gap-1">
-                                                            📌 حجز #{ticket.booking_id}
+                                                            <Pin className="w-3.5 h-3.5" /> حجز #{ticket.booking_id}
                                                         </span>
                                                     )}
                                                 </div>
@@ -204,7 +229,7 @@ export default function SupportPage() {
                                             <div className="mt-6 bg-gradient-to-l from-indigo-50/50 to-blue-50/50 border border-indigo-100 p-6 rounded-2xl relative shadow-sm">
                                                 <div className="absolute top-0 right-6 -mt-3.5 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white text-[10px] sm:text-xs font-black px-4 py-1.5 rounded-full shadow-lg flex items-center gap-2">
                                                     <span>رد فريق الدعم</span>
-                                                    <span>🎧</span>
+                                                    <Headphones className="w-3.5 h-3.5" />
                                                 </div>
                                                 <p className="text-sm text-indigo-900 mt-3 font-bold whitespace-pre-wrap leading-relaxed">
                                                     {ticket.admin_reply}
@@ -215,7 +240,7 @@ export default function SupportPage() {
                                 ))}
                             </div>
                         )}
-                    </div>
+                    </Card>
 
                 </div>
             </div>

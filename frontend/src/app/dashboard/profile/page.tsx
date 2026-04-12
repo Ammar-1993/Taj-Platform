@@ -8,6 +8,10 @@ import PageHeader from '@/components/ui/PageHeader';
 import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import { showApiError } from '@/hooks/useApiError';
 import { ApiResponse, Subject, TeacherProfile, TeacherProfileFormData } from '@/types';
+import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { CheckCircle2, Clock, Info, User, FileText, FileBadge, GraduationCap, Rocket, Loader2 } from "lucide-react";
 
 export default function TeacherProfilePage() {
     const { user } = useAuth();
@@ -93,7 +97,15 @@ export default function TeacherProfilePage() {
         }
     };
 
-    if (loading) return <div className="p-8 text-center animate-pulse font-bold">جاري تحميل الملف الشخصي...</div>;
+    if (loading) return (
+        <div className="p-8 min-h-screen">
+             <div className="max-w-4xl mx-auto space-y-8">
+                 <Skeleton className="h-10 w-1/3" />
+                 <Skeleton className="h-24 rounded-3xl" />
+                 <Skeleton className="h-[600px] rounded-3xl" />
+             </div>
+        </div>
+    );
     if (!user?.roles?.some((r) => r.name === 'teacher')) return <div className="p-8 text-center text-red-500 font-bold">هذه الصفحة للمعلمين فقط.</div>;
 
     return (
@@ -114,7 +126,7 @@ export default function TeacherProfilePage() {
                     {profile ? (
                         profile.is_verified ? (
                             <div className="bg-emerald-50/80 backdrop-blur-sm text-emerald-800 p-5 rounded-[2rem] font-bold flex items-center gap-4 border border-emerald-100 shadow-lg shadow-emerald-500/5">
-                                <div className="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg">✅</div>
+                                <div className="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg"><CheckCircle2 className="w-6 h-6" /></div>
                                 <div>
                                     <h4 className="text-lg">حسابك موثق ونشط!</h4>
                                     <p className="text-emerald-600/80 text-xs font-medium mt-0.5">أنت تظهر الآن في نتائج بحث الطلاب ويمكنك استقبال الحجوزات.</p>
@@ -122,7 +134,7 @@ export default function TeacherProfilePage() {
                             </div>
                         ) : (
                             <div className="bg-amber-50/80 backdrop-blur-sm text-amber-800 p-5 rounded-[2rem] font-bold flex items-center gap-4 border border-amber-100 shadow-lg shadow-amber-500/5">
-                                <div className="w-12 h-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg animate-pulse">⏳</div>
+                                <div className="w-12 h-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center shadow-lg animate-pulse"><Clock className="w-6 h-6" /></div>
                                 <div>
                                     <h4 className="text-lg">حسابك قيد المراجعة الإدارية</h4>
                                     <p className="text-amber-600/80 text-xs font-medium mt-0.5">سيتم تنشيط ملفك فور التحقق من مستنداتك المرفوعة.</p>
@@ -131,7 +143,7 @@ export default function TeacherProfilePage() {
                         )
                     ) : (
                         <div className="bg-indigo-50/80 backdrop-blur-sm text-indigo-800 p-5 rounded-[2rem] font-bold flex items-center gap-4 border border-indigo-100 shadow-lg shadow-indigo-500/5">
-                            <div className="w-12 h-12 bg-indigo-500 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg">ℹ️</div>
+                            <div className="w-12 h-12 bg-indigo-500 text-white rounded-2xl flex items-center justify-center shadow-lg"><Info className="w-6 h-6" /></div>
                             <div>
                                 <h4 className="text-lg">مرحباً بك في فريق تاج!</h4>
                                 <p className="text-indigo-600/80 text-xs font-medium mt-0.5">يرجى إكمال بياناتك ورفع المستندات المطلوبة أدناه لتقديم طلب الانضمام.</p>
@@ -146,12 +158,12 @@ export default function TeacherProfilePage() {
                     </div>
                 )}
 
-                <div className="bg-white/90 backdrop-blur-md p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-white/50 animate-fade-in-up-delay-2">
+                <Card className="bg-white/90 backdrop-blur-md rounded-[2.5rem] border-white/50 animate-fade-in-up-delay-2 p-8 md:p-10">
                     <form onSubmit={handleSubmit} className="space-y-8">
                         
                         <div className="space-y-6">
                             <h3 className="text-xl font-black text-gray-900 flex items-center gap-3 mb-2 underline underline-offset-8 decoration-indigo-100">
-                                <span className="text-2xl">👤</span>
+                                <User className="w-6 h-6 text-indigo-600" />
                                 المعلومات الأساسية
                             </h3>
                             
@@ -188,15 +200,15 @@ export default function TeacherProfilePage() {
 
                         <div className="space-y-6 pt-4 border-t border-gray-50">
                             <h3 className="text-xl font-black text-gray-900 flex items-center gap-3 mb-2 underline underline-offset-8 decoration-purple-100">
-                                <span className="text-2xl">📑</span>
+                                <FileText className="w-6 h-6 text-purple-600" />
                                 المستندات المهنية
                             </h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="group bg-indigo-50/50 p-6 rounded-3xl border-2 border-dashed border-indigo-100 hover:border-indigo-300 hover:bg-indigo-50 transition-all duration-300 relative overflow-hidden">
                                      <div className="absolute -top-10 -right-10 w-24 h-24 bg-white/20 rounded-full blur-2xl group-hover:blur-xl transition-all"></div>
-                                     <label className="block text-sm font-black text-indigo-900 mb-3 flex items-center gap-2">
-                                        📄 صورة الهوية الوطنية
+                                     <label className="text-sm font-black text-indigo-900 mb-3 flex items-center gap-2">
+                                        <FileBadge className="w-4 h-4" /> صورة الهوية الوطنية
                                         {profile?.national_id_path && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">مرفوعة مسبقاً</span>}
                                      </label>
                                      <input 
@@ -210,8 +222,8 @@ export default function TeacherProfilePage() {
 
                                 <div className="group bg-purple-50/50 p-6 rounded-3xl border-2 border-dashed border-purple-100 hover:border-purple-300 hover:bg-purple-50 transition-all duration-300 relative overflow-hidden">
                                      <div className="absolute -top-10 -right-10 w-24 h-24 bg-white/20 rounded-full blur-2xl group-hover:blur-xl transition-all"></div>
-                                     <label className="block text-sm font-black text-purple-900 mb-3 flex items-center gap-2">
-                                        🎓 الشهادة الجامعية
+                                     <label className="text-sm font-black text-purple-900 mb-3 flex items-center gap-2">
+                                        <GraduationCap className="w-4 h-4" /> الشهادة الجامعية
                                         {profile?.degree_path && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">مرفوعة مسبقاً</span>}
                                      </label>
                                      <input 
@@ -231,25 +243,25 @@ export default function TeacherProfilePage() {
                             </div>
                         </div>
 
-                        <button 
+                        <Button 
                             type="submit" 
                             disabled={isSubmitting} 
-                            className="w-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 text-white font-black py-4.5 rounded-[1.5rem] hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] transition-all duration-300 disabled:opacity-50 hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 text-lg shadow-xl"
+                            className="w-full h-14 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] text-lg rounded-[1.5rem]"
                         >
                             {isSubmitting ? (
                                 <>
-                                    <span className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
                                     جاري المعالجة...
                                 </>
                             ) : (
                                 <>
                                     <span>إرسال طلب الانضمام والتوثيق</span>
-                                    <span>🚀</span>
+                                    <Rocket className="w-5 h-5 mr-3" />
                                 </>
                             )}
-                        </button>
+                        </Button>
                     </form>
-                </div>
+                </Card>
             </div>
         </div>
     );

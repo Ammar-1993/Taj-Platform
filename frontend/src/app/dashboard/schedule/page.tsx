@@ -10,6 +10,11 @@ import toast from "react-hot-toast";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { showApiError } from "@/hooks/useApiError";
 import { ApiResponse, SlotsByDate, TeacherSlot } from '@/types';
+import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { Plus, CheckCircle2, XCircle, Loader2, CalendarRange, CalendarX2, CalendarDays, Clock, LockOpen, Lock, LockKeyhole, Trash2 } from "lucide-react";
 
 export default function TeacherSchedulePage() {
   const { user } = useAuth();
@@ -81,8 +86,14 @@ export default function TeacherSchedulePage() {
 
   if (loading)
     return (
-      <div className="p-8 text-center animate-pulse font-bold">
-        جاري تحميل الجدول...
+      <div className="p-8 min-h-screen">
+          <div className="max-w-7xl mx-auto space-y-8">
+              <Skeleton className="h-10 w-1/3" />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <Skeleton className="h-[400px] rounded-3xl" />
+                  <Skeleton className="h-[600px] rounded-3xl lg:col-span-2" />
+              </div>
+          </div>
       </div>
     );
   if (!user?.roles?.some((r) => r.name === "teacher"))
@@ -110,19 +121,20 @@ export default function TeacherSchedulePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* عمود إضافة المواعيد */}
-          <div className="lg:col-span-1 bg-white/90 backdrop-blur-md p-8 rounded-[2rem] shadow-xl border border-white/50 h-fit animate-fade-in-up-delay">
+          <Card className="lg:col-span-1 bg-white/90 backdrop-blur-md rounded-[2rem] border-white/50 animate-fade-in-up-delay p-8 h-fit">
             <h3 className="font-extrabold text-xl text-indigo-900 mb-6 flex items-center gap-3">
-              <span className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center text-lg shadow-inner">
-                ➕
+              <span className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner">
+                <Plus className="w-5 h-5" />
               </span>
               إضافة موعد جديد
             </h3>
 
             {message.text && (
               <div
-                className={`p-4 mb-6 rounded-2xl text-sm font-bold shadow-sm animate-bounce-subtle ${message.type === "success" ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-rose-50 text-rose-700 border border-rose-100"}`}
+                className={`p-4 mb-6 rounded-2xl text-sm font-bold shadow-sm flex items-center gap-2 animate-bounce-subtle ${message.type === "success" ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-rose-50 text-rose-700 border border-rose-100"}`}
               >
-                {message.type === "success" ? "✅ " : "❌ "}{message.text}
+                {message.type === "success" ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                <span>{message.text}</span>
               </div>
             )}
 
@@ -131,13 +143,12 @@ export default function TeacherSchedulePage() {
                 <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">
                   تاريخ اليوم:
                 </label>
-                <input
+                <Input
                   type="date"
                   required
                   min={today}
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 font-bold text-gray-700"
                 />
               </div>
               <div className="flex gap-4">
@@ -145,59 +156,57 @@ export default function TeacherSchedulePage() {
                   <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">
                     يبدأ من:
                   </label>
-                  <input
+                  <Input
                     type="time"
                     required
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 font-bold text-gray-700"
                   />
                 </div>
                 <div className="w-1/2">
                   <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">
                     ينتهي في:
                   </label>
-                  <input
+                  <Input
                     type="time"
                     required
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 font-bold text-gray-700"
                   />
                 </div>
               </div>
-              <button
+              <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 text-white font-black py-4.5 rounded-[1.5rem] hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] transition-all duration-300 disabled:opacity-50 mt-2 hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 shadow-xl"
+                className="w-full h-14 bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] text-lg rounded-[1.5rem]"
               >
                 {isSubmitting ? (
                     <>
-                        <span className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
                         جاري الإضافة...
                     </>
                 ) : (
                     <>
                         <span>إضافة الموعد للجدول</span>
-                        <span>➕</span>
+                        <Plus className="w-5 h-5 mr-3" />
                     </>
                 )}
-              </button>
+              </Button>
             </form>
-          </div>
+          </Card>
 
           {/* عمود عرض الجدول الحالي */}
-          <div className="lg:col-span-2 bg-white/80 backdrop-blur-md p-8 rounded-[2.5rem] shadow-xl border border-white/50 h-fit animate-fade-in-up-delay-2">
+          <Card className="lg:col-span-2 bg-white/80 backdrop-blur-md rounded-[2.5rem] border-white/50 h-fit animate-fade-in-up-delay-2 p-8">
             <h3 className="font-extrabold text-2xl text-gray-900 mb-8 flex items-center gap-3 underline underline-offset-8 decoration-indigo-100">
-               <span className="w-10 h-10 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-lg shadow-inner">
-                    🗓️
+               <span className="w-10 h-10 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center shadow-inner">
+                    <CalendarRange className="w-5 h-5" />
                </span>
               جدول أوقاتي المتاحة والمحجوزة
             </h3>
 
             {Object.keys(slots).length === 0 ? (
               <div className="text-center py-20 bg-gray-50/50 rounded-3xl border-4 border-dashed border-gray-100 text-gray-400 font-black flex flex-col items-center gap-4">
-                <div className="text-7xl opacity-20">📅</div>
+                <CalendarX2 className="w-16 h-16 text-gray-300" />
                 <span>ليس لديك أي مواعيد مضافة في المستقبل.</span>
                 <p className="text-xs font-bold">ابدأ بإضافة أوقات فراغك ليتمكن الطلاب من الحجز معك.</p>
               </div>
@@ -210,8 +219,8 @@ export default function TeacherSchedulePage() {
                       className="relative bg-white/40 p-6 rounded-[2rem] border-2 border-gray-50 shadow-sm"
                     >
                       <h4 className="font-black text-gray-900 text-xl mb-6 flex items-center gap-2">
-                        <span className="bg-indigo-100 text-indigo-700 px-4 py-1.5 rounded-2xl text-sm shadow-sm inline-block mr-1">
-                             📅 {new Date(dayDate).toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        <span className="bg-indigo-100 text-indigo-700 px-4 py-1.5 rounded-2xl text-sm shadow-sm inline-flex items-center gap-2 mr-1">
+                             <CalendarDays className="w-4 h-4" /> {new Date(dayDate).toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                         </span>
                       </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -227,13 +236,13 @@ export default function TeacherSchedulePage() {
                             }`}
                           >
                             <div className="flex justify-between items-start">
-                                <div className="space-y-1">
+                                <div className="space-y-2">
                                     <div className="font-black text-gray-900 text-base flex items-center gap-1.5">
-                                        <span className="text-lg">🕒</span>
+                                        <Clock className="w-4 h-4 text-gray-500" />
                                         {formatTimeTo12h(slot.start_time)} - {formatTimeTo12h(slot.end_time)}
                                     </div>
                                     <div
-                                        className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full inline-block ${
+                                        className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full inline-flex items-center gap-1.5 ${
                                         slot.status === "available"
                                             ? "bg-emerald-100 text-emerald-700"
                                             : slot.status === "booked"
@@ -242,10 +251,10 @@ export default function TeacherSchedulePage() {
                                         }`}
                                     >
                                         {slot.status === "available"
-                                        ? "متاح للطلاب 🔓"
+                                        ? <>متاح للطلاب <LockOpen className="w-3 h-3" /></>
                                         : slot.status === "booked"
-                                            ? "محجوز 🔒"
-                                            : "مغلق"}
+                                            ? <>محجوز <Lock className="w-3 h-3" /></>
+                                            : <>مغلق <LockKeyhole className="w-3 h-3" /></>}
                                     </div>
                                 </div>
 
@@ -255,7 +264,7 @@ export default function TeacherSchedulePage() {
                                     className="w-9 h-9 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all duration-200 flex items-center justify-center shadow-sm group-hover:rotate-12"
                                     title="حذف الموعد"
                                 >
-                                    <span className="text-lg">🗑️</span>
+                                    <Trash2 className="w-4 h-4" />
                                 </button>
                                 )}
                             </div>
@@ -272,7 +281,7 @@ export default function TeacherSchedulePage() {
                 )}
               </div>
             )}
-          </div>
+          </Card>
         </div>
       </div>
 

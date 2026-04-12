@@ -3,6 +3,9 @@ import Link from "next/link";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { ParentDashboardData } from "@/types";
 import { formatTimeTo12h } from "@/lib/utils";
+import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { WalletCards, Zap, Calendar, BookOpen } from "lucide-react";
 
 interface ParentDashboardProps {
   parentData: ParentDashboardData | null;
@@ -26,7 +29,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
 
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xl">💳</span>
+              <WalletCards className="w-6 h-6 text-purple-200" />
               <h3 className="text-purple-200 text-sm font-bold">
                 رصيد المحفظة الأساسية
               </h3>
@@ -38,12 +41,11 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
               <span className="text-purple-200 text-base sm:text-lg font-medium">ريال</span>
             </div>
 
-            <Link
-              href="/dashboard/top-up"
-              className="mt-5 flex justify-center items-center w-full py-2.5 bg-white/20 hover:bg-white/30 rounded-xl text-sm font-bold transition-all duration-200 backdrop-blur-sm border border-white/10 hover:-translate-y-0.5"
-            >
-              شحن المحفظة ⚡
-            </Link>
+            <Button asChild variant="secondary" className="mt-5 w-full bg-white/20 hover:bg-white/30 text-white border border-white/10 rounded-xl">
+              <Link href="/dashboard/top-up">
+                شحن المحفظة <Zap className="w-4 h-4 mr-2" />
+              </Link>
+            </Button>
 
             {/* إجمالي الإنفاق */}
             <div className="mt-6 pt-4 border-t border-white/20">
@@ -92,18 +94,18 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
       </div>
 
       {/* Bookings Table */}
-      <div className="lg:col-span-3 animate-fade-in-up-delay bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-lg border border-gray-100/80">
+      <Card className="lg:col-span-3 animate-fade-in-up-delay p-6 border-gray-100/80 bg-white/80 backdrop-blur-sm">
         <h3 className="font-extrabold text-xl text-gray-900 mb-6 flex items-center gap-2">
-          <span className="w-9 h-9 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center text-base">
-            📅
+          <span className="w-9 h-9 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+            <Calendar className="w-5 h-5" />
           </span>
           سجل حجوزات الأبناء الموحد
         </h3>
 
         {!parentData.bookings || parentData.bookings.length === 0 ? (
           <div className="text-center py-16">
-            <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-5 text-4xl">
-              📚
+            <div className="w-20 h-20 bg-indigo-50 text-indigo-300 rounded-full flex items-center justify-center mx-auto mb-5">
+              <BookOpen className="w-10 h-10" />
             </div>
             <h4 className="text-xl font-extrabold text-gray-800 mb-2">
               لا توجد حجوزات لأبنائك حتى الآن
@@ -176,7 +178,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
             </table>
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 };

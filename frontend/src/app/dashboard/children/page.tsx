@@ -8,6 +8,11 @@ import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import toast from 'react-hot-toast';
 import { showApiError } from '@/hooks/useApiError';
 import { ApiResponse, GradeLevel, User } from '@/types';
+import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { GraduationCap, Users, Plus, X, Check, Loader2 } from "lucide-react";
 
 export default function ChildrenManagementPage() {
     const { user } = useAuth();
@@ -82,7 +87,18 @@ export default function ChildrenManagementPage() {
         }
     };
 
-    if (loading) return <div className="p-8 animate-pulse text-center">جاري التحميل...</div>;
+    if (loading) return (
+        <div className="p-8 min-h-screen">
+            <div className="max-w-6xl mx-auto space-y-8">
+                 <Skeleton className="h-10 w-1/3" />
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                     <Skeleton className="h-64 rounded-3xl" />
+                     <Skeleton className="h-64 rounded-3xl" />
+                     <Skeleton className="h-64 rounded-3xl" />
+                 </div>
+            </div>
+        </div>
+    );
 
     // التأكد من أن المستخدم ولي أمر
     const isParent = user?.roles?.some((r) => r.name === 'parent');
@@ -100,13 +116,14 @@ export default function ChildrenManagementPage() {
                     backHref="/dashboard"
                     backLabel="العودة للوحة التحكم"
                     actions={
-                        <button
+                        <Button
                             onClick={() => setShowForm(!showForm)}
-                            className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all duration-300 shadow-md flex items-center gap-2 ${showForm ? 'bg-rose-50 text-rose-600 hover:bg-rose-100' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'}`}
+                            variant={showForm ? 'destructive' : 'default'}
+                            className="px-5 shadow-md flex items-center gap-2"
                         >
                             <span>{showForm ? 'إلغاء الإضافة' : 'إضافة ابن جديد'}</span>
-                            <span>{showForm ? '✕' : '+'}</span>
-                        </button>
+                            {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                        </Button>
                     }
                 />
 
@@ -118,10 +135,10 @@ export default function ChildrenManagementPage() {
 
                 {/* فورم الإضافة المحدث */}
                 {showForm && (
-                    <div className="bg-white/90 backdrop-blur-md p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-white/50 animate-fade-in-up-delay">
+                    <Card className="bg-white/90 backdrop-blur-md rounded-[2.5rem] border-white/50 animate-fade-in-up-delay p-8 md:p-10">
                         <h3 className="font-black text-xl text-indigo-900 mb-8 flex items-center gap-3">
-                             <span className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center text-lg shadow-inner">
-                                🧑‍🎓
+                             <span className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner">
+                                <GraduationCap className="w-5 h-5" />
                              </span>
                              إنشاء حساب جديد للابن
                         </h3>
@@ -129,17 +146,17 @@ export default function ChildrenManagementPage() {
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-bold mb-2 text-gray-700 mr-1">اسم الابن الكامل *</label>
-                                    <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 font-bold text-gray-700" placeholder="مثال: أحمد محمد" />
+                                    <Input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="مثال: أحمد محمد" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold mb-2 text-gray-700 mr-1">البريد الإلكتروني (للدخول) *</label>
-                                    <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 font-bold text-gray-700 tracking-tight" dir="ltr" placeholder="child@taj-platform.com" />
+                                    <Input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} dir="ltr" placeholder="child@taj-platform.com" className="tracking-tight" />
                                 </div>
                             </div>
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-bold mb-2 text-gray-700 mr-1">كلمة المرور *</label>
-                                    <input type="password" required minLength={6} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 font-bold text-gray-700" dir="ltr" placeholder="••••••••" />
+                                    <Input type="password" required minLength={6} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} dir="ltr" placeholder="••••••••" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold mb-2 text-gray-700 mr-1">المرحلة الدراسية *</label>
@@ -153,29 +170,29 @@ export default function ChildrenManagementPage() {
                                 </div>
                             </div>
                             <div className="md:col-span-2 mt-4">
-                                <button type="submit" disabled={isSubmitting} className="w-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 text-white font-black py-4.5 rounded-[1.5rem] hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] transition-all duration-300 disabled:opacity-50 hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 shadow-xl">
+                                <Button type="submit" disabled={isSubmitting} className="w-full h-14 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] text-lg rounded-[1.5rem]">
                                     {isSubmitting ? (
                                         <>
-                                            <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                            <Loader2 className="w-5 h-5 animate-spin mr-2" />
                                             جاري المعالجة...
                                         </>
                                     ) : (
                                         <>
                                             <span>إضافة الابن للعائلة</span>
-                                            <span>🧑‍🎓</span>
+                                            <GraduationCap className="w-5 h-5 mr-3" />
                                         </>
                                     )}
-                                </button>
+                                </Button>
                             </div>
                         </form>
-                    </div>
+                    </Card>
                 )}
 
                 {/* قائمة الأبناء (Grid) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {children.length === 0 ? (
                         <div className="col-span-full bg-white/50 backdrop-blur-md p-24 rounded-[3rem] border-4 border-dashed border-gray-100/50 text-center text-gray-400 font-black flex flex-col items-center gap-6 animate-fade-in-up-delay-2">
-                            <div className="text-8xl opacity-10">🏕️</div>
+                            <Users className="w-16 h-16 text-gray-300" />
                             <p className="text-xl">لا يوجد أفراد عائلة مضافين حالياً.</p>
                             <p className="text-sm font-bold opacity-60">ابدأ بإضافة حسابات أبنائك لتتمكن من حجز حصصهم الدراسية.</p>
                         </div>
@@ -219,9 +236,9 @@ export default function ChildrenManagementPage() {
                                                 }`}
                                             >
                                                 {child.student_profile?.can_book_independently ? (
-                                                    <><span className="text-xs">✓</span> مـفـعـل</>
+                                                    <><Check className="w-3.5 h-3.5" /> مـفـعـل</>
                                                 ) : (
-                                                    <><span className="text-xs">✕</span> مـعـطـل</>
+                                                    <><X className="w-3.5 h-3.5" /> مـعـطـل</>
                                                 )}
                                             </button>
                                         </div>

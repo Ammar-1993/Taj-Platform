@@ -11,6 +11,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { showApiError } from '@/hooks/useApiError';
 import { ApiResponse } from '@/types';
 import type { IAgoraRTCClient, ILocalVideoTrack } from 'agora-rtc-sdk-ng';
+import { Video, Lock, AlertTriangle, LogOut, PowerOff, MonitorUp, MicOff, Info, CheckCircle2, Loader2, Coins } from 'lucide-react';
 
 const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID || '039c4b2d111b488f8069bb00c583aa04';
 
@@ -19,8 +20,8 @@ const AgoraCall = dynamic(() => import('@/components/classroom/AgoraCall'), {
     ssr: false,
     loading: () => (
         <div className="flex flex-col items-center justify-center h-full space-y-4">
-            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-white font-bold animate-pulse">جاري تشغيل الكاميرا وإعداد الاتصال... 🎥</p>
+            <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
+            <p className="text-white font-bold animate-pulse flex items-center gap-2">جاري تشغيل الكاميرا وإعداد الاتصال... <Video className="w-5 h-5" /></p>
         </div>
     )
 });
@@ -105,7 +106,11 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         setIsEnding(true);
         try {
             await api.patch(`/bookings/${params.id}/complete`);
-            toast.success("تم إنهاء الحصة بنجاح! وتم إيداع الأرباح. 💰");
+            toast.success(
+                <div className="flex items-center gap-2">
+                    تم إنهاء الحصة بنجاح! وتم إيداع الأرباح. <Coins className="w-4 h-4" />
+                </div>
+            );
             await handleLeave();
         } catch (err: unknown) {
             showApiError(err, "حدث خطأ أثناء إنهاء الحصة");
@@ -178,14 +183,14 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     };
 
     if (authLoading || loading) return (
-        <div className="h-screen flex items-center justify-center font-bold text-xl animate-pulse bg-gray-900 text-white" dir="rtl">
-            جاري تجهيز الفصل الافتراضي وتشفير الاتصال... 🔒
+        <div className="h-screen flex items-center justify-center font-bold text-xl animate-pulse bg-gray-900 text-white gap-3" dir="rtl">
+            جاري تجهيز الفصل الافتراضي وتشفير الاتصال... <Lock className="w-6 h-6" />
         </div>
     );
     
     if (error) return (
         <div className="h-screen flex flex-col items-center justify-center bg-gray-900 text-white" dir="rtl">
-            <div className="text-red-500 text-6xl mb-4">⚠️</div>
+            <AlertTriangle className="text-red-500 w-16 h-16 mb-4" />
             <h2 className="font-bold text-2xl mb-2">عذراً، حدث خطأ</h2>
             <p className="text-gray-400 mb-6">{error}</p>
             <button onClick={() => router.replace('/dashboard')} className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-bold transition">العودة للوحة التحكم</button>
@@ -206,13 +211,13 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 <div className="flex gap-3">
                     {isTeacher ? (
                         <>
-                            <button onClick={handleLeave} className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition">خروج مؤقت 🚪</button>
-                            <button onClick={() => setShowEndConfirm(true)} disabled={isEnding} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-bold shadow-lg transition disabled:opacity-50">
-                                {isEnding ? 'جاري الإنهاء...' : 'إنهاء الحصة وتحصيل الأرباح 🔴'}
+                            <button onClick={handleLeave} className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2">خروج مؤقت <LogOut className="w-4 h-4" /></button>
+                            <button onClick={() => setShowEndConfirm(true)} disabled={isEnding} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-bold shadow-lg transition disabled:opacity-50 flex items-center gap-2">
+                                {isEnding ? 'جاري الإنهاء...' : <>إنهاء الحصة وتحصيل الأرباح <PowerOff className="w-4 h-4" /></>}
                             </button>
                         </>
                     ) : (
-                        <button onClick={handleLeave} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-semibold transition">مغادرة الحصة 🚪</button>
+                        <button onClick={handleLeave} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2">مغادرة الحصة <LogOut className="w-4 h-4" /></button>
                     )}
                 </div>
             </div>
@@ -222,7 +227,9 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 <div className="flex-1 relative bg-black flex items-center justify-center">
                     {!inCall ? (
                         <div className="flex flex-col items-center justify-center space-y-6 p-8 text-center animate-fade-in-up">
-                            <div className="w-20 h-20 bg-blue-900/50 rounded-full flex items-center justify-center text-4xl mb-2">📹</div>
+                            <div className="w-20 h-20 bg-blue-900/50 rounded-full flex items-center justify-center mb-2 text-blue-400">
+                                <Video className="w-10 h-10" />
+                            </div>
                             <div>
                                 <h2 className="text-3xl font-bold text-white mb-3">هل أنت مستعد لبدء الحصة؟</h2>
                                 <p className="text-gray-400 text-lg">تأكد من إضاءة الغرفة وعمل الميكروفون بشكل جيد قبل الدخول.</p>
@@ -246,7 +253,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                             onClick={toggleScreenShare} 
                             className={`p-4 rounded-2xl flex items-center gap-4 transition group border ${isSharing ? 'bg-green-600 border-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.4)]' : 'bg-gray-700/80 border-gray-600 hover:bg-gray-600 text-gray-200'}`}
                         >
-                            <span className="text-3xl group-hover:scale-110 transition">💻</span>
+                            <MonitorUp className="w-8 h-8 group-hover:scale-110 transition" />
                             <div className="text-right flex-1">
                                 <div className="text-sm font-bold">{isSharing ? 'إيقاف المشاركة' : 'مشاركة الشاشة'}</div>
                                 <div className={`text-xs mt-1 ${isSharing ? 'text-green-200' : 'text-gray-400'}`}>عرض الملفات للطلاب</div>
@@ -254,16 +261,17 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                         </button>
 
                         <button className="bg-gray-700/50 cursor-not-allowed text-gray-500 p-4 rounded-2xl flex items-center gap-4 transition border border-transparent">
-                            <span className="text-3xl opacity-50">🔇</span>
+                            <MicOff className="w-8 h-8 opacity-50" />
                             <div className="text-right flex-1">
                                 <div className="text-sm font-bold">كتم صوت الطلاب</div>
                                 <div className="text-[10px] text-gray-500 mt-1">التحكم في الميكروفون</div>
                             </div>
                         </button>
 
-                        <div className="mt-auto bg-blue-900/10 border border-blue-800/30 p-4 rounded-xl">
-                            <p className="text-xs text-blue-400/80 text-center leading-relaxed font-medium">
-                                ℹ️ ميزة (كتم صوت الطلاب) تتطلب ربط المنصة بـ WebSockets لإرسال إشعارات التحكم عن بعد.
+                        <div className="mt-auto bg-blue-900/10 border border-blue-800/30 p-4 rounded-xl flex gap-2">
+                            <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+                            <p className="text-xs text-blue-400/80 text-right leading-relaxed font-medium">
+                                ميزة (كتم صوت الطلاب) تتطلب ربط المنصة بـ WebSockets لإرسال إشعارات التحكم عن بعد.
                             </p>
                         </div>
                     </div>

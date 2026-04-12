@@ -6,8 +6,11 @@ import api from '@/lib/axios';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { GradeLevel } from '@/types';
-// import toast from 'react-hot-toast';
 import { showApiError } from '@/hooks/useApiError';
+import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { GraduationCap, AlertCircle, CheckCircle2, XCircle, Lightbulb, Rocket, Loader2 } from "lucide-react";
 
 export default function StudentProfilePage() {
     const { user, loading: authLoading } = useAuth();
@@ -74,8 +77,8 @@ export default function StudentProfilePage() {
                     <div className="absolute top-[10%] -left-20 w-96 h-96 rounded-full bg-indigo-300 blur-[120px]"></div>
                     <div className="absolute bottom-[20%] -right-20 w-[600px] h-[600px] rounded-full bg-purple-200 blur-[150px]"></div>
                 </div>
-                <div className="relative z-10 flex flex-col items-center gap-4">
-                    <div className="w-16 h-16 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+                <div className="relative z-10 flex flex-col items-center gap-4 w-full max-w-md">
+                    <Loader2 className="w-16 h-16 text-indigo-600 animate-spin" />
                     <p className="font-black text-gray-400 animate-pulse">جاري تجهيز إعداداتك...</p>
                 </div>
             </div>
@@ -89,14 +92,16 @@ export default function StudentProfilePage() {
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-10">
                     <div className="absolute top-[10%] -left-20 w-96 h-96 rounded-full bg-indigo-300 blur-[120px]"></div>
                 </div>
-                <div className="relative z-10 bg-white/80 backdrop-blur-md p-10 rounded-[2.5rem] shadow-xl border border-white/50 max-w-md w-full">
-                    <div className="text-6xl mb-6">🛑</div>
+                <Card className="relative z-10 bg-white/80 backdrop-blur-md rounded-[2.5rem] border-white/50 max-w-md w-full p-10">
+                    <div className="flex justify-center mb-6">
+                        <AlertCircle className="w-16 h-16 text-rose-500" />
+                    </div>
                     <h2 className="text-2xl font-black text-rose-600 mb-2">عذراً، هذه الصفحة للطلاب فقط.</h2>
                     <p className="text-gray-500 font-bold mb-8">ليس لديك الصلاحيات الكافية للوصول لهذه الإعدادات.</p>
-                    <Link href="/dashboard" className="inline-block px-8 py-3 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-200">
+                    <Link href="/dashboard" className="inline-flex justify-center items-center px-8 py-3 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-200">
                         العودة للوحة التحكم
                     </Link>
-                </div>
+                </Card>
             </div>
         );
     }
@@ -112,9 +117,9 @@ export default function StudentProfilePage() {
             <div className="relative z-10 max-w-2xl w-full space-y-8 tracking-tight">
                 
                 {/* بطاقة الترحيب */}
-                <div className="bg-white/80 backdrop-blur-md p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-white/50 text-center animate-fade-in-up">
-                    <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 rounded-[2rem] flex items-center justify-center text-5xl mx-auto mb-8 shadow-inner animate-subtle-pulse">
-                        🎓
+                <Card className="bg-white/80 backdrop-blur-md rounded-[2.5rem] border-white/50 text-center animate-fade-in-up p-8 md:p-10">
+                    <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner animate-subtle-pulse">
+                        <GraduationCap className="w-12 h-12" />
                     </div>
                     <h1 className="text-3xl font-black text-gray-900 mb-3">
                         مرحباً بك يا {user?.name.split(' ')[0]}!
@@ -122,14 +127,15 @@ export default function StudentProfilePage() {
                     <p className="text-gray-500 text-base font-medium leading-relaxed max-w-md mx-auto font-bold">
                         خطوة واحدة تفصلك عن بدء التعلم. يرجى تحديد مرحلتك الدراسية ليتمكن النظام من تخصيص تجربتك وعرض الأسعار المناسبة لك.
                     </p>
-                </div>
+                </Card>
 
                 {/* نموذج الإعدادات */}
-                <div className="bg-white/90 backdrop-blur-md p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-white/50 animate-fade-in-up-delay">
+                <Card className="bg-white/90 backdrop-blur-md rounded-[2.5rem] border-white/50 animate-fade-in-up-delay p-8 md:p-10">
                     
                     {message.text && (
-                        <div className={`p-4 rounded-2xl font-bold text-center mb-8 shadow-sm animate-bounce-subtle ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
-                            {message.type === 'success' ? '✅ ' : '❌ '}{message.text}
+                        <div className={`p-4 rounded-2xl font-bold text-center mb-8 shadow-sm flex items-center justify-center gap-2 animate-bounce-subtle ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+                            {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                            <span>{message.text}</span>
                         </div>
                     )}
 
@@ -153,30 +159,30 @@ export default function StudentProfilePage() {
                                 <div className="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
                             </div>
                             <div className="mt-4 flex items-start gap-3 text-xs bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/50 text-indigo-700 font-black leading-relaxed">
-                                <span className="text-lg">💡</span>
+                                <Lightbulb className="w-5 h-5 shrink-0" />
                                 <p>هذا الاختيار سيضمن لك الحصول على التسعيرة الموحدة لحصصك مع جميع المعلمين في المنصة حسب المرحلة المختارة.</p>
                             </div>
                         </div>
 
-                        <button 
+                        <Button 
                             type="submit" 
                             disabled={isSubmitting || !gradeLevelId} 
-                            className="w-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 text-white font-black py-4.5 rounded-[1.5rem] hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] transition-all duration-300 disabled:opacity-50 hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 text-lg shadow-xl"
+                            className="w-full h-14 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] text-lg rounded-[1.5rem]"
                         >
                             {isSubmitting ? (
                                 <>
-                                    <span className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
                                     جاري الحفظ...
                                 </>
                             ) : (
                                 <>
                                     <span>حفظ الإعدادات وبدء التعلم</span>
-                                    <span>🚀</span>
+                                    <Rocket className="w-5 h-5 mr-3" />
                                 </>
                             )}
-                        </button>
+                        </Button>
                     </form>
-                </div>
+                </Card>
                 
             </div>
         </div>

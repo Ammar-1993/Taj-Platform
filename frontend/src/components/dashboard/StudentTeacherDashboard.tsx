@@ -8,6 +8,12 @@ import { Wallet, Booking, AppNotification } from "@/types";
 import { formatTimeTo12h } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { showApiError } from "@/hooks/useApiError";
+import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { 
+  WalletCards, CalendarDays, Banknote, Zap, BarChart2,
+  Landmark, LifeBuoy, ClipboardList, Bell, Check, BookOpen, Rocket, Video, XCircle, Coins
+} from "lucide-react";
 
 interface StudentTeacherDashboardProps {
   isTeacher: boolean;
@@ -83,7 +89,7 @@ export const StudentTeacherDashboard: React.FC<
 
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xl">💳</span>
+                <WalletCards className="w-6 h-6 text-purple-200" />
                 <h3 className="text-purple-200 text-sm font-bold">
                   رصيد المحفظة
                 </h3>
@@ -99,43 +105,40 @@ export const StudentTeacherDashboard: React.FC<
 
               {isTeacher ? (
                 <div className="mt-6 flex gap-2">
-                  <Link
-                    href="/dashboard/schedule"
-                    className="flex-1 flex justify-center items-center py-2.5 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold transition-all duration-200 backdrop-blur-sm border border-white/10 hover:-translate-y-0.5"
-                  >
-                    إدارة الجدول 🗓️
-                  </Link>
-                  <Link
-                    href="/dashboard/payout"
-                    className="flex-1 flex justify-center items-center py-2.5 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold transition-all duration-200 backdrop-blur-sm border border-white/10 hover:-translate-y-0.5"
-                  >
-                    طلب سحب 💸
-                  </Link>
+                  <Button asChild variant="secondary" className="flex-1 bg-white/20 hover:bg-white/30 text-white border border-white/10 rounded-xl h-10 px-2 py-0 text-xs">
+                    <Link href="/dashboard/schedule">
+                      إدارة الجدول <CalendarDays className="w-3.5 h-3.5 mr-1" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="secondary" className="flex-1 bg-white/20 hover:bg-white/30 text-white border border-white/10 rounded-xl h-10 px-2 py-0 text-xs">
+                    <Link href="/dashboard/payout">
+                      طلب سحب <Banknote className="w-3.5 h-3.5 mr-1" />
+                    </Link>
+                  </Button>
                 </div>
               ) : (
                 <div className="mt-6">
-                  <Link
-                    href="/dashboard/top-up"
-                    className="w-full flex justify-center items-center py-2.5 bg-white/20 hover:bg-white/30 rounded-xl text-sm font-bold transition-all duration-200 backdrop-blur-sm border border-white/10 hover:-translate-y-0.5"
-                  >
-                    شحن المحفظة ⚡
-                  </Link>
+                  <Button asChild variant="secondary" className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/10 rounded-xl">
+                    <Link href="/dashboard/top-up">
+                      شحن المحفظة <Zap className="w-4 h-4 mr-2" />
+                    </Link>
+                  </Button>
                 </div>
               )}
             </div>
           </div>
 
           {/* 📊 Transaction History */}
-          <div className="animate-fade-in-up-delay-2 bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-lg border border-gray-100/80">
+          <Card className="animate-fade-in-up-delay-2 p-6 border-gray-100/80 bg-white/80 backdrop-blur-sm">
             <h3 className="font-extrabold text-gray-900 mb-4 flex items-center gap-2">
-              <span className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center text-sm">
-                📊
+              <span className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+                <BarChart2 className="w-4 h-4" />
               </span>
               آخر العمليات المالية
             </h3>
             {wallet?.transactions?.data?.length === 0 ? (
               <div className="text-center py-6">
-                <div className="text-4xl mb-2">🏦</div>
+                <Landmark className="w-10 h-10 text-gray-300 mx-auto mb-2" />
                 <p className="text-gray-400 text-sm">لا توجد عمليات سابقة</p>
               </div>
             ) : (
@@ -170,34 +173,33 @@ export const StudentTeacherDashboard: React.FC<
                 ))}
               </ul>
             )}
-          </div>
+          </Card>
 
           {/* 🛟 Support Center */}
-          <div className="animate-fade-in-up-delay-2 bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-lg border border-gray-100/80">
+          <Card className="animate-fade-in-up-delay-2 p-6 border-gray-100/80 bg-white/80 backdrop-blur-sm">
             <h3 className="font-extrabold text-gray-900 mb-3 flex items-center gap-2">
-              <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-sm">
-                🛟
+              <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+                <LifeBuoy className="w-4 h-4" />
               </span>
               مركز المساعدة
             </h3>
             <p className="text-sm text-gray-500 mb-4 leading-relaxed">
               هل تواجه مشكلة؟ فريق الدعم متاح لمساعدتك في أي وقت.
             </p>
-            <Link
-              href="/dashboard/support"
-              className="w-full flex justify-center items-center py-3 bg-gradient-to-l from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5"
-            >
-              فتح تذكرة دعم فني
-            </Link>
-          </div>
+            <Button asChild className="w-full bg-gradient-to-l from-blue-600 to-indigo-600 text-white rounded-xl">
+              <Link href="/dashboard/support">
+                فتح تذكرة دعم فني
+              </Link>
+            </Button>
+          </Card>
         </div>
 
         {/* ============ MAIN CONTENT ============ */}
-        <div className="lg:col-span-3 animate-fade-in-up-delay bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-lg border border-gray-100/80">
+        <Card className="lg:col-span-3 animate-fade-in-up-delay p-6 border-gray-100/80 bg-white/80 backdrop-blur-sm">
           <div className="flex justify-between items-center mb-6">
             <h3 className="font-extrabold text-xl text-gray-900 flex items-center gap-2">
-              <span className="w-9 h-9 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center text-base">
-                📋
+              <span className="w-9 h-9 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+                <ClipboardList className="w-5 h-5" />
               </span>
               سجل الحجوزات
             </h3>
@@ -207,8 +209,8 @@ export const StudentTeacherDashboard: React.FC<
           {isTeacher && notifications.length > 0 && (
             <div className="bg-gradient-to-l from-amber-50 to-yellow-50 border border-amber-200/60 p-5 rounded-2xl mb-6">
               <h3 className="font-extrabold text-amber-800 mb-3 flex items-center gap-2">
-                <span className="w-7 h-7 bg-amber-200 rounded-lg flex items-center justify-center text-sm">
-                  🔔
+                <span className="w-7 h-7 bg-amber-200 rounded-lg flex items-center justify-center">
+                  <Bell className="w-4 h-4 text-amber-700" />
                 </span>
                 إشعارات جديدة ({notifications.length})
               </h3>
@@ -226,9 +228,9 @@ export const StudentTeacherDashboard: React.FC<
                     </p>
                     <button
                       onClick={() => markNotificationAsRead(notif.id)}
-                      className="text-xs bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg text-amber-700 transition-all duration-200 font-bold"
+                      className="text-xs bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg text-amber-700 flex items-center gap-1 transition-all duration-200 font-bold"
                     >
-                      تحديد كمقروء ✔️
+                      تحديد كمقروء <Check className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}
@@ -239,8 +241,8 @@ export const StudentTeacherDashboard: React.FC<
           {/* Bookings Content */}
           {bookings.length === 0 ? (
             <div className="text-center py-16">
-              <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-5 text-4xl">
-                📚
+              <div className="w-20 h-20 bg-indigo-50 text-indigo-300 rounded-full flex items-center justify-center mx-auto mb-5">
+                <BookOpen className="w-10 h-10" />
               </div>
               <h4 className="text-xl font-extrabold text-gray-800 mb-2">
                 ليس لديك أي حجوزات حتى الآن
@@ -249,12 +251,11 @@ export const StudentTeacherDashboard: React.FC<
                 ابدأ رحلتك التعليمية بحجز حصتك الأولى مع نخبة المعلمين
               </p>
               {!isTeacher && (
-                <Link
-                  href="/"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-l from-indigo-600 to-purple-600 text-white rounded-xl font-bold hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5 text-sm"
-                >
-                  احجز حصتك الأولى 🚀
-                </Link>
+                <Button asChild className="px-6 rounded-xl font-bold">
+                  <Link href="/">
+                    احجز حصتك الأولى <Rocket className="w-4 h-4 mr-2" />
+                  </Link>
+                </Button>
               )}
             </div>
           ) : (
@@ -333,9 +334,9 @@ export const StudentTeacherDashboard: React.FC<
                               onClick={() =>
                                 router.push(`/classroom/${booking.id}`)
                               }
-                              className="px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-all duration-200 text-xs font-bold hover:shadow-md hover:-translate-y-0.5"
+                              className="px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-all duration-200 text-xs font-bold flex items-center gap-1"
                             >
-                              دخول الفصل 📹
+                              دخول الفصل <Video className="w-3.5 h-3.5" />
                             </button>
                           )}
                           {isTeacher && booking.status === "scheduled" && (
@@ -347,9 +348,9 @@ export const StudentTeacherDashboard: React.FC<
                                   bookingId: booking.id,
                                 })
                               }
-                              className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-all duration-200 text-xs font-bold hover:shadow-md hover:-translate-y-0.5"
+                              className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-all duration-200 text-xs font-bold flex items-center gap-1"
                             >
-                              إلغاء طارئ ❌
+                              إلغاء طارئ <XCircle className="w-3.5 h-3.5" />
                             </button>
                           )}
                           {isTeacher && booking.status === "in_progress" && (
@@ -361,9 +362,9 @@ export const StudentTeacherDashboard: React.FC<
                                   bookingId: booking.id,
                                 })
                               }
-                              className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-all duration-200 text-xs font-bold hover:shadow-md hover:-translate-y-0.5"
+                              className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-all duration-200 text-xs font-bold flex items-center gap-1"
                             >
-                              إنهاء وتحصيل 💰
+                              إنهاء وتحصيل <Coins className="w-3.5 h-3.5" />
                             </button>
                           )}
                         </div>
@@ -374,7 +375,7 @@ export const StudentTeacherDashboard: React.FC<
               </table>
             </div>
           )}
-        </div>
+        </Card>
       </div>
 
       {/* مربعات التأكيد */}

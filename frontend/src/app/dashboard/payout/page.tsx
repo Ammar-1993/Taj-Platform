@@ -8,6 +8,11 @@ import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { showApiError } from '@/hooks/useApiError';
 import { ApiResponse, PayoutRequest, Wallet } from '@/types';
+import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { CircleDollarSign, SendHorizonal, Send, AlertTriangle, TrendingUp, Inbox, Landmark, Calendar, Building, Loader2, CheckCircle2, XCircle } from "lucide-react";
 
 export default function PayoutPage() {
     const { user } = useAuth();
@@ -75,7 +80,18 @@ export default function PayoutPage() {
         return <StatusBadge status={status} />;
     };
 
-    if (loading) return <div className="p-8 text-center animate-pulse font-bold text-gray-500">جاري تحميل المحفظة والسجل المالي...</div>;
+    if (loading) return (
+        <div className="p-8 text-center bg-gray-50/50 min-h-screen">
+             <div className="max-w-7xl mx-auto space-y-8">
+                 <Skeleton className="h-10 w-1/3" />
+                 <Skeleton className="h-6 w-1/2" />
+                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Skeleton className="h-64 rounded-3xl" />
+                    <Skeleton className="h-96 rounded-3xl lg:col-span-2" />
+                 </div>
+             </div>
+        </div>
+    );
     if (!user) return null;
 
     return (
@@ -100,7 +116,7 @@ export default function PayoutPage() {
                         <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-600 to-green-800 p-8 rounded-[2.5rem] shadow-2xl text-white animate-fade-in-up-delay">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl group-hover:blur-xl transition-all"></div>
                             <h3 className="text-emerald-100 text-sm font-black flex items-center gap-2">
-                                <span className="text-lg">💰</span>
+                                <CircleDollarSign className="w-5 h-5 text-emerald-200" />
                                 الرصيد القابل للسحب
                             </h3>
                             <div className="mt-4 flex items-baseline gap-3">
@@ -113,33 +129,33 @@ export default function PayoutPage() {
                         </div>
 
                         {/* نموذج الطلب */}
-                        <div className="bg-white/90 backdrop-blur-md p-8 rounded-[2.5rem] shadow-xl border border-white/50 animate-fade-in-up-delay-2">
+                        <Card className="bg-white/90 backdrop-blur-md rounded-[2.5rem] border-white/50 animate-fade-in-up-delay-2 p-8">
                             <h3 className="font-black text-xl text-gray-900 mb-6 flex items-center gap-3">
-                                <span className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-lg shadow-inner">
-                                    📩
+                                <span className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
+                                    <SendHorizonal className="w-5 h-5" />
                                 </span>
                                 تقديم طلب جديد
                             </h3>
                             
                             {message.text && (
-                                <div className={`p-4 mb-6 rounded-2xl text-sm font-bold shadow-sm animate-bounce-subtle ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
-                                    {message.type === 'success' ? '✅ ' : '❌ '}{message.text}
+                                <div className={`p-4 mb-6 rounded-2xl text-sm font-bold shadow-sm flex items-center gap-2 animate-bounce-subtle ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+                                    {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                                    <span>{message.text}</span>
                                 </div>
                             )}
 
                             <form onSubmit={handlePayoutSubmit} className="space-y-6">
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">المبلغ المراد سحبه (ريال):</label>
-                                    <input 
+                                    <Input 
                                         type="number" 
                                         min="50"
                                         step="0.01"
-                                        max={walletInfo?.balance}
+                                        max={String(walletInfo?.balance || '')}
                                         required 
                                         value={amount} 
                                         onChange={(e) => setAmount(Number(e.target.value))}
                                         placeholder="الحد الأدنى 50 ريال"
-                                        className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 outline-none transition-all duration-200 font-bold placeholder:text-gray-300" 
                                     />
                                 </div>
                                 <div>
@@ -164,7 +180,7 @@ export default function PayoutPage() {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">رقم الآيبان (IBAN):</label>
-                                    <input 
+                                    <Input 
                                         type="text" 
                                         required 
                                         value={iban} 
@@ -172,52 +188,53 @@ export default function PayoutPage() {
                                         placeholder="SA00 0000 0000 ..."
                                         maxLength={24}
                                         dir="ltr"
-                                        className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 outline-none text-left tracking-widest transition-all duration-200 font-black placeholder:text-gray-300" 
+                                        className="tracking-widest"
                                     />
                                 </div>
                                 
-                                <button 
+                                <Button 
                                     type="submit" 
                                     disabled={
                                         isSubmitting ||
                                         (amount !== '' && amount > walletBalance) ||
                                         walletBalance < 50
                                     }
-                                    className="w-full bg-gradient-to-r from-emerald-600 via-emerald-700 to-green-800 text-white font-black py-4.5 rounded-[1.5rem] hover:shadow-[0_12px_40px_rgba(16,185,129,0.3)] transition-all duration-300 disabled:opacity-50 mt-2 hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 text-lg shadow-xl"
+                                    className="w-full h-14 bg-gradient-to-r from-emerald-600 via-emerald-700 to-green-800 hover:shadow-[0_12px_40px_rgba(16,185,129,0.3)] text-lg rounded-[1.5rem]"
                                 >
                                     {isSubmitting ? (
                                         <>
-                                            <span className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                            <Loader2 className="w-5 h-5 animate-spin mr-2" />
                                             جاري المعالجة...
                                         </>
                                     ) : (
                                         <>
                                             <span>إرسال طلب السحب</span>
-                                            <span>📤</span>
+                                            <Send className="w-5 h-5 mr-2" />
                                         </>
                                     )}
-                                </button>
+                                </Button>
                                 {walletBalance < 50 && (
                                     <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-[10px] text-rose-600 font-bold text-center flex items-center gap-2 justify-center">
-                                         <span>⚠️ رصيدك أقل من الحد الأدنى (50 ريال)</span>
+                                         <AlertTriangle className="w-3.5 h-3.5" />
+                                         <span>رصيدك أقل من الحد الأدنى (50 ريال)</span>
                                     </div>
                                 )}
                             </form>
-                        </div>
+                        </Card>
                     </div>
 
                     {/* سجل طلبات السحب المحدث (Card Collection) */}
-                    <div className="lg:col-span-2 bg-white/80 backdrop-blur-md p-8 md:p-10 rounded-[3rem] shadow-xl border border-white/50 h-fit animate-fade-in-up-delay-3">
+                    <Card className="lg:col-span-2 bg-white/80 backdrop-blur-md rounded-[3rem] border-white/50 h-fit animate-fade-in-up-delay-3 p-8 md:p-10">
                         <h3 className="font-extrabold text-2xl text-gray-900 mb-8 flex items-center gap-3 underline underline-offset-8 decoration-indigo-100">
-                             <span className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center text-lg shadow-inner">
-                                    📈
+                             <span className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner">
+                                    <TrendingUp className="w-5 h-5" />
                              </span>
                              سجل المعاملات المالية
                         </h3>
                         
                         {payouts.length === 0 ? (
                             <div className="text-center py-20 bg-gray-50/50 rounded-3xl border-4 border-dashed border-gray-100 text-gray-400 font-black flex flex-col items-center gap-4">
-                                <div className="text-7xl opacity-20">📭</div>
+                                <Inbox className="w-16 h-16 text-gray-300" />
                                 <span>لم تقم بتقديم أي طلب سحب حتى الآن.</span>
                                 <p className="text-xs font-bold leading-relaxed">سيتم عرض جميع طلباتك وحالتها المالية هنا فور إرسالها.</p>
                             </div>
@@ -227,8 +244,8 @@ export default function PayoutPage() {
                                     <div key={payout.id} className="group relative overflow-hidden bg-white/50 hover:bg-white transition-all duration-300 border-2 border-gray-50 rounded-[2rem] p-7 shadow-sm hover:shadow-xl hover:-translate-y-1">
                                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                                             <div className="flex items-center gap-6">
-                                                <div className="w-16 h-16 bg-gradient-to-br from-indigo-50 to-emerald-50 rounded-[1.5rem] flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform duration-300">
-                                                    🏦
+                                                <div className="w-16 h-16 bg-gradient-to-br from-indigo-50 to-emerald-50 rounded-[1.5rem] flex items-center justify-center text-emerald-600 shadow-inner group-hover:scale-110 transition-transform duration-300">
+                                                    <Landmark className="w-7 h-7" />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <div className="flex items-center gap-3">
@@ -236,8 +253,8 @@ export default function PayoutPage() {
                                                         <span className="text-[10px] bg-indigo-50 text-indigo-600 px-3 py-0.5 rounded-full font-black uppercase tracking-widest">Transaction</span>
                                                     </div>
                                                     <div className="flex items-center gap-4 text-xs font-bold text-gray-400">
-                                                        <span className="flex items-center gap-1.5 italic">📅 {new Date(payout.created_at).toLocaleDateString('ar-SA')}</span>
-                                                        <span className="flex items-center gap-1.5">🏢 {payout.bank_name}</span>
+                                                        <span className="flex items-center gap-1.5 italic"><Calendar className="w-3.5 h-3.5" /> {new Date(payout.created_at).toLocaleDateString('ar-SA')}</span>
+                                                        <span className="flex items-center gap-1.5"><Building className="w-3.5 h-3.5" /> {payout.bank_name}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -256,7 +273,7 @@ export default function PayoutPage() {
                                 ))}
                             </div>
                         )}
-                    </div>
+                    </Card>
 
                 </div>
             </div>
