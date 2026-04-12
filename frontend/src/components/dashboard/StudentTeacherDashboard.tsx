@@ -8,7 +8,7 @@ import { Wallet, Booking, AppNotification } from "@/types";
 import { formatTimeTo12h } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { showApiError } from "@/hooks/useApiError";
-import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { 
   WalletCards, CalendarDays, Banknote, Zap, BarChart2,

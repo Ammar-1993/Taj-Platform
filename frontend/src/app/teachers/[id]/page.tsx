@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import { useAuth } from "@/context/AuthContext";
@@ -8,11 +8,10 @@ import { User, TeacherSlot } from "@/types";
 import { formatTimeTo12h } from "@/lib/utils";
 import toast from "react-hot-toast";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import { Card, CardHeader, CardContent } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { CalendarDays, CalendarX2, Gift, Users, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { CalendarDays, CalendarX2, Gift, Users, CheckCircle2, XCircle } from "lucide-react";
 
 export default function TeacherProfile({ params }: { params: { id: string } }) {
   const [teacherName, setTeacherName] = useState("");
@@ -32,9 +31,21 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
   // 🟢 التحقق مما إذا كان المستخدم ولي أمر
   const isParent = user?.roles?.some((r) => r.name === "parent");
 
+  const fetchSlots = useCallback(async () => {
+    try {
+      const res = await api.get(`/discovery/teachers/${params.id}/slots`);
+      setTeacherName(res.data.teacher_name);
+      setSlots(res.data.data); // الأوقات مجمعة حسب التاريخ من الـ Backend
+    } catch (error) {
+      console.error("خطأ في جلب المواعيد", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [params.id]);
+
   useEffect(() => {
     fetchSlots();
-  }, []);
+  }, [fetchSlots]);
 
   // 🟢 جلب أبناء ولي الأمر إذا كان المستخدم أباً
   useEffect(() => {
@@ -47,18 +58,6 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
         );
     }
   }, [isParent]);
-
-  const fetchSlots = async () => {
-    try {
-      const res = await api.get(`/discovery/teachers/${params.id}/slots`);
-      setTeacherName(res.data.teacher_name);
-      setSlots(res.data.data); // الأوقات مجمعة حسب التاريخ من الـ Backend
-    } catch (error) {
-      console.error("خطأ في جلب المواعيد", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // حالة مربع تأكيد الحجز
   const [bookingConfirm, setBookingConfirm] = useState<{ isOpen: boolean; slotId: number }>({

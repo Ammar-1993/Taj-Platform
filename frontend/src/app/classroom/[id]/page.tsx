@@ -11,7 +11,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { showApiError } from '@/hooks/useApiError';
 import { ApiResponse } from '@/types';
 import type { IAgoraRTCClient, ILocalVideoTrack } from 'agora-rtc-sdk-ng';
-import { Video, Lock, AlertTriangle, LogOut, PowerOff, MonitorUp, MicOff, Info, CheckCircle2, Loader2, Coins } from 'lucide-react';
+import { Video, Lock, AlertTriangle, LogOut, PowerOff, MonitorUp, MicOff, Info, Loader2, Coins } from 'lucide-react';
 
 const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID || '039c4b2d111b488f8069bb00c583aa04';
 

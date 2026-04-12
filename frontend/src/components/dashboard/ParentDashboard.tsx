@@ -3,7 +3,7 @@ import Link from "next/link";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { ParentDashboardData } from "@/types";
 import { formatTimeTo12h } from "@/lib/utils";
-import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { WalletCards, Zap, Calendar, BookOpen } from "lucide-react";
 

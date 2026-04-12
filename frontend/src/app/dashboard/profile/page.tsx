@@ -8,7 +8,7 @@ import PageHeader from '@/components/ui/PageHeader';
 import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import { showApiError } from '@/hooks/useApiError';
 import { ApiResponse, Subject, TeacherProfile, TeacherProfileFormData } from '@/types';
-import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { CheckCircle2, Clock, Info, User, FileText, FileBadge, GraduationCap, Rocket, Loader2 } from "lucide-react";

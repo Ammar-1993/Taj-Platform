@@ -7,9 +7,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { GradeLevel } from '@/types';
 import { showApiError } from '@/hooks/useApiError';
-import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { GraduationCap, AlertCircle, CheckCircle2, XCircle, Lightbulb, Rocket, Loader2 } from "lucide-react";
 
 export default function StudentProfilePage() {

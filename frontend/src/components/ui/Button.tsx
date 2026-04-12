@@ -29,11 +29,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       icon: "h-12 w-12",
     };
 
-    const computedClassName = cn(baseClass, variants[variant], sizes[size], className);
+    const computedClassName = cn(baseClass, variants[variant as keyof typeof variants], sizes[size as keyof typeof sizes], className);
 
     if (asChild && React.isValidElement(props.children)) {
-      return React.cloneElement(props.children as React.ReactElement<any>, {
-        className: cn(computedClassName, props.children.props.className),
+      return React.cloneElement(props.children as React.ReactElement, {
+        className: cn(computedClassName, (props.children.props as { className?: string }).className),
         ref: ref as any,
       });
     }
