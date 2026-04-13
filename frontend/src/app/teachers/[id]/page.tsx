@@ -107,8 +107,21 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
       }, 3000);
     } catch (err: unknown) {
       const errorMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "حدث خطأ غير متوقع";
-      setMessage({ type: "error", text: errorMsg });
       toast.error(errorMsg);
+      
+      const isStudent = user?.roles?.some((r) => r.name === "student");
+      // التحقق مما إذا كان الخطأ هو سحب صلاحية الحجز من الطالب
+      const isPermissionError = errorMsg.includes("غير مصرح له بالحجز والدفع المباشر");
+
+      if (isStudent && isPermissionError) {
+        // حالة الطالب المعطل: توجيه للوحة التحكم بعد الرسالة الديناميكية فقط
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 3000);
+      } else {
+        // بقية الحالات (مثل خطأ كود الخصم أو الأدوار الأخرى): يبقى في الصفحة مع رسالة توضيح ثابتة
+        setMessage({ type: "error", text: errorMsg });
+      }
     } finally {
       setBookingLoading(false);
     }
