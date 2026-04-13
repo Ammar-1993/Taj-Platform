@@ -87,15 +87,15 @@ export default function Home() {
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="w-full md:w-auto text-center md:text-right">
               <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-                <span className="text-4xl drop-shadow-lg animate-subtle-pulse">👑</span>
-                <h1 className="text-3xl md:text-4xl font-black tracking-tight">منصة تاج التعليمية</h1>
+                <span className="text-3xl md:text-4xl drop-shadow-lg animate-subtle-pulse">👑</span>
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight">منصة تاج التعليمية</h1>
               </div>
               <p className="text-indigo-200 text-base md:text-lg font-medium mt-1">
                 نخبة من المعلمين المعتمدين في جميع المواد — اختر معلمك وانطلق نحو التفوق.
               </p>
             </div>
 
-            <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-1.5 sm:gap-2 md:gap-3 mt-2 md:mt-0">
+            <div className="grid grid-cols-1 xs:grid-cols-2 lg:flex lg:items-center lg:justify-end w-full lg:w-auto gap-2 sm:gap-3 mt-4 lg:mt-0">
               {authLoading ? (
                 <div className="h-10 md:h-12 w-full md:w-32 bg-white/20 animate-pulse rounded-xl md:rounded-2xl"></div>
               ) : user ? (
@@ -132,7 +132,7 @@ export default function Home() {
         </div>
 
         {/* Modernized Search & Filters */}
-        <div className="animate-fade-in-up-delay bg-white/90 backdrop-blur-md p-5 rounded-[2rem] shadow-lg border border-white/50 flex flex-col md:flex-row gap-4 justify-between items-center">
+        <div className="animate-fade-in-up-delay bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] shadow-lg border border-white/50 flex flex-col lg:flex-row gap-4 justify-between items-center">
           <div className="w-full md:flex-1 relative">
             <Input
               type="text"
@@ -217,8 +217,8 @@ export default function Home() {
                       {teacher.teacher_profile?.bio || "لا توجد نبذة تعريفية."}
                     </CardDescription>
                   </CardContent>
-                  <CardFooter className="flex justify-between items-center pt-5 border-t border-gray-50 mt-auto">
-                    <div className="flex flex-col gap-1">
+                  <CardFooter className="flex flex-col sm:flex-row justify-between items-center pt-5 border-t border-gray-50 mt-auto gap-4 sm:gap-0">
+                    <div className="flex flex-col items-center sm:items-start gap-1">
                       <span className="text-amber-500 font-black flex items-center gap-1.5 text-lg">
                         <Star size={18} className="fill-amber-500" />
                         {teacher.teacher_profile?.average_rating || "0.00"}
@@ -227,7 +227,7 @@ export default function Home() {
                         ({teacher.teacher_profile?.reviews_count || 0} تقييم)
                       </span>
                     </div>
-                    <Button asChild variant="default" className="px-6 rounded-2xl">
+                    <Button asChild variant="default" className="w-full sm:w-auto px-6 rounded-2xl">
                       <Link 
                         href={`/teachers/${teacher.id}`}
                         onClick={(e) => {
