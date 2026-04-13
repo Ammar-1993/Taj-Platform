@@ -110,16 +110,18 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
       toast.error(errorMsg);
       
       const isStudent = user?.roles?.some((r) => r.name === "student");
-      // التحقق مما إذا كان الخطأ هو سحب صلاحية الحجز من الطالب
+      const isParent = user?.roles?.some((r) => r.name === "parent");
+      // التحقق من نوع الخطأ (صلاحية الحجز أو نقص الرصيد)
       const isPermissionError = errorMsg.includes("غير مصرح له بالحجز والدفع المباشر");
+      const isBalanceError = errorMsg.includes("رصيد المحفظة غير كافٍ");
 
-      if (isStudent && isPermissionError) {
-        // حالة الطالب المعطل: توجيه للوحة التحكم بعد الرسالة الديناميكية فقط
+      if ((isStudent && isPermissionError) || ((isStudent || isParent) && isBalanceError)) {
+        // حالات التوجيه التلقائي: سحب الصلاحية (للطالب) أو نقص الرصيد (للجميع)
         setTimeout(() => {
           router.push("/dashboard");
         }, 3000);
       } else {
-        // بقية الحالات (مثل خطأ كود الخصم أو الأدوار الأخرى): يبقى في الصفحة مع رسالة توضيح ثابتة
+        // بقية الحالات: عرض الرسالة الثابتة داخل الصفحة
         setMessage({ type: "error", text: errorMsg });
       }
     } finally {
