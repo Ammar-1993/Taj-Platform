@@ -33,6 +33,10 @@ class DiscoveryController extends Controller
             ->role('teacher')
             ->where('users.is_active', true)
             ->with(['teacherProfile.subject']) // Eager Loading لتسريع الاستعلام
+            ->withCount(['teacherSlots as active_slots_count' => function ($q) {
+                $q->where('status', 'available')
+                  ->where('slot_date', '>=', now()->toDateString());
+            }])
             ->whereHas('teacherProfile', function ($q) {
                 $q->where('is_verified', true); // نجلب المعلمين الموثقين فقط
             });

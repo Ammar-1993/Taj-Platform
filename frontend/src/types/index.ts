@@ -72,6 +72,7 @@ export interface User {
   wallet?: Wallet;
   student_profile?: StudentProfile;
   teacher_profile?: TeacherProfile;
+  active_slots_count?: number;
 }
 
 export interface TeacherSlot {

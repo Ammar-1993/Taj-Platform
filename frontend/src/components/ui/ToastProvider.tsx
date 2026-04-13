@@ -13,8 +13,10 @@ export default function ToastProvider() {
           fontFamily: "Tajawal, sans-serif",
           fontWeight: "700",
           borderRadius: "16px",
-          padding: "14px 20px",
-          boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+          padding: "14px 28px",
+          boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
+          maxWidth: "none",
+          whiteSpace: "nowrap",
         },
         success: {
           style: {

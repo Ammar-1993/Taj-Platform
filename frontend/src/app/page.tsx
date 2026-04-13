@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { Card, CardHeader, CardContent, CardFooter, CardDescription, CardTitle } from "@/components/ui/Card";
 
+import toast from "react-hot-toast";
+
 export default function Home() {
   const [teachers, setTeachers] = useState<User[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -226,7 +228,15 @@ export default function Home() {
                       </span>
                     </div>
                     <Button asChild variant="default" className="px-6 rounded-2xl">
-                      <Link href={`/teachers/${teacher.id}`}>
+                      <Link 
+                        href={`/teachers/${teacher.id}`}
+                        onClick={(e) => {
+                          if ((teacher.active_slots_count || 0) <= 0) {
+                            e.preventDefault();
+                            toast.error("عذراً، هذا المعلم ليس لديه مواعيد متاحة حالياً.");
+                          }
+                        }}
+                      >
                         احجز الآن
                       </Link>
                     </Button>
