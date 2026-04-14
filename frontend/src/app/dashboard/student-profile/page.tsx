@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { GradeLevel } from '@/types';
 import { showApiError } from '@/hooks/useApiError';
@@ -19,7 +20,6 @@ export default function StudentProfilePage() {
     const [gradeLevelId, setGradeLevelId] = useState('');
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [message, setMessage] = useState({ type: '', text: '' });
 
     // 1. جلب المراحل الدراسية عند فتح الصفحة
     useEffect(() => {
@@ -48,14 +48,13 @@ export default function StudentProfilePage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        setMessage({ type: '', text: '' });
 
         try {
             const res = await api.post('/profile/student', {
                 grade_level_id: gradeLevelId
             });
             
-            setMessage({ type: 'success', text: res.data.message || 'تم حفظ المرحلة بنجاح!' });
+            toast.success(res.data.message || 'تم حفظ المرحلة بنجاح!');
             
             // 🟢 بعد الحفظ، نوجه الطالب للوحة التحكم الرئيسية أو صفحة البحث عن معلمين
             setTimeout(() => {
@@ -131,12 +130,7 @@ export default function StudentProfilePage() {
                 {/* نموذج الإعدادات */}
                 <Card className="bg-white/90 backdrop-blur-md rounded-[2.5rem] border-white/50 animate-fade-in-up-delay p-8 md:p-10">
                     
-                    {message.text && (
-                        <div className={`p-4 rounded-2xl font-bold text-center mb-8 shadow-sm flex items-center justify-center gap-2 animate-bounce-subtle ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
-                            {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
-                            <span>{message.text}</span>
-                        </div>
-                    )}
+
 
                     <form onSubmit={handleSubmit} className="space-y-8">
                         <div className="space-y-4">

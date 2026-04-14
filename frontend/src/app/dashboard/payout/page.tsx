@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import PageHeader from '@/components/ui/PageHeader';
 import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import StatusBadge from '@/components/ui/StatusBadge';
@@ -16,6 +18,7 @@ import { CircleDollarSign, SendHorizonal, Send, AlertTriangle, TrendingUp, Inbox
 
 export default function PayoutPage() {
     const { user } = useAuth();
+    const router = useRouter();
     
     const [walletInfo, setWalletInfo] = useState<Wallet | null>(null);
     const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
@@ -26,7 +29,6 @@ export default function PayoutPage() {
     const [bankName, setBankName] = useState('');
     const [iban, setIban] = useState('SA');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [message, setMessage] = useState({ type: '', text: '' });
 
     const walletBalance = walletInfo ? Number(walletInfo.balance) : 0;
 
@@ -53,7 +55,6 @@ export default function PayoutPage() {
     const handlePayoutSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        setMessage({ type: '', text: '' });
 
         try {
             const res = await api.post<ApiResponse<unknown>>('/wallet/payouts', {
@@ -62,14 +63,16 @@ export default function PayoutPage() {
                 iban: iban
             });
             
-            setMessage({ type: 'success', text: res.data.message || 'تم إرسال طلب السحب.' });
+            toast.success(res.data.message || 'تم إرسال طلب السحب.');
             setAmount('');
             setBankName('');
             setIban('SA');
             
             // تحديث الرصيد والجدول فوراً بدون الحاجة لتحديث الصفحة
             fetchData(); 
-        } catch (error: unknown) {
+            
+            // العودة للوحة بعد 3 ثواني
+            setTimeout(() => router.push('/dashboard'), 3000);        } catch (error: unknown) {
             showApiError(error, 'تأكد من صحة البيانات وألا يقل المبلغ عن 50 ريال.');
         } finally {
             setIsSubmitting(false);
@@ -137,12 +140,7 @@ export default function PayoutPage() {
                                 تقديم طلب جديد
                             </h3>
                             
-                            {message.text && (
-                                <div className={`p-4 mb-6 rounded-2xl text-sm font-bold shadow-sm flex items-center gap-2 animate-bounce-subtle ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
-                                    {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
-                                    <span>{message.text}</span>
-                                </div>
-                            )}
+
 
                             <form onSubmit={handlePayoutSubmit} className="space-y-6">
                                 <div>

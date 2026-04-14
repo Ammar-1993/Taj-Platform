@@ -24,7 +24,6 @@ export default function ChildrenManagementPage() {
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({ name: '', email: '', password: '', grade_level_id: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [message, setMessage] = useState({ type: '', text: '' });
 
     useEffect(() => {
         fetchData();
@@ -48,11 +47,9 @@ export default function ChildrenManagementPage() {
     const handleAddChild = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        setMessage({ type: '', text: '' });
 
         try {
             await api.post('/parent/children', formData);
-            setMessage({ type: 'success', text: 'تم إضافة الابن بنجاح!' });
             toast.success('تم إضافة الابن بنجاح! 🎉');
             setFormData({ name: '', email: '', password: '', grade_level_id: '' });
             setShowForm(false);
@@ -127,11 +124,7 @@ export default function ChildrenManagementPage() {
                     }
                 />
 
-                {message.text && (
-                    <div className={`p-4 rounded-lg font-bold text-center ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {message.text}
-                    </div>
-                )}
+
 
                 {/* فورم الإضافة المحدث */}
                 {showForm && (

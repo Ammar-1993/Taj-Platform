@@ -26,7 +26,6 @@ export default function TeacherSchedulePage() {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState({ type: "", text: "" });
 
   useEffect(() => {
     if (user) fetchSlots();
@@ -46,7 +45,6 @@ export default function TeacherSchedulePage() {
   const handleAddSlot = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setMessage({ type: "", text: "" });
 
     try {
       await api.post("/teacher/slots", {
@@ -55,16 +53,12 @@ export default function TeacherSchedulePage() {
         end_time: endTime,
       });
 
-      setMessage({ type: "success", text: "تم إضافة الموعد بنجاح! ✅" });
+      toast.success("تم إضافة الموعد بنجاح!");
       setStartTime(""); // تصفير الوقت لتسهيل الإضافة التالية
       setEndTime("");
       fetchSlots(); // تحديث الجدول فوراً
     } catch (error: unknown) {
       showApiError(error, "حدث خطأ غير متوقع");
-      setMessage({
-        type: "error",
-        text: "حدث خطأ غير متوقع",
-      });
     } finally {
       setIsSubmitting(false);
     }
@@ -129,14 +123,7 @@ export default function TeacherSchedulePage() {
               إضافة موعد جديد
             </h3>
 
-            {message.text && (
-              <div
-                className={`p-4 mb-6 rounded-2xl text-sm font-bold shadow-sm flex items-center gap-2 animate-bounce-subtle ${message.type === "success" ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-rose-50 text-rose-700 border border-rose-100"}`}
-              >
-                {message.type === "success" ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
-                <span>{message.text}</span>
-              </div>
-            )}
+
 
             <form onSubmit={handleAddSlot} className="space-y-6">
               <div>

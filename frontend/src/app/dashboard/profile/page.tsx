@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import PageHeader from '@/components/ui/PageHeader';
 import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import { showApiError } from '@/hooks/useApiError';
@@ -27,7 +28,6 @@ export default function TeacherProfilePage() {
     const [nationalIdFile, setNationalIdFile] = useState<File | null>(null);
     const [degreeFile, setDegreeFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [message, setMessage] = useState({ type: '', text: '' });
 
     useEffect(() => {
         if (user) fetchData();
@@ -58,7 +58,6 @@ export default function TeacherProfilePage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        setMessage({ type: '', text: '' });
 
         // استخدمنا FormData لأننا نرسل ملفات (Files)
         const formData = new FormData();
@@ -85,7 +84,7 @@ export default function TeacherProfilePage() {
             const res = await api.post<ApiResponse<TeacherProfile>>('/profile/teacher', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            setMessage({ type: 'success', text: res.data.message || 'تم حفظ الملف الشخصي بنجاح.' });
+            toast.success(res.data.message || 'تم حفظ الملف الشخصي بنجاح.');
             setProfile(res.data.data); // تحديث الحالة
             
             // العودة للوحة بعد 3 ثواني
@@ -152,11 +151,7 @@ export default function TeacherProfilePage() {
                     )}
                 </div>
 
-                {message.text && (
-                    <div className={`p-4 rounded-lg font-bold text-center ${message.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
-                        {message.text}
-                    </div>
-                )}
+
 
                 <Card className="bg-white/90 backdrop-blur-md rounded-[2.5rem] border-white/50 animate-fade-in-up-delay-2 p-8 md:p-10">
                     <form onSubmit={handleSubmit} className="space-y-8">

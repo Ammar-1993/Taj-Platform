@@ -19,7 +19,6 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
   const [promoCode, setPromoCode] = useState("");
   const [loading, setLoading] = useState(true);
   const [bookingLoading, setBookingLoading] = useState(false);
-  const [message, setMessage] = useState({ type: "", text: "" });
 
   // 🟢 حالات (States) جديدة خاصة بولي الأمر
   const [children, setChildren] = useState<User[]>([]);
@@ -75,10 +74,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
 
     // تحقق أمني: إذا كان أباً ولم يختر ابناً
     if (isParent && !selectedChildId) {
-      setMessage({
-        type: "error",
-        text: "الرجاء اختيار الابن الذي سيحضر الحصة أولاً من القائمة أعلاه.",
-      });
+      toast.error("الرجاء اختيار الابن الذي سيحضر الحصة أولاً من القائمة أعلاه.");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -89,7 +85,6 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
   const handleBooking = async () => {
     setBookingConfirm({ isOpen: false, slotId: 0 });
     setBookingLoading(true);
-    setMessage({ type: "", text: "" });
 
     try {
       const res = await api.post("/bookings", {
@@ -127,9 +122,6 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
           }, 3000);
         }
         // في حالة كود الخصم الخاطئ: لا نقوم بالتوجيه لكي يتمكن المستخدم من تعديله أو حذفه
-      } else {
-        // بقية الحالات الأخرى: عرض الرسالة الثابتة داخل الصفحة
-        setMessage({ type: "error", text: errorMsg });
       }
     } finally {
       setBookingLoading(false);
@@ -164,14 +156,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
           </p>
         </div>
 
-        {message.text && (
-          <div
-            className={`p-4 rounded-2xl mb-6 font-bold flex items-center justify-center gap-2 shadow-sm ${message.type === "success" ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-rose-50 text-rose-700 border border-rose-100"}`}
-          >
-            {message.type === "success" ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
-            <span>{message.text}</span>
-          </div>
-        )}
+
 
         {/* 🟢 القائمة المنسدلة لاختيار الابن (تظهر لولي الأمر فقط) */}
         {isParent && (

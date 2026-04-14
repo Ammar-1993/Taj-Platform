@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import PageHeader from '@/components/ui/PageHeader';
 import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import StatusBadge from '@/components/ui/StatusBadge';
@@ -16,6 +18,7 @@ import { PenSquare, CheckCircle2, XCircle, Send, FolderOpen, Inbox, Pin, Headpho
 
 export default function SupportPage() {
     const { user } = useAuth();
+    const router = useRouter();
     
     const [tickets, setTickets] = useState<SupportTicket[]>([]);
     const [bookings, setBookings] = useState<Booking[]>([]);
@@ -26,7 +29,6 @@ export default function SupportPage() {
     const [description, setDescription] = useState('');
     const [bookingId, setBookingId] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [message, setMessage] = useState({ type: '', text: '' });
 
     useEffect(() => {
         if (user) fetchData();
@@ -52,7 +54,6 @@ export default function SupportPage() {
     const handleSubmitTicket = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        setMessage({ type: '', text: '' });
 
         try {
             const payload: SupportTicketCreatePayload = { subject, description };
@@ -60,12 +61,15 @@ export default function SupportPage() {
 
             const res = await api.post<ApiResponse<SupportTicket>>('/support-tickets', payload);
             
-            setMessage({ type: 'success', text: res.data.message || 'تم إرسال التذكرة بنجاح.' });
+            toast.success(res.data.message || 'تم إرسال التذكرة بنجاح.');
             setSubject('');
             setDescription('');
             setBookingId('');
             
             fetchData(); // تحديث قائمة التذاكر فوراً
+            
+            // العودة للوحة بعد 3 ثواني
+            setTimeout(() => router.push('/dashboard'), 3000);
         } catch (error: unknown) {
             showApiError(error, 'حدث خطأ أثناء إرسال التذكرة.');
         } finally {
@@ -115,12 +119,7 @@ export default function SupportPage() {
                                 فتح تذكرة جديدة
                             </h3>
                             
-                            {message.text && (
-                                <div className={`p-4 mb-6 rounded-2xl text-sm font-bold shadow-sm flex items-center gap-2 animate-bounce-subtle ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
-                                    {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
-                                    <span>{message.text}</span>
-                                </div>
-                            )}
+
 
                             <form onSubmit={handleSubmitTicket} className="space-y-5">
                                 <div>
