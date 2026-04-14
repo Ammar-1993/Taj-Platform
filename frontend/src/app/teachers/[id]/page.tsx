@@ -111,17 +111,24 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
       
       const isStudent = user?.roles?.some((r) => r.name === "student");
       const isParent = user?.roles?.some((r) => r.name === "parent");
-      // التحقق من نوع الخطأ (صلاحية الحجز أو نقص الرصيد)
+      // التحقق من نوع الخطأ
       const isPermissionError = errorMsg.includes("غير مصرح له بالحجز والدفع المباشر");
       const isBalanceError = errorMsg.includes("رصيد المحفظة غير كافٍ");
+      const isPromoError = errorMsg.includes("كود الخصم المدخل غير صحيح");
 
-      if ((isStudent && isPermissionError) || ((isStudent || isParent) && isBalanceError)) {
-        // حالات التوجيه التلقائي: سحب الصلاحية (للطالب) أو نقص الرصيد (للجميع)
-        setTimeout(() => {
-          router.push("/dashboard");
-        }, 3000);
+      // الحالات التي نريد فيها إخفاء الرسالة الثابتة والاكتفاء بالـ Toast
+      const hideStaticMessage = (isStudent && isPermissionError) || isBalanceError || isPromoError;
+
+      if (hideStaticMessage) {
+        // التوجيه التلقائي فقط في حالة سحب الصلاحية أو نقص الرصيد
+        if ((isStudent && isPermissionError) || ((isStudent || isParent) && isBalanceError)) {
+          setTimeout(() => {
+            router.push("/dashboard");
+          }, 3000);
+        }
+        // في حالة كود الخصم الخاطئ: لا نقوم بالتوجيه لكي يتمكن المستخدم من تعديله أو حذفه
       } else {
-        // بقية الحالات: عرض الرسالة الثابتة داخل الصفحة
+        // بقية الحالات الأخرى: عرض الرسالة الثابتة داخل الصفحة
         setMessage({ type: "error", text: errorMsg });
       }
     } finally {
