@@ -14,7 +14,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { Plus, CheckCircle2, XCircle, Loader2, CalendarRange, CalendarX2, CalendarDays, Clock, LockOpen, Lock, LockKeyhole, Trash2 } from "lucide-react";
+import { Plus, Loader2, CalendarRange, CalendarX2, CalendarDays, Clock, LockOpen, Lock, LockKeyhole, Trash2 } from "lucide-react";
 
 export default function TeacherSchedulePage() {
   const { user } = useAuth();

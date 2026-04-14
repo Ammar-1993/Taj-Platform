@@ -11,7 +11,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { CalendarDays, CalendarX2, Gift, Users, CheckCircle2, XCircle } from "lucide-react";
+import { CalendarDays, CalendarX2, Gift, Users } from "lucide-react";
 
 export default function TeacherProfile({ params }: { params: { id: string } }) {
   const [teacherName, setTeacherName] = useState("");

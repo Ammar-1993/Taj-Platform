@@ -14,7 +14,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { PenSquare, CheckCircle2, XCircle, Send, FolderOpen, Inbox, Pin, Headphones, Loader2 } from "lucide-react";
+import { PenSquare, Send, FolderOpen, Inbox, Pin, Headphones, Loader2 } from "lucide-react";
 
 export default function SupportPage() {
     const { user } = useAuth();

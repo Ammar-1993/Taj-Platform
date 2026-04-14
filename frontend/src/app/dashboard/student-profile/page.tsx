@@ -10,7 +10,7 @@ import { GradeLevel } from '@/types';
 import { showApiError } from '@/hooks/useApiError';
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { GraduationCap, AlertCircle, CheckCircle2, XCircle, Lightbulb, Rocket, Loader2 } from "lucide-react";
+import { GraduationCap, AlertCircle, Lightbulb, Rocket, Loader2 } from "lucide-react";
 
 export default function StudentProfilePage() {
     const { user, loading: authLoading } = useAuth();
