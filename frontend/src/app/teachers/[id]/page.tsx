@@ -98,7 +98,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
         child_id: isParent ? selectedChildId : undefined,
       });
 
-      setMessage({ type: "success", text: res.data.message });
+      // تم إزالة الرسالة الثابتة هنا والاكتفاء بالتنبيه الديناميكي (Toast) بناءً على طلب المستخدم
       toast.success(res.data.message || "تم الحجز بنجاح!");
       fetchSlots();
 
