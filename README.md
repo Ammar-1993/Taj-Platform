@@ -1,38 +1,113 @@
 <div align="center">
-  <img src="https://ui-avatars.com/api/?name=Taj+Platform&background=0284c7&color=fff&size=150&rounded=true" alt="Taj Platform Logo" width="150" height="150" />
+  <img src="https://ui-avatars.com/api/?name=Taj+Platform&background=0284c7&color=fff&size=200&rounded=true" alt="Taj Platform Logo" width="160" height="160" />
 
   <h1>👑 Taj Educational Platform (منصة تاج التعليمية)</h1>
   
   <p>
-    <b>A Next-Generation E-Learning & Video Tutoring App built for scale.</b>
+    <b>The Ultimate Production-Ready App for Live Tutoring, Mentorship, and Academic Excellence.</b>
   </p>
 
   <!-- Badges -->
   <p>
-    <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-12.0-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 12" /></a>
-    <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-14.2-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 14" /></a>
-    <a href="https://filamentphp.com"><img src="https://img.shields.io/badge/FilamentPHP-3.2-EAB308?style=for-the-badge&logo=php&logoColor=white" alt="Filament v3" /></a>
-    <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" /></a>
-    <a href="https://www.agora.io/"><img src="https://img.shields.io/badge/Agora-Video_Calling-099DFD?style=for-the-badge&logo=agora&logoColor=white" alt="Agora" /></a>
-    <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" /></a>
+    <img src="https://img.shields.io/badge/Laravel-12.0-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 12" />
+    <img src="https://img.shields.io/badge/Next.js-14.2-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 14" />
+    <img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/Filament_V3-EAB308?style=for-the-badge&logo=php&logoColor=white" alt="Filament" />
+    <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind" />
+    <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
   </p>
 
   <p align="center">
-    Taj Educational Platform is a comprehensive, production-ready full-stack application connecting students and specialized teachers seamlessly through high-quality live video sessions, interactive bookings, and a robust management portal.
+    Taj Educational Platform is a state-of-the-art, multi-tenant e-learning ecosystem designed to bridge the gap between students and specialized educators. Powered by a high-performance REST API and a stunningly responsive Next.js frontend, it delivers low-latency live video sessions and a seamless educational experience.
   </p>
 </div>
 
 <br />
 
 ## 📖 Table of Contents
-- [Live Beta Access](#-live-beta-access)
-- [Key Features](#-key-features)
-- [Functional Requirements](#-functional-requirements-fr)
-- [Technology Stack](#-technology-stack)
-- [Getting Started](#-getting-started)
-- [Project Architecture](#-project-architecture)
-- [Testing](#-testing)
+- [📸 Project Showcase](#-project-showcase)
+- [🏗️ System Architecture](#️-system-architecture)
+- [🌐 Live Beta Access](#-live-beta-access)
+- [✨ Functional Requirements](#-functional-requirements-fr)
+- [🛠️ Technology Stack](#️-technology-stack)
+- [📊 Project Stats](#-project-stats)
+- [🚀 Getting Started](#-getting-started)
+- [🧪 Testing](#-testing)
 - [Author](#-author)
+
+---
+
+## 📸 Project Showcase
+
+Experience the Taj Platform from the perspective of our 4 primary users. Each portal is uniquely optimized for its specific educational and administrative goals.
+
+### 👨‍👩‍👧‍👦 1. Parent Interface (واجهة ولي الأمر)
+*Focus: Oversight, Financial Funding, and Child Safety.*
+| Children Dashboard | Wallet & Funding |
+| :---: | :---: |
+| ![Children Management](https://via.placeholder.com/600x400.png?text=Parent:+Children+Management) | ![Parent Wallet](https://via.placeholder.com/600x400.png?text=Parent:+Wallet+Funding) |
+| *Monitor all children accounts and their academic progress in one place.* | *Securely top-up the main wallet and manage student allowances.* |
+
+### 👨‍🎓 2. Student Interface (واجهة الطالب)
+*Focus: Seamless Discovery, Learning, and Interactivity.*
+| Teacher Discovery | Live Virtual Classroom |
+| :---: | :---: |
+| ![Tutor Search](https://via.placeholder.com/600x400.png?text=Student:+Tutor+Discovery) | ![Agora Live Session](https://via.placeholder.com/600x400.png?text=Student:+Virtual+Classroom) |
+| *Find the perfect tutor using advanced subject and rating filters.* | *Real-time WebRTC video/audio sessions with zero latency.* |
+
+### 👨‍🏫 3. Teacher Interface (واجهة المعلم)
+*Focus: Schedule Autonomy, Earnings, and Profile Verification.*
+| Schedule Management | Earnings Dashboard |
+| :---: | :---: |
+| ![Availability Calendar](https://via.placeholder.com/600x400.png?text=Teacher:+Schedule+Management) | ![Teacher Payouts](https://via.placeholder.com/600x400.png?text=Teacher:+Earnings+Payouts) |
+| *Define working hours and manage weekly availability slots effortlessly.* | *Track earnings in real-time and request payouts to bank accounts.* |
+
+### 🛡️ 4. Admin Panel (لوحة الإدارة)
+*Focus: Quality Control, Financial Audit, and Platform Governance.*
+| Global Analytics | KYC Verification |
+| :---: | :---: |
+| ![Admin Metrics](https://via.placeholder.com/600x400.png?text=Admin:+Global+Metrics) | ![Teacher KYC Approval](https://via.placeholder.com/600x400.png?text=Admin:+KYC+Verification) |
+| *Real-time insights into user numbers, active bookings, and revenue.* | *Rigorous review of teacher credentials before profile activation.* |
+
+---
+
+## 🏗️ System Architecture
+
+The following diagram illustrates the decoupled interaction between the **Next.js** presentation layer, the **Laravel** API heart, and the shared ecosystem services.
+
+```mermaid
+graph TD
+    subgraph "Frontend Layer (User Facing)"
+        NJ[Next.js 14 App Router]
+        TW[Tailwind CSS / UI Components]
+        SC[Student/Teacher/Parent Portals]
+    end
+
+    subgraph "Service Connectivity"
+        AX[Axios / REST API Calls]
+        AG[Agora RTC SDK / Live Video]
+    end
+
+    subgraph "Backend Engine (Business Logic)"
+        LV[Laravel 12 API]
+        FL[Filament V3 Admin Panel]
+        SM[Sanctum Auth / RBAC]
+    end
+
+    subgraph "Data & Media"
+        DB[(MySQL 8.0)]
+        ST[Public/Private Storage]
+    end
+
+    %% Flow Connections
+    NJ --> AX
+    AX --> LV
+    NJ --> AG
+    AG <-.-> LV
+    LV --> DB
+    LV --> ST
+    FL --> DB
+```
 
 ---
 
@@ -112,6 +187,19 @@ The project operates as a modern monorepo, decoupling the interactive presentati
 
 ---
 
+## 📊 Project Stats
+
+| Metric | Details |
+| :--- | :--- |
+| **🚀 Stack Architecture** | Monorepo (Next.js + Laravel API) |
+| **🔐 Role Support** | Super Admin, Student, Teacher, Parent |
+| **📡 Streaming Service** | WebRTC via Agora RTC (Global Edge) |
+| **🌍 RTL Localization** | 100% Arabic (Full Interface) |
+| **🛡️ Security Layer** | JWT/Sanctum + RBAC Persistence |
+| **📱 Responsiveness** | Advanced Tailwind Grid (Mobile First) |
+
+---
+
 ## 🚀 Getting Started
 
 The recommended way to boot up the complete Taj Platform stack (Frontend, Backend, and Database) is using **Docker Compose**.
@@ -165,14 +253,6 @@ php artisan migrate --seed
 - **Frontend App:** [http://localhost:3000](http://localhost:3000)
 - **Backend API:** [http://localhost:8000/api](http://localhost:8000/api)
 - **Filament Admin Panel:** [http://localhost:8000/admin](http://localhost:8000/admin)
-
----
-
-## 🏗️ Project Architecture
-
-1. **Decoupled API Routing:** The Next.js frontend behaves as an independent SPA application, communicating strictly with Laravel's typed API endpoints via `axios`.
-2. **Secure Video Handshakes:** When a session goes live, Next.js calls local API wrapper endpoints to retrieve Agora RTC connection tokens—securely minted by the Laravel Backend.
-3. **Centralized Administration:** Site operators manage syllabi, user verifications, billing, and system states exclusively through the Filament Admin UI.
 
 ---
 
