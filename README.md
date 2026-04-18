@@ -1,13 +1,14 @@
 <div align="center">
-  <img src="https://ui-avatars.com/api/?name=Taj+Platform&background=0284c7&color=fff&size=200&rounded=true" alt="Taj Platform Logo" width="160" height="160" />
+  <a href="https://taj-backend-t4ki.onrender.com/" target="_blank" style="text-decoration: none;" title="Go to Taj Backend">
+    <span style="font-size: 140px; display: inline-block; width: 160px; height: 160px; line-height: 160px; text-align: center; cursor: pointer;">👑</span>
+  </a>
 
-  <h1>👑 Taj Educational Platform (منصة تاج التعليمية)</h1>
+  <h1>Taj Educational Platform (منصة تاج التعليمية)</h1>
   
   <p>
     <b>The Ultimate Production-Ready App for Live Tutoring, Mentorship, and Academic Excellence.</b>
   </p>
 
-  <!-- Badges -->
   <p>
     <img src="https://img.shields.io/badge/Laravel-12.0-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 12" />
     <img src="https://img.shields.io/badge/Next.js-14.2-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 14" />
@@ -113,7 +114,6 @@ graph TD
     LV --> ST
     FL --> DB
 ```
-
 ---
 
 ## 🌐 Live Beta Access
