@@ -1,24 +1,27 @@
 <div align="center">
-  <a href="https://taj-platform.vercel.app/" target="_blank" style="text-decoration: none;" title="Go to Taj Platform">
-    <span style="font-size: 300px; display: inline-block; width: 320px; height: 320px; line-height: 320px; text-align: center; cursor: pointer; text-shadow: 0px 10px 20px rgba(0,0,0,0.15);">👑</span>
+  <a href="https://taj-backend-t4ki.onrender.com/" target="_blank" title="Go to Taj Platform">
+    <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f451.svg" alt="Taj Platform Logo" width="160" height="160" />
   </a>
 
-  <h1>Taj Educational Platform (منصة تاج التعليمية)</h1>
+  <br />
+  <br />
+
+  <h1>Taj Educational Platform <br/> (منصة تاج التعليمية)</h1>
   
   <p>
     <b>The Ultimate Production-Ready App for Live Tutoring, Mentorship, and Academic Excellence.</b>
   </p>
 
   <p>
-    <img src="https://img.shields.io/badge/Laravel-12.0-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 12" />
-    <img src="https://img.shields.io/badge/Next.js-14.2-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 14" />
-    <img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
-    <img src="https://img.shields.io/badge/Filament_V3-EAB308?style=for-the-badge&logo=php&logoColor=white" alt="Filament" />
-    <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind" />
-    <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+    <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-12.0-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 12" /></a>
+    <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-14.2-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 14" /></a>
+    <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" /></a>
+    <a href="https://filamentphp.com"><img src="https://img.shields.io/badge/Filament_V3-EAB308?style=for-the-badge&logo=filament&logoColor=white" alt="Filament" /></a>
+    <a href="https://tailwindcss.com"><img src="https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind" /></a>
+    <a href="https://www.docker.com"><img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" /></a>
   </p>
 
-  <p align="center">
+  <p align="center" style="max-width: 800px; margin: 0 auto;">
     Taj Educational Platform is a state-of-the-art, multi-tenant e-learning ecosystem designed to bridge the gap between students and specialized educators. Powered by a high-performance REST API and a stunningly responsive Next.js frontend, it delivers low-latency live video sessions and a seamless educational experience.
   </p>
 </div>
@@ -35,7 +38,7 @@
 - [📊 Project Stats](#-project-stats)
 - [🚀 Getting Started](#-getting-started)
 - [🧪 Testing](#-testing)
-- [Author](#-author)
+- [👤 Author](#-author)
 
 ---
 
@@ -44,32 +47,32 @@
 Experience the Taj Platform from the perspective of our 4 primary users. Each portal is uniquely optimized for its specific educational and administrative goals.
 
 ### 👨‍👩‍👧‍👦 1. Parent Interface (واجهة ولي الأمر)
-
 _Focus: Oversight, Financial Funding, and Child Safety._
+
 | Children Dashboard | Wallet & Funding |
 | :---: | :---: |
 | ![Children Management](https://via.placeholder.com/600x400.png?text=Parent:+Children+Management) | ![Parent Wallet](https://via.placeholder.com/600x400.png?text=Parent:+Wallet+Funding) |
 | _Monitor all children accounts and their academic progress in one place._ | _Securely top-up the main wallet and manage student allowances._ |
 
 ### 👨‍🎓 2. Student Interface (واجهة الطالب)
-
 _Focus: Seamless Discovery, Learning, and Interactivity._
+
 | Teacher Discovery | Live Virtual Classroom |
 | :---: | :---: |
 | ![Tutor Search](https://via.placeholder.com/600x400.png?text=Student:+Tutor+Discovery) | ![Agora Live Session](https://via.placeholder.com/600x400.png?text=Student:+Virtual+Classroom) |
 | _Find the perfect tutor using advanced subject and rating filters._ | _Real-time WebRTC video/audio sessions with zero latency._ |
 
 ### 👨‍🏫 3. Teacher Interface (واجهة المعلم)
-
 _Focus: Schedule Autonomy, Earnings, and Profile Verification._
+
 | Schedule Management | Earnings Dashboard |
 | :---: | :---: |
 | ![Availability Calendar](https://via.placeholder.com/600x400.png?text=Teacher:+Schedule+Management) | ![Teacher Payouts](https://via.placeholder.com/600x400.png?text=Teacher:+Earnings+Payouts) |
 | _Define working hours and manage weekly availability slots effortlessly._ | _Track earnings in real-time and request payouts to bank accounts._ |
 
 ### 🛡️ 4. Admin Panel (لوحة الإدارة)
-
 _Focus: Quality Control, Financial Audit, and Platform Governance._
+
 | Global Analytics | KYC Verification |
 | :---: | :---: |
 | ![Admin Metrics](https://via.placeholder.com/600x400.png?text=Admin:+Global+Metrics) | ![Teacher KYC Approval](https://via.placeholder.com/600x400.png?text=Admin:+KYC+Verification) |
