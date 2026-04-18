@@ -1,6 +1,6 @@
 <div align="center">
-  <a href="https://taj-backend-t4ki.onrender.com/" target="_blank" style="text-decoration: none;" title="Go to Taj Backend">
-    <span style="font-size: 140px; display: inline-block; width: 160px; height: 160px; line-height: 160px; text-align: center; cursor: pointer;">👑</span>
+  <a href="https://taj-platform.vercel.app/" target="_blank" style="text-decoration: none;" title="Go to Taj Platform">
+    <span style="font-size: 300px; display: inline-block; width: 320px; height: 320px; line-height: 320px; text-align: center; cursor: pointer; text-shadow: 0px 10px 20px rgba(0,0,0,0.15);">👑</span>
   </a>
 
   <h1>Taj Educational Platform (منصة تاج التعليمية)</h1>
