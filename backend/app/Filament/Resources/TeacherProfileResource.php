@@ -47,7 +47,7 @@ class TeacherProfileResource extends Resource
                             ->label('النبذة التعريفية (كما كتبها المعلم)')
                             ->disabled()
                             ->columnSpanFull(),
-                    ])->columns(3),
+                    ])->columns(['sm' => 1, 'md' => 2, 'lg' => 3]),
 
                 Forms\Components\Section::make('المستندات المرفقة (للمراجعة)')
                     ->description('يرجى التحقق من صحة المستندات قبل توثيق الحساب.')
@@ -69,7 +69,7 @@ class TeacherProfileResource extends Resource
                             ->openable()
                             ->disabled()
                             ->columnSpan(1),
-                    ])->columns(2),
+                    ])->columns(['sm' => 1, 'md' => 2]),
             ]);
     }
 
@@ -109,30 +109,27 @@ class TeacherProfileResource extends Resource
                     ->falseLabel('طلبات قيد المراجعة ⏳'),
             ])
             ->actions([
-                // 👁️ زر الاستعراض (يفتح الفورم الذي صممناه بالأعلى)
-                Tables\Actions\ViewAction::make()->label('مراجعة الملف'),
-
-                // ✅ زر التوثيق والقبول
-                Action::make('approve')
-                    ->label('توثيق الحساب')
-                    ->icon('heroicon-o-check-badge')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->modalHeading('توثيق حساب المعلم')
-                    ->modalDescription('بمجرد توثيق الحساب، سيظهر المعلم فوراً للطلاب في نتائج البحث وسيتمكن من استقبال الحجوزات. هل أنت متأكد؟')
-                    ->visible(fn (TeacherProfile $record): bool => !$record->is_verified) // يظهر فقط لغير الموثقين
-                    ->action(fn (TeacherProfile $record) => $record->update(['is_verified' => true])),
-
-                // 🛑 زر التجميد / إلغاء التوثيق
-                Action::make('suspend')
-                    ->label('تجميد الحساب')
-                    ->icon('heroicon-o-x-circle')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->modalHeading('تجميد توثيق المعلم')
-                    ->modalDescription('إذا قمت بتجميد التوثيق، سيختفي المعلم من نتائج البحث ولن يتمكن الطلاب من الحجز لديه. هل أنت متأكد؟')
-                    ->visible(fn (TeacherProfile $record): bool => (bool) $record->is_verified) // يظهر فقط للموثقين
-                    ->action(fn (TeacherProfile $record) => $record->update(['is_verified' => false])),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()->label('مراجعة الملف'),
+                    Action::make('approve')
+                        ->label('توثيق الحساب')
+                        ->icon('heroicon-o-check-badge')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('توثيق حساب المعلم')
+                        ->modalDescription('بمجرد توثيق الحساب، سيظهر المعلم فوراً للطلاب في نتائج البحث وسيتمكن من استقبال الحجوزات. هل أنت متأكد؟')
+                        ->visible(fn (TeacherProfile $record): bool => !$record->is_verified)
+                        ->action(fn (TeacherProfile $record) => $record->update(['is_verified' => true])),
+                    Action::make('suspend')
+                        ->label('تجميد الحساب')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('تجميد توثيق المعلم')
+                        ->modalDescription('إذا قمت بتجميد التوثيق، سيختفي المعلم من نتائج البحث ولن يتمكن الطلاب من الحجز لديه. هل أنت متأكد؟')
+                        ->visible(fn (TeacherProfile $record): bool => (bool) $record->is_verified)
+                        ->action(fn (TeacherProfile $record) => $record->update(['is_verified' => false])),
+                ])->icon('heroicon-m-ellipsis-vertical'),
             ])
             ->bulkActions([]);
     }

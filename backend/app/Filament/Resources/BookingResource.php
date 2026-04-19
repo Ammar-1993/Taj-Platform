@@ -109,48 +109,44 @@ class BookingResource extends Resource
                     }),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()->label('تفاصيل'),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()->label('تفاصيل'),
+                    
+                    // 🔴 زر التدخل الإداري القوي (Admin Override)
+                    Action::make('force_cancel_refund')
+                        ->label('إلغاء واسترداد مالي (Refund)')
+                        ->icon('heroicon-o-shield-exclamation')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('التدخل الإداري لحل نزاع ⚖️')
+                        ->modalDescription('سيتم إلغاء هذه الحصة فوراً، وإرجاع المبلغ كاملاً لمحفظة الطالب (Refund)، وسيصبح الموعد متاحاً لمعلمين آخرين. هل أنت متأكد؟')
+                        ->form([
+                            Forms\Components\Textarea::make('admin_reason')
+                                ->label('سبب الإلغاء (للسجلات الإدارية)')
+                                ->required()
+                                ->placeholder('مثال: المعلم لم يحضر الحصة، أو خلل فني في الإنترنت...'),
+                        ])
+                        ->visible(fn (Booking $record): bool => in_array($record->status, ['scheduled', 'in_progress']))
+                        ->action(function (Booking $record, array $data) {
+                            try {
+                                $bookingService = app(\App\Services\BookingService::class);
+                                $bookingService->cancelBooking($record, \Illuminate\Support\Facades\Auth::user());
 
-                // 🔴 زر التدخل الإداري القوي (Admin Override)
-                Action::make('force_cancel_refund')
-                    ->label('إلغاء واسترداد مالي (Refund)')
-                    ->icon('heroicon-o-shield-exclamation')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->modalHeading('التدخل الإداري لحل نزاع ⚖️')
-                    ->modalDescription('سيتم إلغاء هذه الحصة فوراً، وإرجاع المبلغ كاملاً لمحفظة الطالب (Refund)، وسيصبح الموعد متاحاً لمعلمين آخرين. هل أنت متأكد؟')
-                    ->form([
-                        Forms\Components\Textarea::make('admin_reason')
-                            ->label('سبب الإلغاء (للسجلات الإدارية)')
-                            ->required()
-                            ->placeholder('مثال: المعلم لم يحضر الحصة، أو خلل فني في الإنترنت...'),
-                    ])
-                    // الزر يظهر فقط للحصص التي لم تكتمل ولم تلغى بعد
-                    ->visible(fn (Booking $record): bool => in_array($record->status, ['scheduled', 'in_progress']))
-                    ->action(function (Booking $record, array $data) {
-                        try {
-                            // 1. استدعاء المحرك المالي الذي بنيناه سابقاً لضمان دقة العمليات
-                            $bookingService = app(\App\Services\BookingService::class);
+                                \Filament\Notifications\Notification::make()
+                                    ->title('تم الإلغاء والاسترداد بنجاح ✅')
+                                    ->body('تم إرجاع المبلغ لمحفظة الطالب وتفريغ الموعد.')
+                                    ->success()
+                                    ->send();
 
-                            // نمرر المستخدم الحالي (المدير) كمنفذ لعملية الإلغاء
-                            $bookingService->cancelBooking($record, \Illuminate\Support\Facades\Auth::user());
-
-                            // يمكننا هنا إضافة كود لحفظ سبب الإلغاء $data['admin_reason'] في جدول ملاحظات أو إرساله كإشعار
-
-                            \Filament\Notifications\Notification::make()
-                                ->title('تم الإلغاء والاسترداد بنجاح ✅')
-                                ->body('تم إرجاع المبلغ لمحفظة الطالب وتفريغ الموعد.')
-                                ->success()
-                                ->send();
-
-                        } catch (\Exception $e) {
-                            \Filament\Notifications\Notification::make()
-                                ->title('فشل الإلغاء ❌')
-                                ->body($e->getMessage())
-                                ->danger()
-                                ->send();
-                        }
-                    }),
+                            } catch (\Exception $e) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('فشل الإلغاء ❌')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        }),
+                ])->icon('heroicon-m-ellipsis-horizontal'),
             ])
             ->bulkActions([]);
     }

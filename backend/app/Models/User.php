@@ -11,10 +11,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes, HasRoles;
 
@@ -39,6 +40,13 @@ class User extends Authenticatable implements FilamentUser
     {
         // فقط المستخدم الذي يمتلك دور "admin" يمكنه الدخول
         return $this->hasRole('admin');
+    }
+
+    // 🎨 تخصيص أيقونة المستخدم في القائمة العلوية
+    public function getFilamentAvatarUrl(): ?string
+    {
+        $name = urlencode($this->name);
+        return "https://ui-avatars.com/api/?name={$name}&color=ffffff&background=1D4ED8&bold=true&rounded=true";
     }
 
     // --- العلاقات (كما هي لم تتغير) ---

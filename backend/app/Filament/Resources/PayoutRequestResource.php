@@ -84,107 +84,103 @@ class PayoutRequestResource extends Resource
                     ]),
             ])
             ->actions([
-                // 🟢 1. زر الاعتماد (موافقة مبدئية)
-                Action::make('approve')
-                    ->label('اعتماد')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('info')
-                    ->requiresConfirmation()
-                    ->visible(fn (PayoutRequest $record): bool => $record->status === 'pending')
-                    ->action(function (PayoutRequest $record) {
-                        $record->update(['status' => 'approved']);
-                        // 🔔 إشعار المعلم بالموافقة المبدئية
-                        \Illuminate\Support\Facades\DB::table('notifications')->insert([
-                            'id' => \Illuminate\Support\Str::uuid(),
-                            'type' => 'App\Notifications\PayoutApprovedNotification',
-                            'notifiable_type' => 'App\Models\User',
-                            'notifiable_id' => $record->user_id,
-                            'data' => json_encode([
-                                'type' => 'payout_approved',
-                                'message' => "تم اعتماد طلب السحب بمبلغ {$record->amount} ريال وسوف يتم تحويله قريباً.",
-                                'time' => now()->format('Y-m-d h:i A')
-                            ]),
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-                    }),
-
-                // 🟢 2. زر تم التحويل (إغلاق الطلب وإرسال إشعار) - ✨ محدث
-                Action::make('transfer')
-                    ->label('تم التحويل البنكي')
-                    ->icon('heroicon-o-currency-dollar')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->modalHeading('تأكيد التحويل البنكي')
-                    ->modalDescription('هل قمت بتحويل المبلغ فعلياً لحساب المعلم؟ سيتم إغلاق الطلب وإرسال إشعار للمعلم.')
-                    ->visible(fn (PayoutRequest $record): bool => $record->status === 'approved')
-                    ->action(function (PayoutRequest $record) {
-                        $record->update(['status' => 'transferred']);
-                        
-                        // 🔔 إرسال إشعار للمعلم (بافتراض أنك أنشأت PayoutProcessedNotification)
-                        if (class_exists(\App\Notifications\PayoutProcessedNotification::class)) {
-                            $record->user->notify(new \App\Notifications\PayoutProcessedNotification($record));
-                        }
-                        
-                        // إشعار نجاح للمدير داخل Filament
-                        \Filament\Notifications\Notification::make()
-                            ->title('تم إغلاق الطلب بنجاح')
-                            ->body('تم تغيير الحالة وإرسال إشعار للمعلم.')
-                            ->success()
-                            ->send();
-                    }),
-
-                // 🔴 3. زر الرفض (وإرجاع المال الفعلي)
-                Action::make('reject')
-                    ->label('رفض وإرجاع الرصيد')
-                    ->icon('heroicon-o-x-circle')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->form([
-                        \Filament\Forms\Components\Textarea::make('admin_notes')
-                            ->label('سبب الرفض (سيظهر للمعلم)')
-                            ->required(),
-                    ])
-                    ->visible(fn (PayoutRequest $record): bool => $record->status === 'pending')
-                    ->action(function (PayoutRequest $record, array $data) {
-                        DB::transaction(function () use ($record, $data) {
-                            // 1. تحديث حالة الطلب
-                            $record->update([
-                                'status' => 'rejected',
-                                'admin_notes' => $data['admin_notes'],
-                            ]);
-                            
-                            // 2. إرجاع المبلغ لمحفظة المعلم
-                            $walletService = resolve(\App\Services\WalletService::class);
-                            $walletService->processTransaction(
-                                $record->user,
-                                $record->amount,
-                                'deposit', // إيداع
-                                'استرجاع مبلغ طلب سحب مرفوض. السبب: ' . $data['admin_notes']
-                            );
-
-                            // 🔔 إشعار المعلم بالرفض
+                Tables\Actions\ActionGroup::make([
+                    // 🟢 1. زر الاعتماد (موافقة مبدئية)
+                    Action::make('approve')
+                        ->label('اعتماد')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('info')
+                        ->requiresConfirmation()
+                        ->visible(fn (PayoutRequest $record): bool => $record->status === 'pending')
+                        ->action(function (PayoutRequest $record) {
+                            $record->update(['status' => 'approved']);
                             \Illuminate\Support\Facades\DB::table('notifications')->insert([
                                 'id' => \Illuminate\Support\Str::uuid(),
-                                'type' => 'App\Notifications\PayoutRejectedNotification',
+                                'type' => 'App\Notifications\PayoutApprovedNotification',
                                 'notifiable_type' => 'App\Models\User',
                                 'notifiable_id' => $record->user_id,
                                 'data' => json_encode([
-                                    'type' => 'payout_rejected',
-                                    'message' => "تم رفض طلب السحب وإرجاع المبلغ لمحفظتك. السبب: {$data['admin_notes']}",
+                                    'type' => 'payout_approved',
+                                    'message' => "تم اعتماد طلب السحب بمبلغ {$record->amount} ريال وسوف يتم تحويله قريباً.",
                                     'time' => now()->format('Y-m-d h:i A')
                                 ]),
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ]);
+                        }),
 
+                    // 🟢 2. زر تم التحويل (إغلاق الطلب وإرسال إشعار) - ✨ محدث
+                    Action::make('transfer')
+                        ->label('تم التحويل البنكي')
+                        ->icon('heroicon-o-currency-dollar')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('تأكيد التحويل البنكي')
+                        ->modalDescription('هل قمت بتحويل المبلغ فعلياً لحساب المعلم؟ سيتم إغلاق الطلب وإرسال إشعار للمعلم.')
+                        ->visible(fn (PayoutRequest $record): bool => $record->status === 'approved')
+                        ->action(function (PayoutRequest $record) {
+                            $record->update(['status' => 'transferred']);
+                            
+                            if (class_exists(\App\Notifications\PayoutProcessedNotification::class)) {
+                                $record->user->notify(new \App\Notifications\PayoutProcessedNotification($record));
+                            }
+                            
                             \Filament\Notifications\Notification::make()
-                                ->title('تم الرفض بنجاح')
-                                ->body('تم إرجاع المبلغ إلى محفظة المعلم.')
+                                ->title('تم إغلاق الطلب بنجاح')
+                                ->body('تم تغيير الحالة وإرسال إشعار للمعلم.')
                                 ->success()
                                 ->send();
-                        });
-                    }),
+                        }),
+
+                    // 🔴 3. زر الرفض (وإرجاع المال الفعلي)
+                    Action::make('reject')
+                        ->label('رفض وإرجاع الرصيد')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->form([
+                            \Filament\Forms\Components\Textarea::make('admin_notes')
+                                ->label('سبب الرفض (سيظهر للمعلم)')
+                                ->required(),
+                        ])
+                        ->visible(fn (PayoutRequest $record): bool => $record->status === 'pending')
+                        ->action(function (PayoutRequest $record, array $data) {
+                            DB::transaction(function () use ($record, $data) {
+                                $record->update([
+                                    'status' => 'rejected',
+                                    'admin_notes' => $data['admin_notes'],
+                                ]);
+                                
+                                $walletService = resolve(\App\Services\WalletService::class);
+                                $walletService->processTransaction(
+                                    $record->user,
+                                    $record->amount,
+                                    'deposit', 
+                                    'استرجاع مبلغ طلب سحب مرفوض. السبب: ' . $data['admin_notes']
+                                );
+
+                                \Illuminate\Support\Facades\DB::table('notifications')->insert([
+                                    'id' => \Illuminate\Support\Str::uuid(),
+                                    'type' => 'App\Notifications\PayoutRejectedNotification',
+                                    'notifiable_type' => 'App\Models\User',
+                                    'notifiable_id' => $record->user_id,
+                                    'data' => json_encode([
+                                        'type' => 'payout_rejected',
+                                        'message' => "تم رفض طلب السحب وإرجاع المبلغ لمحفظتك. السبب: {$data['admin_notes']}",
+                                        'time' => now()->format('Y-m-d h:i A')
+                                    ]),
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ]);
+
+                                \Filament\Notifications\Notification::make()
+                                    ->title('تم الرفض بنجاح')
+                                    ->body('تم إرجاع المبلغ إلى محفظة المعلم.')
+                                    ->success()
+                                    ->send();
+                            });
+                        }),
+                ])->icon('heroicon-m-ellipsis-vertical'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

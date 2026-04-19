@@ -53,7 +53,7 @@ class SupportTicketResource extends Resource
                             ->label('التفاصيل')
                             ->disabled()
                             ->columnSpanFull(),
-                    ])->columns(2),
+                    ])->columns(['sm' => 1, 'md' => 2]),
 
                 Forms\Components\Section::make('رد الإدارة')
                     ->schema([
@@ -86,14 +86,13 @@ class SupportTicketResource extends Resource
                     ->limit(40)
                     ->toggleable(),
 
-                // 🟢 مخفي افتراضياً لأن المدير يمكنه رؤيته عند فتح تفاصيل التذكرة
                 Tables\Columns\TextColumn::make('booking_id')
                     ->label('رقم الحجز')
                     ->badge()
                     ->color('info')
                     ->url(fn ($record) => $record->booking_id ? BookingResource::getUrl('index', ['tableSearch' => $record->booking_id]) : null)
                     ->placeholder('عام')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->visibleFrom('md'),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('الحالة')
@@ -131,44 +130,46 @@ class SupportTicketResource extends Resource
                     ]),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()->label('قراءة التذكرة'),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()->label('قراءة التذكرة'),
 
-                Action::make('reply')
-                    ->label('الرد والإغلاق')
-                    ->icon('heroicon-o-chat-bubble-left-ellipsis')
-                    ->color('success')
-                    ->visible(fn (SupportTicket $record): bool => in_array($record->status, ['open', 'in_progress']))
-                    ->form([
-                        Forms\Components\Textarea::make('admin_reply')
-                            ->label('اكتب ردك للطالب (سيظهر له في لوحة التحكم)')
-                            ->required()
-                            ->rows(4),
-                    ])
-                    ->action(function (SupportTicket $record, array $data) {
-                        $record->update([
-                            'admin_reply' => $data['admin_reply'],
-                            'status' => 'resolved', 
-                        ]);
+                    Action::make('reply')
+                        ->label('الرد والإغلاق')
+                        ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                        ->color('success')
+                        ->visible(fn (SupportTicket $record): bool => in_array($record->status, ['open', 'in_progress']))
+                        ->form([
+                            Forms\Components\Textarea::make('admin_reply')
+                                ->label('اكتب ردك للطالب (سيظهر له في لوحة التحكم)')
+                                ->required()
+                                ->rows(4),
+                        ])
+                        ->action(function (SupportTicket $record, array $data) {
+                            $record->update([
+                                'admin_reply' => $data['admin_reply'],
+                                'status' => 'resolved', 
+                            ]);
 
-                        \Filament\Notifications\Notification::make()
-                            ->title('تم إرسال الرد بنجاح ✅')
-                            ->success()
-                            ->send();
-                    }),
+                            \Filament\Notifications\Notification::make()
+                                ->title('تم إرسال الرد بنجاح ✅')
+                                ->success()
+                                ->send();
+                        }),
 
-                Action::make('mark_resolved')
-                    ->label('إغلاق بدون رد')
-                    ->icon('heroicon-o-check')
-                    ->color('gray')
-                    ->requiresConfirmation()
-                    ->visible(fn (SupportTicket $record): bool => in_array($record->status, ['open', 'in_progress']) && empty($record->admin_reply))
-                    ->action(function (SupportTicket $record) {
-                        $record->update(['status' => 'resolved']);
-                        \Filament\Notifications\Notification::make()
-                            ->title('تم إغلاق التذكرة ✅')
-                            ->success()
-                            ->send();
-                    }),
+                    Action::make('mark_resolved')
+                        ->label('إغلاق بدون رد')
+                        ->icon('heroicon-o-check')
+                        ->color('gray')
+                        ->requiresConfirmation()
+                        ->visible(fn (SupportTicket $record): bool => in_array($record->status, ['open', 'in_progress']) && empty($record->admin_reply))
+                        ->action(function (SupportTicket $record) {
+                            $record->update(['status' => 'resolved']);
+                            \Filament\Notifications\Notification::make()
+                                ->title('تم إغلاق التذكرة ✅')
+                                ->success()
+                                ->send();
+                        }),
+                ])->icon('heroicon-m-ellipsis-vertical'),
             ])
             ->bulkActions([]);
     }

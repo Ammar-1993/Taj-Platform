@@ -1,0 +1,31 @@
+/* Custom Scrollbar for Taj Platform */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5); /* Tailwind gray-400 */
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(107, 114, 128, 0.8); /* Tailwind gray-500 */
+}
+
+/* Utilities for LTR inputs in RTL layout */
+.dir-ltr {
+    direction: ltr !important;
+    text-align: left !important;
+}
+
+/* Custom shadow improvements for widgets */
+.fi-wi-stats-overview-stat {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.fi-wi-stats-overview-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}

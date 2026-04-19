@@ -49,7 +49,7 @@ class UserResource extends Resource
                             ->dehydrated(fn ($state) => filled($state))
                             ->required(fn (string $context): bool => $context === 'create')
                             ->maxLength(255),
-                    ])->columns(2), // عمودين لتنسيق أجمل
+                    ])->columns(['sm' => 1, 'md' => 2]), // Responsive fluid columns
 
                 Forms\Components\Section::make('الصلاحيات والحالة')
                     ->schema([
@@ -69,7 +69,7 @@ class UserResource extends Resource
                         Forms\Components\Toggle::make('is_active')
                             ->label('حساب نشط (يمكنه تسجيل الدخول)')
                             ->default(true),
-                    ])->columns(2),
+                    ])->columns(['sm' => 1, 'md' => 2]),
             ]);
     }
 
@@ -87,13 +87,13 @@ class UserResource extends Resource
                     ->label('البريد الإلكتروني')
                     ->searchable()
                     ->copyable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->visibleFrom('md'),
 
                 // 🟢 مخفي افتراضياً
                 Tables\Columns\TextColumn::make('phone')
                     ->label('الجوال')
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->visibleFrom('lg'),
 
                 Tables\Columns\TextColumn::make('roles.name')
                     ->label('الدور')
@@ -136,28 +136,30 @@ class UserResource extends Resource
                     }),
             ])
             ->actions([
-                Tables\Actions\Action::make('wallet')
-                    ->label('المحفظة')
-                    ->icon('heroicon-o-wallet')
-                    ->color('info')
-                    ->modalHeading(fn (User $record) => 'محفظة ' . $record->name)
-                    ->infolist([
-                        \Filament\Infolists\Components\TextEntry::make('wallet.balance')
-                            ->label('الرصيد المتاح')
-                            ->money('SAR')
-                            ->size(\Filament\Infolists\Components\TextEntry\TextEntrySize::Large)
-                            ->weight('bold')
-                            ->color('success'),
-                        \Filament\Infolists\Components\TextEntry::make('wallet.pending_balance')
-                            ->label('الرصيد المعلق')
-                            ->money('SAR')
-                            ->color('warning'),
-                    ])
-                    ->modalSubmitAction(false)
-                    ->modalCancelAction(fn (\Filament\Actions\StaticAction $action) => $action->label('إغلاق')),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\RestoreAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('wallet')
+                        ->label('المحفظة')
+                        ->icon('heroicon-o-wallet')
+                        ->color('info')
+                        ->modalHeading(fn (User $record) => 'محفظة ' . $record->name)
+                        ->infolist([
+                            \Filament\Infolists\Components\TextEntry::make('wallet.balance')
+                                ->label('الرصيد المتاح')
+                                ->money('SAR')
+                                ->size(\Filament\Infolists\Components\TextEntry\TextEntrySize::Large)
+                                ->weight('bold')
+                                ->color('success'),
+                            \Filament\Infolists\Components\TextEntry::make('wallet.pending_balance')
+                                ->label('الرصيد المعلق')
+                                ->money('SAR')
+                                ->color('warning'),
+                        ])
+                        ->modalSubmitAction(false)
+                        ->modalCancelAction(fn (\Filament\Actions\StaticAction $action) => $action->label('إغلاق')),
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\RestoreAction::make(),
+                ])->icon('heroicon-m-ellipsis-vertical'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
