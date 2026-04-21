@@ -42,44 +42,6 @@
 
 ---
 
-## 📸 Project Showcase
-
-Experience the Taj Platform from the perspective of our 4 primary users. Each portal is uniquely optimized for its specific educational and administrative goals.
-
-### 👨‍👩‍👧‍👦 1. Parent Interface 
-_Focus: Oversight, Financial Funding, and Child Safety._
-
-| Children Dashboard | Wallet & Funding |
-| :---: | :---: |
-| ![Children Management](https://via.placeholder.com/600x400.png?text=Parent:+Children+Management) | ![Parent Wallet](https://via.placeholder.com/600x400.png?text=Parent:+Wallet+Funding) |
-| _Monitor all children accounts and their academic progress in one place._ | _Securely top-up the main wallet and manage student allowances._ |
-
-### 👨‍🎓 2. Student Interface 
-_Focus: Seamless Discovery, Learning, and Interactivity._
-
-| Teacher Discovery | Live Virtual Classroom |
-| :---: | :---: |
-| ![Tutor Search](https://via.placeholder.com/600x400.png?text=Student:+Tutor+Discovery) | ![Agora Live Session](https://via.placeholder.com/600x400.png?text=Student:+Virtual+Classroom) |
-| _Find the perfect tutor using advanced subject and rating filters._ | _Real-time WebRTC video/audio sessions with zero latency._ |
-
-### 👨‍🏫 3. Teacher Interface 
-_Focus: Schedule Autonomy, Earnings, and Profile Verification._
-
-| Schedule Management | Earnings Dashboard |
-| :---: | :---: |
-| ![Availability Calendar](https://via.placeholder.com/600x400.png?text=Teacher:+Schedule+Management) | ![Teacher Payouts](https://via.placeholder.com/600x400.png?text=Teacher:+Earnings+Payouts) |
-| _Define working hours and manage weekly availability slots effortlessly._ | _Track earnings in real-time and request payouts to bank accounts._ |
-
-### 🛡️ 4. Admin Panel 
-_Focus: Quality Control, Financial Audit, and Platform Governance._
-
-| Global Analytics | KYC Verification |
-| :---: | :---: |
-| ![Admin Metrics](https://via.placeholder.com/600x400.png?text=Admin:+Global+Metrics) | ![Teacher KYC Approval](https://via.placeholder.com/600x400.png?text=Admin:+KYC+Verification) |
-| _Real-time insights into user numbers, active bookings, and revenue._ | _Rigorous review of teacher credentials before profile activation._ |
-
----
-
 ## 🏗️ System Architecture
 
 The following diagram illustrates the decoupled interaction between the **Next.js** presentation layer, the **Laravel** API heart, and the shared ecosystem services.
