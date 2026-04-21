@@ -29,7 +29,7 @@ class LatestBookings extends BaseWidget
                     ->label('المعلم'),
                 Tables\Columns\TextColumn::make('net_paid')
                     ->label('المبلغ')
-                    ->money('SAR')
+                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' SAR')
                     ->weight('bold'),
                 Tables\Columns\TextColumn::make('status')
                     ->label('الحالة')

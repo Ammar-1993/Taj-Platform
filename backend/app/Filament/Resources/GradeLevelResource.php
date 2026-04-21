@@ -63,7 +63,7 @@ class GradeLevelResource extends Resource
 
                 Tables\Columns\TextColumn::make('session_price')
                     ->label('سعر الحصة (ثابت)')
-                    ->money('SAR')
+                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' SAR')
                     ->sortable()
                     ->badge() // جعل السعر يظهر بشكل بارز كـ Badge
                     ->color('success'),

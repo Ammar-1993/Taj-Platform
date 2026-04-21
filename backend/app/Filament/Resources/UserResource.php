@@ -145,13 +145,13 @@ class UserResource extends Resource
                         ->infolist([
                             \Filament\Infolists\Components\TextEntry::make('wallet.balance')
                                 ->label('الرصيد المتاح')
-                                ->money('SAR')
+                                ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' SAR')
                                 ->size(\Filament\Infolists\Components\TextEntry\TextEntrySize::Large)
                                 ->weight('bold')
                                 ->color('success'),
                             \Filament\Infolists\Components\TextEntry::make('wallet.pending_balance')
                                 ->label('الرصيد المعلق')
-                                ->money('SAR')
+                                ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' SAR')
                                 ->color('warning'),
                         ])
                         ->modalSubmitAction(false)

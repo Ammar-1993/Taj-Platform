@@ -35,7 +35,7 @@ class PayoutRequestResource extends Resource
 
                 Tables\Columns\TextColumn::make('amount')
                     ->label('المبلغ المطلوب')
-                    ->money('SAR')
+                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' SAR')
                     ->sortable()
                     ->badge()
                     ->color('success'),

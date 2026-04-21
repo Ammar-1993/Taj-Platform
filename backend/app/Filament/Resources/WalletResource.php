@@ -59,7 +59,7 @@ class WalletResource extends Resource
 
                 Tables\Columns\TextColumn::make('balance')
                     ->label('الرصيد المتاح')
-                    ->money('SAR')
+                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' SAR')
                     ->sortable()
                     ->badge()
                     ->color(fn ($state) => $state > 0 ? 'success' : 'gray'),

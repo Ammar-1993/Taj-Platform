@@ -37,7 +37,7 @@ class StudentBookingsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('id')->label('رقم الحجز')->sortable(),
                 Tables\Columns\TextColumn::make('teacher.name')->label('المعلم')->searchable()->color('primary')->weight('bold'),
                 Tables\Columns\TextColumn::make('booking_date')->label('تاريخ الحصة')->dateTime('Y-m-d h:i A')->sortable(),
-                Tables\Columns\TextColumn::make('net_paid')->label('المبلغ')->money('SAR')->sortable()->badge()->color('success'),
+                Tables\Columns\TextColumn::make('net_paid')->label('المبلغ')->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' SAR')->sortable()->badge()->color('success'),
                 Tables\Columns\TextColumn::make('status')
                     ->label('الحالة')
                     ->badge()
