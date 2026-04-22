@@ -58,7 +58,7 @@ export default function LoginPage() {
           >
             👑
           </Link>
-          <h2 className="text-2xl font-black text-gray-900 tracking-tight">
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
             مرحباً بعودتك!
           </h2>
           <p className="mt-1.5 text-gray-500 text-sm font-medium">
@@ -164,7 +164,7 @@ export default function LoginPage() {
             ليس لديك حساب؟{" "}
             <Link
               href="/register"
-              className="font-black text-indigo-700 hover:text-indigo-900 transition-colors ml-1"
+              className="font-bold text-indigo-700 hover:text-indigo-900 transition-colors ml-1"
             >
               أنشئ حساباً جديداً
             </Link>

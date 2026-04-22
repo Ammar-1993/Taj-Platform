@@ -140,7 +140,7 @@ export default function FAQPage() {
             </div>
           </div>
           
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 drop-shadow-sm">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 drop-shadow-sm">
             الأسئلة الشائعة
           </h1>
           <p className="text-slate-500 text-sm md:text-base font-medium max-w-2xl mx-auto leading-relaxed">
@@ -156,7 +156,7 @@ export default function FAQPage() {
               {/* عنوان القسم */}
               <div className="flex items-center gap-2 border-b-2 border-indigo-100/50 pb-2">
                 {category.icon}
-                <h2 className="text-lg md:text-xl font-extrabold text-slate-800">
+                <h2 className="text-lg md:text-xl font-bold text-slate-800">
                   {category.title}
                 </h2>
               </div>
@@ -220,7 +220,7 @@ export default function FAQPage() {
               <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mb-2">
                 <HelpCircle className="w-6 h-6" />
               </div>
-              <h3 className="text-xl md:text-2xl font-black text-slate-900">لم تجد إجابة لسؤالك؟</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-slate-900">لم تجد إجابة لسؤالك؟</h3>
               <p className="text-slate-500 text-sm font-medium">فريق الدعم الفني متواجد دائماً للإجابة على استفساراتك وتقديم المساعدة.</p>
             </div>
             

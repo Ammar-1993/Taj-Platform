@@ -6,7 +6,6 @@ import api from '@/lib/axios';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import PageHeader from '@/components/ui/PageHeader';
-import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import { showApiError } from '@/hooks/useApiError';
 import { ApiResponse, Subject, TeacherProfile, TeacherProfileFormData } from '@/types';
 import { Card } from "@/components/ui/Card";
@@ -108,9 +107,8 @@ export default function TeacherProfilePage() {
     if (!user?.roles?.some((r) => r.name === 'teacher')) return <div className="p-8 text-center text-red-500 font-bold">هذه الصفحة للمعلمين فقط.</div>;
 
     return (
-        <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 md:p-8">
-            <DecorativeBackground />
-
+        <div className="p-4 md:p-8">
+            
             <div className="relative z-10 max-w-4xl mx-auto space-y-8 tracking-tight">
                 
                 <PageHeader
@@ -157,7 +155,7 @@ export default function TeacherProfilePage() {
                     <form onSubmit={handleSubmit} className="space-y-8">
                         
                         <div className="space-y-6">
-                            <h3 className="text-xl font-black text-gray-900 flex items-center gap-3 mb-2 underline underline-offset-8 decoration-indigo-100">
+                            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 mb-2 underline underline-offset-8 decoration-indigo-100">
                                 <User className="w-6 h-6 text-indigo-600" />
                                 المعلومات الأساسية
                             </h3>
@@ -194,7 +192,7 @@ export default function TeacherProfilePage() {
                         </div>
 
                         <div className="space-y-6 pt-4 border-t border-gray-50">
-                            <h3 className="text-xl font-black text-gray-900 flex items-center gap-3 mb-2 underline underline-offset-8 decoration-purple-100">
+                            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 mb-2 underline underline-offset-8 decoration-purple-100">
                                 <FileText className="w-6 h-6 text-purple-600" />
                                 المستندات المهنية
                             </h3>
@@ -202,7 +200,7 @@ export default function TeacherProfilePage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="group bg-indigo-50/50 p-6 rounded-3xl border-2 border-dashed border-indigo-100 hover:border-indigo-300 hover:bg-indigo-50 transition-all duration-300 relative overflow-hidden">
                                      <div className="absolute -top-10 -right-10 w-24 h-24 bg-white/20 rounded-full blur-2xl group-hover:blur-xl transition-all"></div>
-                                     <label className="text-sm font-black text-indigo-900 mb-3 flex items-center gap-2">
+                                     <label className="text-sm font-bold text-indigo-900 mb-3 flex items-center gap-2">
                                         <FileBadge className="w-4 h-4" /> صورة الهوية الوطنية
                                         {profile?.national_id_path && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">مرفوعة مسبقاً</span>}
                                      </label>
@@ -211,13 +209,13 @@ export default function TeacherProfilePage() {
                                         accept=".jpg,.jpeg,.png,.pdf"
                                         required={!profile?.national_id_path}
                                         onChange={(e) => setNationalIdFile(e.target.files?.[0] || null)}
-                                        className="w-full text-xs text-indigo-400 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 file:transition-all cursor-pointer" 
+                                        className="w-full text-xs text-indigo-400 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 file:transition-all cursor-pointer" 
                                      />
                                 </div>
 
                                 <div className="group bg-purple-50/50 p-6 rounded-3xl border-2 border-dashed border-purple-100 hover:border-purple-300 hover:bg-purple-50 transition-all duration-300 relative overflow-hidden">
                                      <div className="absolute -top-10 -right-10 w-24 h-24 bg-white/20 rounded-full blur-2xl group-hover:blur-xl transition-all"></div>
-                                     <label className="text-sm font-black text-purple-900 mb-3 flex items-center gap-2">
+                                     <label className="text-sm font-bold text-purple-900 mb-3 flex items-center gap-2">
                                         <GraduationCap className="w-4 h-4" /> الشهادة الجامعية
                                         {profile?.degree_path && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">مرفوعة مسبقاً</span>}
                                      </label>
@@ -226,7 +224,7 @@ export default function TeacherProfilePage() {
                                         accept=".jpg,.jpeg,.png,.pdf"
                                         required={!profile?.degree_path}
                                         onChange={(e) => setDegreeFile(e.target.files?.[0] || null)}
-                                        className="w-full text-xs text-purple-400 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-purple-600 file:text-white hover:file:bg-purple-700 file:transition-all cursor-pointer" 
+                                        className="w-full text-xs text-purple-400 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-600 file:text-white hover:file:bg-purple-700 file:transition-all cursor-pointer" 
                                      />
                                 </div>
                             </div>

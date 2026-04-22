@@ -96,7 +96,7 @@ export const StudentTeacherDashboard: React.FC<
                 </h3>
               </div>
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="text-4xl sm:text-5xl font-black tracking-tight">
+                <span className="text-4xl sm:text-5xl font-bold tracking-tight">
                   {wallet?.balance || "0.00"}
                 </span>
                 <span className="text-purple-200 text-base sm:text-lg font-medium">
@@ -131,7 +131,7 @@ export const StudentTeacherDashboard: React.FC<
 
           {/* 📊 Transaction History */}
           <Card className="animate-fade-in-up-delay-2 p-6 border-gray-100/80 bg-white/80 backdrop-blur-sm">
-            <h3 className="font-extrabold text-gray-900 mb-4 flex items-center gap-2">
+            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
               <span className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
                 <BarChart2 className="w-4 h-4" />
               </span>
@@ -165,7 +165,7 @@ export const StudentTeacherDashboard: React.FC<
                       </div>
                     </div>
                     <span
-                      className={`font-black text-base ${tx.type === "withdrawal" ? "text-red-500" : "text-emerald-500"}`}
+                      className={`font-bold text-base ${tx.type === "withdrawal" ? "text-red-500" : "text-emerald-500"}`}
                     >
                       {tx.type === "withdrawal" ? "-" : "+"}
                       {tx.amount}
@@ -178,7 +178,7 @@ export const StudentTeacherDashboard: React.FC<
 
           {/* 🛟 Support Center */}
           <Card className="animate-fade-in-up-delay-2 p-6 border-gray-100/80 bg-white/80 backdrop-blur-sm">
-            <h3 className="font-extrabold text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
               <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
                 <LifeBuoy className="w-4 h-4" />
               </span>
@@ -199,7 +199,7 @@ export const StudentTeacherDashboard: React.FC<
         {/* ============ MAIN CONTENT ============ */}
         <Card className="lg:col-span-2 animate-fade-in-up-delay p-6 border-gray-100/80 bg-white/80 backdrop-blur-sm">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="font-extrabold text-xl text-gray-900 flex items-center gap-2">
+            <h3 className="font-bold text-xl text-gray-900 flex items-center gap-2">
               <span className="w-9 h-9 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
                 <ClipboardList className="w-5 h-5" />
               </span>
@@ -210,7 +210,7 @@ export const StudentTeacherDashboard: React.FC<
           {/* 🔔 Notifications for Teachers */}
           {isTeacher && notifications.length > 0 && (
             <div className="bg-gradient-to-l from-amber-50 to-yellow-50 border border-amber-200/60 p-5 rounded-2xl mb-6">
-              <h3 className="font-extrabold text-amber-800 mb-3 flex items-center gap-2">
+              <h3 className="font-bold text-amber-800 mb-3 flex items-center gap-2">
                 <span className="w-7 h-7 bg-amber-200 rounded-lg flex items-center justify-center">
                   <Bell className="w-4 h-4 text-amber-700" />
                 </span>
@@ -246,7 +246,7 @@ export const StudentTeacherDashboard: React.FC<
               <div className="w-20 h-20 bg-indigo-50 text-indigo-300 rounded-full flex items-center justify-center mx-auto mb-5">
                 <BookOpen className="w-10 h-10" />
               </div>
-              <h4 className="text-xl font-extrabold text-gray-800 mb-2">
+              <h4 className="text-xl font-bold text-gray-800 mb-2">
                 ليس لديك أي حجوزات حتى الآن
               </h4>
               <p className="text-gray-400 text-sm mb-6">
@@ -296,7 +296,7 @@ export const StudentTeacherDashboard: React.FC<
                       </td>
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl flex items-center justify-center text-indigo-600 font-extrabold text-sm">
+                          <div className="w-9 h-9 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl flex items-center justify-center text-indigo-600 font-bold text-sm">
                             {(isTeacher
                               ? booking.student?.name
                               : booking.teacher?.name
@@ -318,7 +318,7 @@ export const StudentTeacherDashboard: React.FC<
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        <span className="font-black text-gray-800">
+                        <span className="font-bold text-gray-800">
                           {booking.net_paid}
                         </span>
                         <span className="text-xs text-gray-400 mr-1">

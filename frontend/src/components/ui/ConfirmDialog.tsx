@@ -54,7 +54,7 @@ export default function ConfirmDialog({
           <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
             {styles.icon}
           </div>
-          <h3 className="text-xl font-extrabold text-gray-900 mb-2">
+          <h3 className="text-xl font-bold text-gray-900 mb-2">
             {title}
           </h3>
           <p className="text-gray-500 text-sm leading-relaxed">{message}</p>
@@ -71,7 +71,7 @@ export default function ConfirmDialog({
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className={`flex-1 py-3 text-white rounded-xl font-extrabold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 ${styles.confirmBtn}`}
+            className={`flex-1 py-3 text-white rounded-xl font-bold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 ${styles.confirmBtn}`}
           >
             {isLoading ? "جاري التنفيذ..." : confirmText}
           </button>

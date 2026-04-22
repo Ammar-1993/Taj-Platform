@@ -88,7 +88,7 @@ export default function Home() {
             <div className="w-full md:w-auto text-center md:text-right">
               <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
                 <span className="text-3xl md:text-4xl drop-shadow-lg animate-subtle-pulse">👑</span>
-                <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight">منصة تاج التعليمية</h1>
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight">منصة تاج التعليمية</h1>
               </div>
               <p className="text-indigo-200 text-base md:text-lg font-medium mt-1">
                 نخبة من المعلمين المعتمدين في جميع المواد — اختر معلمك وانطلق نحو التفوق.
@@ -184,7 +184,7 @@ export default function Home() {
                 <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-5 text-indigo-300">
                   <SearchX size={40} strokeWidth={1.5} />
                 </div>
-                <h4 className="text-xl font-extrabold text-gray-800 mb-2">
+                <h4 className="text-xl font-bold text-gray-800 mb-2">
                   لا يوجد معلمين يطابقون بحثك
                 </h4>
                 <p className="text-gray-400 text-sm">
@@ -199,7 +199,7 @@ export default function Home() {
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   <CardHeader className="flex flex-row items-center gap-4 mb-1 pb-2">
-                    <div className="w-16 h-16 shrink-0 bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100/50 rounded-2xl flex items-center justify-center text-indigo-600 font-black text-xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                    <div className="w-16 h-16 shrink-0 bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100/50 rounded-2xl flex items-center justify-center text-indigo-600 font-bold text-xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
                       {teacher.name.charAt(0)}
                     </div>
                     <div>
@@ -219,7 +219,7 @@ export default function Home() {
                   </CardContent>
                   <CardFooter className="flex flex-col sm:flex-row justify-between items-center pt-5 border-t border-gray-50 mt-auto gap-4 sm:gap-0">
                     <div className="flex flex-col items-center sm:items-start gap-1">
-                      <span className="text-amber-500 font-black flex items-center gap-1.5 text-lg">
+                      <span className="text-amber-500 font-bold flex items-center gap-1.5 text-lg">
                         <Star size={18} className="fill-amber-500" />
                         {teacher.teacher_profile?.average_rating || "0.00"}
                       </span>

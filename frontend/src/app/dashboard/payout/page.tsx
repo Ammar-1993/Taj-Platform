@@ -6,7 +6,6 @@ import api from '@/lib/axios';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import PageHeader from '@/components/ui/PageHeader';
-import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { showApiError } from '@/hooks/useApiError';
 import { ApiResponse, PayoutRequest, Wallet } from '@/types';
@@ -98,9 +97,8 @@ export default function PayoutPage() {
     if (!user) return null;
 
     return (
-        <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 md:p-8">
-            <DecorativeBackground />
-
+        <div className="p-4 md:p-8">
+            
             <div className="relative z-10 max-w-7xl mx-auto space-y-8 tracking-tight">
                 
                 <PageHeader
@@ -118,13 +116,13 @@ export default function PayoutPage() {
                         {/* بطاقة الرصيد */}
                         <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-600 to-green-800 p-8 rounded-[2.5rem] shadow-2xl text-white animate-fade-in-up-delay">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl group-hover:blur-xl transition-all"></div>
-                            <h3 className="text-emerald-100 text-sm font-black flex items-center gap-2">
+                            <h3 className="text-emerald-100 text-sm font-bold flex items-center gap-2">
                                 <CircleDollarSign className="w-5 h-5 text-emerald-200" />
                                 الرصيد القابل للسحب
                             </h3>
-                            <div className="mt-4 flex items-baseline gap-3">
-                                <span className="text-5xl font-black tracking-tighter shadow-sm">{walletInfo?.balance || '0.00'}</span>
-                                <span className="text-emerald-200 font-bold text-xl uppercase">SAR</span>
+                            <div className="mt-4 flex items-baseline gap-3 font-mono" dir="ltr">
+                                <span className="text-5xl font-bold tracking-tighter shadow-sm">{walletInfo?.balance || '0.00'}</span>
+                                <span className="text-emerald-200 font-bold font-sans text-xl uppercase">SAR</span>
                             </div>
                             <div className="mt-6 h-1 w-full bg-white/20 rounded-full overflow-hidden">
                                 <div className="h-full bg-white/40 w-2/3 animate-shimmer"></div>
@@ -133,7 +131,7 @@ export default function PayoutPage() {
 
                         {/* نموذج الطلب */}
                         <Card className="bg-white/90 backdrop-blur-md rounded-[2.5rem] border-white/50 animate-fade-in-up-delay-2 p-8">
-                            <h3 className="font-black text-xl text-gray-900 mb-6 flex items-center gap-3">
+                            <h3 className="font-bold text-xl text-gray-900 mb-6 flex items-center gap-3">
                                 <span className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
                                     <SendHorizonal className="w-5 h-5" />
                                 </span>
@@ -223,7 +221,7 @@ export default function PayoutPage() {
 
                     {/* سجل طلبات السحب المحدث (Card Collection) */}
                     <Card className="lg:col-span-2 bg-white/80 backdrop-blur-md rounded-[3rem] border-white/50 h-fit animate-fade-in-up-delay-3 p-8 md:p-10">
-                        <h3 className="font-extrabold text-2xl text-gray-900 mb-8 flex items-center gap-3 underline underline-offset-8 decoration-indigo-100">
+                        <h3 className="font-bold text-2xl text-gray-900 mb-8 flex items-center gap-3 underline underline-offset-8 decoration-indigo-100">
                              <span className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner">
                                     <TrendingUp className="w-5 h-5" />
                              </span>
@@ -231,7 +229,7 @@ export default function PayoutPage() {
                         </h3>
                         
                         {payouts.length === 0 ? (
-                            <div className="text-center py-20 bg-gray-50/50 rounded-3xl border-4 border-dashed border-gray-100 text-gray-400 font-black flex flex-col items-center gap-4">
+                            <div className="text-center py-20 bg-gray-50/50 rounded-3xl border-4 border-dashed border-gray-100 text-gray-400 font-bold flex flex-col items-center gap-4">
                                 <Inbox className="w-16 h-16 text-gray-300" />
                                 <span>لم تقم بتقديم أي طلب سحب حتى الآن.</span>
                                 <p className="text-xs font-bold leading-relaxed">سيتم عرض جميع طلباتك وحالتها المالية هنا فور إرسالها.</p>
@@ -247,8 +245,8 @@ export default function PayoutPage() {
                                                 </div>
                                                 <div className="space-y-2">
                                                     <div className="flex items-center gap-3">
-                                                        <h4 className="font-black text-gray-900 text-lg group-hover:text-emerald-700 transition-colors">طلب سحب #{payout.id}</h4>
-                                                        <span className="text-[10px] bg-indigo-50 text-indigo-600 px-3 py-0.5 rounded-full font-black uppercase tracking-widest">Transaction</span>
+                                                        <h4 className="font-bold text-gray-900 text-lg group-hover:text-emerald-700 transition-colors">طلب سحب #{payout.id}</h4>
+                                                        <span className="text-[10px] bg-indigo-50 text-indigo-600 px-3 py-0.5 rounded-full font-bold uppercase tracking-widest">Transaction</span>
                                                     </div>
                                                     <div className="flex items-center gap-4 text-xs font-bold text-gray-400">
                                                         <span className="flex items-center gap-1.5 italic"><Calendar className="w-3.5 h-3.5" /> {new Date(payout.created_at).toLocaleDateString('ar-SA')}</span>
@@ -257,9 +255,9 @@ export default function PayoutPage() {
                                                 </div>
                                             </div>
                                             <div className="flex flex-row md:flex-col items-center md:items-end gap-6 md:gap-2 w-full md:w-auto pt-4 md:pt-0 border-t md:border-0 border-gray-100 mt-2 md:mt-0">
-                                                <div className="text-2xl font-black text-emerald-600 flex items-baseline gap-1.5">
+                                                <div className="text-2xl font-bold font-mono text-emerald-600 flex items-baseline gap-1.5" dir="ltr">
                                                     <span>{payout.amount}</span>
-                                                    <span className="text-xs font-bold text-emerald-400">SAR</span>
+                                                    <span className="text-xs font-bold font-sans text-emerald-400">SAR</span>
                                                 </div>
                                                 <div>{renderStatusBadge(payout.status)}</div>
                                             </div>

@@ -36,7 +36,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
               </h3>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-4xl sm:text-5xl font-black tracking-tight">
+              <span className="text-4xl sm:text-5xl font-bold tracking-tight">
                 {parentData.parent_balance || "0.00"}
               </span>
               <span className="text-purple-200 text-base sm:text-lg font-medium">ريال</span>
@@ -54,7 +54,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                 إجمالي الاستثمار في التعليم
               </h3>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black">
+                <span className="text-2xl font-bold">
                   {parentData.total_spent || "0.00"}
                 </span>
                 <span className="text-purple-200 text-xs">ريال</span>
@@ -63,7 +63,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
 
             {/* محافظ الأبناء */}
             <div className="mt-6 pt-4 border-t border-white/20">
-              <h4 className="text-xs font-extrabold mb-3 text-purple-200">
+              <h4 className="text-xs font-bold mb-3 text-purple-200">
                 أرصدة محافظ الأبناء:
               </h4>
               {parentData.wallets?.length === 0 ? (
@@ -77,12 +77,12 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                     className="flex justify-between items-center text-sm mb-2 bg-white/10 backdrop-blur-sm p-2.5 rounded-xl border border-white/5"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center text-xs font-black">
+                      <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center text-xs font-bold">
                         {w.user.name.charAt(0)}
                       </div>
                       <span className="font-bold">{w.user.name}</span>
                     </div>
-                    <span className="font-black">
+                    <span className="font-bold">
                       {w.balance}{" "}
                       <span className="text-xs text-purple-200">ريال</span>
                     </span>
@@ -97,7 +97,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
 
       {/* Bookings Table */}
       <Card className="lg:col-span-2 animate-fade-in-up-delay p-6 border-gray-100/80 bg-white/80 backdrop-blur-sm">
-        <h3 className="font-extrabold text-xl text-gray-900 mb-6 flex items-center gap-2">
+        <h3 className="font-bold text-xl text-gray-900 mb-6 flex items-center gap-2">
           <span className="w-9 h-9 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
             <Calendar className="w-5 h-5" />
           </span>
@@ -109,7 +109,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
             <div className="w-20 h-20 bg-indigo-50 text-indigo-300 rounded-full flex items-center justify-center mx-auto mb-5">
               <BookOpen className="w-10 h-10" />
             </div>
-            <h4 className="text-xl font-extrabold text-gray-800 mb-2">
+            <h4 className="text-xl font-bold text-gray-800 mb-2">
               لا توجد حجوزات لأبنائك حتى الآن
             </h4>
             <p className="text-gray-400 text-sm">
@@ -146,7 +146,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                   >
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center text-indigo-600 font-extrabold text-xs">
+                        <div className="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center text-indigo-600 font-bold text-xs">
                           {booking.student?.name?.charAt(0) || "?"}
                         </div>
                         <span className="font-bold text-indigo-700">
@@ -166,7 +166,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <span className="font-black text-gray-800">
+                      <span className="font-bold text-gray-800">
                         {booking.net_paid}
                       </span>
                       <span className="text-xs text-gray-400 mr-1">ريال</span>

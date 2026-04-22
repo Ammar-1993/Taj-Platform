@@ -1,7 +1,7 @@
 import React from "react";
 
 export const getStatusBadge = (status: string) => {
-  const base = "inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full font-extrabold";
+  const base = "inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full font-bold";
   
   switch (status) {
     case "scheduled":

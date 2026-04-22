@@ -45,7 +45,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ pendingReview, onSucce
           <div className="w-20 h-20 bg-gradient-to-br from-amber-100 to-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl shadow-lg">
             ⭐
           </div>
-          <h2 className="text-2xl font-extrabold text-gray-900">كيف كانت حصتك؟</h2>
+          <h2 className="text-2xl font-bold text-gray-900">كيف كانت حصتك؟</h2>
           <p className="text-gray-500 mt-2">
             يرجى تقييم حصتك مع الأستاذ{" "}
             <span className="font-bold text-blue-600">
@@ -78,7 +78,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ pendingReview, onSucce
         <button
           onClick={submitReview}
           disabled={isSubmittingReview}
-          className="w-full bg-gradient-to-l from-indigo-600 to-purple-600 text-white font-extrabold py-3.5 rounded-xl hover:shadow-xl transition-all duration-200 disabled:opacity-50 hover:-translate-y-0.5"
+          className="w-full bg-gradient-to-l from-indigo-600 to-purple-600 text-white font-bold py-3.5 rounded-xl hover:shadow-xl transition-all duration-200 disabled:opacity-50 hover:-translate-y-0.5"
         >
           {isSubmittingReview ? "جاري الإرسال..." : "إرسال التقييم"}
         </button>

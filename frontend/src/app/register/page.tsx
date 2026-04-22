@@ -19,7 +19,7 @@ export default function RegisterHubPage() {
         >
           👑
         </Link>
-        <h1 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">
           مرحباً بك في منصة تاج
         </h1>
         <p className="text-base text-gray-500 font-medium">
@@ -41,11 +41,11 @@ export default function RegisterHubPage() {
             <div className="w-16 h-16 bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100/50 text-indigo-600 rounded-2xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm">
               🎓
             </div>
-            <h2 className="text-xl font-black text-gray-900 mb-1.5">طالب</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-1.5">طالب</h2>
             <p className="text-gray-500 text-sm leading-relaxed mb-4 flex-1">
               أريد أن أتعلم، أحجز حصصاً، وأطور من مهاراتي مع نخبة المعلمين.
             </p>
-            <span className="w-full inline-block bg-gradient-to-r from-indigo-600 via-indigo-500 to-blue-600 text-white font-black py-2.5 px-4 rounded-xl group-hover:shadow-[0_8px_20px_rgba(79,70,229,0.25)] transition-all duration-300 text-sm">
+            <span className="w-full inline-block bg-gradient-to-r from-indigo-600 via-indigo-500 to-blue-600 text-white font-bold py-2.5 px-4 rounded-xl group-hover:shadow-[0_8px_20px_rgba(79,70,229,0.25)] transition-all duration-300 text-sm">
               حساب طالب
             </span>
           </div>
@@ -62,11 +62,11 @@ export default function RegisterHubPage() {
             <div className="w-16 h-16 bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100/50 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm">
               👨‍🏫
             </div>
-            <h2 className="text-xl font-black text-gray-900 mb-1.5">معلم / خبير</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-1.5">معلم / خبير</h2>
             <p className="text-gray-500 text-sm leading-relaxed mb-4 flex-1">
               أريد الانضمام لفريق تاج، تقديم حصص تفاعلية، وتحقيق دخل إضافي.
             </p>
-            <span className="w-full inline-block bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-600 text-white font-black py-2.5 px-4 rounded-xl group-hover:shadow-[0_8px_20px_rgba(16,185,129,0.25)] transition-all duration-300 text-sm">
+            <span className="w-full inline-block bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-600 text-white font-bold py-2.5 px-4 rounded-xl group-hover:shadow-[0_8px_20px_rgba(16,185,129,0.25)] transition-all duration-300 text-sm">
               حساب معلم
             </span>
           </div>
@@ -83,11 +83,11 @@ export default function RegisterHubPage() {
             <div className="w-16 h-16 bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-100/50 text-purple-600 rounded-2xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm">
               👨‍👩‍👦
             </div>
-            <h2 className="text-xl font-black text-gray-900 mb-1.5">ولي أمر</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-1.5">ولي أمر</h2>
             <p className="text-gray-500 text-sm leading-relaxed mb-4 flex-1">
               أريد إدارة حسابات أبنائي، شحن محافظهم، ومتابعة تطورهم الدراسي.
             </p>
-            <span className="w-full inline-block bg-gradient-to-r from-purple-600 via-purple-500 to-violet-600 text-white font-black py-2.5 px-4 rounded-xl group-hover:shadow-[0_8px_20px_rgba(147,51,234,0.25)] transition-all duration-300 text-sm">
+            <span className="w-full inline-block bg-gradient-to-r from-purple-600 via-purple-500 to-violet-600 text-white font-bold py-2.5 px-4 rounded-xl group-hover:shadow-[0_8px_20px_rgba(147,51,234,0.25)] transition-all duration-300 text-sm">
               حساب ولي أمر
             </span>
           </div>
@@ -99,7 +99,7 @@ export default function RegisterHubPage() {
           لديك حساب بالفعل؟{" "}
           <Link
             href="/login"
-            className="text-indigo-700 hover:text-indigo-900 font-black transition-colors ml-1"
+            className="text-indigo-700 hover:text-indigo-900 font-bold transition-colors ml-1"
           >
             تسجيل الدخول
           </Link>

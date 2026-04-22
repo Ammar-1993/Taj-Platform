@@ -5,7 +5,6 @@ import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/axios";
 import { formatTimeTo12h } from "@/lib/utils";
 import PageHeader from "@/components/ui/PageHeader";
-import DecorativeBackground from "@/components/ui/DecorativeBackground";
 import toast from "react-hot-toast";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { showApiError } from "@/hooks/useApiError";
@@ -101,9 +100,8 @@ export default function TeacherSchedulePage() {
   const today = new Date().toISOString().split("T")[0];
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 md:p-8">
-      <DecorativeBackground />
-
+    <div className="p-4 md:p-8">
+      
       <div className="relative z-10 max-w-7xl mx-auto space-y-8 tracking-tight">
         
         <PageHeader
@@ -116,7 +114,7 @@ export default function TeacherSchedulePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* عمود إضافة المواعيد */}
           <Card className="lg:col-span-1 bg-white/90 backdrop-blur-md rounded-[2rem] border-white/50 animate-fade-in-up-delay p-8 h-fit">
-            <h3 className="font-extrabold text-xl text-indigo-900 mb-6 flex items-center gap-3">
+            <h3 className="font-bold text-xl text-indigo-900 mb-6 flex items-center gap-3">
               <span className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner">
                 <Plus className="w-5 h-5" />
               </span>
@@ -184,7 +182,7 @@ export default function TeacherSchedulePage() {
 
           {/* عمود عرض الجدول الحالي */}
           <Card className="lg:col-span-2 bg-white/80 backdrop-blur-md rounded-[2.5rem] border-white/50 h-fit animate-fade-in-up-delay-2 p-8">
-            <h3 className="font-extrabold text-2xl text-gray-900 mb-8 flex items-center gap-3 underline underline-offset-8 decoration-indigo-100">
+            <h3 className="font-bold text-2xl text-gray-900 mb-8 flex items-center gap-3 underline underline-offset-8 decoration-indigo-100">
                <span className="w-10 h-10 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center shadow-inner">
                     <CalendarRange className="w-5 h-5" />
                </span>
@@ -192,7 +190,7 @@ export default function TeacherSchedulePage() {
             </h3>
 
             {Object.keys(slots).length === 0 ? (
-              <div className="text-center py-20 bg-gray-50/50 rounded-3xl border-4 border-dashed border-gray-100 text-gray-400 font-black flex flex-col items-center gap-4">
+              <div className="text-center py-20 bg-gray-50/50 rounded-3xl border-4 border-dashed border-gray-100 text-gray-400 font-bold flex flex-col items-center gap-4">
                 <CalendarX2 className="w-16 h-16 text-gray-300" />
                 <span>ليس لديك أي مواعيد مضافة في المستقبل.</span>
                 <p className="text-xs font-bold">ابدأ بإضافة أوقات فراغك ليتمكن الطلاب من الحجز معك.</p>
@@ -205,7 +203,7 @@ export default function TeacherSchedulePage() {
                       key={dayDate}
                       className="relative bg-white/40 p-6 rounded-[2rem] border-2 border-gray-50 shadow-sm"
                     >
-                      <h4 className="font-black text-gray-900 text-xl mb-6 flex items-center gap-2">
+                      <h4 className="font-bold text-gray-900 text-xl mb-6 flex items-center gap-2">
                         <span className="bg-indigo-100 text-indigo-700 px-4 py-1.5 rounded-2xl text-sm shadow-sm inline-flex items-center gap-2 mr-1">
                              <CalendarDays className="w-4 h-4" /> {new Date(dayDate).toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                         </span>
@@ -224,12 +222,12 @@ export default function TeacherSchedulePage() {
                           >
                             <div className="flex justify-between items-start">
                                 <div className="space-y-2">
-                                    <div className="font-black text-gray-900 text-base flex items-center gap-1.5">
+                                    <div className="font-bold text-gray-900 text-base flex items-center gap-1.5">
                                         <Clock className="w-4 h-4 text-gray-500" />
                                         {formatTimeTo12h(slot.start_time)} - {formatTimeTo12h(slot.end_time)}
                                     </div>
                                     <div
-                                        className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full inline-flex items-center gap-1.5 ${
+                                        className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full inline-flex items-center gap-1.5 ${
                                         slot.status === "available"
                                             ? "bg-emerald-100 text-emerald-700"
                                             : slot.status === "booked"

@@ -90,7 +90,7 @@ export default function StudentRegisterPage() {
           >
             🎓
           </Link>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight mb-1.5">
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1.5">
             إنشاء حساب طالب
           </h1>
           <p className="text-gray-500 text-sm font-medium">
@@ -101,7 +101,7 @@ export default function StudentRegisterPage() {
         {successMsg ? (
           <div className="bg-indigo-50 border border-indigo-100 p-6 rounded-[2rem] text-center animate-fade-in-up shadow-sm">
             <CheckCircle className="w-14 h-14 text-indigo-500 mx-auto mb-3 animate-subtle-pulse" />
-            <h3 className="text-xl font-black text-indigo-800 mb-2">
+            <h3 className="text-xl font-bold text-indigo-800 mb-2">
               {successMsg}
             </h3>
             <p className="text-indigo-600 text-sm font-medium flex items-center justify-center gap-2">

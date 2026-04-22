@@ -148,7 +148,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
     <div className="min-h-screen p-4 md:p-8 bg-slate-50/50">
       <Card className="max-w-4xl mx-auto bg-white/80 backdrop-blur-sm rounded-[2rem] border-white/50 animate-fade-in-up p-8">
         <div className="border-b border-gray-100 pb-6 mb-6">
-          <h1 className="text-3xl font-black text-gray-900">
+          <h1 className="text-3xl font-bold text-gray-900">
             حجز موعد مع {teacherName}
           </h1>
           <p className="text-gray-500 mt-2 leading-relaxed">
@@ -161,7 +161,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
         {/* 🟢 القائمة المنسدلة لاختيار الابن (تظهر لولي الأمر فقط) */}
         {isParent && (
           <div className="mb-6 bg-indigo-50/80 p-5 rounded-2xl border border-indigo-100">
-            <label className="block text-sm font-extrabold text-indigo-900 mb-2 flex items-center gap-2">
+            <label className="block text-sm font-bold text-indigo-900 mb-2 flex items-center gap-2">
               <Users className="w-4 h-4" /> اختر الابن الذي سيحضر الحصة (إلزامي):
             </label>
             <div className="relative">
@@ -185,7 +185,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
 
         {/* كود الخصم */}
         <div className="mb-8 bg-gradient-to-l from-blue-50 to-indigo-50 p-5 rounded-2xl border border-blue-100 flex flex-col md:flex-row items-center gap-4">
-          <span className="text-indigo-800 font-extrabold whitespace-nowrap flex items-center gap-2">
+          <span className="text-indigo-800 font-bold whitespace-nowrap flex items-center gap-2">
             <Gift className="w-5 h-5 text-indigo-600" /> هل لديك كود خصم؟
           </span>
           <Input
@@ -202,7 +202,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
         {Object.keys(slots).length === 0 ? (
           <div className="text-center py-16 bg-gray-50/50 rounded-3xl border-4 border-dashed border-gray-100 flex flex-col items-center justify-center">
             <CalendarX2 className="w-16 h-16 text-indigo-200 mb-5" />
-            <h4 className="text-xl font-extrabold text-gray-800 mb-2">
+            <h4 className="text-xl font-bold text-gray-800 mb-2">
               لا توجد مواعيد متاحة
             </h4>
             <p className="text-gray-400 text-sm font-bold">
@@ -213,7 +213,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
           <div className="space-y-8">
             {Object.entries(slots).map(([date, daySlots]) => (
               <div key={date}>
-                <h3 className="text-xl font-extrabold mb-4 bg-gradient-to-l from-gray-50 to-slate-50 p-3 rounded-xl px-4 border-r-4 border-indigo-500 text-gray-800 flex items-center gap-2">
+                <h3 className="text-xl font-bold mb-4 bg-gradient-to-l from-gray-50 to-slate-50 p-3 rounded-xl px-4 border-r-4 border-indigo-500 text-gray-800 flex items-center gap-2">
                   <CalendarDays className="w-5 h-5 text-indigo-500" /> {date}
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">

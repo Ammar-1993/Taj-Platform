@@ -81,7 +81,7 @@ export default function ParentRegisterPage() {
           >
             👨‍👩‍👦
           </Link>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight mb-1.5">
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1.5">
             إنشاء حساب ولي أمر
           </h1>
           <p className="text-gray-500 text-sm font-medium">
@@ -92,7 +92,7 @@ export default function ParentRegisterPage() {
         {successMsg ? (
           <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-[2rem] text-center animate-fade-in-up shadow-sm">
             <CheckCircle className="w-14 h-14 text-emerald-500 mx-auto mb-3 animate-subtle-pulse" />
-            <h3 className="text-xl font-black text-emerald-800 mb-2">
+            <h3 className="text-xl font-bold text-emerald-800 mb-2">
               {successMsg}
             </h3>
             <p className="text-emerald-600 text-sm font-medium flex items-center justify-center gap-2">
@@ -209,7 +209,7 @@ export default function ParentRegisterPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative w-full flex justify-center py-3.5 px-4 text-sm font-black rounded-xl text-white bg-gradient-to-r from-purple-600 via-purple-500 to-violet-600 hover:shadow-[0_10px_20px_rgba(147,51,234,0.3)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-300 transform hover:-translate-y-0.5"
+                className="group relative w-full flex justify-center py-3.5 px-4 text-sm font-bold rounded-xl text-white bg-gradient-to-r from-purple-600 via-purple-500 to-violet-600 hover:shadow-[0_10px_20px_rgba(147,51,234,0.3)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-300 transform hover:-translate-y-0.5"
               >
                 {loading ? (
                   <span className="flex items-center gap-2">

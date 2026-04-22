@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
 import PageHeader from '@/components/ui/PageHeader';
-import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import toast from 'react-hot-toast';
 import { showApiError } from '@/hooks/useApiError';
 import { ApiResponse, GradeLevel, User } from '@/types';
@@ -103,8 +102,7 @@ export default function ChildrenManagementPage() {
 
     return (
         <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 md:p-8 flex items-start justify-center">
-            <DecorativeBackground />
-
+            
             <div className="relative z-10 max-w-6xl w-full space-y-8 tracking-tight">
                 
                 <PageHeader
@@ -129,7 +127,7 @@ export default function ChildrenManagementPage() {
                 {/* فورم الإضافة المحدث */}
                 {showForm && (
                     <Card className="bg-white/90 backdrop-blur-md rounded-[2.5rem] border-white/50 animate-fade-in-up-delay p-8 md:p-10">
-                        <h3 className="font-black text-xl text-indigo-900 mb-8 flex items-center gap-3">
+                        <h3 className="font-bold text-xl text-indigo-900 mb-8 flex items-center gap-3">
                              <span className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner">
                                 <GraduationCap className="w-5 h-5" />
                              </span>
@@ -184,7 +182,7 @@ export default function ChildrenManagementPage() {
                 {/* قائمة الأبناء (Grid) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {children.length === 0 ? (
-                        <div className="col-span-full bg-white/50 backdrop-blur-md p-24 rounded-[3rem] border-4 border-dashed border-gray-100/50 text-center text-gray-400 font-black flex flex-col items-center gap-6 animate-fade-in-up-delay-2">
+                        <div className="col-span-full bg-white/50 backdrop-blur-md p-24 rounded-[3rem] border-4 border-dashed border-gray-100/50 text-center text-gray-400 font-bold flex flex-col items-center gap-6 animate-fade-in-up-delay-2">
                             <Users className="w-16 h-16 text-gray-300" />
                             <p className="text-xl">لا يوجد أفراد عائلة مضافين حالياً.</p>
                             <p className="text-sm font-bold opacity-60">ابدأ بإضافة حسابات أبنائك لتتمكن من حجز حصصهم الدراسية.</p>
@@ -196,19 +194,19 @@ export default function ChildrenManagementPage() {
                                 <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full -mr-10 -mt-10 blur-2xl group-hover:bg-indigo-500/10 transition-colors"></div>
                                 
                                 <div className="flex flex-col items-center gap-5 mb-8 text-center">
-                                    <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 via-indigo-50 to-purple-50 text-indigo-600 rounded-[2rem] flex items-center justify-center text-4xl font-black shadow-inner group-hover:scale-110 transition-transform duration-300 ring-8 ring-indigo-50/30">
+                                    <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 via-indigo-50 to-purple-50 text-indigo-600 rounded-[2rem] flex items-center justify-center text-4xl font-bold shadow-inner group-hover:scale-110 transition-transform duration-300 ring-8 ring-indigo-50/30">
                                         {child.name.charAt(0)}
                                     </div>
                                     <div className="space-y-1">
-                                        <h3 className="font-black text-xl text-gray-900 group-hover:text-indigo-700 transition-colors">{child.name}</h3>
+                                        <h3 className="font-bold text-xl text-gray-900 group-hover:text-indigo-700 transition-colors">{child.name}</h3>
                                         <p className="text-xs text-gray-400 font-bold opacity-60 tracking-tight">{child.email}</p>
                                     </div>
                                 </div>
 
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center bg-gray-50/50 p-4 rounded-2xl border border-gray-100 shadow-sm">
-                                        <span className="text-[10px] font-black uppercase text-gray-400">المرحلة الدراسية</span>
-                                        <span className="bg-white/50 backdrop-blur-sm text-indigo-700 px-4 py-1.5 rounded-xl text-sm font-black shadow-sm ring-1 ring-indigo-100/50">
+                                        <span className="text-[10px] font-bold uppercase text-gray-400">المرحلة الدراسية</span>
+                                        <span className="bg-white/50 backdrop-blur-sm text-indigo-700 px-4 py-1.5 rounded-xl text-sm font-bold shadow-sm ring-1 ring-indigo-100/50">
                                             {child.student_profile?.grade_level?.name || 'غير محدد'}
                                         </span>
                                     </div>
@@ -217,12 +215,12 @@ export default function ChildrenManagementPage() {
                                     <div className="bg-gray-50/80 p-5 rounded-3xl border-2 border-white shadow-inner">
                                         <div className="flex items-center justify-between gap-4">
                                             <div className="flex flex-col gap-0.5">
-                                                <span className="text-xs font-black text-gray-800">إذن الحجز المباشر</span>
+                                                <span className="text-xs font-bold text-gray-800">إذن الحجز المباشر</span>
                                                 <p className="text-[9px] text-gray-400 font-bold leading-tight">تفعيل إمكانية حجز الحصص والدفع بشكل مستقل.</p>
                                             </div>
                                             <button 
                                                 onClick={() => handleTogglePermission(child.id, child.student_profile?.can_book_independently ?? false)}
-                                                className={`min-w-[80px] px-3 py-2.5 rounded-2xl text-[10px] font-black transition-all duration-300 shadow-sm flex items-center justify-center gap-1.5 ${
+                                                className={`min-w-[80px] px-3 py-2.5 rounded-2xl text-[10px] font-bold transition-all duration-300 shadow-sm flex items-center justify-center gap-1.5 ${
                                                     child.student_profile?.can_book_independently 
                                                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100' 
                                                         : 'bg-rose-50 text-rose-700 border border-rose-100 hover:bg-rose-100'
@@ -238,7 +236,7 @@ export default function ChildrenManagementPage() {
                                     </div>
                                     
                                     <button 
-                                        className="w-full py-2.5 text-xs font-black text-indigo-600 hover:text-indigo-800 transition-colors opacity-40 hover:opacity-100" 
+                                        className="w-full py-2.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors opacity-40 hover:opacity-100" 
                                         onClick={() => toast('ميزة التعديل ستفتح قريباً', { icon: '🛠️' })}
                                     >
                                         تعديل بيانات الحساب

@@ -105,7 +105,7 @@ export default function StatusBadge({ status, label }: StatusBadgeProps) {
 
   if (!config) {
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full font-extrabold bg-gray-100 text-gray-700">
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full font-bold bg-gray-100 text-gray-700">
         <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
         {label || status}
       </span>
@@ -114,7 +114,7 @@ export default function StatusBadge({ status, label }: StatusBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full font-extrabold ${config.bg} ${config.text} ${config.pulse ? "animate-pulse" : ""}`}
+      className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full font-bold ${config.bg} ${config.text} ${config.pulse ? "animate-pulse" : ""}`}
     >
       <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`}></span>
       {label || config.label}

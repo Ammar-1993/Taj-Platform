@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
 import PageHeader from '@/components/ui/PageHeader';
-import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import { showApiError } from '@/hooks/useApiError';
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -54,8 +53,7 @@ export default function TopUpPage() {
 
     return (
     <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 md:p-8 flex items-center justify-center">
-        <DecorativeBackground />
-
+        
         <div className="relative z-10 max-w-2xl w-full space-y-8 tracking-tight">
             
             <PageHeader
@@ -73,7 +71,7 @@ export default function TopUpPage() {
                             <CheckCircle2 className="w-12 h-12" />
                         </div>
                         <div className="text-center space-y-4">
-                            <h2 className="text-3xl font-black text-gray-900">تم الشحن بنجاح!</h2>
+                            <h2 className="text-3xl font-bold text-gray-900">تم الشحن بنجاح!</h2>
                             <p className="text-gray-500 font-bold text-lg">{successMsg}</p>
                         </div>
                         <div className="w-full h-2 bg-indigo-50 rounded-full overflow-hidden max-w-xs">
@@ -100,7 +98,7 @@ export default function TopUpPage() {
                                         <button
                                             key={val}
                                             onClick={() => setAmount(val)}
-                                            className={`relative group flex flex-col items-center gap-2 p-5 rounded-2xl font-black border-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
+                                            className={`relative group flex flex-col items-center gap-2 p-5 rounded-2xl font-bold border-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
                                                 amount === val 
                                                     ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-indigo-100 shadow-lg' 
                                                     : 'border-gray-100/50 bg-gray-50/50 hover:border-indigo-300 text-gray-500'
@@ -123,7 +121,7 @@ export default function TopUpPage() {
 
                         <div className="space-y-6 pt-4 border-t border-gray-100">
                             <div className="flex justify-between items-end mb-2">
-                                <h3 className="text-gray-900 font-black flex items-center gap-2">
+                                <h3 className="text-gray-900 font-bold flex items-center gap-2">
                                     <ShieldCheck className="w-5 h-5 text-emerald-600" />
                                     بيانات الدفع الآمن
                                 </h3>
@@ -137,20 +135,20 @@ export default function TopUpPage() {
                             <div className="bg-gray-50/50 p-6 rounded-[2rem] border-2 border-gray-100 space-y-4">
                                 <div className="space-y-4 opacity-50">
                                     <div className="flex flex-col gap-2 relative group">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-1">رقم البطاقة الائتمانية</label>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-1">رقم البطاقة الائتمانية</label>
                                         <div className="absolute left-4 top-9 text-gray-400"><CreditCard className="w-5 h-5" /></div>
-                                        <input type="text" placeholder="•••• •••• •••• ••••" disabled className="w-full p-4 pl-12 border-2 border-gray-200 rounded-2xl bg-white/50 cursor-not-allowed font-black tracking-widest text-gray-400 dir-ltr text-left" dir="ltr" />
+                                        <input type="text" placeholder="•••• •••• •••• ••••" disabled className="w-full p-4 pl-12 border-2 border-gray-200 rounded-2xl bg-white/50 cursor-not-allowed font-bold tracking-widest text-gray-400 dir-ltr text-left" dir="ltr" />
                                     </div>
                                     <div className="flex gap-4">
                                         <div className="w-1/2 flex flex-col gap-2 relative group">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-1">تاريخ الانتهاء</label>
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-1">تاريخ الانتهاء</label>
                                             <div className="absolute left-4 top-9 text-gray-400"><Calendar className="w-5 h-5" /></div>
-                                            <input type="text" placeholder="MM / YY" disabled className="w-full p-4 pl-12 border-2 border-gray-200 rounded-2xl bg-white/50 cursor-not-allowed font-black text-center text-gray-400 dir-ltr" dir="ltr" />
+                                            <input type="text" placeholder="MM / YY" disabled className="w-full p-4 pl-12 border-2 border-gray-200 rounded-2xl bg-white/50 cursor-not-allowed font-bold text-center text-gray-400 dir-ltr" dir="ltr" />
                                         </div>
                                         <div className="w-1/2 flex flex-col gap-2 relative group">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-1">رمز الأمان (CVC)</label>
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-1">رمز الأمان (CVC)</label>
                                             <div className="absolute left-4 top-9 text-gray-400"><Hash className="w-5 h-5" /></div>
-                                            <input type="text" placeholder="•••" disabled className="w-full p-4 pl-12 border-2 border-gray-200 rounded-2xl bg-white/50 cursor-not-allowed font-black text-center text-gray-400 dir-ltr" dir="ltr" />
+                                            <input type="text" placeholder="•••" disabled className="w-full p-4 pl-12 border-2 border-gray-200 rounded-2xl bg-white/50 cursor-not-allowed font-bold text-center text-gray-400 dir-ltr" dir="ltr" />
                                         </div>
                                     </div>
                                 </div>

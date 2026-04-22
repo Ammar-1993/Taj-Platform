@@ -10,7 +10,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "default", asChild = false, ...props }, ref) => {
     
-    const baseClass = "inline-flex items-center justify-center whitespace-nowrap rounded-[1.25rem] text-sm font-black transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-200 disabled:pointer-events-none disabled:opacity-50 active:scale-95";
+    const baseClass = "inline-flex items-center justify-center whitespace-nowrap rounded-[1.25rem] text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-200 disabled:pointer-events-none disabled:opacity-50 active:scale-95";
     
     // الأسلوب المخصص لتصميم المنصة المحدث (بدون Emojis)
     const variants = {

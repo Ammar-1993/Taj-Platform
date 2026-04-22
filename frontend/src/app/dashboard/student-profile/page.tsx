@@ -77,7 +77,7 @@ export default function StudentProfilePage() {
                 </div>
                 <div className="relative z-10 flex flex-col items-center gap-4 w-full max-w-md">
                     <Loader2 className="w-16 h-16 text-indigo-600 animate-spin" />
-                    <p className="font-black text-gray-400 animate-pulse">جاري تجهيز إعداداتك...</p>
+                    <p className="font-bold text-gray-400 animate-pulse">جاري تجهيز إعداداتك...</p>
                 </div>
             </div>
         );
@@ -94,9 +94,9 @@ export default function StudentProfilePage() {
                     <div className="flex justify-center mb-6">
                         <AlertCircle className="w-16 h-16 text-rose-500" />
                     </div>
-                    <h2 className="text-2xl font-black text-rose-600 mb-2">عذراً، هذه الصفحة للطلاب فقط.</h2>
+                    <h2 className="text-2xl font-bold text-rose-600 mb-2">عذراً، هذه الصفحة للطلاب فقط.</h2>
                     <p className="text-gray-500 font-bold mb-8">ليس لديك الصلاحيات الكافية للوصول لهذه الإعدادات.</p>
-                    <Link href="/dashboard" className="inline-flex justify-center items-center px-8 py-3 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-200">
+                    <Link href="/dashboard" className="inline-flex justify-center items-center px-8 py-3 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-200">
                         العودة للوحة التحكم
                     </Link>
                 </Card>
@@ -119,7 +119,7 @@ export default function StudentProfilePage() {
                     <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner animate-subtle-pulse">
                         <GraduationCap className="w-12 h-12" />
                     </div>
-                    <h1 className="text-3xl font-black text-gray-900 mb-3">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-3">
                         مرحباً بك يا {user?.name.split(' ')[0]}!
                     </h1>
                     <p className="text-gray-500 text-base font-medium leading-relaxed max-w-md mx-auto font-bold">
@@ -134,13 +134,13 @@ export default function StudentProfilePage() {
 
                     <form onSubmit={handleSubmit} className="space-y-8">
                         <div className="space-y-4">
-                            <label className="block text-sm font-black text-gray-700 mb-2 mr-1">اختر مرحلتك الدراسية الحالية *</label>
+                            <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">اختر مرحلتك الدراسية الحالية *</label>
                             <div className="relative">
                                 <select 
                                     required 
                                     value={gradeLevelId} 
                                     onChange={(e) => setGradeLevelId(e.target.value)} 
-                                    className="w-full bg-gray-50/50 border-2 border-gray-100 p-5 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 font-black cursor-pointer appearance-none"
+                                    className="w-full bg-gray-50/50 border-2 border-gray-100 p-5 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 font-bold cursor-pointer appearance-none"
                                 >
                                     <option value="" disabled>-- اضغط هنا لاختيار المرحلة --</option>
                                     {gradeLevels.map(grade => (
@@ -151,7 +151,7 @@ export default function StudentProfilePage() {
                                 </select>
                                 <div className="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
                             </div>
-                            <div className="mt-4 flex items-start gap-3 text-xs bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/50 text-indigo-700 font-black leading-relaxed">
+                            <div className="mt-4 flex items-start gap-3 text-xs bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/50 text-indigo-700 font-bold leading-relaxed">
                                 <Lightbulb className="w-5 h-5 shrink-0" />
                                 <p>هذا الاختيار سيضمن لك الحصول على التسعيرة الموحدة لحصصك مع جميع المعلمين في المنصة حسب المرحلة المختارة.</p>
                             </div>

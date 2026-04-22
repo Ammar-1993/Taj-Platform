@@ -6,7 +6,6 @@ import api from '@/lib/axios';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import PageHeader from '@/components/ui/PageHeader';
-import DecorativeBackground from '@/components/ui/DecorativeBackground';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { showApiError } from '@/hooks/useApiError';
 import { ApiResponse, Booking, SupportTicket, SupportTicketCreatePayload } from '@/types';
@@ -95,9 +94,8 @@ export default function SupportPage() {
     if (!user) return null;
 
     return (
-        <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 md:p-8">
-            <DecorativeBackground />
-
+        <div className="p-4 md:p-8">
+            
             <div className="relative z-10 max-w-7xl mx-auto space-y-8 tracking-tight">
                 
                 <PageHeader
@@ -112,7 +110,7 @@ export default function SupportPage() {
                     {/* القسم الأول: نموذج فتح تذكرة جديدة */}
                     <div className="lg:col-span-1 space-y-6">
                         <Card className="bg-white/90 backdrop-blur-md rounded-[2rem] border-white/50 animate-fade-in-up-delay p-8">
-                            <h3 className="font-black text-xl text-gray-900 mb-6 flex items-center gap-3">
+                            <h3 className="font-bold text-xl text-gray-900 mb-6 flex items-center gap-3">
                                 <span className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner">
                                     <PenSquare className="w-5 h-5" />
                                 </span>
@@ -187,7 +185,7 @@ export default function SupportPage() {
 
                     {/* القسم الثاني: سجل التذاكر وردود الإدارة */}
                     <Card className="lg:col-span-2 bg-white/80 backdrop-blur-md rounded-[2rem] border-white/50 h-fit animate-fade-in-up-delay p-8">
-                        <h3 className="font-extrabold text-2xl text-gray-900 mb-8 flex items-center gap-3 underline underline-offset-8 decoration-indigo-100">
+                        <h3 className="font-bold text-2xl text-gray-900 mb-8 flex items-center gap-3 underline underline-offset-8 decoration-indigo-100">
                              <span className="w-10 h-10 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center shadow-inner">
                                     <FolderOpen className="w-5 h-5" />
                              </span>
@@ -205,7 +203,7 @@ export default function SupportPage() {
                                     <div key={ticket.id} className="group relative bg-white/50 hover:bg-white transition-all duration-300 border-2 border-gray-50 rounded-[1.5rem] p-6 shadow-sm hover:shadow-xl hover:-translate-y-1">
                                         <div className="flex flex-col sm:flex-row justify-between items-start mb-5 gap-3">
                                             <div>
-                                                <h4 className="font-black text-gray-900 text-xl group-hover:text-indigo-600 transition-colors">{ticket.subject}</h4>
+                                                <h4 className="font-bold text-gray-900 text-xl group-hover:text-indigo-600 transition-colors">{ticket.subject}</h4>
                                                 <div className="flex flex-wrap items-center gap-2 mt-2">
                                                     <span className="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full font-bold">#{ticket.id}</span>
                                                     <span className="text-xs text-gray-400 font-medium italic">آخر تحديث: {new Date(ticket.updated_at).toLocaleDateString('ar-SA')}</span>
@@ -226,7 +224,7 @@ export default function SupportPage() {
                                         {/* 🟢 عرض رد الإدارة إن وجد */}
                                         {ticket.admin_reply && (
                                             <div className="mt-6 bg-gradient-to-l from-indigo-50/50 to-blue-50/50 border border-indigo-100 p-6 rounded-2xl relative shadow-sm">
-                                                <div className="absolute top-0 right-6 -mt-3.5 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white text-[10px] sm:text-xs font-black px-4 py-1.5 rounded-full shadow-lg flex items-center gap-2">
+                                                <div className="absolute top-0 right-6 -mt-3.5 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white text-[10px] sm:text-xs font-bold px-4 py-1.5 rounded-full shadow-lg flex items-center gap-2">
                                                     <span>رد فريق الدعم</span>
                                                     <Headphones className="w-3.5 h-3.5" />
                                                 </div>
