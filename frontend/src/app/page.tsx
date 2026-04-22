@@ -102,27 +102,27 @@ export default function Home() {
                 <Button asChild variant="default" className="flex-1 md:flex-none py-3.5 bg-white text-indigo-700 hover:bg-gray-50">
                   <Link href="/dashboard">
                     <span>لوحة التحكم</span>
-                    <HomeIcon className="w-5 h-5 ml-2" strokeWidth={2.5} />
+                    <HomeIcon className="w-5 h-5" strokeWidth={2.5} />
                   </Link>
                 </Button>
               ) : (
                 <>
                   <Button asChild variant="outline" className="flex-1 md:flex-none border-white/20 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md">
-                    <Link href="/faq">
-                      <HelpCircle className="w-4 h-4 ml-2" />
+                    <Link href="/faq" className="flex items-center gap-2">
+                      <HelpCircle className="w-4 h-4" />
                       <span>الأسئلة الشائعة</span>
                     </Link>
                   </Button>
                   <Button asChild variant="outline" className="flex-1 md:flex-none border-white/20 bg-white/20 hover:bg-white/30 text-white backdrop-blur-md">
-                    <Link href="/login">
-                      <LogIn className="w-4 h-4 ml-2" />
+                    <Link href="/login" className="flex items-center gap-2">
+                      <LogIn className="w-4 h-4" />
                       <span>تسجيل الدخول</span>
                     </Link>
                   </Button>
-                  <Button asChild variant="default" className="flex-1 md:flex-none bg-white text-indigo-700 hover:bg-gray-50 shadow-xl">
-                    <Link href="/register">
-                      <UserPlus className="w-4 h-4 ml-2" strokeWidth={2.5} />
-                      <span>إنشاء حساب</span>
+                  <Button asChild variant="gradient" className="flex-1 md:flex-none h-12 px-8 shadow-xl">
+                    <Link href="/register" className="flex items-center gap-2">
+                      <UserPlus className="w-5 h-5" strokeWidth={2.5} />
+                      <span>إنشاء حساب مجاني</span>
                     </Link>
                   </Button>
                 </>
