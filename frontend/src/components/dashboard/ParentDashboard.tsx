@@ -117,68 +117,119 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-right">
-              <thead>
-                <tr className="bg-gradient-to-l from-gray-50/50 to-slate-50/50 border-b border-gray-100">
-                  <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider rounded-tr-2xl text-right">
-                    الابن
-                  </th>
-                  <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
-                    المعلم
-                  </th>
-                  <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
-                    التاريخ والوقت
-                  </th>
-                  <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
-                    التكلفة
-                  </th>
-                  <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider rounded-tl-2xl text-right">
-                    الحالة
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {parentData.bookings?.map((booking) => (
-                  <tr
-                    key={booking.id}
-                    className="hover:bg-indigo-50/50 transition-all duration-200"
-                  >
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center text-indigo-600 font-bold text-xs">
+          <>
+            <div className="md:hidden space-y-4">
+              {parentData.bookings?.map((booking) => (
+                <div key={booking.id} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-3">
+                  <div className="flex justify-between items-center border-b border-gray-50 pb-3">
+                    <span className="font-bold text-indigo-600">#{booking.id}</span>
+                    <StatusBadge status={booking.status} />
+                  </div>
+                  
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between items-center bg-gray-50 p-3 rounded-xl">
+                      <span className="text-xs text-gray-500 font-bold">الابن</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-indigo-100 rounded flex items-center justify-center text-indigo-600 font-bold text-xs">
                           {booking.student?.name?.charAt(0) || "?"}
                         </div>
-                        <span className="font-bold text-indigo-700">
+                        <span className="font-bold text-indigo-700 text-sm">
                           {booking.student?.name}
                         </span>
                       </div>
-                    </td>
-                    <td className="px-4 py-4 font-bold text-gray-800">
-                      {booking.teacher?.name}
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="font-bold text-gray-800">
-                        {booking.booking_date?.substring(0, 10)}
-                      </div>
-                      <div className="text-xs text-gray-400 mt-0.5">
-                        {formatTimeTo12h(booking.teacher_slot?.start_time)}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className="font-bold text-gray-800">
-                        {booking.net_paid}
+                    </div>
+
+                    <div className="flex justify-between items-center bg-gray-50 p-3 rounded-xl">
+                      <span className="text-xs text-gray-500 font-bold">المعلم</span>
+                      <span className="font-bold text-gray-800 text-sm">
+                        {booking.teacher?.name}
                       </span>
-                      <span className="text-xs text-gray-400 mr-1">ريال</span>
-                    </td>
-                    <td className="px-4 py-4">
-                    <StatusBadge status={booking.status} />
-                    </td>
+                    </div>
+
+                    <div className="flex justify-between items-center bg-gray-50 p-3 rounded-xl mt-1">
+                        <div>
+                          <div className="font-bold text-gray-800 text-sm">
+                            {booking.booking_date?.substring(0, 10)}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            {formatTimeTo12h(booking.teacher_slot?.start_time)}
+                          </div>
+                        </div>
+                        <div className="text-left">
+                          <span className="font-bold font-mono text-gray-800" dir="ltr">
+                            {booking.net_paid}
+                          </span>
+                          <span className="text-xs text-gray-400 mr-1">ريال</span>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm text-right">
+                <thead>
+                  <tr className="bg-gradient-to-l from-gray-50/50 to-slate-50/50 border-b border-gray-100">
+                    <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider rounded-tr-2xl text-right">
+                      الابن
+                    </th>
+                    <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
+                      المعلم
+                    </th>
+                    <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
+                      التاريخ والوقت
+                    </th>
+                    <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
+                      التكلفة
+                    </th>
+                    <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider rounded-tl-2xl text-right">
+                      الحالة
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {parentData.bookings?.map((booking) => (
+                    <tr
+                      key={booking.id}
+                      className="hover:bg-indigo-50/50 transition-all duration-200"
+                    >
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center text-indigo-600 font-bold text-xs">
+                            {booking.student?.name?.charAt(0) || "?"}
+                          </div>
+                          <span className="font-bold text-indigo-700">
+                            {booking.student?.name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 font-bold text-gray-800">
+                        {booking.teacher?.name}
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="font-bold text-gray-800">
+                          {booking.booking_date?.substring(0, 10)}
+                        </div>
+                        <div className="text-xs text-gray-400 mt-0.5">
+                          {formatTimeTo12h(booking.teacher_slot?.start_time)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="font-bold font-mono text-gray-800" dir="ltr">
+                          {booking.net_paid}
+                        </span>
+                        <span className="text-xs text-gray-400 mr-1">ريال</span>
+                      </td>
+                      <td className="px-4 py-4">
+                      <StatusBadge status={booking.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </Card>
     </div>

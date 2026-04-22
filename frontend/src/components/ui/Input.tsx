@@ -18,11 +18,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           type={type}
           dir={dir}
           className={cn(
-            "flex h-12 w-full rounded-[1.25rem] border-2 border-transparent bg-gray-50/50 px-4 py-2 text-sm font-medium transition-all duration-300",
+            "flex h-10 w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium transition-all duration-300",
             "file:border-0 file:bg-transparent file:text-sm file:font-medium",
             "placeholder:text-gray-400 font-bold",
-            "focus-visible:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 hover:bg-gray-50",
-            "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-100",
+            "focus-visible:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent",
+            "disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400",
             icon ? (dir === 'ltr' ? "pl-11" : "pr-11") : "",
             className
           )}
