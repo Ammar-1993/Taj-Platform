@@ -1,6 +1,5 @@
 import React from "react";
-import Link from "next/link";
-import { Users, LifeBuoy, Home as HomeIcon, Pencil, LogOut, Shield } from "lucide-react";
+import { LogOut, Shield } from "lucide-react";
 import { User } from "@/types";
 
 interface DashboardHeaderProps {
