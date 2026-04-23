@@ -7,6 +7,7 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { ParentDashboard } from "@/components/dashboard/ParentDashboard";
 import { StudentTeacherDashboard } from "@/components/dashboard/StudentTeacherDashboard";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import dynamic from "next/dynamic";
 const ReviewModal = dynamic(() => import("@/components/dashboard/ReviewModal").then(mod => mod.ReviewModal), { ssr: false });
 import { Role } from "@/types";
@@ -38,11 +39,7 @@ export default function DashboardPage() {
   }, [user, authLoading, router]);
 
   if (authLoading || dataLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-xl font-bold animate-pulse text-gray-500">
-        جاري تحميل لوحة التحكم...
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (!user) return null;
