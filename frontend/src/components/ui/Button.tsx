@@ -1,16 +1,18 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { Loader2 } from "lucide-react"
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | "gradient";
   size?: "default" | "sm" | "lg" | "icon";
   asChild?: boolean;
+  isLoading?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "default", size = "default", asChild = false, ...props }, ref) => {
+  ({ className, variant = "default", size = "default", asChild = false, isLoading = false, children, disabled, ...props }, ref) => {
     
-    const baseClass = "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:pointer-events-none disabled:bg-gray-100 disabled:text-gray-400 disabled:shadow-none active:scale-95 gap-2";
+    const baseClass = "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 gap-2";
     
     // الأسلوب المخصص لتصميم المنصة المحدث
     const variants = {
@@ -32,11 +34,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const computedClassName = cn(baseClass, variants[variant as keyof typeof variants], sizes[size as keyof typeof sizes], className);
 
-    if (asChild && React.isValidElement(props.children)) {
-      return React.cloneElement(props.children as React.ReactElement, {
-        className: cn(computedClassName, (props.children.props as { className?: string }).className),
+    if (asChild && React.isValidElement(children)) {
+      return React.cloneElement(children as React.ReactElement, {
+        className: cn(computedClassName, (children.props as { className?: string }).className),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ref: ref as any,
+        disabled: isLoading || disabled,
       });
     }
 
@@ -44,8 +47,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={computedClassName}
+        disabled={isLoading || disabled}
         {...props}
-      />
+      >
+        {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+        {children}
+      </button>
     )
   }
 )

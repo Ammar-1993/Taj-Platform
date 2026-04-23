@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import DecorativeBackground from "@/components/ui/DecorativeBackground";
 import { showApiError } from "@/hooks/useApiError";
-import { Mail, Lock, Eye, EyeOff, Loader2, AlertTriangle, ArrowRight } from "lucide-react";
+import { Mail, Lock, AlertTriangle, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -17,7 +17,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   const router = useRouter();
   const { login } = useAuth();
@@ -67,7 +66,7 @@ export default function LoginPage() {
         </div>
 
         {/* صندوق تسجيل الدخول (Glassmorphism) */}
-        <Card className="bg-white/80 backdrop-blur-xl shadow-[0_20px_50px_rgba(8,_112,_184,_0.07)] border-white relative">
+        <Card variant="glass">
           <CardContent className="p-6 sm:p-8">
             <form className="space-y-5" onSubmit={handleSubmit}>
             
@@ -109,28 +108,15 @@ export default function LoginPage() {
                     نسيت كلمة المرور؟
                   </Link>
                 </div>
-                <div className="relative group">
-                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors">
-                    <Lock className="w-4 h-4" />
-                  </div>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2.5 bg-gray-50/50 hover:bg-gray-50 border-2 border-transparent focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 rounded-xl outline-none transition-all duration-300 text-left tracking-widest font-medium placeholder:tracking-normal placeholder:text-gray-400 text-sm"
-                    placeholder="••••••••"
-                    dir="ltr"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-colors p-1"
-                    title={showPassword ? "إخفاء كلمة المرور" : "عرض كلمة المرور"}
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
+                <Input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  dir="ltr"
+                  icon={<Lock className="w-4 h-4" />}
+                />
               </div>
             </div>
 
@@ -138,19 +124,16 @@ export default function LoginPage() {
             <div className="pt-2">
               <Button
                 type="submit"
-                disabled={isLoading}
-                className="w-full"
+                isLoading={isLoading}
+                className="w-full group"
               >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    جاري الدخول...
-                  </span>
-                ) : (
+                {!isLoading ? (
                   <span className="flex items-center gap-2">
                     تسجيل الدخول
                     <ArrowRight className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:-translate-x-1 transition-all" />
                   </span>
+                ) : (
+                  <span>جاري الدخول...</span>
                 )}
               </Button>
             </div>
