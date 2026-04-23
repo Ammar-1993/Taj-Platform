@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/axios";
-import { formatTimeTo12h } from "@/lib/utils";
+import { formatTime, formatDate } from "@/lib/formatters";
 import PageHeader from "@/components/ui/PageHeader";
 import toast from "react-hot-toast";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -205,7 +205,7 @@ export default function TeacherSchedulePage() {
                     >
                       <h4 className="font-bold text-gray-900 text-xl mb-6 flex items-center gap-2">
                         <span className="bg-indigo-100 text-indigo-700 px-4 py-1.5 rounded-2xl text-sm shadow-sm inline-flex items-center gap-2 mr-1">
-                             <CalendarDays className="w-4 h-4" /> {new Date(dayDate).toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                             <CalendarDays className="w-4 h-4" /> {formatDate(dayDate, "long")}
                         </span>
                       </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -224,7 +224,7 @@ export default function TeacherSchedulePage() {
                                 <div className="space-y-2">
                                     <div className="font-bold text-gray-900 text-base flex items-center gap-1.5">
                                         <Clock className="w-4 h-4 text-gray-500" />
-                                        {formatTimeTo12h(slot.start_time)} - {formatTimeTo12h(slot.end_time)}
+                                        {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
                                     </div>
                                     <div
                                         className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full inline-flex items-center gap-1.5 ${

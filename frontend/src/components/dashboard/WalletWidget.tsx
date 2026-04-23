@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Wallet } from "@/types";
+import { formatDate, formatCurrency } from "@/lib/formatters";
 import { 
   WalletCards, CalendarDays, Banknote, Zap, BarChart2,
   Landmark, LifeBuoy
@@ -96,7 +97,7 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
                         : "إيداع/أرباح"}
                     </p>
                     <p className="text-xs text-gray-400 mt-0.5">
-                      {new Date(tx.created_at).toLocaleDateString("ar-SA")}
+                      {formatDate(tx.created_at, "short")}
                     </p>
                   </div>
                 </div>
@@ -104,7 +105,7 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
                   className={`font-bold text-base ${tx.type === "withdrawal" ? "text-red-500" : "text-emerald-500"}`}
                 >
                   {tx.type === "withdrawal" ? "-" : "+"}
-                  {tx.amount}
+                  {formatCurrency(tx.amount)}
                 </span>
               </li>
             ))}

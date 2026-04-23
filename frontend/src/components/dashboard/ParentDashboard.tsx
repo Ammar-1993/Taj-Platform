@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { ParentDashboardData } from "@/types";
-import { formatTimeTo12h } from "@/lib/utils";
+import { formatTime, formatDate, formatCurrency } from "@/lib/formatters";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { WalletCards, Zap, Calendar, BookOpen } from "lucide-react";
@@ -36,8 +36,8 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
               </h3>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-4xl sm:text-5xl font-bold tracking-tight">
-                {parentData.parent_balance || "0.00"}
+              <span className="font-mono text-4xl sm:text-5xl font-bold tracking-tight">
+                {formatCurrency(parentData.parent_balance)}
               </span>
               <span className="text-purple-200 text-base sm:text-lg font-medium">ريال</span>
             </div>
@@ -54,8 +54,8 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                 إجمالي الاستثمار في التعليم
               </h3>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold">
-                  {parentData.total_spent || "0.00"}
+                <span className="font-mono text-2xl font-bold">
+                  {formatCurrency(parentData.total_spent)}
                 </span>
                 <span className="text-purple-200 text-xs">ريال</span>
               </div>
@@ -149,17 +149,16 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                     <div className="flex justify-between items-center bg-gray-50 p-3 rounded-xl mt-1">
                         <div>
                           <div className="font-bold text-gray-800 text-sm">
-                            {booking.booking_date?.substring(0, 10)}
+                            {formatDate(booking.booking_date, "medium")}
                           </div>
                           <div className="text-xs text-gray-500 mt-0.5">
-                            {formatTimeTo12h(booking.teacher_slot?.start_time)}
+                            {formatTime(booking.teacher_slot?.start_time)}
                           </div>
                         </div>
                         <div className="text-left">
                           <span className="font-bold font-mono text-gray-800" dir="ltr">
-                            {booking.net_paid}
+                            {formatCurrency(booking.net_paid)}
                           </span>
-                          <span className="text-xs text-gray-400 mr-1">ريال</span>
                         </div>
                     </div>
                   </div>
@@ -209,10 +208,10 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                       </td>
                       <td className="px-4 py-4">
                         <div className="font-bold text-gray-800">
-                          {booking.booking_date?.substring(0, 10)}
+                          {formatDate(booking.booking_date, "medium")}
                         </div>
                         <div className="text-xs text-gray-400 mt-0.5">
-                          {formatTimeTo12h(booking.teacher_slot?.start_time)}
+                          {formatTime(booking.teacher_slot?.start_time)}
                         </div>
                       </td>
                       <td className="px-4 py-4">

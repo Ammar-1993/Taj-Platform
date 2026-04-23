@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Booking } from "@/types";
-import { formatTimeTo12h } from "@/lib/utils";
+import { formatTime, formatDate } from "@/lib/formatters";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/Button";
 import { Video, XCircle, Coins, BookOpen, Rocket } from "lucide-react";
@@ -89,10 +89,10 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 <span className="md:hidden font-bold text-gray-500 text-xs">الموعد:</span>
                 <div className="text-left md:text-right">
                   <div className="font-bold text-gray-800 text-sm md:text-base">
-                    {booking.booking_date.substring(0, 10)}
+                    {formatDate(booking.booking_date, "medium")}
                   </div>
                   <div className="text-xs text-gray-500 md:text-gray-400 mt-0.5">
-                    {formatTimeTo12h(booking.teacher_slot?.start_time)}
+                    {formatTime(booking.teacher_slot?.start_time)}
                   </div>
                 </div>
               </td>

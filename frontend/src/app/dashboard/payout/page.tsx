@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { CircleDollarSign, SendHorizonal, Send, AlertTriangle, TrendingUp, Inbox, Landmark, Calendar, Building, Loader2 } from "lucide-react";
+import { formatDate, formatCurrency } from "@/lib/formatters";
 
 export default function PayoutPage() {
     const { user } = useAuth();
@@ -121,7 +122,7 @@ export default function PayoutPage() {
                                 الرصيد القابل للسحب
                             </h3>
                             <div className="mt-4 flex items-baseline gap-3 font-mono" dir="ltr">
-                                <span className="text-5xl font-bold tracking-tighter shadow-sm">{walletInfo?.balance || '0.00'}</span>
+                            <span className="font-mono text-5xl font-bold tracking-tighter shadow-sm">{formatCurrency(walletInfo?.balance)}</span>
                                 <span className="text-emerald-200 font-bold font-sans text-xl uppercase">SAR</span>
                             </div>
                             <div className="mt-6 h-1 w-full bg-white/20 rounded-full overflow-hidden">
@@ -249,15 +250,14 @@ export default function PayoutPage() {
                                                         <span className="text-[10px] bg-indigo-50 text-indigo-600 px-3 py-0.5 rounded-full font-bold uppercase tracking-widest">Transaction</span>
                                                     </div>
                                                     <div className="flex items-center gap-4 text-xs font-bold text-gray-400">
-                                                        <span className="flex items-center gap-1.5 italic"><Calendar className="w-3.5 h-3.5" /> {new Date(payout.created_at).toLocaleDateString('ar-SA')}</span>
+                                                        <span className="flex items-center gap-1.5 italic"><Calendar className="w-3.5 h-3.5" /> {formatDate(payout.created_at, "medium")}</span>
                                                         <span className="flex items-center gap-1.5"><Building className="w-3.5 h-3.5" /> {payout.bank_name}</span>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div className="flex flex-row md:flex-col items-center md:items-end gap-6 md:gap-2 w-full md:w-auto pt-4 md:pt-0 border-t md:border-0 border-gray-100 mt-2 md:mt-0">
                                                 <div className="text-2xl font-bold font-mono text-emerald-600 flex items-baseline gap-1.5" dir="ltr">
-                                                    <span>{payout.amount}</span>
-                                                    <span className="text-xs font-bold font-sans text-emerald-400">SAR</span>
+                                                    <span>{formatCurrency(payout.amount, 'code')}</span>
                                                 </div>
                                                 <div>{renderStatusBadge(payout.status)}</div>
                                             </div>

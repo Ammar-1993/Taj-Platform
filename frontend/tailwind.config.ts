@@ -13,72 +13,121 @@ const config = {
     container: {
       center: true,
       padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
+      screens: { "2xl": "1400px" },
     },
     extend: {
       screens: {
         "xs": "480px",
       },
+
+      // ─── Font Family ─────────────────────────────────────
+      fontFamily: {
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+      },
+
+      // ─── Color Tokens ────────────────────────────────────
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        // shadcn/ui compatibility
+        border:      "hsl(var(--border))",
+        input:       "hsl(var(--input))",
+        ring:        "hsl(var(--ring))",
+        background:  "hsl(var(--background))",
+        foreground:  "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
+          DEFAULT:    "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
+          DEFAULT:    "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
+          DEFAULT:    "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
+          DEFAULT:    "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
+          DEFAULT:    "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
+          DEFAULT:    "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
+          DEFAULT:    "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+
+        // ─── Taj semantic tokens ───────────────────────────
+        brand: {
+          50:  "var(--color-brand-50)",
+          100: "var(--color-brand-100)",
+          200: "var(--color-brand-200)",
+          500: "var(--color-brand-500)",
+          600: "var(--color-brand-600)",  // primary action
+          700: "var(--color-brand-700)",  // hover
+          800: "var(--color-brand-800)",  // active
+        },
+        surface: {
+          DEFAULT: "var(--color-surface)",
+          subtle:  "var(--color-surface-subtle)",
+          muted:   "var(--color-surface-muted)",
+        },
       },
+
+      // ─── Border Radius (4-level scale) ───────────────────
+      // Existing 'lg/md/sm' kept for shadcn compat; new scale layered on top.
       borderRadius: {
+        // shadcn compat
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        // Taj 4-level scale
+        "taj-sm": "var(--radius-sm)",   // 8px  — badges, small buttons
+        "taj-md": "var(--radius-md)",   // 12px — inputs, secondary buttons
+        "taj-lg": "var(--radius-lg)",   // 16px — cards, modals
+        "taj-xl": "var(--radius-xl)",   // 24px — hero banners, wallet cards
       },
+
+      // ─── Keyframes ───────────────────────────────────────
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+          to:   { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+          to:   { height: "0" },
         },
         shimmer: {
-          '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(300%)' },
+          "0%":   { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(300%)" },
+        },
+        fadeUp: {
+          from: { opacity: "0", transform: "translateY(16px)" },
+          to:   { opacity: "1", transform: "translateY(0)" },
+        },
+        pulseDot: {
+          "0%, 100%": { opacity: "1" },
+          "50%":      { opacity: "0.5" },
         },
       },
+
+      // ─── Animation utilities ──────────────────────────────
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-        shimmer: "shimmer 2s infinite",
+        "accordion-up":   "accordion-up 0.2s ease-out",
+        shimmer:          "shimmer 2s infinite",
+        "fade-up":        "fadeUp 0.5s ease-out both",
+        "fade-up-1":      "fadeUp 0.5s ease-out 0.1s both",
+        "fade-up-2":      "fadeUp 0.5s ease-out 0.2s both",
+        "fade-up-3":      "fadeUp 0.5s ease-out 0.3s both",
+        "pulse-dot":      "pulseDot 1.5s ease-in-out infinite",
       },
     },
   },

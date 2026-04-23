@@ -2,40 +2,86 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Semantic Design Tokens ─────────────────────────────── */
 @layer base {
   :root {
+    /* --- shadcn/ui legacy tokens (keep for compatibility) --- */
     --background: 210 40% 98%;
     --foreground: 222.2 84% 4.9%;
-
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
- 
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
- 
     --primary: 243 75% 59%;
     --primary-foreground: 210 40% 98%;
- 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
- 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
- 
     --accent: 160 84% 39%;
     --accent-foreground: 0 0% 100%;
- 
     --destructive: 350 89% 60%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 243 75% 59%;
- 
     --radius: 1rem;
+
+    /* ─── Taj Platform Semantic Tokens ─────────────────────── */
+
+    /* Brand colors */
+    --color-brand-50:  #eef2ff;
+    --color-brand-100: #e0e7ff;
+    --color-brand-200: #c7d2fe;
+    --color-brand-500: #6366f1;
+    --color-brand-600: #4f46e5;   /* primary action */
+    --color-brand-700: #4338ca;   /* primary hover   */
+    --color-brand-800: #3730a3;   /* active/pressed  */
+
+    /* Surface tokens */
+    --color-surface:        #ffffff;
+    --color-surface-subtle: #f8fafc;  /* slate-50  */
+    --color-surface-muted:  #f1f5f9;  /* slate-100 */
+
+    /* Border tokens */
+    --color-border:       #e2e8f0;   /* slate-200 */
+    --color-border-focus: #6366f1;   /* indigo-500 */
+
+    /* Text tokens */
+    --color-text-primary:   #0f172a;  /* slate-900 */
+    --color-text-secondary: #64748b;  /* slate-500 */
+    --color-text-muted:     #94a3b8;  /* slate-400 */
+
+    /* Status tokens */
+    --color-success-bg:   #d1fae5;   /* emerald-100 */
+    --color-success-text: #065f46;   /* emerald-800 */
+    --color-warning-bg:   #fef3c7;   /* amber-100   */
+    --color-warning-text: #92400e;   /* amber-800   */
+    --color-error-bg:     #fee2e2;   /* red-100     */
+    --color-error-text:   #991b1b;   /* red-800     */
+    --color-info-bg:      #dbeafe;   /* blue-100    */
+    --color-info-text:    #1e40af;   /* blue-800    */
+    --color-neutral-bg:   #f1f5f9;   /* slate-100   */
+    --color-neutral-text: #475569;   /* slate-600   */
+
+    /* Approved gradient system (max 3 gradients platform-wide) */
+    --gradient-brand:   linear-gradient(135deg, #4f46e5, #7c3aed);
+    --gradient-success: linear-gradient(135deg, #059669, #047857);
+    --gradient-surface: linear-gradient(180deg, #ffffff, #f8fafc);
+
+    /* Typography tokens */
+    --font-sans: 'Tajawal', system-ui, sans-serif;   /* set by next/font via CSS var */
+    --font-mono: 'IBM Plex Mono', monospace;          /* set by next/font via CSS var */
+
+    /* Radius scale (4 levels only) */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
   }
 }
- 
+
+/* ─── Global Base Styles ─────────────────────────────────── */
 @layer base {
   * {
     @apply border-border;
@@ -43,52 +89,61 @@
   body {
     @apply bg-background text-foreground;
   }
-  
-  /* إخفاء شريط التمرير مع الحفاظ على وظيفة التمرير */
-  * {
-    scrollbar-width: none; /* Firefox */
+
+  /* font-mono utility: applies IBM Plex Mono to financial figures */
+  .font-mono {
+    font-family: var(--font-mono), ui-monospace, monospace;
   }
-  *::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Edge */
+
+  /* Scrollbar: hidden only where explicitly needed via .scrollbar-hide */
+  .scrollbar-hide {
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }
 
-/* Animations */
+/* ─── Animation System ───────────────────────────────────── */
 @layer utilities {
-  .animate-fade-in-up {
-    animation: fadeInUp 0.6s ease-out forwards;
+  /* Staggered page entrance animations */
+  .animate-fade-up {
+    animation: fadeUp 0.5s ease-out both;
   }
-  .animate-fade-in-up-delay {
-    animation: fadeInUp 0.6s ease-out 0.1s forwards;
+  .animate-fade-up-1 {
+    animation: fadeUp 0.5s ease-out 0.1s both;
     opacity: 0;
   }
-  .animate-fade-in-up-delay-2 {
-    animation: fadeInUp 0.6s ease-out 0.2s forwards;
+  .animate-fade-up-2 {
+    animation: fadeUp 0.5s ease-out 0.2s both;
     opacity: 0;
   }
-  .animate-fade-in-up-delay-3 {
-    animation: fadeInUp 0.6s ease-out 0.3s forwards;
+  .animate-fade-up-3 {
+    animation: fadeUp 0.5s ease-out 0.3s both;
     opacity: 0;
   }
-  .animate-subtle-pulse {
-    animation: subtlePulse 3s ease-in-out infinite;
-  }
-  .animate-bounce-subtle {
-    animation: subtleBounce 2s ease-in-out infinite;
-  }
+
+  /* Legacy aliases — kept for backward compat, migrated in Sprint 5 */
+  .animate-fade-in-up         { animation: fadeUp 0.6s ease-out forwards; }
+  .animate-fade-in-up-delay   { animation: fadeUp 0.6s ease-out 0.1s forwards; opacity: 0; }
+  .animate-fade-in-up-delay-2 { animation: fadeUp 0.6s ease-out 0.2s forwards; opacity: 0; }
+  .animate-fade-in-up-delay-3 { animation: fadeUp 0.6s ease-out 0.3s forwards; opacity: 0; }
+  .animate-subtle-pulse { animation: subtlePulse 3s ease-in-out infinite; }
+  .animate-bounce-subtle { animation: subtleBounce 2s ease-in-out infinite; }
 }
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+/* ─── Keyframes ──────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes subtlePulse {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.95; transform: scale(0.98); }
+  50%       { opacity: 0.95; transform: scale(0.98); }
 }
 
 @keyframes subtleBounce {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+  50%       { transform: translateY(-5px); }
 }

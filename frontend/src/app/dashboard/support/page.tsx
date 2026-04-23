@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { PenSquare, Send, FolderOpen, Inbox, Pin, Headphones, Loader2 } from "lucide-react";
+import { formatDate } from "@/lib/formatters";
 
 export default function SupportPage() {
     const { user } = useAuth();
@@ -142,7 +143,7 @@ export default function SupportPage() {
                                             <option value="">-- شكوى عامة --</option>
                                             {bookings.map((b: Booking) => (
                                                 <option key={b.id} value={b.id}>
-                                                    حجز #{b.id} مع {b.teacher?.name} ({new Date(b.booking_date).toLocaleDateString('ar-SA')})
+                                                    حجز #{b.id} مع {b.teacher?.name} ({formatDate(b.booking_date, "medium")})
                                                 </option>
                                             ))}
                                         </select>
@@ -206,7 +207,7 @@ export default function SupportPage() {
                                                 <h4 className="font-bold text-gray-900 text-xl group-hover:text-indigo-600 transition-colors">{ticket.subject}</h4>
                                                 <div className="flex flex-wrap items-center gap-2 mt-2">
                                                     <span className="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full font-bold">#{ticket.id}</span>
-                                                    <span className="text-xs text-gray-400 font-medium italic">آخر تحديث: {new Date(ticket.updated_at).toLocaleDateString('ar-SA')}</span>
+                                                    <span className="text-xs text-gray-400 font-medium italic">آخر تحديث: {formatDate(ticket.updated_at, "medium")}</span>
                                                     {ticket.booking_id && (
                                                         <span className="text-xs bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full font-bold flex items-center gap-1">
                                                             <Pin className="w-3.5 h-3.5" /> حجز #{ticket.booking_id}

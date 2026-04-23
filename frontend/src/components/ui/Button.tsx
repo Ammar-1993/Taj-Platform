@@ -12,17 +12,18 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "default", asChild = false, isLoading = false, children, disabled, ...props }, ref) => {
     
-    const baseClass = "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 gap-2";
+    const baseClass = "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 gap-2";
     
-    // الأسلوب المخصص لتصميم المنصة المحدث
+    // Variants use semantic brand tokens — do not use raw indigo-* classes
     const variants = {
-      default: "bg-indigo-600 text-white shadow-sm hover:bg-indigo-700",
+      default:     "bg-brand-600 text-white shadow-sm hover:bg-brand-700",
       destructive: "bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-100 active:bg-rose-200",
-      outline: "border-2 border-indigo-100 bg-white hover:bg-indigo-50 text-indigo-700",
-      secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200",
-      ghost: "hover:bg-slate-100 hover:text-slate-900",
-      link: "text-indigo-600 underline-offset-4 hover:underline focus-visible:underline",
-      gradient: "bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 text-white shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-0.5",
+      outline:     "border-2 border-brand-100 bg-white hover:bg-brand-50 text-brand-700",
+      secondary:   "bg-slate-100 text-slate-900 hover:bg-slate-200",
+      ghost:       "hover:bg-slate-100 hover:text-slate-900",
+      link:        "text-brand-600 underline-offset-4 hover:underline focus-visible:underline",
+      // gradient: special-case for hero CTAs only — avoid proliferating
+      gradient:    "bg-gradient-to-r from-brand-600 via-indigo-700 to-purple-600 text-white shadow-lg hover:shadow-brand-600/30 hover:-translate-y-0.5",
     };
 
     const sizes = {

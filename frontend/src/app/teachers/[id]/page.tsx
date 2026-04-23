@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import { useAuth } from "@/context/AuthContext";
 import { User, TeacherSlot } from "@/types";
-import { formatTimeTo12h } from "@/lib/utils";
+import { formatTime } from "@/lib/formatters";
 import toast from "react-hot-toast";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -192,9 +192,9 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
                       onClick={() => handleBookingRequest(slot)}
                       className="border border-gray-200 hover:border-indigo-500 bg-white hover:bg-indigo-50 text-indigo-900 font-bold py-3 px-4 rounded-lg transition-all flex flex-col items-center justify-center gap-1 active:scale-95"
                     >
-                      <span className="text-base">{formatTimeTo12h(slot.start_time)}</span>
+                      <span className="text-base">{formatTime(slot.start_time)}</span>
                       <span className="text-xs text-gray-500 font-normal">
-                        إلى {formatTimeTo12h(slot.end_time)}
+                        إلى {formatTime(slot.end_time)}
                       </span>
                     </button>
                   ))}
@@ -211,7 +211,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
             <div className="text-center mb-6">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">تأكيد الحجز</h3>
               <p className="text-gray-500 text-sm">
-                ستقوم بحجز الموعد من <span className="font-bold text-indigo-600">{formatTimeTo12h(bookingModal.slot.start_time)}</span> إلى <span className="font-bold text-indigo-600">{formatTimeTo12h(bookingModal.slot.end_time)}</span>
+                ستقوم بحجز الموعد من <span className="font-bold text-indigo-600">{formatTime(bookingModal.slot.start_time)}</span> إلى <span className="font-bold text-indigo-600">{formatTime(bookingModal.slot.end_time)}</span>
               </p>
             </div>
 
