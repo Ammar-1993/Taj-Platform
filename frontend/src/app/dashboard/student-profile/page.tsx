@@ -11,6 +11,7 @@ import { showApiError } from '@/hooks/useApiError';
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { GraduationCap, AlertCircle, Lightbulb, Rocket, Loader2 } from "lucide-react";
+import RedirectCountdown from "@/components/ui/RedirectCountdown";
 
 export default function StudentProfilePage() {
     const { user, loading: authLoading } = useAuth();
@@ -20,6 +21,7 @@ export default function StudentProfilePage() {
     const [gradeLevelId, setGradeLevelId] = useState('');
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [successRedirect, setSuccessRedirect] = useState(false);
 
     // 1. جلب المراحل الدراسية عند فتح الصفحة
     useEffect(() => {
@@ -57,9 +59,7 @@ export default function StudentProfilePage() {
             toast.success(res.data.message || 'تم حفظ المرحلة بنجاح!');
             
             // 🟢 بعد الحفظ، نوجه الطالب للوحة التحكم الرئيسية أو صفحة البحث عن معلمين
-            setTimeout(() => {
-                router.push('/dashboard');
-            }, 2000);
+            setSuccessRedirect(true);
             
         } catch (error: unknown) {
             showApiError(error, 'حدث خطأ أثناء الحفظ. يرجى المحاولة مرة أخرى.');
@@ -130,8 +130,14 @@ export default function StudentProfilePage() {
                 {/* نموذج الإعدادات */}
                 <Card className="bg-white/90 backdrop-blur-md rounded-[2.5rem] border-white/50 animate-fade-in-up-delay p-8 md:p-10">
                     
-
-
+                    {successRedirect ? (
+                        <RedirectCountdown 
+                            href="/dashboard"
+                            message="تم حفظ الإعدادات بنجاح! جاري تحويلك..."
+                            seconds={2}
+                            onCancel={() => setSuccessRedirect(false)}
+                        />
+                    ) : (
                     <form onSubmit={handleSubmit} className="space-y-8">
                         <div className="space-y-4">
                             <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">اختر مرحلتك الدراسية الحالية *</label>
@@ -175,6 +181,7 @@ export default function StudentProfilePage() {
                             )}
                         </Button>
                     </form>
+                    )}
                 </Card>
                 
             </div>

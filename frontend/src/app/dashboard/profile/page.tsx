@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { CheckCircle2, Clock, Info, User, FileText, FileBadge, GraduationCap, Rocket, Loader2 } from "lucide-react";
+import RedirectCountdown from "@/components/ui/RedirectCountdown";
 
 export default function TeacherProfilePage() {
     const { user } = useAuth();
@@ -27,6 +28,7 @@ export default function TeacherProfilePage() {
     const [nationalIdFile, setNationalIdFile] = useState<File | null>(null);
     const [degreeFile, setDegreeFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [successRedirect, setSuccessRedirect] = useState(false);
 
     useEffect(() => {
         if (user) fetchData();
@@ -72,7 +74,7 @@ export default function TeacherProfilePage() {
             setProfile(res.data.data);
             
             // العودة للوحة بعد 3 ثواني
-            setTimeout(() => router.push('/dashboard'), 3000);
+            setSuccessRedirect(true);
         } catch (error: unknown) {
             showApiError(error, 'حدث خطأ أثناء الرفع');
         } finally {
@@ -137,6 +139,14 @@ export default function TeacherProfilePage() {
 
 
                 <Card className="bg-white/90 backdrop-blur-md rounded-[2.5rem] border-white/50 animate-fade-in-up-delay-2 p-8 md:p-10">
+                    {successRedirect ? (
+                        <RedirectCountdown 
+                            href="/dashboard"
+                            message="تم حفظ الملف الشخصي بنجاح! جاري تحويلك..."
+                            seconds={3}
+                            onCancel={() => setSuccessRedirect(false)}
+                        />
+                    ) : (
                     <form onSubmit={handleSubmit} className="space-y-8">
                         
                         <div className="space-y-6">
@@ -239,6 +249,7 @@ export default function TeacherProfilePage() {
                             )}
                         </Button>
                     </form>
+                    )}
                 </Card>
             </div>
         </div>

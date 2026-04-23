@@ -235,12 +235,7 @@ export default function ChildrenManagementPage() {
                                         </div>
                                     </div>
                                     
-                                    <button 
-                                        className="w-full py-2.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors opacity-40 hover:opacity-100" 
-                                        onClick={() => toast('ميزة التعديل ستفتح قريباً', { icon: '🛠️' })}
-                                    >
-                                        تعديل بيانات الحساب
-                                    </button>
+
                                 </div>
                             </div>
                         ))

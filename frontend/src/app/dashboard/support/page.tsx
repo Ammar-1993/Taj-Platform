@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { PenSquare, Send, FolderOpen, Inbox, Pin, Headphones, Loader2 } from "lucide-react";
+import RedirectCountdown from "@/components/ui/RedirectCountdown";
 import { formatDate } from "@/lib/formatters";
 
 export default function SupportPage() {
@@ -29,6 +30,7 @@ export default function SupportPage() {
     const [description, setDescription] = useState('');
     const [bookingId, setBookingId] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [successRedirect, setSuccessRedirect] = useState(false);
 
     useEffect(() => {
         if (user) fetchData();
@@ -69,7 +71,7 @@ export default function SupportPage() {
             fetchData(); // تحديث قائمة التذاكر فوراً
             
             // العودة للوحة بعد 3 ثواني
-            setTimeout(() => router.push('/dashboard'), 3000);
+            setSuccessRedirect(true);
         } catch (error: unknown) {
             showApiError(error, 'حدث خطأ أثناء إرسال التذكرة.');
         } finally {
@@ -118,8 +120,14 @@ export default function SupportPage() {
                                 فتح تذكرة جديدة
                             </h3>
                             
-
-
+                            {successRedirect ? (
+                                <RedirectCountdown 
+                                    href="/dashboard"
+                                    message="تم إرسال التذكرة بنجاح! جاري تحويلك..."
+                                    seconds={3}
+                                    onCancel={() => setSuccessRedirect(false)}
+                                />
+                            ) : (
                             <form onSubmit={handleSubmitTicket} className="space-y-5">
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">موضوع المشكلة:</label>
@@ -181,6 +189,7 @@ export default function SupportPage() {
                                     )}
                                 </Button>
                             </form>
+                            )}
                         </Card>
                     </div>
 

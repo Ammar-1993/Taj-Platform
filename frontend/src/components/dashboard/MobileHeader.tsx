@@ -7,21 +7,16 @@ import { useAuth } from "@/context/AuthContext";
 import { 
   Menu,
   X,
-  LayoutDashboard, 
-  CalendarDays, 
-  CreditCard, 
-  User, 
-  LifeBuoy, 
-  LogOut,
-  Users,
-  Search
+  LogOut
 } from "lucide-react";
+import { useNavLinks } from "@/hooks/useNavLinks";
 
 export default function MobileHeader() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
-  const { user, logout } = useAuth();
-  
+  const { logout } = useAuth();
+  const navLinks = useNavLinks();
+
   // إغلاق القائمة الجانبية عند تغيير المسار (الانتقال لصفحة جديدة)
   useEffect(() => {
     setIsOpen(false);
@@ -36,22 +31,6 @@ export default function MobileHeader() {
     }
     return () => { document.body.style.overflow = 'auto'; };
   }, [isOpen]);
-
-  const isTeacher = user?.roles?.some(r => r.name === 'teacher');
-  const isParent = user?.roles?.some(r => r.name === 'parent');
-  const isStudent = user?.roles?.some(r => r.name === 'student');
-
-  const navLinks = [
-    { name: "لوحة التحكم", href: "/dashboard", icon: LayoutDashboard, show: true },
-    { name: "البحث عن معلمين", href: "/dashboard/teachers", icon: Search, show: isParent || isStudent },
-    { name: "الجدول والمواعيد", href: "/dashboard/schedule", icon: CalendarDays, show: isTeacher },
-    { name: "سحب الأرباح", href: "/dashboard/payout", icon: CreditCard, show: isTeacher },
-    { name: "الملف الشخصي", href: "/dashboard/profile", icon: User, show: isTeacher },
-    { name: "إدارة الأبناء", href: "/dashboard/children", icon: Users, show: isParent },
-    { name: "شحن المحفظة", href: "/dashboard/top-up", icon: CreditCard, show: isParent || isStudent },
-    { name: "إعدادات الطالب", href: "/dashboard/student-profile", icon: User, show: isStudent },
-    { name: "الدعم الفني", href: "/dashboard/support", icon: LifeBuoy, show: true },
-  ];
 
   return (
     <>
@@ -93,7 +72,7 @@ export default function MobileHeader() {
         </div>
         
         <nav className="flex-1 overflow-y-auto p-4 space-y-2" dir="rtl">
-          {navLinks.filter(link => link.show).map((link) => {
+          {navLinks.map((link) => {
             const isActive = pathname === link.href;
             const Icon = link.icon;
             return (

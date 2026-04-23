@@ -11,7 +11,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { showApiError } from '@/hooks/useApiError';
 import { ApiResponse } from '@/types';
 import type { IAgoraRTCClient, ILocalVideoTrack } from 'agora-rtc-sdk-ng';
-import { Video, Lock, AlertTriangle, LogOut, PowerOff, MonitorUp, MicOff, Info, Loader2, Coins } from 'lucide-react';
+import { Video, Lock, AlertTriangle, LogOut, PowerOff, MonitorUp, Info, Loader2, Coins } from 'lucide-react';
 
 const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID || '039c4b2d111b488f8069bb00c583aa04';
 
@@ -204,7 +204,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 <div className="flex items-center gap-3">
                     <div className={`w-3 h-3 rounded-full animate-pulse ${inCall ? 'bg-red-500' : 'bg-green-500'}`}></div>
                     <h1 className="font-bold text-lg">
-                        {isTeacher ? 'لوحة تحكم المعلم (المضيف)' : 'الفصل الافتراضي'} - {channelName}
+                        {isTeacher ? 'لوحة تحكم المعلم' : 'الفصل الافتراضي'} — حصة #{params.id}
                     </h1>
                 </div>
 
@@ -260,18 +260,10 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                             </div>
                         </button>
 
-                        <button className="bg-gray-700/50 cursor-not-allowed text-gray-500 p-4 rounded-2xl flex items-center gap-4 transition border border-transparent">
-                            <MicOff className="w-8 h-8 opacity-50" />
-                            <div className="text-right flex-1">
-                                <div className="text-sm font-bold">كتم صوت الطلاب</div>
-                                <div className="text-[10px] text-gray-500 mt-1">التحكم في الميكروفون</div>
-                            </div>
-                        </button>
-
                         <div className="mt-auto bg-blue-900/10 border border-blue-800/30 p-4 rounded-xl flex gap-2">
                             <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
                             <p className="text-xs text-blue-400/80 text-right leading-relaxed font-medium">
-                                ميزة (كتم صوت الطلاب) تتطلب ربط المنصة بـ WebSockets لإرسال إشعارات التحكم عن بعد.
+                                ميزة كتم صوت الطلاب ستتوفر عند تفعيل WebSocket في الإصدار القادم.
                             </p>
                         </div>
                     </div>

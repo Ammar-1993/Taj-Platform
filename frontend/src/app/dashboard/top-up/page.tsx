@@ -9,6 +9,7 @@ import { showApiError } from '@/hooks/useApiError';
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { CheckCircle2, Leaf, Star, Zap, Rocket, ShieldCheck, Loader2 } from "lucide-react";
+import RedirectCountdown from "@/components/ui/RedirectCountdown";
 
 export default function TopUpPage() {
     const { user } = useAuth();
@@ -36,10 +37,6 @@ export default function TopUpPage() {
                 setSuccessMsg(`تم شحن محفظتك بمبلغ ${amount} ريال بنجاح!`);
                 setIsProcessing(false);
 
-                // العودة للوحة التحكم بعد 2 ثانية
-                setTimeout(() => {
-                    router.push('/dashboard');
-                }, 2000);
 
             } catch (error: unknown) {
                 console.error(error);
@@ -71,13 +68,16 @@ export default function TopUpPage() {
                             <CheckCircle2 className="w-12 h-12" />
                         </div>
                         <div className="text-center space-y-4">
-                            <h2 className="text-3xl font-bold text-gray-900">تم الشحن بنجاح!</h2>
-                            <p className="text-gray-500 font-bold text-lg">{successMsg}</p>
+                            <h2 className="text-3xl font-bold text-gray-900">اكتملت العملية بنجاح!</h2>
                         </div>
-                        <div className="w-full h-2 bg-indigo-50 rounded-full overflow-hidden max-w-xs">
-                            <div className="h-full bg-indigo-600 w-full animate-progress-bar"></div>
+                        <div className="w-full max-w-md">
+                            <RedirectCountdown 
+                                href="/dashboard"
+                                message={successMsg}
+                                seconds={2}
+                                onCancel={() => setSuccessMsg('')}
+                            />
                         </div>
-                        <p className="text-xs text-gray-400 font-bold animate-pulse">جاري توجيهك للوحة التحكم خلال 3 ثوانٍ...</p>
                     </div>
                 ) : (
                     <div className="space-y-8">

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { CircleDollarSign, SendHorizonal, Send, AlertTriangle, TrendingUp, Inbox, Landmark, Calendar, Building, Loader2 } from "lucide-react";
+import RedirectCountdown from "@/components/ui/RedirectCountdown";
 import { formatDate, formatCurrency } from "@/lib/formatters";
 
 export default function PayoutPage() {
@@ -29,6 +30,7 @@ export default function PayoutPage() {
     const [bankName, setBankName] = useState('');
     const [iban, setIban] = useState('SA');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [successRedirect, setSuccessRedirect] = useState(false);
 
     const walletBalance = walletInfo ? Number(walletInfo.balance) : 0;
 
@@ -72,7 +74,7 @@ export default function PayoutPage() {
             fetchData(); 
             
             // العودة للوحة بعد 3 ثواني
-            setTimeout(() => router.push('/dashboard'), 3000);        } catch (error: unknown) {
+            setSuccessRedirect(true);        } catch (error: unknown) {
             showApiError(error, 'تأكد من صحة البيانات وألا يقل المبلغ عن 50 ريال.');
         } finally {
             setIsSubmitting(false);
@@ -115,15 +117,15 @@ export default function PayoutPage() {
                     <div className="lg:col-span-1 space-y-6">
                         
                         {/* بطاقة الرصيد */}
-                        <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-600 to-green-800 p-8 rounded-[2.5rem] shadow-2xl text-white animate-fade-in-up-delay">
+                        <div className="group relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-violet-700 p-8 rounded-[2.5rem] shadow-2xl text-white animate-fade-in-up-delay">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl group-hover:blur-xl transition-all"></div>
-                            <h3 className="text-emerald-100 text-sm font-bold flex items-center gap-2">
-                                <CircleDollarSign className="w-5 h-5 text-emerald-200" />
+                            <h3 className="text-indigo-100 text-sm font-bold flex items-center gap-2">
+                                <CircleDollarSign className="w-5 h-5 text-indigo-200" />
                                 الرصيد القابل للسحب
                             </h3>
                             <div className="mt-4 flex items-baseline gap-3 font-mono" dir="ltr">
                             <span className="font-mono text-5xl font-bold tracking-tighter shadow-sm">{formatCurrency(walletInfo?.balance)}</span>
-                                <span className="text-emerald-200 font-bold font-sans text-xl uppercase">SAR</span>
+                                <span className="text-indigo-200 font-bold font-sans text-xl uppercase">SAR</span>
                             </div>
                             <div className="mt-6 h-1 w-full bg-white/20 rounded-full overflow-hidden">
                                 <div className="h-full bg-white/40 w-2/3 animate-shimmer"></div>
@@ -141,6 +143,14 @@ export default function PayoutPage() {
                             
 
 
+                            {successRedirect ? (
+                                <RedirectCountdown 
+                                    href="/dashboard"
+                                    message="تم إرسال طلب السحب بنجاح! جاري تحويلك..."
+                                    seconds={3}
+                                    onCancel={() => setSuccessRedirect(false)}
+                                />
+                            ) : (
                             <form onSubmit={handlePayoutSubmit} className="space-y-6">
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">المبلغ المراد سحبه (ريال):</label>
@@ -217,6 +227,7 @@ export default function PayoutPage() {
                                     </div>
                                 )}
                             </form>
+                            )}
                         </Card>
                     </div>
 
