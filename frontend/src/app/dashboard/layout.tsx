@@ -2,6 +2,7 @@ import React from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
 import AuthGuard from "@/components/ui/AuthGuard";
 import DecorativeBackground from "@/components/ui/DecorativeBackground";
+import MobileHeader from "@/components/dashboard/MobileHeader";
 
 export default function DashboardLayout({
   children,
@@ -19,8 +20,11 @@ export default function DashboardLayout({
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col min-h-screen z-10 w-full overflow-hidden">
-          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-transparent">
+        <div className="flex-1 flex flex-col min-h-screen z-10 w-full overflow-x-hidden">
+          {/* Mobile Header */}
+          <MobileHeader />
+
+          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-transparent relative">
             {children}
           </main>
         </div>
