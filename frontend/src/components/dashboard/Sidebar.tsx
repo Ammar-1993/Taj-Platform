@@ -37,7 +37,7 @@ export default function Sidebar() {
   return (
     <aside className="hidden md:flex flex-col w-64 bg-white border-l border-gray-100 h-screen sticky top-0">
       <div className="p-6 border-b border-gray-100">
-        <h2 className="text-2xl font-bold text-indigo-600">منصة تاج</h2>
+        <h2 className="text-2xl font-bold text-indigo-600">منصة تاج التعليمية</h2>
       </div>
       <nav className="flex-1 overflow-y-auto p-4 space-y-2">
         {navLinks.filter(link => link.show).map((link) => {
