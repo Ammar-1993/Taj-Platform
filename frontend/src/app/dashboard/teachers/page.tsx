@@ -20,7 +20,7 @@ export default function DashboardTeachers() {
   const [sortBy, setSortBy] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const { user, loading: authLoading } = useAuth();
+  const { loading: authLoading } = useAuth();
 
   const fetchSubjects = useCallback(async () => {
     try {
