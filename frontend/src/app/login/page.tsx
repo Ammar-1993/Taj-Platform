@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import DecorativeBackground from "@/components/ui/DecorativeBackground";
-import { showApiError } from "@/hooks/useApiError";
 import { Mail, Lock, AlertTriangle, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -32,8 +32,8 @@ export default function LoginPage() {
       
       await login(token, user);
       router.push("/dashboard");
-    } catch (error: unknown) {
-      showApiError(error, "حدث خطأ غير متوقع أثناء تسجيل الدخول.");
+    } catch {
+      // Single error channel: inline banner only — no toast duplicate
       setError("بيانات الدخول غير صحيحة، يرجى المحاولة مرة أخرى.");
     } finally {
       setIsLoading(false);
@@ -101,12 +101,18 @@ export default function LoginPage() {
                   <label className="block text-sm font-bold text-gray-700">
                     كلمة المرور
                   </label>
-                  <Link
-                    href="#"
+                  <button
+                    type="button"
+                    onClick={() =>
+                      toast("لاستعادة كلمة المرور، تواصل مع الدعم الفني عبر لوحة التحكم.", {
+                        icon: "🔐",
+                        duration: 5000,
+                      })
+                    }
                     className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
                   >
                     نسيت كلمة المرور؟
-                  </Link>
+                  </button>
                 </div>
                 <Input
                   type="password"

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import PageHeader from '@/components/ui/PageHeader';
 import { showApiError } from '@/hooks/useApiError';
-import { ApiResponse, Subject, TeacherProfile, TeacherProfileFormData } from '@/types';
+import { ApiResponse, Subject, TeacherProfile } from '@/types';
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -58,33 +58,18 @@ export default function TeacherProfilePage() {
         e.preventDefault();
         setIsSubmitting(true);
 
-        // استخدمنا FormData لأننا نرسل ملفات (Files)
-        const formData = new FormData();
-        formData.append('subject_id', subjectId);
-        formData.append('bio', bio);
-        
-        if (nationalIdFile) formData.append('national_id', nationalIdFile);
-        if (degreeFile) formData.append('degree', degreeFile);
-
         try {
-            const payload: TeacherProfileFormData = {
-                subject_id: subjectId,
-                bio,
-                national_id: nationalIdFile,
-                degree: degreeFile,
-            };
-
             const formData = new FormData();
-            formData.append('subject_id', payload.subject_id);
-            formData.append('bio', payload.bio);
-            if (payload.national_id) formData.append('national_id', payload.national_id);
-            if (payload.degree) formData.append('degree', payload.degree);
+            formData.append('subject_id', subjectId);
+            formData.append('bio', bio);
+            if (nationalIdFile) formData.append('national_id', nationalIdFile);
+            if (degreeFile) formData.append('degree', degreeFile);
 
             const res = await api.post<ApiResponse<TeacherProfile>>('/profile/teacher', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             toast.success(res.data.message || 'تم حفظ الملف الشخصي بنجاح.');
-            setProfile(res.data.data); // تحديث الحالة
+            setProfile(res.data.data);
             
             // العودة للوحة بعد 3 ثواني
             setTimeout(() => router.push('/dashboard'), 3000);

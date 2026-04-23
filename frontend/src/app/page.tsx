@@ -15,6 +15,8 @@ import {
   ListFilter,
   Star,
   SearchX,
+  CalendarDays,
+  CalendarX,
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -223,23 +225,23 @@ export default function Home() {
                         <Star size={18} className="fill-amber-500" />
                         {teacher.teacher_profile?.average_rating || "0.00"}
                       </span>
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                        ({teacher.teacher_profile?.reviews_count || 0} تقييم)
+                      <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
+                        <CalendarDays size={11} />
+                        {(teacher.active_slots_count || 0) > 0
+                          ? `${teacher.active_slots_count} موعد متاح`
+                          : "لا توجد مواعيد"}
                       </span>
                     </div>
-                    <Button asChild variant="default" className="w-full sm:w-auto px-6 rounded-2xl">
-                      <Link 
-                        href={`/teachers/${teacher.id}`}
-                        onClick={(e) => {
-                          if ((teacher.active_slots_count || 0) <= 0) {
-                            e.preventDefault();
-                            toast.error("عذراً، هذا المعلم ليس لديه مواعيد متاحة حالياً.");
-                          }
-                        }}
-                      >
-                        احجز الآن
-                      </Link>
-                    </Button>
+                    {(teacher.active_slots_count || 0) > 0 ? (
+                      <Button asChild variant="default" className="w-full sm:w-auto px-6 rounded-2xl">
+                        <Link href={`/teachers/${teacher.id}`}>احجز الآن</Link>
+                      </Button>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-4 py-2 text-xs rounded-xl font-bold bg-gray-100 text-gray-400 cursor-not-allowed select-none w-full sm:w-auto justify-center">
+                        <CalendarX size={14} />
+                        لا توجد مواعيد متاحة
+                      </span>
+                    )}
                   </CardFooter>
                 </Card>
               ))

@@ -8,7 +8,7 @@ import PageHeader from '@/components/ui/PageHeader';
 import { showApiError } from '@/hooks/useApiError';
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { CheckCircle2, Leaf, Star, Zap, Rocket, ShieldCheck, CreditCard, Calendar, Hash, Loader2 } from "lucide-react";
+import { CheckCircle2, Leaf, Star, Zap, Rocket, ShieldCheck, Loader2 } from "lucide-react";
 
 export default function TopUpPage() {
     const { user } = useAuth();
@@ -120,37 +120,14 @@ export default function TopUpPage() {
                         </div>
 
                         <div className="space-y-6 pt-4 border-t border-gray-100">
-                            <div className="flex justify-between items-end mb-2">
-                                <h3 className="text-gray-900 font-bold flex items-center gap-2">
-                                    <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                                    بيانات الدفع الآمن
-                                </h3>
-                                <div className="flex gap-2 opacity-50 grayscale hover:grayscale-0 transition-all cursor-help" title="نقبل جميع البطاقات البنكية">
-                                    <div className="w-8 h-5 bg-indigo-100 rounded-md"></div>
-                                    <div className="w-8 h-5 bg-emerald-100 rounded-md"></div>
-                                    <div className="w-8 h-5 bg-purple-100 rounded-md"></div>
-                                </div>
-                            </div>
-                            
-                            <div className="bg-gray-50/50 p-6 rounded-[2rem] border-2 border-gray-100 space-y-4">
-                                <div className="space-y-4 opacity-50">
-                                    <div className="flex flex-col gap-2 relative group">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-1">رقم البطاقة الائتمانية</label>
-                                        <div className="absolute left-4 top-9 text-gray-400"><CreditCard className="w-5 h-5" /></div>
-                                        <input type="text" placeholder="•••• •••• •••• ••••" disabled className="w-full p-4 pl-12 border-2 border-gray-200 rounded-2xl bg-white/50 cursor-not-allowed font-bold tracking-widest text-gray-400 dir-ltr text-left" dir="ltr" />
-                                    </div>
-                                    <div className="flex gap-4">
-                                        <div className="w-1/2 flex flex-col gap-2 relative group">
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-1">تاريخ الانتهاء</label>
-                                            <div className="absolute left-4 top-9 text-gray-400"><Calendar className="w-5 h-5" /></div>
-                                            <input type="text" placeholder="MM / YY" disabled className="w-full p-4 pl-12 border-2 border-gray-200 rounded-2xl bg-white/50 cursor-not-allowed font-bold text-center text-gray-400 dir-ltr" dir="ltr" />
-                                        </div>
-                                        <div className="w-1/2 flex flex-col gap-2 relative group">
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-1">رمز الأمان (CVC)</label>
-                                            <div className="absolute left-4 top-9 text-gray-400"><Hash className="w-5 h-5" /></div>
-                                            <input type="text" placeholder="•••" disabled className="w-full p-4 pl-12 border-2 border-gray-200 rounded-2xl bg-white/50 cursor-not-allowed font-bold text-center text-gray-400 dir-ltr" dir="ltr" />
-                                        </div>
-                                    </div>
+                            {/* Sandbox notice — replaces fake payment form (P0-01 fix) */}
+                            <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                                <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-sm font-bold text-amber-800">بيئة تطوير — الشحن الفوري نشط</p>
+                                    <p className="text-xs text-amber-700 mt-0.5 font-medium leading-relaxed">
+                                        بوابة الدفع الحقيقية (مدى / فيزا / أبل باي) ستُفعَّل قريباً. حالياً سيُشحن رصيدك مباشرة بالمبلغ المختار لأغراض الاختبار.
+                                    </p>
                                 </div>
                             </div>
                         </div>

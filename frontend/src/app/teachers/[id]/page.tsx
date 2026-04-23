@@ -11,10 +11,11 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { CalendarDays, CalendarX2, Gift, Users, Clock, Loader2 } from "lucide-react";
+import { CalendarDays, CalendarX2, Gift, Users, Clock, Loader2, CircleDollarSign } from "lucide-react";
 
 export default function TeacherProfile({ params }: { params: { id: string } }) {
   const [teacherName, setTeacherName] = useState("");
+  const [sessionPrice, setSessionPrice] = useState<string | null>(null);
   const [slots, setSlots] = useState<{ [date: string]: TeacherSlot[] }>({});
   const [activeDate, setActiveDate] = useState<string>("");
   const [promoCode, setPromoCode] = useState("");
@@ -34,6 +35,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
     try {
       const res = await api.get(`/discovery/teachers/${params.id}/slots`);
       setTeacherName(res.data.teacher_name);
+      if (res.data.session_price) setSessionPrice(res.data.session_price);
       setSlots(res.data.data);
       const dates = Object.keys(res.data.data);
       if (dates.length > 0) {
@@ -247,6 +249,19 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
                         dir="ltr"
                     />
                 </div>
+
+                {/* Price summary — P0-03 fix */}
+                {sessionPrice && (
+                  <div className="flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3">
+                    <span className="text-sm font-bold text-indigo-700 flex items-center gap-2">
+                      <CircleDollarSign className="w-4 h-4" />
+                      سعر الحصة
+                    </span>
+                    <span className="font-mono font-bold text-indigo-800 text-base" dir="ltr">
+                      {sessionPrice} ريال
+                    </span>
+                  </div>
+                )}
             </div>
 
             <div className="flex gap-3 mt-8">
