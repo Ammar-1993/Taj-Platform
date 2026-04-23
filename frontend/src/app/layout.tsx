@@ -3,6 +3,7 @@ import { Tajawal } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import ToastProvider from "@/components/ui/ToastProvider";
+import ReactQueryProvider from "@/context/ReactQueryProvider";
 
 const tajawal = Tajawal({
   subsets: ["arabic", "latin"],
@@ -21,13 +22,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // استخدام dir="rtl" لدعم اللغة العربية
     <html lang="ar" dir="rtl">
       <body className={tajawal.className}>
-        <AuthProvider>
-          <ToastProvider />
-          {children}
-        </AuthProvider>
+        <ReactQueryProvider>
+          <AuthProvider>
+            <ToastProvider />
+            {children}
+          </AuthProvider>
+        </ReactQueryProvider>
       </body>
     </html>
   );

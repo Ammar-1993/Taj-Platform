@@ -7,7 +7,8 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { ParentDashboard } from "@/components/dashboard/ParentDashboard";
 import { StudentTeacherDashboard } from "@/components/dashboard/StudentTeacherDashboard";
-import { ReviewModal } from "@/components/dashboard/ReviewModal";
+import dynamic from "next/dynamic";
+const ReviewModal = dynamic(() => import("@/components/dashboard/ReviewModal").then(mod => mod.ReviewModal), { ssr: false });
 import { Role } from "@/types";
 
 export default function DashboardPage() {

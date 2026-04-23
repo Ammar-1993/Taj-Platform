@@ -1,72 +1,82 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { User, Wallet, Booking, AppNotification, ParentDashboardData } from "@/types";
 
 export const useDashboardData = (user: User | null, isParent: boolean, isTeacher: boolean) => {
-  const [wallet, setWallet] = useState<Wallet | null>(null);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [parentData, setParentData] = useState<ParentDashboardData | null>(null);
-  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const queryClient = useQueryClient();
   const [pendingReview, setPendingReview] = useState<Booking | null>(null);
-  const [dataLoading, setDataLoading] = useState<boolean>(true);
 
-  const fetchDashboardData = useCallback(async () => {
-    if (!user) return;
-    setDataLoading(true);
-    try {
-      if (isParent) {
-        const res = await api.get("/parent/dashboard");
-        setParentData(res.data.data);
-      } else {
-        const [walletRes, bookingsRes, notifRes] = await Promise.all([
-          api.get("/wallet"),
-          api.get("/bookings"),
-          api.get("/notifications"),
-        ]);
-        
-        setWallet(walletRes.data.data);
-        const fetchedBookings: Booking[] = bookingsRes.data.data.data;
-        setBookings(fetchedBookings);
-        setNotifications(notifRes.data.data || []);
+  // Fetch parent data
+  const { data: parentData, isLoading: parentLoading } = useQuery({
+    queryKey: ['parentDashboard', user?.id],
+    queryFn: async () => {
+      const res = await api.get("/parent/dashboard");
+      return res.data.data as ParentDashboardData;
+    },
+    enabled: !!user && isParent,
+  });
 
-        if (!isTeacher && !isParent) {
-          const unreviewedBooking = fetchedBookings.find(
-            (b) => b.status === "completed" && !b.review,
-          );
-          if (unreviewedBooking) {
-            setPendingReview(unreviewedBooking);
-          }
-        }
-      }
-    } catch (error) {
-      console.error("خطأ في جلب بيانات اللوحة", error);
-    } finally {
-      setDataLoading(false);
-    }
-  }, [user, isParent, isTeacher]);
+  // Fetch generic dashboard data
+  const { data: dashboardData, isLoading: dashboardLoading, refetch: fetchDashboardData } = useQuery({
+    queryKey: ['dashboard', user?.id],
+    queryFn: async () => {
+      const [walletRes, bookingsRes, notifRes] = await Promise.all([
+        api.get("/wallet"),
+        api.get("/bookings"),
+        api.get("/notifications"),
+      ]);
+      return {
+        wallet: walletRes.data.data as Wallet,
+        bookings: bookingsRes.data.data.data as Booking[],
+        notifications: (notifRes.data.data || []) as AppNotification[],
+      };
+    },
+    enabled: !!user && !isParent,
+  });
 
+  // Handle pending review seeding
   useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
+    if (dashboardData?.bookings && !isTeacher && !isParent) {
+      const unreviewedBooking = dashboardData.bookings.find(
+        (b) => b.status === "completed" && !b.review,
+      );
+      if (unreviewedBooking && !pendingReview) {
+        setPendingReview(unreviewedBooking);
+      }
+    }
+  }, [dashboardData?.bookings, isTeacher, isParent, pendingReview]);
 
-  const markNotificationAsRead = async (id: string) => {
-    try {
+  // Mutation for notifications
+  const markNotificationAsReadMutation = useMutation({
+    mutationFn: async (id: string) => {
       await api.post(`/notifications/${id}/read`);
-      setNotifications(notifications.filter((n) => n.id !== id));
-    } catch (error) {
+      return id;
+    },
+    onSuccess: (id) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      queryClient.setQueryData(['dashboard', user?.id], (oldData: any) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          notifications: oldData.notifications.filter((n: AppNotification) => n.id !== id),
+        };
+      });
+    },
+    onError: (error) => {
       console.error("خطأ في قراءة الإشعار", error);
     }
-  };
+  });
 
   return {
-    wallet,
-    bookings,
-    parentData,
-    notifications,
+    wallet: dashboardData?.wallet || null,
+    bookings: dashboardData?.bookings || [],
+    parentData: parentData || null,
+    notifications: dashboardData?.notifications || [],
     pendingReview,
-    dataLoading,
+    dataLoading: !!user && (parentLoading || dashboardLoading),
     fetchDashboardData,
     setPendingReview,
-    markNotificationAsRead,
+    markNotificationAsRead: (id: string) => markNotificationAsReadMutation.mutate(id),
   };
 };
