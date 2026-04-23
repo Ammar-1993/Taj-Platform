@@ -10,7 +10,8 @@ import {
   User, 
   LifeBuoy, 
   LogOut,
-  Users
+  Users,
+  Search
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -23,6 +24,7 @@ export default function Sidebar() {
 
   const navLinks = [
     { name: "لوحة التحكم", href: "/dashboard", icon: LayoutDashboard, show: true },
+    { name: "البحث عن معلمين", href: "/dashboard/teachers", icon: Search, show: isParent || isStudent },
     { name: "الجدول والمواعيد", href: "/dashboard/schedule", icon: CalendarDays, show: isTeacher },
     { name: "سحب الأرباح", href: "/dashboard/payout", icon: CreditCard, show: isTeacher },
     { name: "الملف الشخصي", href: "/dashboard/profile", icon: User, show: isTeacher },
