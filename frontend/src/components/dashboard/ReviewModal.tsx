@@ -36,8 +36,8 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ pendingReview, onSucce
   if (!pendingReview) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative animate-fade-in-up border border-gray-100">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative animate-in zoom-in-95 fade-in duration-200 border border-gray-100">
         {/* زر الإغلاق الاختياري */}
         <button onClick={onClose} className="absolute top-4 left-4 text-gray-400 hover:text-gray-600">×</button>
 

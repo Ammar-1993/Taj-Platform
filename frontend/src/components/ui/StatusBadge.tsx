@@ -1,4 +1,5 @@
 import React from "react";
+import { Check, CheckCircle2 } from "lucide-react";
 
 // ======================================================
 // جميع حالات النظام موحدة في مكان واحد
@@ -10,6 +11,7 @@ interface BadgeConfig {
   text: string;
   dot: string;
   pulse?: boolean;
+  icon?: React.ReactNode;
 }
 
 const statusMap: Record<string, BadgeConfig> = {
@@ -32,6 +34,7 @@ const statusMap: Record<string, BadgeConfig> = {
     bg: "bg-emerald-100",
     text: "text-emerald-700",
     dot: "bg-emerald-500",
+    icon: <Check className="w-3 h-3" />,
   },
   cancelled: {
     label: "ملغي",
@@ -48,16 +51,18 @@ const statusMap: Record<string, BadgeConfig> = {
 
   // حالات طلبات السحب (Payouts)
   pending: {
-    label: "قيد المراجعة ⏳",
+    label: "قيد المراجعة",
     bg: "bg-yellow-100",
     text: "text-yellow-800",
     dot: "bg-yellow-500",
+    pulse: true,
   },
   approved: {
-    label: "معتمد ✅",
+    label: "معتمد",
     bg: "bg-green-100",
     text: "text-green-800",
     dot: "bg-green-500",
+    icon: <CheckCircle2 className="w-3 h-3" />,
   },
   transferred: {
     label: "تم التحويل 🏦",
@@ -81,16 +86,18 @@ const statusMap: Record<string, BadgeConfig> = {
   },
   // in_progress already defined above (shared between bookings & tickets)
   resolved: {
-    label: "تم الحل ✅",
+    label: "تم الحل",
     bg: "bg-green-100",
     text: "text-green-800",
     dot: "bg-green-500",
+    icon: <Check className="w-3 h-3" />,
   },
   closed: {
-    label: "مغلقة ✅",
+    label: "مغلقة",
     bg: "bg-green-100",
     text: "text-green-800",
     dot: "bg-green-500",
+    icon: <Check className="w-3 h-3" />,
   },
 };
 
@@ -114,9 +121,13 @@ export default function StatusBadge({ status, label }: StatusBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full font-bold ${config.bg} ${config.text} ${config.pulse ? "animate-pulse" : ""}`}
+      className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full font-bold ${config.bg} ${config.text} ${config.pulse ? "animate-subtle-pulse" : ""}`}
     >
-      <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`}></span>
+      {config.icon ? (
+        config.icon
+      ) : (
+        <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`}></span>
+      )}
       {label || config.label}
     </span>
   );

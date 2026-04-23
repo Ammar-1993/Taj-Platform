@@ -62,7 +62,7 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
           {bookings.map((booking) => (
             <tr
               key={booking.id}
-              className="block md:table-row bg-white border border-gray-100 md:border-b md:border-gray-50 hover:bg-indigo-50/50 rounded-2xl md:rounded-none mb-4 md:mb-0 p-4 md:p-0 shadow-sm md:shadow-none transition-all duration-200 group"
+              className="block md:table-row bg-white border border-gray-100 md:border-b md:border-gray-50 hover:bg-indigo-50/50 hover:-translate-y-1 hover:shadow-md rounded-2xl md:rounded-none mb-4 md:mb-0 p-4 md:p-0 shadow-sm md:shadow-none transition-all duration-300 group"
             >
               <td className="flex justify-between items-center md:table-cell px-2 md:px-4 py-2 md:py-4 font-bold text-indigo-600 border-b border-gray-50 md:border-none mb-3 md:mb-0">
                 <span className="md:hidden font-bold text-gray-500 text-xs">رقم الحجز:</span>
