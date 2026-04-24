@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { LogOut, ChevronRight, ChevronLeft } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 import { useNavLinks } from "@/hooks/useNavLinks";
 
 export default function Sidebar() {
@@ -25,7 +25,7 @@ export default function Sidebar() {
           className={`text-gray-400 hover:text-indigo-600 transition-colors p-1.5 rounded-lg hover:bg-indigo-50 flex-shrink-0 ${isCollapsed ? 'bg-gray-50' : ''}`}
           title={isCollapsed ? "توسيع القائمة" : "تصغير القائمة"}
         >
-          {isCollapsed ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+          <Menu className="w-5 h-5" />
         </button>
       </div>
       
