@@ -12,13 +12,15 @@ import {
   Mail,
   Phone,
   Lock,
-  Eye,
-  EyeOff,
   Loader2,
   CheckCircle,
   ArrowRight,
 } from "lucide-react";
 import ErrorBanner from "@/components/ui/ErrorBanner";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
+import { PasswordStrength } from "@/components/ui/PasswordStrength";
 
 export default function TeacherRegisterPage() {
     const router = useRouter();
@@ -27,7 +29,6 @@ export default function TeacherRegisterPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
 
     // Form Data States
     const [name, setName] = useState('');
@@ -35,8 +36,45 @@ export default function TeacherRegisterPage() {
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
 
+    const [nameError, setNameError] = useState("");
+    const [emailError, setEmailError] = useState("");
+    const [phoneError, setPhoneError] = useState("");
+    const [passwordError, setPasswordError] = useState("");
+
+    const validateName = () => {
+        if (!name) setNameError("اسم المعلم مطلوب");
+        else setNameError("");
+    };
+
+    const validateEmail = () => {
+        if (!email) setEmailError("البريد الإلكتروني مطلوب");
+        else if (!/^\S+@\S+\.\S+$/.test(email)) setEmailError("صيغة البريد الإلكتروني غير صحيحة");
+        else setEmailError("");
+    };
+
+    const validatePhone = () => {
+        if (!phone) setPhoneError("رقم الجوال مطلوب");
+        else if (phone.length < 10) setPhoneError("رقم الجوال غير مكتمل");
+        else setPhoneError("");
+    };
+
+    const validatePassword = () => {
+        if (!password) setPasswordError("كلمة المرور مطلوبة");
+        else if (password.length < 8) setPasswordError("يجب أن لا تقل عن 8 أحرف");
+        else setPasswordError("");
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        validateName();
+        validateEmail();
+        validatePhone();
+        validatePassword();
+
+        if (!name || !email || !phone || !password || nameError || emailError || phoneError || passwordError) {
+            return;
+        }
+
         setLoading(true);
         setError('');
 
@@ -76,27 +114,27 @@ export default function TeacherRegisterPage() {
             
             <DecorativeBackground />
             
-            <div className="max-w-xl w-full bg-white/80 backdrop-blur-xl p-6 sm:p-8 rounded-[2rem] shadow-[0_20px_50px_rgba(8,_112,_184,_0.07)] border border-white relative z-10 animate-fade-in-up">
-                
-                <div className="text-center mb-6">
-                    {/* الشعار قابل للنقر ويوجه لتسجيل الدخول */}
-                    <Link
-                        href="/login"
-                        className="inline-block text-5xl mb-3 hover:scale-110 transition-transform duration-300 drop-shadow-xl cursor-pointer"
-                        title="الذهاب لصفحة تسجيل الدخول"
-                    >
-                        👨‍🏫
-                    </Link>
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1.5">
-                        إنشاء حساب معلم
-                    </h1>
-                    <p className="text-gray-500 text-sm font-medium">
-                        الخطوة الأولى: أنشئ حسابك الأساسي لتتمكن من الدخول للمنصة.
-                    </p>
-                </div>
+            <div className="w-full max-w-2xl animate-fade-in-up relative z-10">
+                <Card variant="glass" className="overflow-hidden">
+                    <div className="bg-emerald-500/10 border-b border-emerald-500/10 p-6 sm:p-8 text-center relative overflow-hidden">
+                        {/* Decorative blobs for header */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-teal-500/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
+                        
+                        <div className="w-16 h-16 bg-white/80 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto shadow-sm border border-white/50 mb-4 relative z-10">
+                            <span className="text-3xl">👨‍🏫</span>
+                        </div>
+                        <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2 relative z-10">
+                            إنشاء حساب معلم
+                        </h2>
+                        <p className="text-gray-600 font-medium relative z-10 text-sm sm:text-base">
+                            انضم لنخبة المعلمين في منصة تاج وابدأ رحلتك التعليمية
+                        </p>
+                    </div>
 
-                {successMsg ? (
-                    <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-[2rem] text-center animate-fade-in-up shadow-sm">
+                    <CardContent className="p-6 sm:p-8">
+                        {successMsg ? (
+                            <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-[2rem] text-center animate-fade-in-up shadow-sm">
                         <CheckCircle className="w-14 h-14 text-emerald-500 mx-auto mb-3 animate-subtle-pulse" />
                         <h3 className="text-xl font-bold text-emerald-800 mb-2">
                             {successMsg}
@@ -115,115 +153,92 @@ export default function TeacherRegisterPage() {
                             
                             {/* حقل الاسم (يأخذ العرض كاملاً) */}
                             <div className="sm:col-span-2">
-                                <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                                    الاسم الكامل (كما في الهوية) *
-                                </label>
-                                <div className="relative group">
-                                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-600 transition-colors">
-                                        <UserIcon className="w-4 h-4" />
-                                    </div>
-                                    <input 
-                                        type="text" 
-                                        required 
-                                        value={name} 
-                                        onChange={e => setName(e.target.value)} 
-                                        placeholder="الاسم الثنائي أو الثلاثي"
-                                        className="w-full pr-10 pl-4 py-2.5 bg-gray-50/50 hover:bg-gray-50 border-2 border-transparent focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 rounded-xl outline-none transition-all duration-300 font-medium placeholder:text-gray-400 text-sm" 
-                                    />
-                                </div>
+                                <Input
+                                    label="الاسم الكامل (كما في الهوية) *"
+                                    type="text" 
+                                    required 
+                                    value={name} 
+                                    onChange={e => {
+                                        setName(e.target.value);
+                                        if (nameError) setNameError("");
+                                    }} 
+                                    onBlur={validateName}
+                                    error={nameError}
+                                    placeholder="الاسم الثنائي أو الثلاثي"
+                                    icon={<UserIcon className="w-4 h-4" />}
+                                />
                             </div>
                             
                             {/* حقل البريد الإلكتروني (يأخذ نصف العرض) */}
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                                    البريد الإلكتروني *
-                                </label>
-                                <div className="relative group">
-                                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-600 transition-colors">
-                                        <Mail className="w-4 h-4" />
-                                    </div>
-                                    <input 
-                                        type="email" 
-                                        required 
-                                        value={email} 
-                                        onChange={e => setEmail(e.target.value)} 
-                                        placeholder="teacher@taj.com"
-                                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 hover:bg-gray-50 border-2 border-transparent focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 rounded-xl outline-none transition-all duration-300 text-left font-medium placeholder:text-gray-400 text-sm" 
-                                        dir="ltr" 
-                                    />
-                                </div>
-                            </div>
+                            <Input
+                                label="البريد الإلكتروني *"
+                                type="email" 
+                                required 
+                                value={email} 
+                                onChange={e => {
+                                    setEmail(e.target.value);
+                                    if (emailError) setEmailError("");
+                                }} 
+                                onBlur={validateEmail}
+                                error={emailError}
+                                placeholder="teacher@taj.com"
+                                dir="ltr" 
+                                icon={<Mail className="w-4 h-4" />}
+                            />
                             
                             {/* حقل رقم الجوال (يأخذ نصف العرض) */}
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                                    رقم الجوال *
-                                </label>
-                                <div className="relative group">
-                                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-600 transition-colors">
-                                        <Phone className="w-4 h-4" />
-                                    </div>
-                                    <input 
-                                        type="tel" 
-                                        required 
-                                        value={phone} 
-                                        onChange={e => setPhone(e.target.value)} 
-                                        placeholder="05XXXXXXXX"
-                                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 hover:bg-gray-50 border-2 border-transparent focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 rounded-xl outline-none transition-all duration-300 text-left font-medium placeholder:text-gray-400 text-sm" 
-                                        dir="ltr" 
-                                    />
-                                </div>
-                            </div>
+                            <Input
+                                label="رقم الجوال *"
+                                type="tel" 
+                                required 
+                                value={phone} 
+                                onChange={e => {
+                                    setPhone(e.target.value);
+                                    if (phoneError) setPhoneError("");
+                                }} 
+                                onBlur={validatePhone}
+                                error={phoneError}
+                                placeholder="05XXXXXXXX"
+                                dir="ltr" 
+                                icon={<Phone className="w-4 h-4" />}
+                            />
                             
                             {/* حقل كلمة المرور (يأخذ العرض كاملاً) */}
                             <div className="sm:col-span-2">
-                                <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                                    كلمة المرور *
-                                </label>
-                                <div className="relative group">
-                                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-600 transition-colors">
-                                        <Lock className="w-4 h-4" />
-                                    </div>
-                                    <input 
-                                        type={showPassword ? 'text' : 'password'} 
-                                        required 
-                                        minLength={8} 
-                                        value={password} 
-                                        onChange={e => setPassword(e.target.value)} 
-                                        placeholder="••••••••"
-                                        className="w-full pl-10 pr-10 py-2.5 bg-gray-50/50 hover:bg-gray-50 border-2 border-transparent focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 rounded-xl outline-none transition-all duration-300 text-left tracking-widest font-medium placeholder:tracking-normal placeholder:text-gray-400 text-sm" 
-                                        dir="ltr"
-                                    />
-                                    <button 
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-600 transition-colors p-1"
-                                        title={showPassword ? 'إخفاء كلمة المرور' : 'عرض كلمة المرور'}
-                                    >
-                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                    </button>
-                                </div>
+                                <Input
+                                    label="كلمة المرور *"
+                                    type="password" 
+                                    required 
+                                    value={password} 
+                                    onChange={e => {
+                                        setPassword(e.target.value);
+                                        if (passwordError) setPasswordError("");
+                                    }} 
+                                    onBlur={validatePassword}
+                                    error={passwordError}
+                                    placeholder="••••••••"
+                                    dir="ltr"
+                                    icon={<Lock className="w-4 h-4" />}
+                                />
+                                <PasswordStrength password={password} />
                             </div>
                         </div>
 
                         <div className="pt-2">
-                            <button 
+                            <Button 
                                 type="submit" 
-                                disabled={loading} 
-                                className="group relative w-full flex justify-center py-3.5 px-4 text-sm font-bold rounded-xl text-white bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-600 hover:shadow-[0_10px_20px_rgba(16,185,129,0.3)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-300 transform hover:-translate-y-0.5"
+                                isLoading={loading}
+                                className="w-full group"
                             >
-                                {loading ? (
-                                    <span className="flex items-center gap-2">
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        جاري إنشاء الحساب...
-                                    </span>
-                                ) : (
+                                {!loading ? (
                                     <span className="flex items-center gap-2">
                                         إنشاء الحساب
                                         <ArrowRight className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:-translate-x-1 transition-all" />
                                     </span>
+                                ) : (
+                                    <span>جاري إنشاء الحساب...</span>
                                 )}
-                            </button>
+                            </Button>
                         </div>
                         
                         <div className="text-center mt-4">
@@ -237,6 +252,8 @@ export default function TeacherRegisterPage() {
                         </div>
                     </form>
                 )}
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );

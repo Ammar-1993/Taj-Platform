@@ -115,28 +115,33 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
               <td className="flex justify-end md:table-cell px-2 md:px-4 py-2 md:py-4 mt-2 md:mt-0 pt-3 md:pt-4 border-t border-gray-50 md:border-none">
                 <div className="flex gap-2 justify-end">
                   {(booking.status === "scheduled" || booking.status === "in_progress") && (
-                    <button
+                    <Button
+                      size="sm"
+                      variant="outline"
                       onClick={() => router.push(`/classroom/${booking.id}`)}
-                      className="px-3 py-1.5 md:py-1.5 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-all duration-200 text-xs font-bold flex items-center gap-1"
+                      className="bg-indigo-50 border-indigo-100 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 h-9"
                     >
-                      دخول الفصل <Video className="w-3.5 h-3.5 md:w-3.5 md:h-3.5" />
-                    </button>
+                      دخول الفصل <Video className="w-3.5 h-3.5 mr-2" />
+                    </Button>
                   )}
                   {isTeacher && booking.status === "scheduled" && (
-                    <button
+                    <Button
+                      size="sm"
+                      variant="ghost"
                       onClick={() => onCancelClick(booking.id)}
-                      className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-all duration-200 text-xs font-bold flex items-center gap-1"
+                      className="text-red-600 hover:bg-red-50 hover:text-red-700 h-9"
                     >
-                      إلغاء طارئ <XCircle className="w-3.5 h-3.5" />
-                    </button>
+                      إلغاء طارئ <XCircle className="w-3.5 h-3.5 mr-2" />
+                    </Button>
                   )}
                   {isTeacher && booking.status === "in_progress" && (
-                    <button
+                    <Button
+                      size="sm"
                       onClick={() => onCompleteClick(booking.id)}
-                      className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-all duration-200 text-xs font-bold flex items-center gap-1"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white h-9"
                     >
-                      إنهاء وتحصيل <Coins className="w-3.5 h-3.5" />
-                    </button>
+                      إنهاء وتحصيل <Coins className="w-3.5 h-3.5 mr-2" />
+                    </Button>
                   )}
                 </div>
               </td>

@@ -6,6 +6,7 @@ import api from '@/lib/axios';
 import toast from 'react-hot-toast';
 import PageHeader from '@/components/ui/PageHeader';
 import { Select } from '@/components/ui/Select';
+import { Textarea } from '@/components/ui/Textarea';
 import { showApiError } from '@/hooks/useApiError';
 import { ApiResponse, Subject, TeacherProfile } from '@/types';
 import { Card } from "@/components/ui/Card";
@@ -168,17 +169,15 @@ export default function TeacherProfilePage() {
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">نبذة تعريفية (Bio) *</label>
-                                <textarea 
-                                    required 
-                                    minLength={10}
-                                    value={bio} 
-                                    onChange={(e) => setBio(e.target.value)} 
-                                    placeholder="اكتب نبذة عن خبراتك وطريقتك في التدريس لجذب الطلاب..."
-                                    className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none h-40 resize-none transition-all duration-200 font-medium placeholder:text-gray-300"
-                                />
-                            </div>
+                            <Textarea
+                                label="نبذة تعريفية (Bio) *"
+                                required 
+                                minLength={10}
+                                value={bio} 
+                                onChange={(e) => setBio(e.target.value)} 
+                                placeholder="اكتب نبذة عن خبراتك وطريقتك في التدريس لجذب الطلاب..."
+                                className="h-40 resize-none"
+                            />
                         </div>
 
                         <div className="space-y-6 pt-4 border-t border-gray-50">

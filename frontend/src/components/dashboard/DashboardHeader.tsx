@@ -21,36 +21,38 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user, isTeache
 
       <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
         {/* Left: Brand & Welcome */}
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <span className="p-2 bg-white/10 rounded-lg">
-                <Shield className="w-6 h-6 text-indigo-100" />
-            </span>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              مرحباً، {user.name}
-            </h1>
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <span className="p-2 bg-white/10 rounded-lg">
+                  <Shield className="w-6 h-6 text-indigo-100" />
+              </span>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+                مرحباً، {user.name}
+              </h1>
+            </div>
+            <p className="text-indigo-200 text-sm md:text-base font-medium">
+              {isParent
+                ? "لوحة المراقبة الشاملة لحجوزات ونفقات الأبناء"
+                : isTeacher
+                ? "بوابة المعلم لإدارة الحصص والأرباح"
+                : "بوابة الطالب لإدارة الحجوزات والمحفظة"}
+            </p>
           </div>
-          <p className="text-indigo-200 text-sm md:text-base font-medium">
-            {isParent
-              ? "لوحة المراقبة الشاملة لحجوزات ونفقات الأبناء"
-              : isTeacher
-              ? "بوابة المعلم لإدارة الحصص والأرباح"
-              : "بوابة الطالب لإدارة الحجوزات والمحفظة"}
-          </p>
-        </div>
 
-        {/* Right: Action Buttons */}
-        <div className="flex flex-wrap gap-3 items-center w-full md:w-auto mt-4 md:mt-0">
           {!isTeacher && (
             <Link 
               href="/"
-              className="flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl text-sm font-bold text-white transition-all duration-200 border border-white/20 shadow-sm whitespace-nowrap"
+              className="flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl text-sm font-bold text-white transition-all duration-200 border border-white/20 shadow-sm whitespace-nowrap md:mt-2"
             >
               <Search className="w-4 h-4" />
               <span>{isParent ? "اختر المعلم المفضل لأبنائك" : "اختر معلمك المفضل"}</span>
             </Link>
           )}
+        </div>
 
+        {/* Right: Action Buttons */}
+        <div className="flex flex-wrap gap-3 items-center w-full md:w-auto mt-4 md:mt-0">
           {/* Mobile Logout - Only visible on mobile since sidebar has it on desktop */}
           <button
             onClick={logout}

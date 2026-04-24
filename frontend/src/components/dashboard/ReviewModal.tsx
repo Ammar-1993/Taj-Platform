@@ -3,6 +3,9 @@ import api from "@/lib/axios";
 import { Booking } from "@/types";
 import toast from "react-hot-toast";
 import { showApiError } from "@/hooks/useApiError";
+import Modal from "@/components/ui/Modal";
+import { Textarea } from "@/components/ui/Textarea";
+import { Button } from "@/components/ui/Button";
 
 interface ReviewModalProps {
   pendingReview: Booking | null;
@@ -36,53 +39,50 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ pendingReview, onSucce
   if (!pendingReview) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative animate-in zoom-in-95 fade-in duration-200 border border-gray-100">
-        {/* زر الإغلاق الاختياري */}
-        <button onClick={onClose} className="absolute top-4 left-4 text-gray-400 hover:text-gray-600">×</button>
-
-        <div className="text-center mb-6">
-          <div className="w-20 h-20 bg-gradient-to-br from-amber-100 to-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl shadow-lg">
-            ⭐
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900">كيف كانت حصتك؟</h2>
-          <p className="text-gray-500 mt-2">
-            يرجى تقييم حصتك مع الأستاذ{" "}
-            <span className="font-bold text-blue-600">
-              {pendingReview.teacher?.name}
-            </span>{" "}
-            لتتمكن من متابعة تصفح لوحة التحكم.
-          </p>
+    <Modal isOpen={!!pendingReview} onClose={onClose} hideCloseButton size="sm">
+      <div className="text-center mb-6">
+        <div className="w-20 h-20 bg-gradient-to-br from-amber-100 to-yellow-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-4xl shadow-inner border border-amber-200">
+          ⭐
         </div>
-
-        {/* النجوم */}
-        <div className="flex justify-center gap-2 mb-6 cursor-pointer">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <span
-              key={star}
-              onClick={() => setRating(star)}
-              className={`text-4xl transition transform hover:scale-110 ${rating >= star ? "text-yellow-400" : "text-gray-200"}`}
-            >
-              ★
-            </span>
-          ))}
-        </div>
-
-        <textarea
-          placeholder="اكتب تعليقك هنا (اختياري)..."
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          className="w-full border-2 border-gray-100 rounded-xl p-3 mb-6 focus:ring-2 focus:ring-blue-500 outline-none resize-none h-24"
-        />
-
-        <button
-          onClick={submitReview}
-          disabled={isSubmittingReview}
-          className="w-full bg-gradient-to-l from-indigo-600 to-purple-600 text-white font-bold py-3.5 rounded-xl hover:shadow-xl transition-all duration-200 disabled:opacity-50 hover:-translate-y-0.5"
-        >
-          {isSubmittingReview ? "جاري الإرسال..." : "إرسال التقييم"}
-        </button>
+        <h2 className="text-2xl font-bold text-gray-900">كيف كانت حصتك؟</h2>
+        <p className="text-gray-500 mt-2 text-sm leading-relaxed">
+          يرجى تقييم حصتك مع الأستاذ{" "}
+          <span className="font-bold text-indigo-600">
+            {pendingReview.teacher?.name}
+          </span>{" "}
+          لتتمكن من متابعة تصفح لوحة التحكم.
+        </p>
       </div>
-    </div>
+
+      {/* النجوم */}
+      <div className="flex justify-center gap-3 mb-6 cursor-pointer">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <span
+            key={star}
+            onClick={() => setRating(star)}
+            className={`text-4xl transition transform hover:scale-125 duration-200 ${rating >= star ? "text-yellow-400 drop-shadow-sm" : "text-gray-200"}`}
+          >
+            ★
+          </span>
+        ))}
+      </div>
+
+      <Textarea
+        label="تعليقك (اختياري):"
+        placeholder="اكتب تعليقك هنا..."
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        rows={3}
+        className="mb-6"
+      />
+
+      <Button
+        onClick={submitReview}
+        isLoading={isSubmittingReview}
+        className="w-full h-14 bg-gradient-to-l from-indigo-600 to-purple-600 rounded-2xl text-lg"
+      >
+        {isSubmittingReview ? "جاري الإرسال..." : "إرسال التقييم"}
+      </Button>
+    </Modal>
   );
 };
