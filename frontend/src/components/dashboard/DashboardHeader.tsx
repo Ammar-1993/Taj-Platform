@@ -39,20 +39,20 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user, isTeache
                 : "بوابة الطالب لإدارة الحجوزات والمحفظة"}
             </p>
           </div>
+        </div>
 
+        {/* Right: Action Buttons (Renders on the Left in RTL) */}
+        <div className="flex flex-wrap gap-3 items-center w-full md:w-auto mt-4 md:mt-0">
           {!isTeacher && (
             <Link 
               href="/"
-              className="flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl text-sm font-bold text-white transition-all duration-200 border border-white/20 shadow-sm whitespace-nowrap md:mt-2"
+              className="flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl text-sm font-bold text-white transition-all duration-200 border border-white/20 shadow-sm whitespace-nowrap"
             >
               <Search className="w-4 h-4" />
               <span>{isParent ? "اختر المعلم المفضل لأبنائك" : "اختر معلمك المفضل"}</span>
             </Link>
           )}
-        </div>
 
-        {/* Right: Action Buttons */}
-        <div className="flex flex-wrap gap-3 items-center w-full md:w-auto mt-4 md:mt-0">
           {/* Mobile Logout - Only visible on mobile since sidebar has it on desktop */}
           <button
             onClick={logout}
