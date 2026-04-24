@@ -4,8 +4,7 @@ import {
   CreditCard, 
   User, 
   LifeBuoy, 
-  Users,
-  Search
+  Users
 } from "lucide-react";
 import { useUserRole } from "./useUserRole";
 
