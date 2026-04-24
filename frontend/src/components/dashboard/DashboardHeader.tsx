@@ -1,5 +1,6 @@
 import React from "react";
-import { LogOut, Shield } from "lucide-react";
+import Link from "next/link";
+import { LogOut, Shield, Search } from "lucide-react";
 import { User } from "@/types";
 
 interface DashboardHeaderProps {
@@ -38,11 +39,22 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user, isTeache
           </p>
         </div>
 
-        {/* Right: Action Buttons (Mobile nav focus) */}
-        <div className="flex flex-wrap gap-2 md:hidden">
+        {/* Right: Action Buttons */}
+        <div className="flex flex-wrap gap-3 items-center w-full md:w-auto mt-4 md:mt-0">
+          {!isTeacher && (
+            <Link 
+              href="/"
+              className="flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl text-sm font-bold text-white transition-all duration-200 border border-white/20 shadow-sm whitespace-nowrap"
+            >
+              <Search className="w-4 h-4" />
+              <span>{isParent ? "اختر المعلم المفضل لأبنائك" : "اختر معلمك المفضل"}</span>
+            </Link>
+          )}
+
+          {/* Mobile Logout - Only visible on mobile since sidebar has it on desktop */}
           <button
             onClick={logout}
-            className="px-4 py-2 bg-rose-500 hover:bg-rose-600 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 border border-rose-400 text-white shadow-sm flex items-center gap-2"
+            className="md:hidden px-4 py-2 bg-rose-500 hover:bg-rose-600 rounded-lg text-sm font-bold transition-all duration-200 border border-rose-400 text-white shadow-sm flex items-center gap-2"
           >
             <span>تسجيل الخروج</span>
             <LogOut className="w-4 h-4" />
