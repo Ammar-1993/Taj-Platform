@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
-import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { GradeLevel } from '@/types';
@@ -15,7 +14,6 @@ import RedirectCountdown from "@/components/ui/RedirectCountdown";
 
 export default function StudentProfilePage() {
     const { user, loading: authLoading } = useAuth();
-    const router = useRouter();
     
     const [gradeLevels, setGradeLevels] = useState<GradeLevel[]>([]);
     const [gradeLevelId, setGradeLevelId] = useState('');

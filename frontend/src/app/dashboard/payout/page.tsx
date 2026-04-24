@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
-import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import PageHeader from '@/components/ui/PageHeader';
 import StatusBadge from '@/components/ui/StatusBadge';
@@ -19,7 +18,6 @@ import { formatDate, formatCurrency } from "@/lib/formatters";
 
 export default function PayoutPage() {
     const { user } = useAuth();
-    const router = useRouter();
     
     const [walletInfo, setWalletInfo] = useState<Wallet | null>(null);
     const [payouts, setPayouts] = useState<PayoutRequest[]>([]);

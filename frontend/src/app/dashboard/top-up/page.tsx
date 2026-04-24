@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
 import PageHeader from '@/components/ui/PageHeader';
@@ -13,7 +12,6 @@ import RedirectCountdown from "@/components/ui/RedirectCountdown";
 
 export default function TopUpPage() {
     const { user } = useAuth();
-    const router = useRouter();
     const [amount, setAmount] = useState<number>(100);
     const [isProcessing, setIsProcessing] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');

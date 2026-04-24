@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
-import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import PageHeader from '@/components/ui/PageHeader';
 import { showApiError } from '@/hooks/useApiError';
@@ -16,7 +15,6 @@ import RedirectCountdown from "@/components/ui/RedirectCountdown";
 
 export default function TeacherProfilePage() {
     const { user } = useAuth();
-    const router = useRouter();
     
     const [subjects, setSubjects] = useState<Subject[]>([]);
     const [profile, setProfile] = useState<TeacherProfile | null>(null);
