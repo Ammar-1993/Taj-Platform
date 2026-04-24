@@ -6,6 +6,7 @@ import { formatTime, formatDate, formatCurrency } from "@/lib/formatters";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { WalletCards, Zap, Calendar, BookOpen } from "lucide-react";
+import EmptyState from "@/components/ui/EmptyState";
 
 interface ParentDashboardProps {
   parentData: ParentDashboardData | null;
@@ -105,17 +106,12 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
         </h3>
 
         {!parentData.bookings || parentData.bookings.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-20 h-20 bg-indigo-50 text-indigo-300 rounded-full flex items-center justify-center mx-auto mb-5">
-              <BookOpen className="w-10 h-10" />
-            </div>
-            <h4 className="text-xl font-bold text-gray-800 mb-2">
-              لا توجد حجوزات لأبنائك حتى الآن
-            </h4>
-            <p className="text-gray-400 text-sm">
-              ابدأ بحجز حصص لأبنائك مع نخبة المعلمين
-            </p>
-          </div>
+          <EmptyState
+            icon={BookOpen}
+            title="لا توجد حجوزات لأبنائك حتى الآن"
+            subtitle="ابدأ بحجز حصص لأبنائك مع نخبة المعلمين"
+            action={{ label: "ابحث عن معلم", href: "/dashboard/teachers" }}
+          />
         ) : (
           <>
             <div className="md:hidden space-y-4">

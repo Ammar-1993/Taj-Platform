@@ -10,7 +10,10 @@ import toast from "react-hot-toast";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 import { Skeleton } from "@/components/ui/Skeleton";
+import Modal from "@/components/ui/Modal";
+import EmptyState from "@/components/ui/EmptyState";
 import { CalendarDays, CalendarX2, Gift, Users, Clock, Loader2, CircleDollarSign } from "lucide-react";
 
 export default function TeacherProfile({ params }: { params: { id: string } }) {
@@ -151,15 +154,11 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
         </div>
 
         {Object.keys(slots).length === 0 ? (
-          <div className="text-center py-16 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center">
-            <CalendarX2 className="w-16 h-16 text-indigo-200 mb-5" />
-            <h4 className="text-xl font-bold text-gray-800 mb-2">
-              لا توجد مواعيد متاحة
-            </h4>
-            <p className="text-gray-400 text-sm">
-              عفواً، لا توجد مواعيد متاحة حالياً لهذا المعلم.
-            </p>
-          </div>
+        <EmptyState
+          icon={CalendarX2}
+          title="لا توجد مواعيد متاحة"
+          subtitle="عفواً، لا توجد مواعيد متاحة حالياً لهذا المعلم."
+        />
         ) : (
           <div className="space-y-8">
             {/* Date Carousel */}
@@ -204,67 +203,61 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
         )}
       </Card>
 
-      {/* Unified Booking Modal */}
-      {bookingModal.isOpen && bookingModal.slot && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl animate-fade-in-up">
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">تأكيد الحجز</h3>
-              <p className="text-gray-500 text-sm">
-                ستقوم بحجز الموعد من <span className="font-bold text-indigo-600">{formatTime(bookingModal.slot.start_time)}</span> إلى <span className="font-bold text-indigo-600">{formatTime(bookingModal.slot.end_time)}</span>
-              </p>
+      <Modal
+        isOpen={bookingModal.isOpen && !!bookingModal.slot}
+        onClose={() => setBookingModal({ isOpen: false, slot: null })}
+        title="تأكيد الحجز"
+      >
+        {bookingModal.slot && (
+          <div className="space-y-5">
+            <p className="text-gray-500 text-sm text-center -mt-2">
+              ستقوم بحجز الموعد من <span className="font-bold text-indigo-600">{formatTime(bookingModal.slot.start_time)}</span> إلى <span className="font-bold text-indigo-600">{formatTime(bookingModal.slot.end_time)}</span>
+            </p>
+
+            {isParent && (
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                  <Users className="w-4 h-4" /> اختر الابن (إلزامي):
+                </label>
+                <Select
+                  value={selectedChildId}
+                  onChange={(e) => setSelectedChildId(e.target.value)}
+                >
+                  <option value="">اختر الابن</option>
+                  {children.map((child) => (
+                    <option key={child.id} value={child.id}>{child.name}</option>
+                  ))}
+                </Select>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                <Gift className="w-4 h-4" /> كود الخصم (اختياري):
+              </label>
+              <Input
+                type="text"
+                placeholder="أدخل الكود هنا"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                className="w-full"
+                dir="ltr"
+              />
             </div>
 
-            <div className="space-y-5">
-                {isParent && (
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                      <Users className="w-4 h-4" /> اختر الابن (إلزامي):
-                    </label>
-                    <select
-                        value={selectedChildId}
-                        onChange={(e) => setSelectedChildId(e.target.value)}
-                        className="w-full border border-gray-200 p-3 rounded-lg bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all font-bold"
-                    >
-                        <option value="">-- اضغط لاختيار الابن --</option>
-                        {children.map((child) => (
-                            <option key={child.id} value={child.id}>
-                            {child.name}
-                            </option>
-                        ))}
-                    </select>
-                  </div>
-                )}
+            {sessionPrice && (
+              <div className="flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3">
+                <span className="text-sm font-bold text-indigo-700 flex items-center gap-2">
+                  <CircleDollarSign className="w-4 h-4" />
+                  سعر الحصة
+                </span>
+                <span className="font-mono font-bold text-indigo-800 text-base" dir="ltr">
+                  {sessionPrice} ريال
+                </span>
+              </div>
+            )}
 
-                <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                      <Gift className="w-4 h-4" /> كود الخصم (اختياري):
-                    </label>
-                    <Input
-                        type="text"
-                        placeholder="أدخل الكود هنا"
-                        value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value)}
-                        className="w-full"
-                        dir="ltr"
-                    />
-                </div>
-
-                {/* Price summary — P0-03 fix */}
-                {sessionPrice && (
-                  <div className="flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3">
-                    <span className="text-sm font-bold text-indigo-700 flex items-center gap-2">
-                      <CircleDollarSign className="w-4 h-4" />
-                      سعر الحصة
-                    </span>
-                    <span className="font-mono font-bold text-indigo-800 text-base" dir="ltr">
-                      {sessionPrice} ريال
-                    </span>
-                  </div>
-                )}
-            </div>
-
-            <div className="flex gap-3 mt-8">
+            <div className="flex gap-3 pt-2">
               <Button
                 variant="secondary"
                 onClick={() => setBookingModal({ isOpen: false, slot: null })}
@@ -282,8 +275,8 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
               </Button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </div>
   );
 }

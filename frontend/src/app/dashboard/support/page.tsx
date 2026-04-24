@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { PenSquare, Send, FolderOpen, Inbox, Pin, Headphones, Loader2 } from "lucide-react";
 import RedirectCountdown from "@/components/ui/RedirectCountdown";
+import EmptyState from "@/components/ui/EmptyState";
+import { Select } from "@/components/ui/Select";
 import { formatDate } from "@/lib/formatters";
 
 export default function SupportPage() {
@@ -140,21 +142,17 @@ export default function SupportPage() {
 
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">مرتبطة بحجز؟ (اختياري):</label>
-                                    <div className="relative">
-                                        <select
-                                            value={bookingId}
-                                            onChange={(e) => setBookingId(e.target.value)}
-                                            className="w-full px-4 py-4 bg-gray-50/50 border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 text-sm font-bold text-gray-700 appearance-none cursor-pointer"
-                                        >
-                                            <option value="">-- شكوى عامة --</option>
-                                            {bookings.map((b: Booking) => (
-                                                <option key={b.id} value={b.id}>
-                                                    حجز #{b.id} مع {b.teacher?.name} ({formatDate(b.booking_date, "medium")})
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
-                                    </div>
+                                    <Select
+                                        value={bookingId}
+                                        onChange={(e) => setBookingId(e.target.value)}
+                                    >
+                                        <option value="">-- شكوى عامة --</option>
+                                        {bookings.map((b: Booking) => (
+                                            <option key={b.id} value={b.id}>
+                                                حجز #{b.id} مع {b.teacher?.name} ({formatDate(b.booking_date, "medium")})
+                                            </option>
+                                        ))}
+                                    </Select>
                                 </div>
 
                                 <div>
@@ -201,10 +199,10 @@ export default function SupportPage() {
                         </h3>
                         
                         {tickets.length === 0 ? (
-                            <div className="text-center py-20 bg-gray-50/50 rounded-3xl border-4 border-dashed border-gray-100 text-gray-400 font-bold flex flex-col items-center gap-4">
-                                <Inbox className="w-16 h-16 text-gray-300" />
-                                <span>لم تقم بفتح أي تذكرة دعم فني حتى الآن.</span>
-                            </div>
+                            <EmptyState
+                                icon={Inbox}
+                                title="لم تقم بفتح أي تذكرة دعم فني حتى الآن."
+                            />
                         ) : (
                             <div className="space-y-6">
                                 {tickets.map((ticket) => (

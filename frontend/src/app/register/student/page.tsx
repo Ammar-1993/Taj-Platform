@@ -15,10 +15,10 @@ import {
   Eye,
   EyeOff,
   Loader2,
-  AlertTriangle,
   CheckCircle,
   ArrowRight,
 } from "lucide-react";
+import ErrorBanner from "@/components/ui/ErrorBanner";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -111,12 +111,7 @@ export default function StudentRegisterPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="flex items-center gap-3 bg-red-50 border border-red-100 text-red-600 p-3 rounded-xl text-sm font-bold animate-fade-in-up">
-                <AlertTriangle className="w-5 h-5 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
+            {error && <ErrorBanner message={error} />}
 
             {/* استخدام Grid لوضع الحقول بجانب بعضها في الشاشات المتوسطة والكبيرة */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

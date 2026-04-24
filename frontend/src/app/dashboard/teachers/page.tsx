@@ -6,6 +6,7 @@ import api from "@/lib/axios";
 import { User, Subject } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import { Search, BookOpen, ListFilter, Star, SearchX, GraduationCap } from "lucide-react";
+import EmptyState from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
@@ -131,16 +132,12 @@ export default function DashboardTeachers() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {teachers.length === 0 ? (
-            <div className="col-span-full text-center py-16 animate-fade-in-up bg-white rounded-3xl border border-gray-100 shadow-sm">
-              <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-5 text-indigo-300">
-                <SearchX size={40} strokeWidth={1.5} />
-              </div>
-              <h4 className="text-xl font-bold text-gray-800 mb-2">
-                لا يوجد معلمين يطابقون بحثك
-              </h4>
-              <p className="text-gray-400 text-sm">
-                جرب تغيير كلمات البحث أو تصفية المواد
-              </p>
+            <div className="col-span-full">
+              <EmptyState
+                icon={SearchX}
+                title="لا يوجد معلمين يطابقون بحثك"
+                subtitle="جرب تغيير كلمات البحث أو تصفية المواد"
+              />
             </div>
           ) : (
             teachers.map((teacher, index) => (

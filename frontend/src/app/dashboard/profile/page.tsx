@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
 import PageHeader from '@/components/ui/PageHeader';
+import { Select } from '@/components/ui/Select';
 import { showApiError } from '@/hooks/useApiError';
 import { ApiResponse, Subject, TeacherProfile } from '@/types';
 import { Card } from "@/components/ui/Card";
@@ -156,18 +157,14 @@ export default function TeacherProfilePage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">المادة التي تدرسها *</label>
-                                    <div className="relative">
-                                        <select 
-                                            required 
-                                            value={subjectId} 
-                                            onChange={(e) => setSubjectId(e.target.value)} 
-                                            className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 text-sm font-bold text-gray-700 appearance-none cursor-pointer"
-                                        >
-                                            <option value="">-- اختر المادة --</option>
-                                            {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                                        </select>
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
-                                    </div>
+                                    <Select 
+                                        required 
+                                        value={subjectId} 
+                                        onChange={(e) => setSubjectId(e.target.value)} 
+                                    >
+                                        <option value="">-- اختر المادة --</option>
+                                        {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                    </Select>
                                 </div>
                             </div>
 

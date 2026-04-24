@@ -9,6 +9,7 @@ import { GradeLevel } from '@/types';
 import { showApiError } from '@/hooks/useApiError';
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 import { GraduationCap, AlertCircle, Lightbulb, Rocket, Loader2 } from "lucide-react";
 import RedirectCountdown from "@/components/ui/RedirectCountdown";
 
@@ -139,22 +140,18 @@ export default function StudentProfilePage() {
                     <form onSubmit={handleSubmit} className="space-y-8">
                         <div className="space-y-4">
                             <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">اختر مرحلتك الدراسية الحالية *</label>
-                            <div className="relative">
-                                <select 
-                                    required 
-                                    value={gradeLevelId} 
-                                    onChange={(e) => setGradeLevelId(e.target.value)} 
-                                    className="w-full bg-gray-50/50 border-2 border-gray-100 p-5 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 font-bold cursor-pointer appearance-none"
-                                >
-                                    <option value="" disabled>-- اضغط هنا لاختيار المرحلة --</option>
-                                    {gradeLevels.map(grade => (
-                                        <option key={grade.id} value={grade.id}>
-                                            {grade.name} (سعر الحصة: {grade.session_price} ريال)
-                                        </option>
-                                    ))}
-                                </select>
-                                <div className="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
-                            </div>
+                            <Select 
+                                required 
+                                value={gradeLevelId} 
+                                onChange={(e) => setGradeLevelId(e.target.value)} 
+                            >
+                                <option value="" disabled>-- اضغط هنا لاختيار المرحلة --</option>
+                                {gradeLevels.map(grade => (
+                                    <option key={grade.id} value={grade.id}>
+                                        {grade.name} (سعر الحصة: {grade.session_price} ريال)
+                                    </option>
+                                ))}
+                            </Select>
                             <div className="mt-4 flex items-start gap-3 text-xs bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/50 text-indigo-700 font-bold leading-relaxed">
                                 <Lightbulb className="w-5 h-5 shrink-0" />
                                 <p>هذا الاختيار سيضمن لك الحصول على التسعيرة الموحدة لحصصك مع جميع المعلمين في المنصة حسب المرحلة المختارة.</p>

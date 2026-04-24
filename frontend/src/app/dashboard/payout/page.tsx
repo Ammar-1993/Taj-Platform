@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { CircleDollarSign, SendHorizonal, Send, AlertTriangle, TrendingUp, Inbox, Landmark, Calendar, Building, Loader2 } from "lucide-react";
 import RedirectCountdown from "@/components/ui/RedirectCountdown";
+import EmptyState from "@/components/ui/EmptyState";
+import { Select } from "@/components/ui/Select";
 import { formatDate, formatCurrency } from "@/lib/formatters";
 
 export default function PayoutPage() {
@@ -165,23 +167,19 @@ export default function PayoutPage() {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">اسم البنك:</label>
-                                    <div className="relative">
-                                        <select
-                                            required
-                                            value={bankName}
-                                            onChange={(e) => setBankName(e.target.value)}
-                                            className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 outline-none transition-all duration-200 text-sm font-bold text-gray-700 appearance-none cursor-pointer"
-                                        >
-                                            <option value="">-- اختر البنك --</option>
-                                            <option value="البنك الأهلي السعودي">البنك الأهلي السعودي</option>
-                                            <option value="مصرف الراجحي">مصرف الراجحي</option>
-                                            <option value="بنك الرياض">بنك الرياض</option>
-                                            <option value="بنك الإنماء">بنك الإنماء</option>
-                                            <option value="بنك البلاد">بنك البلاد</option>
-                                            <option value="أخرى">أخرى</option>
-                                        </select>
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
-                                    </div>
+                                    <Select
+                                        required
+                                        value={bankName}
+                                        onChange={(e) => setBankName(e.target.value)}
+                                    >
+                                        <option value="">-- اختر البنك --</option>
+                                        <option value="البنك الأهلي السعودي">البنك الأهلي السعودي</option>
+                                        <option value="مصرف الراجحي">مصرف الراجحي</option>
+                                        <option value="بنك الرياض">بنك الرياض</option>
+                                        <option value="بنك الإنماء">بنك الإنماء</option>
+                                        <option value="بنك البلاد">بنك البلاد</option>
+                                        <option value="أخرى">أخرى</option>
+                                    </Select>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">رقم الآيبان (IBAN):</label>
@@ -239,11 +237,11 @@ export default function PayoutPage() {
                         </h3>
                         
                         {payouts.length === 0 ? (
-                            <div className="text-center py-20 bg-gray-50/50 rounded-3xl border-4 border-dashed border-gray-100 text-gray-400 font-bold flex flex-col items-center gap-4">
-                                <Inbox className="w-16 h-16 text-gray-300" />
-                                <span>لم تقم بتقديم أي طلب سحب حتى الآن.</span>
-                                <p className="text-xs font-bold leading-relaxed">سيتم عرض جميع طلباتك وحالتها المالية هنا فور إرسالها.</p>
-                            </div>
+                            <EmptyState
+                                icon={Inbox}
+                                title="لم تقدم أي طلب سحب حتى الآن."
+                                subtitle="سيتم عرض جميع طلباتك وحالتها المالية هنا فور إرسالها."
+                            />
                         ) : (
                             <div className="space-y-6">
                                 {payouts.map((payout) => (

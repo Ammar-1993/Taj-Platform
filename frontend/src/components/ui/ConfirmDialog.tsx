@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import Modal from "@/components/ui/Modal";
+import { AlertTriangle, Info, Trash2 } from "lucide-react";
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -16,19 +18,19 @@ interface ConfirmDialogProps {
 
 const variantStyles = {
   danger: {
-    icon: "🔴",
-    confirmBtn:
-      "bg-gradient-to-l from-red-600 to-rose-600 hover:shadow-red-200",
+    icon: <Trash2 className="w-7 h-7 text-red-600" />,
+    iconBg: "bg-red-100",
+    confirmBtn: "bg-gradient-to-l from-red-600 to-rose-600 hover:shadow-red-200",
   },
   warning: {
-    icon: "⚠️",
-    confirmBtn:
-      "bg-gradient-to-l from-amber-600 to-yellow-600 hover:shadow-amber-200",
+    icon: <AlertTriangle className="w-7 h-7 text-amber-600" />,
+    iconBg: "bg-amber-100",
+    confirmBtn: "bg-gradient-to-l from-amber-600 to-yellow-600 hover:shadow-amber-200",
   },
   info: {
-    icon: "ℹ️",
-    confirmBtn:
-      "bg-gradient-to-l from-indigo-600 to-purple-600 hover:shadow-indigo-200",
+    icon: <Info className="w-7 h-7 text-indigo-600" />,
+    iconBg: "bg-indigo-100",
+    confirmBtn: "bg-gradient-to-l from-indigo-600 to-purple-600 hover:shadow-indigo-200",
   },
 };
 
@@ -43,40 +45,38 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
-  if (!isOpen) return null;
-
   const styles = variantStyles[variant];
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 fade-in duration-200 border border-gray-100">
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-            {styles.icon}
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
-            {title}
-          </h3>
+    <Modal isOpen={isOpen} onClose={onCancel} size="sm" hideCloseButton>
+      <div className="text-center space-y-4">
+        <div
+          className={`w-16 h-16 ${styles.iconBg} rounded-2xl flex items-center justify-center mx-auto`}
+        >
+          {styles.icon}
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
           <p className="text-gray-500 text-sm leading-relaxed">{message}</p>
         </div>
-
-        <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            disabled={isLoading}
-            className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold transition-all duration-200 disabled:opacity-50"
-          >
-            {cancelText}
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={isLoading}
-            className={`flex-1 py-3 text-white rounded-xl font-bold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 ${styles.confirmBtn}`}
-          >
-            {isLoading ? "جاري التنفيذ..." : confirmText}
-          </button>
-        </div>
       </div>
-    </div>
+
+      <div className="flex gap-3 mt-6">
+        <button
+          onClick={onCancel}
+          disabled={isLoading}
+          className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold transition-all duration-200 disabled:opacity-50"
+        >
+          {cancelText}
+        </button>
+        <button
+          onClick={onConfirm}
+          disabled={isLoading}
+          className={`flex-1 py-3 text-white rounded-xl font-bold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 ${styles.confirmBtn}`}
+        >
+          {isLoading ? "جاري التنفيذ..." : confirmText}
+        </button>
+      </div>
+    </Modal>
   );
 }

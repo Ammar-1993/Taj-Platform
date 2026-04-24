@@ -7,7 +7,8 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import DecorativeBackground from "@/components/ui/DecorativeBackground";
-import { Mail, Lock, AlertTriangle, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight } from "lucide-react";
+import ErrorBanner from "@/components/ui/ErrorBanner";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -70,12 +71,7 @@ export default function LoginPage() {
           <CardContent className="p-6 sm:p-8">
             <form className="space-y-5" onSubmit={handleSubmit}>
             
-            {error && (
-              <div className="flex items-center gap-3 bg-red-50 border border-red-100 text-red-600 p-3 rounded-xl text-sm font-bold animate-fade-in-up">
-                <AlertTriangle className="w-5 h-5 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
+            {error && <ErrorBanner message={error} />}
 
             <div className="space-y-4">
               

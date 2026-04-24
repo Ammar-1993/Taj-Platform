@@ -8,6 +8,7 @@ import {
   WalletCards, CalendarDays, Banknote, Zap, BarChart2,
   Landmark, LifeBuoy
 } from "lucide-react";
+import EmptyState from "@/components/ui/EmptyState";
 
 interface WalletWidgetProps {
   wallet: Wallet | null;
@@ -75,10 +76,7 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
           آخر العمليات المالية
         </h3>
         {wallet?.transactions?.data?.length === 0 ? (
-          <div className="text-center py-6">
-            <Landmark className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-            <p className="text-gray-400 text-sm">لا توجد عمليات سابقة</p>
-          </div>
+          <EmptyState icon={Landmark} title="لا توجد عمليات سابقة" className="py-8" />
         ) : (
           <ul className="space-y-2">
             {wallet?.transactions?.data?.slice(0, 5).map((tx) => (

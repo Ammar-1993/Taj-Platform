@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { GraduationCap, Users, Plus, X, Check, Loader2 } from "lucide-react";
+import EmptyState from "@/components/ui/EmptyState";
+import { Select } from "@/components/ui/Select";
 
 export default function ChildrenManagementPage() {
     const { user } = useAuth();
@@ -151,13 +153,14 @@ export default function ChildrenManagementPage() {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold mb-2 text-gray-700 mr-1">المرحلة الدراسية *</label>
-                                    <div className="relative">
-                                        <select required value={formData.grade_level_id} onChange={e => setFormData({...formData, grade_level_id: e.target.value})} className="w-full bg-gray-50/50 border-2 border-gray-100 p-4 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all duration-200 font-bold text-gray-700 appearance-none cursor-pointer">
-                                            <option value="">-- اختر المرحلة --</option>
-                                            {gradeLevels.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-                                        </select>
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
-                                    </div>
+                                    <Select 
+                                        required 
+                                        value={formData.grade_level_id} 
+                                        onChange={e => setFormData({...formData, grade_level_id: e.target.value})}
+                                    >
+                                        <option value="">-- اختر المرحلة --</option>
+                                        {gradeLevels.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                                    </Select>
                                 </div>
                             </div>
                             <div className="md:col-span-2 mt-4">
@@ -182,10 +185,12 @@ export default function ChildrenManagementPage() {
                 {/* قائمة الأبناء (Grid) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {children.length === 0 ? (
-                        <div className="col-span-full bg-white/50 backdrop-blur-md p-24 rounded-[3rem] border-4 border-dashed border-gray-100/50 text-center text-gray-400 font-bold flex flex-col items-center gap-6 animate-fade-in-up-delay-2">
-                            <Users className="w-16 h-16 text-gray-300" />
-                            <p className="text-xl">لا يوجد أفراد عائلة مضافين حالياً.</p>
-                            <p className="text-sm font-bold opacity-60">ابدأ بإضافة حسابات أبنائك لتتمكن من حجز حصصهم الدراسية.</p>
+                        <div className="col-span-full">
+                            <EmptyState
+                                icon={Users}
+                                title="لا يوجد أفراد عائلة مضافين حالياً."
+                                subtitle="ابدأ بإضافة حسابات أبنائك لتتمكن من حجز حصصهم الدراسية."
+                            />
                         </div>
                     ) : (
                         children.map((child, idx) => (
