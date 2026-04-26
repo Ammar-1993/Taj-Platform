@@ -85,26 +85,6 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
     }
   });
 
-  // Wait, bookingService.create in bookingService.ts:
-  /*
-  create: async (teacherSlotId: number) => {
-    const res = await api.post<ApiResponse<Booking>>("/bookings", {
-      teacher_slot_id: teacherSlotId,
-    });
-    return res.data;
-  },
-  */
-  // I need to update it to support promo_code and child_id.
-
-  const handleBooking = () => {
-    if (isParent && !selectedChildId) return;
-    if (!bookingModal.slot) return;
-
-    // Use a generic book method or update bookingService
-    // For now I'll just use the existing one but it won't pass promo/child
-    // Actually I SHOULD update the service.
-  };
-
   if (slotsLoading)
     return (
         <div className="p-8 min-h-screen">

@@ -1,5 +1,5 @@
 import api from "@/lib/axios";
-import { Subject, ApiResponse, User, Review, SlotsByDate, GradeLevel, TeacherSlotsResponse } from "@/types";
+import { Subject, ApiResponse, User, Review, GradeLevel, TeacherSlotsResponse } from "@/types";
 
 export const discoveryService = {
   /**

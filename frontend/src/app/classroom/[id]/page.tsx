@@ -66,7 +66,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 }
                 
                 setLoading(false);
-            } catch (err: unknown) {
+            } catch {
                 setError('فشل الاتصال بالغرفة الافتراضية أو غير مصرح لك.');
                 setLoading(false);
             }

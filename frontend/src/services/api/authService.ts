@@ -18,7 +18,7 @@ export const authService = {
   /**
    * Register a new user
    */
-  register: async (data: Record<string, any>) => {
+  register: async (data: Record<string, unknown>) => {
     const res = await api.post<ApiResponse<LoginResponse>>("/auth/register", data);
     return res.data;
   },
