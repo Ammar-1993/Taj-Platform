@@ -76,17 +76,32 @@ class DiscoveryController extends Controller
 
         $slots = $teacher->teacherSlots()
             ->where('status', 'available')
-            ->where('slot_date', '>=', now()->toDateString()) // أوقات اليوم والمستقبل فقط
+            ->where('slot_date', '>=', now()->toDateString())
             ->orderBy('slot_date')
             ->orderBy('start_time')
             ->get()
-            // تجميع الأوقات حسب اليوم لسهولة عرضها في الواجهة الأمامية
-            ->groupBy('slot_date'); 
+            ->groupBy('slot_date');
 
-        return response()->json([
-            'status' => 'success', 
+        return response()->json(array(
+            'status' => 'success',
             'teacher_name' => $teacher->name,
             'data' => $slots
-        ]);
+        ));
+    }
+
+    // 5. جلب تقييمات المعلم
+    public function teacherReviews($teacherId): JsonResponse
+    {
+        $teacher = User::role('teacher')->findOrFail($teacherId);
+
+        $reviews = \App\Models\Review::where('teacher_id', $teacherId)
+            ->with('student:id,name')
+            ->latest()
+            ->paginate(10);
+
+        return response()->json(array(
+            'status' => 'success',
+            'data' => $reviews
+        ));
     }
 }

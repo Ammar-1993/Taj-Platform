@@ -42,6 +42,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/grade-levels', [DiscoveryController::class, 'gradeLevels']);
         Route::get('/teachers', [DiscoveryController::class, 'teachers']);
         Route::get('/teachers/{id}/slots', [DiscoveryController::class, 'teacherSlots']);
+        Route::get('/teachers/{id}/reviews', [DiscoveryController::class, 'teacherReviews']);
     });
 
     // 3. مسارات عامة أخرى

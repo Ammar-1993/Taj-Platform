@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { Card, CardHeader, CardContent, CardFooter, CardDescription, CardTitle } from "@/components/ui/Card";
+import TeacherReviewsModal from "@/components/discovery/TeacherReviewsModal";
 
 export default function Home() {
   const [teachers, setTeachers] = useState<User[]>([]);
@@ -31,6 +32,7 @@ export default function Home() {
   const [subjectId, setSubjectId] = useState("");
   const [sortBy, setSortBy] = useState("");
   const [loading, setLoading] = useState(true);
+  const [selectedTeacherForReviews, setSelectedTeacherForReviews] = useState<{ id: number; name: string } | null>(null);
 
   const { user, loading: authLoading } = useAuth();
 
@@ -216,10 +218,20 @@ export default function Home() {
                   </CardContent>
                   <CardFooter className="flex flex-col sm:flex-row justify-between items-center pt-5 border-t border-gray-50 mt-auto gap-4 sm:gap-0">
                     <div className="flex flex-col items-center sm:items-start gap-1">
-                      <span className="text-amber-500 font-bold flex items-center gap-1.5 text-lg">
-                        <Star size={18} className="fill-amber-500" />
-                        {teacher.teacher_profile?.average_rating || "0.00"}
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedTeacherForReviews({ id: teacher.id, name: teacher.name });
+                      }}
+                      className="text-amber-500 font-bold flex items-center gap-1.5 text-lg hover:scale-105 transition-transform"
+                    >
+                      <Star size={18} className="fill-amber-500" />
+                      {teacher.teacher_profile?.average_rating || "0.00"}
+                      <span className="text-[10px] text-gray-400 font-medium mr-1">
+                        ({teacher.teacher_profile?.reviews_count || 0} تقييم)
                       </span>
+                    </button>
                       <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
                         <CalendarDays size={11} />
                         {(teacher.active_slots_count || 0) > 0
@@ -243,6 +255,13 @@ export default function Home() {
             )}
           </div>
         )}
+
+        <TeacherReviewsModal
+          isOpen={!!selectedTeacherForReviews}
+          teacherId={selectedTeacherForReviews?.id || null}
+          teacherName={selectedTeacherForReviews?.name || ""}
+          onClose={() => setSelectedTeacherForReviews(null)}
+        />
       </div>
     </div>
   );
