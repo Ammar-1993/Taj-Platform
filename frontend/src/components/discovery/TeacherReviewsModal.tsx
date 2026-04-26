@@ -5,7 +5,6 @@ import api from "@/lib/axios";
 import { Review, ApiResponse } from "@/types";
 import Modal from "@/components/ui/Modal";
 import { Star, MessageSquare, User, Loader2 } from "lucide-react";
-import { formatDate } from "@/lib/formatters";
 import EmptyState from "@/components/ui/EmptyState";
 
 interface TeacherReviewsModalProps {
