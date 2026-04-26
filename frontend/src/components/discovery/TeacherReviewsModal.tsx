@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import api from "@/lib/axios";
 import { Review, ApiResponse } from "@/types";
 import Modal from "@/components/ui/Modal";
 import { Star, MessageSquare, User, Loader2 } from "lucide-react";
+import { formatDate } from "@/lib/formatters";
 import EmptyState from "@/components/ui/EmptyState";
 
 interface TeacherReviewsModalProps {
@@ -23,8 +24,13 @@ export default function TeacherReviewsModal({
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchReviews = useCallback(async () => {
-    if (!teacherId) return;
+  useEffect(() => {
+    if (isOpen && teacherId) {
+      fetchReviews();
+    }
+  }, [isOpen, teacherId]);
+
+  const fetchReviews = async () => {
     setLoading(true);
     try {
       const res = await api.get<ApiResponse<{ data: Review[] }>>(`/discovery/teachers/${teacherId}/reviews`);
@@ -34,13 +40,7 @@ export default function TeacherReviewsModal({
     } finally {
       setLoading(false);
     }
-  }, [teacherId]);
-
-  useEffect(() => {
-    if (isOpen && teacherId) {
-      fetchReviews();
-    }
-  }, [isOpen, teacherId, fetchReviews]);
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`تقييمات الأستاذ ${teacherName}`} size="lg">
