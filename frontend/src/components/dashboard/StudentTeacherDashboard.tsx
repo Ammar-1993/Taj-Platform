@@ -77,10 +77,10 @@ export const StudentTeacherDashboard: React.FC<
         </div>
 
         {/* ============ MAIN CONTENT ============ */}
-        <Card variant="glass" className="lg:col-span-2 animate-fade-in-up-delay p-6">
+        <Card variant="glass" className="lg:col-span-2 animate-fade-up-1 p-6">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="font-bold text-xl text-gray-900 flex items-center gap-2">
-              <span className="w-9 h-9 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+            <h3 className="font-bold text-xl text-text-primary flex items-center gap-2">
+              <span className="w-9 h-9 bg-brand-50 text-brand-600 rounded-taj-md flex items-center justify-center">
                 <ClipboardList className="w-5 h-5" />
               </span>
               سجل الحجوزات

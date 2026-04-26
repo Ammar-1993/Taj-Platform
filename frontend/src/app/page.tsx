@@ -82,7 +82,7 @@ export default function Home() {
     <div className="min-h-screen p-4 md:p-8 bg-gray-50/50">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Hero Header */}
-        <div className="animate-fade-in-up relative overflow-hidden bg-gradient-to-l from-indigo-700 via-indigo-600 to-purple-700 p-8 md:p-12 rounded-3xl shadow-xl text-white">
+        <div className="animate-fade-up relative overflow-hidden bg-gradient-to-l from-brand-700 via-brand-600 to-purple-700 p-8 md:p-12 rounded-taj-xl shadow-xl text-white">
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-10">
             <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full bg-white blur-3xl"></div>
             <div className="absolute -bottom-20 -right-20 w-80 h-80 rounded-full bg-purple-300 blur-3xl"></div>
@@ -100,9 +100,9 @@ export default function Home() {
 
             <div className="grid grid-cols-1 xs:grid-cols-2 lg:flex lg:items-center lg:justify-end w-full lg:w-auto gap-2 sm:gap-3 mt-4 lg:mt-0">
               {authLoading ? (
-                <div className="h-10 md:h-12 w-full md:w-32 bg-white/20 animate-pulse rounded-xl md:rounded-2xl"></div>
+                <div className="h-10 md:h-12 w-full md:w-32 bg-white/20 animate-pulse rounded-taj-md md:rounded-taj-lg"></div>
               ) : user ? (
-                <Button asChild variant="default" className="flex-1 md:flex-none py-3.5 bg-white text-indigo-700 hover:bg-gray-50">
+                <Button asChild variant="default" className="flex-1 md:flex-none py-3.5 bg-white text-brand-700 hover:bg-gray-50">
                   <Link href="/dashboard">
                     <span>لوحة التحكم</span>
                     <HomeIcon className="w-5 h-5" strokeWidth={2.5} />
@@ -135,7 +135,7 @@ export default function Home() {
         </div>
 
         {/* Modernized Search & Filters */}
-        <div className="animate-fade-in-up-delay bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] shadow-lg border border-white/50 flex flex-col lg:flex-row gap-4 justify-between items-center">
+        <div className="animate-fade-up-1 bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-taj-lg sm:rounded-taj-xl shadow-lg border border-white/50 flex flex-col lg:flex-row gap-4 justify-between items-center">
           <div className="w-full md:flex-1 relative">
             <Input
               type="text"
@@ -194,18 +194,18 @@ export default function Home() {
               teachers.map((teacher, index) => (
                 <Card
                   key={teacher.id}
-                  className="animate-fade-in-up hover:border-indigo-100 hover:-translate-y-1.5 group flex flex-col"
+                  className="animate-fade-up hover:border-brand-100 hover:-translate-y-1.5 group flex flex-col"
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   <CardHeader className="flex flex-row items-center gap-4 mb-1 pb-2">
-                    <div className="w-16 h-16 shrink-0 bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100/50 rounded-2xl flex items-center justify-center text-indigo-600 font-bold text-xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                    <div className="w-16 h-16 shrink-0 bg-gradient-to-br from-brand-50 to-purple-50 border border-brand-100/50 rounded-taj-lg flex items-center justify-center text-brand-600 font-bold text-xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
                       {teacher.name.charAt(0)}
                     </div>
                     <div>
                       <CardTitle className="text-lg text-gray-900 mb-1.5">
                         {teacher.name}
                       </CardTitle>
-                      <span className="inline-flex items-center gap-1.5 text-xs text-indigo-700 bg-indigo-50/80 px-2.5 py-1 rounded-lg font-bold">
+                      <span className="inline-flex items-center gap-1.5 text-xs text-brand-700 bg-brand-50/80 px-2.5 py-1 rounded-taj-sm font-bold">
                         <BookOpen size={14} />
                         {teacher.teacher_profile?.subject?.name || "غير محدد"}
                       </span>
@@ -240,7 +240,7 @@ export default function Home() {
                       </span>
                     </div>
                     {(teacher.active_slots_count || 0) > 0 ? (
-                      <Button asChild variant="default" className="w-full sm:w-auto px-6 rounded-2xl">
+                      <Button asChild variant="default" className="w-full sm:w-auto px-6 rounded-taj-lg">
                         <Link href={`/teachers/${teacher.id}`}>احجز الآن</Link>
                       </Button>
                     ) : (

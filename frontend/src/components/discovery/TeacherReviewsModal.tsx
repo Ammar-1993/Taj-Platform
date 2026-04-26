@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import api from "@/lib/axios";
 import { Review, ApiResponse } from "@/types";
 import Modal from "@/components/ui/Modal";
@@ -23,13 +23,7 @@ export default function TeacherReviewsModal({
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && teacherId) {
-      fetchReviews();
-    }
-  }, [isOpen, teacherId]);
-
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get<ApiResponse<{ data: Review[] }>>(`/discovery/teachers/${teacherId}/reviews`);
@@ -39,14 +33,20 @@ export default function TeacherReviewsModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, [teacherId]);
+
+  useEffect(() => {
+    if (isOpen && teacherId) {
+      fetchReviews();
+    }
+  }, [isOpen, teacherId, fetchReviews]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`تقييمات الأستاذ ${teacherName}`} size="lg">
       <div className="space-y-4">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="w-10 h-10 text-indigo-600 animate-spin mb-4" />
+            <Loader2 className="w-10 h-10 text-brand-600 animate-spin mb-4" />
             <p className="text-gray-500 font-bold">جاري تحميل التقييمات...</p>
           </div>
         ) : reviews.length === 0 ? (
@@ -56,15 +56,15 @@ export default function TeacherReviewsModal({
             subtitle="هذا المعلم لم يتلقَ أي تقييمات من الطلاب حتى الآن."
           />
         ) : (
-          <div className="grid grid-cols-1 gap-4 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-indigo-100">
+          <div className="grid grid-cols-1 gap-4 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-brand-100">
             {reviews.map((review) => (
               <div
                 key={review.id}
-                className="bg-gray-50/50 border border-gray-100 rounded-2xl p-5 transition-all hover:bg-white hover:shadow-sm"
+                className="bg-gray-50/50 border border-gray-100 rounded-taj-lg p-5 transition-all hover:bg-white hover:shadow-sm"
               >
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
+                    <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-600">
                       <User size={20} />
                     </div>
                     <div>
@@ -89,7 +89,7 @@ export default function TeacherReviewsModal({
                   </div>
                 </div>
                 {review.comment && (
-                  <p className="text-sm text-gray-700 leading-relaxed bg-white p-3 rounded-xl border border-gray-50 font-medium">
+                  <p className="text-sm text-gray-700 leading-relaxed bg-white p-3 rounded-taj-md border border-gray-50 font-medium">
                     {review.comment}
                   </p>
                 )}

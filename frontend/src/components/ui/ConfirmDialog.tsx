@@ -18,19 +18,19 @@ interface ConfirmDialogProps {
 
 const variantStyles = {
   danger: {
-    icon: <Trash2 className="w-7 h-7 text-red-600" />,
-    iconBg: "bg-red-100",
+    icon: <Trash2 className="w-7 h-7 text-error-text" />,
+    iconBg: "bg-error-bg",
     confirmBtn: "bg-gradient-to-l from-red-600 to-rose-600 hover:shadow-red-200",
   },
   warning: {
-    icon: <AlertTriangle className="w-7 h-7 text-amber-600" />,
-    iconBg: "bg-amber-100",
+    icon: <AlertTriangle className="w-7 h-7 text-warning-text" />,
+    iconBg: "bg-warning-bg",
     confirmBtn: "bg-gradient-to-l from-amber-600 to-yellow-600 hover:shadow-amber-200",
   },
   info: {
-    icon: <Info className="w-7 h-7 text-indigo-600" />,
-    iconBg: "bg-indigo-100",
-    confirmBtn: "bg-gradient-to-l from-indigo-600 to-purple-600 hover:shadow-indigo-200",
+    icon: <Info className="w-7 h-7 text-brand-600" />,
+    iconBg: "bg-brand-50",
+    confirmBtn: "bg-brand-600 hover:bg-brand-700 hover:shadow-brand-200",
   },
 };
 
@@ -51,13 +51,13 @@ export default function ConfirmDialog({
     <Modal isOpen={isOpen} onClose={onCancel} size="sm" hideCloseButton>
       <div className="text-center space-y-4">
         <div
-          className={`w-16 h-16 ${styles.iconBg} rounded-2xl flex items-center justify-center mx-auto`}
+          className={`w-16 h-16 ${styles.iconBg} rounded-taj-lg flex items-center justify-center mx-auto`}
         >
           {styles.icon}
         </div>
         <div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
-          <p className="text-gray-500 text-sm leading-relaxed">{message}</p>
+          <h3 className="text-xl font-bold text-text-primary mb-2">{title}</h3>
+          <p className="text-text-secondary text-sm leading-relaxed">{message}</p>
         </div>
       </div>
 
@@ -65,14 +65,14 @@ export default function ConfirmDialog({
         <button
           onClick={onCancel}
           disabled={isLoading}
-          className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold transition-all duration-200 disabled:opacity-50"
+          className="flex-1 py-3 bg-surface-subtle hover:bg-surface-muted text-text-secondary rounded-taj-md font-bold transition-all duration-200 disabled:opacity-50"
         >
           {cancelText}
         </button>
         <button
           onClick={onConfirm}
           disabled={isLoading}
-          className={`flex-1 py-3 text-white rounded-xl font-bold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 ${styles.confirmBtn}`}
+          className={`flex-1 py-3 text-white rounded-taj-md font-bold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 ${styles.confirmBtn}`}
         >
           {isLoading ? "جاري التنفيذ..." : confirmText}
         </button>

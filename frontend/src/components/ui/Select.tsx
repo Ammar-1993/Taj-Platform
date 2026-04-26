@@ -11,16 +11,16 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="relative group w-full">
         {icon && (
-          <div className={cn("absolute top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors z-10 pointer-events-none", dir === 'ltr' ? 'left-4' : 'right-4')}>
+          <div className={cn("absolute top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-brand-600 transition-colors z-10 pointer-events-none", dir === 'ltr' ? 'left-4' : 'right-4')}>
             {icon}
           </div>
         )}
         <select
           dir={dir}
           className={cn(
-            "flex h-12 w-full appearance-none rounded-[1.25rem] border-2 border-transparent bg-gray-50/50 px-4 py-2 text-sm font-bold text-gray-700 transition-all duration-300",
-            "focus-visible:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 hover:bg-gray-50 cursor-pointer",
-            "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-100",
+            "flex h-12 w-full appearance-none rounded-taj-md border-2 border-transparent bg-surface-subtle px-4 py-2 text-sm font-bold text-text-primary transition-all duration-300",
+            "focus-visible:outline-none focus:ring-4 focus:ring-brand-100 focus:border-brand-500 hover:bg-surface-muted cursor-pointer",
+            "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-surface-muted",
             icon ? (dir === 'ltr' ? "pl-11 pr-10" : "pr-11 pl-10") : (dir === 'ltr' ? "pr-10" : "pl-10"),
             className
           )}

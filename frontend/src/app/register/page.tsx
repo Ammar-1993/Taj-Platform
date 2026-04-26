@@ -12,7 +12,7 @@ export default function RegisterHubPage() {
       {/* استدعاء الخلفية التجميلية بشكل سليم */}
       <DecorativeBackground />
 
-      <div className="text-center max-w-3xl mb-8 animate-fade-in-up relative z-10">
+      <div className="text-center max-w-3xl mb-8 animate-fade-up relative z-10">
         {/* الشعار قابل للنقر ويوجه للصفحة الرئيسية */}
         <Link
           href="/"
@@ -35,7 +35,7 @@ export default function RegisterHubPage() {
         {/* 1. بطاقة الطالب */}
         <Link
           href="/register/student"
-          className="group animate-fade-in-up block h-full"
+          className="group animate-fade-up block h-full"
           style={{ animationDelay: "0.05s" }}
         >
           <Card variant="glass" className="p-6 hover:border-indigo-100 hover:shadow-2xl transition-all duration-300 text-center h-full flex flex-col justify-center items-center hover:-translate-y-1.5 overflow-hidden">
@@ -56,7 +56,7 @@ export default function RegisterHubPage() {
         {/* 2. بطاقة المعلم */}
         <Link
           href="/register/teacher"
-          className="group animate-fade-in-up block h-full"
+          className="group animate-fade-up block h-full"
           style={{ animationDelay: "0.1s" }}
         >
           <Card variant="glass" className="p-6 hover:border-emerald-100 hover:shadow-2xl transition-all duration-300 text-center h-full flex flex-col justify-center items-center hover:-translate-y-1.5 overflow-hidden">
@@ -68,7 +68,7 @@ export default function RegisterHubPage() {
             <p className="text-gray-500 text-sm leading-relaxed mb-4 flex-1">
               أريد الانضمام لفريق تاج، تقديم حصص تفاعلية، وتحقيق دخل إضافي.
             </p>
-            <Button variant="gradient" className="w-full !from-emerald-600 !via-emerald-500 !to-green-600 group-hover:shadow-[0_8px_20px_rgba(16,185,129,0.25)]">
+            <Button variant="gradient" className="w-full from-emerald-600 via-emerald-500 to-green-600 group-hover:shadow-[0_8px_20px_rgba(16,185,129,0.25)]">
               حساب معلم
             </Button>
           </Card>
@@ -77,7 +77,7 @@ export default function RegisterHubPage() {
         {/* 3. بطاقة ولي الأمر */}
         <Link
           href="/register/parent"
-          className="group animate-fade-in-up block h-full"
+          className="group animate-fade-up block h-full"
           style={{ animationDelay: "0.15s" }}
         >
           <Card variant="glass" className="p-6 hover:border-purple-100 hover:shadow-2xl transition-all duration-300 text-center h-full flex flex-col justify-center items-center hover:-translate-y-1.5 overflow-hidden">
@@ -89,7 +89,7 @@ export default function RegisterHubPage() {
             <p className="text-gray-500 text-sm leading-relaxed mb-4 flex-1">
               أريد إدارة حسابات أبنائي، شحن محافظهم، ومتابعة تطورهم الدراسي.
             </p>
-            <Button variant="gradient" className="w-full !from-purple-600 !via-purple-500 !to-violet-600 group-hover:shadow-[0_8px_20px_rgba(147,51,234,0.25)]">
+            <Button variant="gradient" className="w-full from-purple-600 via-purple-500 to-violet-600 group-hover:shadow-[0_8px_20px_rgba(147,51,234,0.25)]">
               حساب ولي أمر
             </Button>
           </Card>

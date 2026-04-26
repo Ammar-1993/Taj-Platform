@@ -65,13 +65,13 @@ const statusMap: Record<string, BadgeConfig> = {
     icon: <CheckCircle2 className="w-3 h-3" />,
   },
   transferred: {
-    label: "تم التحويل 🏦",
+    label: "تم التحويل",
     bg: "bg-blue-100",
     text: "text-blue-800",
     dot: "bg-blue-500",
   },
   rejected: {
-    label: "مرفوض ❌",
+    label: "مرفوض",
     bg: "bg-red-100",
     text: "text-red-800",
     dot: "bg-red-500",
@@ -79,7 +79,7 @@ const statusMap: Record<string, BadgeConfig> = {
 
   // حالات التذاكر (Support Tickets)
   open: {
-    label: "مفتوحة ⏳",
+    label: "مفتوحة",
     bg: "bg-red-100",
     text: "text-red-800",
     dot: "bg-red-500",

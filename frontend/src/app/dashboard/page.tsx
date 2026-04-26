@@ -4,7 +4,10 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import PageHeader from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
+import Link from "next/link";
+import { Shield, Search, LogOut } from "lucide-react";
 import { ParentDashboard } from "@/components/dashboard/ParentDashboard";
 import { StudentTeacherDashboard } from "@/components/dashboard/StudentTeacherDashboard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
@@ -47,11 +50,38 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        <DashboardHeader
-          user={user}
-          isTeacher={isTeacher}
-          isParent={isParent}
-          logout={logout}
+        <PageHeader
+          title={`مرحباً، ${user.name}`}
+          subtitle={
+            isParent
+              ? "لوحة المراقبة الشاملة لحجوزات ونفقات الأبناء"
+              : isTeacher
+              ? "بوابة المعلم لإدارة الحصص والأرباح"
+              : "بوابة الطالب لإدارة الحجوزات والمحفظة"
+          }
+          icon={<Shield className="w-7 h-7" />}
+          variant="indigo"
+          showBack={false}
+          actions={
+            <>
+              {!isTeacher && (
+                <Button asChild variant="outline" className="bg-white/20 border-white/20 text-white hover:bg-white/30 h-11 px-5 rounded-taj-md">
+                  <Link href="/">
+                    <Search className="w-4 h-4 mr-2" />
+                    {isParent ? "اختر المعلم المفضل لأبنائك" : "اختر معلمك المفضل"}
+                  </Link>
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                onClick={logout}
+                className="md:hidden bg-rose-500/20 hover:bg-rose-500/40 text-white border border-rose-500/30 h-11 px-5 rounded-taj-md"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                تسجيل الخروج
+              </Button>
+            </>
+          }
         />
 
         {isParent ? (

@@ -35,11 +35,11 @@ export default function MobileHeader() {
   return (
     <>
       {/* الشريط العلوي الثابت للموبايل */}
-      <header className="md:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 py-4 flex items-center justify-between shadow-sm">
-        <h2 className="text-xl font-bold text-indigo-600">منصة تاج</h2>
+      <header className="md:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-surface-subtle px-4 py-4 flex items-center justify-between shadow-sm">
+        <h2 className="text-xl font-bold text-brand-600">منصة تاج</h2>
         <button 
           onClick={() => setIsOpen(true)}
-          className="p-2 -mr-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors"
+          className="p-2 -mr-2 text-text-secondary hover:bg-brand-50 hover:text-brand-600 rounded-taj-sm transition-colors"
           aria-label="Open menu"
         >
           <Menu className="w-6 h-6" />
@@ -60,11 +60,11 @@ export default function MobileHeader() {
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-indigo-600">منصة تاج</h2>
+        <div className="p-6 border-b border-surface-subtle flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-brand-600">منصة تاج</h2>
           <button 
             onClick={() => setIsOpen(false)}
-            className="p-2 -ml-2 text-gray-400 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors"
+            className="p-2 -ml-2 text-text-muted hover:bg-surface-subtle hover:text-text-primary rounded-taj-sm transition-colors"
             aria-label="Close menu"
           >
             <X className="w-5 h-5" />
@@ -79,26 +79,26 @@ export default function MobileHeader() {
               <Link 
                 key={link.href} 
                 href={link.href}
-                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all ${
+                className={`flex items-center gap-3 px-4 py-3.5 rounded-taj-md font-bold transition-all ${
                   isActive 
-                    ? "bg-indigo-50 text-indigo-700 border-r-4 border-indigo-600" 
-                    : "text-gray-600 hover:bg-gray-50 hover:text-indigo-600"
+                    ? "bg-brand-50 text-brand-700 border-r-4 border-brand-600" 
+                    : "text-text-secondary hover:bg-surface-subtle hover:text-brand-600"
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
+                <Icon className={`w-5 h-5 ${isActive ? 'text-brand-600' : 'text-text-muted'}`} />
                 {link.name}
               </Link>
             );
           })}
         </nav>
         
-        <div className="p-4 border-t border-gray-100">
+        <div className="p-4 border-t border-surface-subtle">
           <button 
             onClick={() => {
               setIsOpen(false);
               logout();
             }}
-            className="flex items-center gap-3 px-4 py-3.5 w-full text-rose-600 hover:bg-rose-50 rounded-xl font-bold transition-colors"
+            className="flex items-center gap-3 px-4 py-3.5 w-full text-error-text hover:bg-error-bg rounded-taj-md font-bold transition-colors"
           >
             <LogOut className="w-5 h-5" />
             تسجيل الخروج

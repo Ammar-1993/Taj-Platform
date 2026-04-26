@@ -20,13 +20,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={finalId} className="block text-sm font-bold text-gray-700 mb-1.5">
+          <label htmlFor={finalId} className="block text-sm font-bold text-text-primary mb-1.5">
             {label}
           </label>
         )}
         <div className="relative group w-full">
           {icon && (
-            <div className={cn("absolute top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors z-10 pointer-events-none", dir === 'ltr' ? 'left-3.5' : 'right-3.5')}>
+            <div className={cn("absolute top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-brand-600 transition-colors z-10 pointer-events-none", dir === 'ltr' ? 'left-3.5' : 'right-3.5')}>
               {icon}
             </div>
           )}
@@ -35,11 +35,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             type={currentType}
             dir={dir}
             className={cn(
-              "flex w-full rounded-xl border-2 border-transparent bg-gray-50/50 hover:bg-gray-50 px-4 py-2.5 text-sm transition-all duration-300 outline-none",
+              "flex w-full rounded-taj-md border-2 border-transparent bg-surface-subtle hover:bg-surface-muted px-4 py-2.5 text-sm transition-all duration-300 outline-none",
               "file:border-0 file:bg-transparent file:text-sm file:font-medium",
-              "placeholder:text-gray-400 placeholder:tracking-normal font-bold text-gray-900",
-              "focus-visible:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500",
-              "disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 disabled:opacity-70",
+              "placeholder:text-text-muted placeholder:tracking-normal font-bold text-text-primary",
+              "focus-visible:outline-none focus:ring-4 focus:ring-brand-100 focus:border-brand-500",
+              "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-text-muted disabled:opacity-70",
               error && "border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50/30",
               icon ? (dir === 'ltr' ? "pl-10" : "pr-10") : "",
               isPassword ? (dir === 'ltr' ? "pr-10 tracking-widest" : "pl-10 tracking-widest") : "",
