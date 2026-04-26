@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import api from '@/lib/axios';
+import { discoveryService, profileService } from '@/services/api';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
-import { GradeLevel } from '@/types';
 import { showApiError } from '@/hooks/useApiError';
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -15,59 +15,43 @@ import RedirectCountdown from "@/components/ui/RedirectCountdown";
 
 export default function StudentProfilePage() {
     const { user, loading: authLoading } = useAuth();
-    
-    const [gradeLevels, setGradeLevels] = useState<GradeLevel[]>([]);
     const [gradeLevelId, setGradeLevelId] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [successRedirect, setSuccessRedirect] = useState(false);
 
-    // 1. جلب المراحل الدراسية عند فتح الصفحة
+    // Fetch grade levels
+    const { data: gradesData, isLoading: gradesLoading } = useQuery({
+        queryKey: ['grade-levels'],
+        queryFn: () => discoveryService.getGradeLevels(),
+        staleTime: 5 * 60 * 1000,
+    });
+
+    const gradeLevels = gradesData?.data || [];
+
+    // Sync form with user profile
     useEffect(() => {
-        const fetchGradeLevels = async () => {
-            try {
-                const res = await api.get('/discovery/grade-levels');
-                setGradeLevels(res.data.data);
-                
-                // إذا كان الطالب قد حدد مرحلته مسبقاً، نقوم بتحديدها في القائمة
-                if (user?.student_profile?.grade_level_id) {
-                    setGradeLevelId(user.student_profile.grade_level_id.toString());
-                }
-            } catch (error) {
-                console.error("خطأ في جلب المراحل الدراسية", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (!authLoading && user) {
-            fetchGradeLevels();
+        if (user?.student_profile?.grade_level_id) {
+            setGradeLevelId(user.student_profile.grade_level_id.toString());
         }
-    }, [user, authLoading]);
+    }, [user]);
 
-    // 2. دالة حفظ المرحلة الدراسية
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-
-        try {
-            const res = await api.post('/profile/student', {
-                grade_level_id: gradeLevelId
-            });
-            
-            toast.success(res.data.message || 'تم حفظ المرحلة بنجاح!');
-            
-            // 🟢 بعد الحفظ، نوجه الطالب للوحة التحكم الرئيسية أو صفحة البحث عن معلمين
+    // Mutation for saving profile
+    const saveMutation = useMutation({
+        mutationFn: (id: string) => profileService.updateStudentProfile({ grade_level_id: id }),
+        onSuccess: (res) => {
+            toast.success(res.message || 'تم حفظ المرحلة بنجاح!');
             setSuccessRedirect(true);
-            
-        } catch (error: unknown) {
+        },
+        onError: (error: unknown) => {
             showApiError(error, 'حدث خطأ أثناء الحفظ. يرجى المحاولة مرة أخرى.');
-        } finally {
-            setIsSubmitting(false);
         }
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        saveMutation.mutate(gradeLevelId);
     };
 
-    if (authLoading || loading) {
+    if (authLoading || gradesLoading) {
         return (
             <div className="min-h-screen relative overflow-hidden bg-gray-50/50 flex justify-center items-center">
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-10">
@@ -82,7 +66,6 @@ export default function StudentProfilePage() {
         );
     }
 
-    // حماية الصفحة: التأكد أن من يزورها هو طالب فقط
     if (!user?.roles?.some((r) => r.name === 'student')) {
         return (
             <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 flex flex-col justify-center items-center text-center">
@@ -105,15 +88,12 @@ export default function StudentProfilePage() {
 
     return (
         <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 md:p-8 flex justify-center items-center">
-            {/* Decorative Background Elements */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-0 opacity-20">
                 <div className="absolute top-[10%] -left-20 w-96 h-96 rounded-full bg-indigo-300 blur-[120px]"></div>
                 <div className="absolute bottom-[20%] -right-20 w-[600px] h-[600px] rounded-full bg-purple-200 blur-[150px]"></div>
             </div>
 
             <div className="relative z-10 max-w-2xl w-full space-y-8 tracking-tight">
-                
-                {/* بطاقة الترحيب */}
                 <Card className="bg-white/80 backdrop-blur-md rounded-[2.5rem] border-white/50 text-center animate-fade-in-up p-8 md:p-10">
                     <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner animate-subtle-pulse">
                         <GraduationCap className="w-12 h-12" />
@@ -126,9 +106,7 @@ export default function StudentProfilePage() {
                     </p>
                 </Card>
 
-                {/* نموذج الإعدادات */}
                 <Card className="bg-white/90 backdrop-blur-md rounded-[2.5rem] border-white/50 animate-fade-in-up-delay p-8 md:p-10">
-                    
                     {successRedirect ? (
                         <RedirectCountdown 
                             href="/dashboard"
@@ -160,10 +138,10 @@ export default function StudentProfilePage() {
 
                         <Button 
                             type="submit" 
-                            disabled={isSubmitting || !gradeLevelId} 
+                            disabled={saveMutation.isPending || !gradeLevelId} 
                             className="w-full h-14 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] text-lg rounded-[1.5rem]"
                         >
-                            {isSubmitting ? (
+                            {saveMutation.isPending ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin mr-2" />
                                     جاري الحفظ...
@@ -178,7 +156,6 @@ export default function StudentProfilePage() {
                     </form>
                     )}
                 </Card>
-                
             </div>
         </div>
     );

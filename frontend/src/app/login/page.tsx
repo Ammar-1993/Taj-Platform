@@ -12,6 +12,7 @@ import ErrorBanner from "@/components/ui/ErrorBanner";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
+import { authService } from "@/services/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -48,8 +49,8 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await api.post("/auth/login", { email, password });
-      const { token, user } = response.data.data;
+      const response = await authService.login({ email, password });
+      const { token, user } = response.data;
       
       await login(token, user);
       router.push("/dashboard");

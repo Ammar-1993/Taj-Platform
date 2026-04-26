@@ -1,80 +1,82 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import api from "@/lib/axios";
 import { formatTime, formatDate } from "@/lib/formatters";
 import PageHeader from "@/components/ui/PageHeader";
 import toast from "react-hot-toast";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { showApiError } from "@/hooks/useApiError";
-import { ApiResponse, SlotsByDate, TeacherSlot } from '@/types';
+import { TeacherSlot } from '@/types';
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Plus, Loader2, CalendarRange, CalendarX2, CalendarDays, Clock, LockOpen, Lock, LockKeyhole, Trash2 } from "lucide-react";
+import { teacherService } from "@/services/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function TeacherSchedulePage() {
   const { user } = useAuth();
-  const [slots, setSlots] = useState<SlotsByDate>({});
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  // Fetch slots using TanStack Query
+  const { data: slotsData, isLoading: loading } = useQuery({
+    queryKey: ["teacher-slots", user?.id],
+    queryFn: () => teacherService.getOwnSlots(),
+    enabled: !!user,
+  });
+
+  const slots = slotsData?.data || {};
 
   // حالة الفورم
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (user) fetchSlots();
-  }, [user]);
-
-  const fetchSlots = async () => {
-    try {
-      const res = await api.get<ApiResponse<SlotsByDate>>("/teacher/slots");
-      setSlots(res.data.data || {});
-    } catch (error) {
-      console.error("خطأ في جلب الجدول", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddSlot = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      await api.post("/teacher/slots", {
-        slot_date: date,
-        start_time: startTime,
-        end_time: endTime,
-      });
-
+  // Mutation for adding a slot
+  const addSlotMutation = useMutation({
+    mutationFn: (data: { slot_date: string; start_time: string; end_time: string }) =>
+      teacherService.createSlot(data),
+    onSuccess: () => {
       toast.success("تم إضافة الموعد بنجاح!");
-      setStartTime(""); // تصفير الوقت لتسهيل الإضافة التالية
+      setStartTime("");
       setEndTime("");
-      fetchSlots(); // تحديث الجدول فوراً
-    } catch (error: unknown) {
+      queryClient.invalidateQueries({ queryKey: ["teacher-slots", user?.id] });
+    },
+    onError: (error: unknown) => {
       showApiError(error, "حدث خطأ غير متوقع");
-    } finally {
-      setIsSubmitting(false);
-    }
+    },
+  });
+
+  // Mutation for deleting a slot
+  const deleteSlotMutation = useMutation({
+    mutationFn: (id: number) => teacherService.deleteSlot(id),
+    onSuccess: () => {
+      toast.success("تم حذف الموعد بنجاح.");
+      queryClient.invalidateQueries({ queryKey: ["teacher-slots", user?.id] });
+    },
+    onError: (error: unknown) => {
+      showApiError(error, "لا يمكن حذف الموعد.");
+    },
+    onSettled: () => {
+      setDeleteConfirm({ isOpen: false, slotId: 0 });
+    },
+  });
+
+  const handleAddSlot = (e: React.FormEvent) => {
+    e.preventDefault();
+    addSlotMutation.mutate({
+      slot_date: date,
+      start_time: startTime,
+      end_time: endTime,
+    });
   };
 
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; slotId: number }>({ isOpen: false, slotId: 0 });
 
-  const handleDeleteSlot = async () => {
-    try {
-      await api.delete(`/teacher/slots/${deleteConfirm.slotId}`);
-      toast.success("تم حذف الموعد بنجاح.");
-      fetchSlots();
-    } catch (error: unknown) {
-      showApiError(error, "لا يمكن حذف الموعد.");
-    } finally {
-      setDeleteConfirm({ isOpen: false, slotId: 0 });
-    }
+  const handleDeleteSlot = () => {
+    deleteSlotMutation.mutate(deleteConfirm.slotId);
   };
 
   if (loading)
@@ -162,10 +164,10 @@ export default function TeacherSchedulePage() {
               </div>
               <Button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full h-14 bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] text-lg rounded-[1.5rem]"
+                disabled={addSlotMutation.isPending}
+                className="w-full h-14 bg-gradient-to-r from-brand-600 via-brand-700 to-brand-800 hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] text-lg rounded-taj-xl"
               >
-                {isSubmitting ? (
+                {addSlotMutation.isPending ? (
                     <>
                         <Loader2 className="w-5 h-5 animate-spin mr-2" />
                         جاري الإضافة...

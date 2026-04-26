@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { PasswordStrength } from "@/components/ui/PasswordStrength";
+import { authService } from "@/services/api";
 
 export default function TeacherRegisterPage() {
     const router = useRouter();
@@ -80,7 +81,7 @@ export default function TeacherRegisterPage() {
 
         try {
             // إرسال الطلب للبوابة الموحدة مع تحديد دور "المعلم"
-            const res = await api.post('/auth/register', {
+            const res = await authService.register({
                 name,
                 email,
                 phone,
@@ -91,7 +92,8 @@ export default function TeacherRegisterPage() {
             setSuccessMsg("تم إنشاء حسابك بنجاح!");
             
             // تسجيل الدخول تلقائياً
-            login(res.data.data.token, res.data.data.user);
+            const { token, user } = res.data;
+            login(token, user);
 
             // توجيه المعلم للوحة التحكم
             setTimeout(() => {

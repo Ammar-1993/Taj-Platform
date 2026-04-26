@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import api from "@/lib/axios";
-import { User, Wallet, Booking, AppNotification, ParentDashboardData } from "@/types";
+import { parentService, walletService, bookingService, notificationService } from "@/services/api";
+import { User, Booking, AppNotification } from "@/types";
 
 export const useDashboardData = (user: User | null, isParent: boolean, isTeacher: boolean) => {
   const queryClient = useQueryClient();
@@ -10,10 +10,7 @@ export const useDashboardData = (user: User | null, isParent: boolean, isTeacher
   // Fetch parent data
   const { data: parentData, isLoading: parentLoading } = useQuery({
     queryKey: ['parentDashboard', user?.id],
-    queryFn: async () => {
-      const res = await api.get("/parent/dashboard");
-      return res.data.data as ParentDashboardData;
-    },
+    queryFn: () => parentService.getDashboardData().then(res => res.data),
     enabled: !!user && isParent,
   });
 
@@ -22,14 +19,14 @@ export const useDashboardData = (user: User | null, isParent: boolean, isTeacher
     queryKey: ['dashboard', user?.id],
     queryFn: async () => {
       const [walletRes, bookingsRes, notifRes] = await Promise.all([
-        api.get("/wallet"),
-        api.get("/bookings"),
-        api.get("/notifications"),
+        walletService.getWallet(),
+        bookingService.getAll(),
+        notificationService.getAll(),
       ]);
       return {
-        wallet: walletRes.data.data as Wallet,
-        bookings: bookingsRes.data.data.data as Booking[],
-        notifications: (notifRes.data.data || []) as AppNotification[],
+        wallet: walletRes.data,
+        bookings: bookingsRes.data.data, // Since getAll returns ApiResponse<{ data: Booking[] }>
+        notifications: notifRes.data || [],
       };
     },
     enabled: !!user && !isParent,
@@ -49,11 +46,8 @@ export const useDashboardData = (user: User | null, isParent: boolean, isTeacher
 
   // Mutation for notifications
   const markNotificationAsReadMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await api.post(`/notifications/${id}/read`);
-      return id;
-    },
-    onSuccess: (id) => {
+    mutationFn: (id: string) => notificationService.markAsRead(id),
+    onSuccess: (res, id) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       queryClient.setQueryData(['dashboard', user?.id], (oldData: any) => {
         if (!oldData) return oldData;

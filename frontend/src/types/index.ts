@@ -86,6 +86,13 @@ export interface TeacherSlot {
 
 export type SlotsByDate = Record<string, TeacherSlot[]>;
 
+export interface TeacherSlotsResponse {
+  data: SlotsByDate;
+  teacher_name: string;
+  session_price?: string;
+}
+
+
 export interface TeacherProfileFormData {
   subject_id: string;
   bio: string;
@@ -167,3 +174,11 @@ export interface ParentDashboardData {
   wallets: ChildWallet[];
   bookings: Booking[];
 }
+
+export interface ClassroomAccess {
+  channel_name: string;
+  uid: number;
+  role: 'host' | 'audience';
+  token?: string;
+}
+

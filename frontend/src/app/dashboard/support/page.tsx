@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import api from "@/lib/axios";
+import { supportService, bookingService } from "@/services/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import PageHeader from "@/components/ui/PageHeader";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -11,7 +12,6 @@ import {
   ApiResponse,
   Booking,
   SupportTicket,
-  SupportTicketCreatePayload,
 } from "@/types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -34,66 +34,54 @@ import { formatDate } from "@/lib/formatters";
 
 export default function SupportPage() {
   const { user } = useAuth();
-
-  const [tickets, setTickets] = useState<SupportTicket[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   // حالات نموذج الإرسال
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [bookingId, setBookingId] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [successRedirect, setSuccessRedirect] = useState(false);
 
-  useEffect(() => {
-    if (user) fetchData();
-  }, [user]);
+  // Fetch tickets
+  const { data: ticketsData, isLoading: ticketsLoading } = useQuery({
+    queryKey: ['support-tickets', user?.id],
+    queryFn: () => supportService.getAll(),
+    enabled: !!user,
+  });
 
-  const fetchData = async () => {
-    try {
-      // جلب التذاكر السابقة وجلب الحجوزات (لربط الشكوى بحجز معين)
-      const [ticketsRes, bookingsRes] = await Promise.all([
-        api.get<ApiResponse<SupportTicket[]>>("/support-tickets"),
-        api.get<ApiResponse<{ data: Booking[] }>>("/bookings"), // نفترض أن هذا المسار موجود مسبقاً لجلب حجوزات الطالب
-      ]);
+  // Fetch bookings for connection
+  const { data: bookingsData, isLoading: bookingsLoading } = useQuery({
+    queryKey: ['bookings', user?.id],
+    queryFn: () => bookingService.getAll(),
+    enabled: !!user,
+  });
 
-      setTickets(ticketsRes.data.data || []);
-      setBookings(bookingsRes.data.data?.data || []); // حسب هيكلة الـ Pagination لديك
-    } catch (error) {
-      console.error("خطأ في جلب بيانات الدعم", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const tickets = ticketsData?.data || [];
+  const bookings = bookingsData?.data?.data || [];
+  const loading = ticketsLoading || bookingsLoading;
 
-  const handleSubmitTicket = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const payload: SupportTicketCreatePayload = { subject, description };
-      if (bookingId) payload.booking_id = bookingId;
-
-      const res = await api.post<ApiResponse<SupportTicket>>(
-        "/support-tickets",
-        payload,
-      );
-
-      toast.success(res.data.message || "تم إرسال التذكرة بنجاح.");
+  // Mutation for submitting a ticket
+  const submitMutation = useMutation({
+    mutationFn: (payload: { subject: string; description: string; booking_id?: string }) => 
+      supportService.create(payload),
+    onSuccess: (res: ApiResponse<SupportTicket>) => {
+      toast.success(res.message || "تم إرسال التذكرة بنجاح.");
       setSubject("");
       setDescription("");
       setBookingId("");
-
-      fetchData(); // تحديث قائمة التذاكر فوراً
-
-      // العودة للوحة بعد 3 ثواني
+      queryClient.invalidateQueries({ queryKey: ['support-tickets', user?.id] });
       setSuccessRedirect(true);
-    } catch (error: unknown) {
+    },
+    onError: (error: unknown) => {
       showApiError(error, "حدث خطأ أثناء إرسال التذكرة.");
-    } finally {
-      setIsSubmitting(false);
     }
+  });
+
+  const handleSubmitTicket = (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload: { subject: string; description: string; booking_id?: string } = { subject, description };
+    if (bookingId) payload.booking_id = bookingId;
+    submitMutation.mutate(payload);
   };
 
   const renderStatusBadge = (status: string) => {
@@ -125,7 +113,6 @@ export default function SupportPage() {
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* القسم الأول: نموذج فتح تذكرة جديدة */}
           <div className="lg:col-span-1 space-y-6">
             <Card className="bg-white/90 backdrop-blur-md rounded-[2rem] border-white/50 animate-fade-in-up-delay p-8">
               <h3 className="font-bold text-xl text-gray-900 mb-6 flex items-center gap-3">
@@ -182,10 +169,10 @@ export default function SupportPage() {
 
                   <Button
                     type="submit"
-                    disabled={isSubmitting || !subject || !description}
+                    disabled={submitMutation.isPending || !subject || !description}
                     className="w-full h-14 bg-gradient-to-r from-indigo-600 to-indigo-800 hover:shadow-[0_8px_30px_rgb(79,70,229,0.3)] text-lg rounded-[1.5rem]"
                   >
-                    {isSubmitting ? (
+                    {submitMutation.isPending ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin mr-2" />
                         جاري الإرسال...
@@ -202,7 +189,6 @@ export default function SupportPage() {
             </Card>
           </div>
 
-          {/* القسم الثاني: سجل التذاكر وردود الإدارة */}
           <Card className="lg:col-span-2 bg-white/80 backdrop-blur-md rounded-[2rem] border-white/50 h-fit animate-fade-in-up-delay p-8">
             <h3 className="font-bold text-2xl text-gray-900 mb-8 flex items-center gap-3 underline underline-offset-8 decoration-indigo-100">
               <span className="w-10 h-10 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center shadow-inner">
@@ -218,7 +204,7 @@ export default function SupportPage() {
               />
             ) : (
               <div className="space-y-6">
-                {tickets.map((ticket) => (
+                {tickets.map((ticket: SupportTicket) => (
                   <div
                     key={ticket.id}
                     className="group relative bg-white/50 hover:bg-white transition-all duration-300 border-2 border-gray-50 rounded-[1.5rem] p-6 shadow-sm hover:shadow-xl hover:-translate-y-1"
@@ -252,7 +238,6 @@ export default function SupportPage() {
                       {ticket.description}
                     </p>
 
-                    {/* 🟢 عرض رد الإدارة إن وجد */}
                     {ticket.admin_reply && (
                       <div className="mt-6 bg-gradient-to-l from-indigo-50/50 to-blue-50/50 border border-indigo-100 p-6 rounded-2xl relative shadow-sm">
                         <div className="absolute top-0 right-6 -mt-3.5 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white text-[10px] sm:text-xs font-bold px-4 py-1.5 rounded-full shadow-lg flex items-center gap-2">

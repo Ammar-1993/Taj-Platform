@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import api from '@/lib/axios';
+import { walletService } from '@/services/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import PageHeader from '@/components/ui/PageHeader';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { showApiError } from '@/hooks/useApiError';
-import { ApiResponse, PayoutRequest, Wallet } from '@/types';
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -20,65 +20,59 @@ import { formatDate, formatCurrency } from "@/lib/formatters";
 
 export default function PayoutPage() {
     const { user } = useAuth();
+    const queryClient = useQueryClient();
     
-    const [walletInfo, setWalletInfo] = useState<Wallet | null>(null);
-    const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
-    const [loading, setLoading] = useState(true);
+    // Fetch wallet info
+    const { data: walletData, isLoading: walletLoading } = useQuery({
+        queryKey: ['wallet', user?.id],
+        queryFn: () => walletService.getWallet(),
+        enabled: !!user,
+    });
+    
+    // Fetch payouts
+    const { data: payoutsData, isLoading: payoutsLoading } = useQuery({
+        queryKey: ['payouts', user?.id],
+        queryFn: () => walletService.getPayouts(),
+        enabled: !!user,
+    });
+
+    const walletInfo = walletData?.data || null;
+    const payouts = payoutsData?.data || [];
+    const loading = walletLoading || payoutsLoading;
 
     // حالات نموذج السحب
     const [amount, setAmount] = useState<number | ''>('');
     const [bankName, setBankName] = useState('');
     const [iban, setIban] = useState('SA');
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [successRedirect, setSuccessRedirect] = useState(false);
 
     const walletBalance = walletInfo ? Number(walletInfo.balance) : 0;
 
-    // جلب الرصيد المباشر وسجل الطلبات عند فتح الصفحة
-    useEffect(() => {
-        if (user) fetchData();
-    }, [user]);
-
-    const fetchData = async () => {
-        try {
-            const [walletRes, payoutsRes] = await Promise.all([
-                api.get<ApiResponse<Wallet>>('/wallet'),
-                api.get<ApiResponse<PayoutRequest[]>>('/wallet/payouts')
-            ]);
-            setWalletInfo(walletRes.data.data);
-            setPayouts(payoutsRes.data.data || []);
-        } catch (error) {
-            console.error("خطأ في جلب البيانات المالية", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handlePayoutSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-
-        try {
-            const res = await api.post<ApiResponse<unknown>>('/wallet/payouts', {
-                amount: Number(amount),
-                bank_name: bankName,
-                iban: iban
-            });
-            
-            toast.success(res.data.message || 'تم إرسال طلب السحب.');
+    // Mutation for payout request
+    const payoutMutation = useMutation({
+        mutationFn: (data: { amount: string; bank_name: string; iban: string }) =>
+            walletService.requestPayout(data),
+        onSuccess: (data) => {
+            toast.success(data.message || 'تم إرسال طلب السحب.');
             setAmount('');
             setBankName('');
             setIban('SA');
-            
-            // تحديث الرصيد والجدول فوراً بدون الحاجة لتحديث الصفحة
-            fetchData(); 
-            
-            // العودة للوحة بعد 3 ثواني
-            setSuccessRedirect(true);        } catch (error: unknown) {
+            queryClient.invalidateQueries({ queryKey: ['wallet', user?.id] });
+            queryClient.invalidateQueries({ queryKey: ['payouts', user?.id] });
+            setSuccessRedirect(true);
+        },
+        onError: (error: unknown) => {
             showApiError(error, 'تأكد من صحة البيانات وألا يقل المبلغ عن 50 ريال.');
-        } finally {
-            setIsSubmitting(false);
-        }
+        },
+    });
+
+    const handlePayoutSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        payoutMutation.mutate({
+            amount: String(amount),
+            bank_name: bankName,
+            iban: iban
+        });
     };
 
     const renderStatusBadge = (status: string) => {
@@ -198,13 +192,13 @@ export default function PayoutPage() {
                                 <Button 
                                     type="submit" 
                                     disabled={
-                                        isSubmitting ||
+                                        payoutMutation.isPending ||
                                         (amount !== '' && amount > walletBalance) ||
                                         walletBalance < 50
                                     }
-                                    className="w-full h-14 bg-gradient-to-r from-emerald-600 via-emerald-700 to-green-800 hover:shadow-[0_12px_40px_rgba(16,185,129,0.3)] text-lg rounded-[1.5rem]"
+                                    className="w-full h-14 bg-gradient-to-r from-emerald-600 via-emerald-700 to-green-800 hover:shadow-[0_12px_40px_rgba(16,185,129,0.3)] text-lg rounded-taj-xl"
                                 >
-                                    {isSubmitting ? (
+                                    {payoutMutation.isPending ? (
                                         <>
                                             <Loader2 className="w-5 h-5 animate-spin mr-2" />
                                             جاري المعالجة...

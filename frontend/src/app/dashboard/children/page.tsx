@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import api from '@/lib/axios';
 import PageHeader from '@/components/ui/PageHeader';
 import toast from 'react-hot-toast';
 import { showApiError } from '@/hooks/useApiError';
-import { ApiResponse, GradeLevel, User } from '@/types';
+import { User } from '@/types';
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -14,75 +13,91 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { GraduationCap, Users, Plus, X, Check, Loader2 } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import { Select } from "@/components/ui/Select";
+import { parentService, discoveryService } from '@/services/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function ChildrenManagementPage() {
     const { user } = useAuth();
-    const [children, setChildren] = useState<User[]>([]);
-    const [gradeLevels, setGradeLevels] = useState<GradeLevel[]>([]);
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
+    
+    // Fetch children
+    const { data: childrenData, isLoading: childrenLoading } = useQuery({
+        queryKey: ['parent-children', user?.id],
+        queryFn: () => parentService.getChildren(),
+        enabled: !!user,
+    });
+    
+    // Fetch grade levels
+    const { data: gradesData, isLoading: gradesLoading } = useQuery({
+        queryKey: ['grade-levels'],
+        queryFn: () => discoveryService.getGradeLevels(),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+
+    const children = childrenData?.data || [];
+    const gradeLevels = gradesData?.data || [];
+    const loading = childrenLoading || gradesLoading;
     
     // حالة الفورم (الإضافة)
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({ name: '', email: '', password: '', grade_level_id: '' });
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
-        try {
-            const [childrenRes, gradesRes] = await Promise.all([
-                api.get<ApiResponse<User[]>>('/parent/children'),
-                api.get<ApiResponse<GradeLevel[]>>('/discovery/grade-levels')
-            ]);
-            setChildren(childrenRes.data.data || []);
-            setGradeLevels(gradesRes.data.data || []);
-        } catch (error) {
-            console.error("حدث خطأ أثناء جلب البيانات", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleAddChild = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-
-        try {
-            await api.post('/parent/children', formData);
+    // Mutation for adding a child
+    const addChildMutation = useMutation({
+        mutationFn: (data: Record<string, string>) => parentService.addChild(data),
+        onSuccess: () => {
             toast.success('تم إضافة الابن بنجاح! 🎉');
             setFormData({ name: '', email: '', password: '', grade_level_id: '' });
             setShowForm(false);
-            fetchData(); // تحديث القائمة
-        } catch (error: unknown) {
+            queryClient.invalidateQueries({ queryKey: ['parent-children', user?.id] });
+        },
+        onError: (error: unknown) => {
             showApiError(error, 'حدث خطأ أثناء الإضافة');
-        } finally {
-            setIsSubmitting(false);
-        }
+        },
+    });
+
+    const handleAddChild = (e: React.FormEvent) => {
+        e.preventDefault();
+        addChildMutation.mutate(formData);
     };
 
-    const handleTogglePermission = async (childId: number, currentStatus: boolean) => {
-        try {
-            // تحديث الواجهة فوراً (Optimistic UI) لإعطاء سرعة استجابة للمستخدم
-            setChildren(children.map((c) => {
-                if (c.id !== childId || !c.student_profile) return c;
-
+    // Mutation for toggling permission
+    const togglePermissionMutation = useMutation({
+        mutationFn: (childId: number) => parentService.toggleChildPermission(childId),
+        onMutate: async (childId) => {
+            // Optimistic UI update
+            await queryClient.cancelQueries({ queryKey: ['parent-children', user?.id] });
+            const previousChildren = queryClient.getQueryData(['parent-children', user?.id]);
+            
+            queryClient.setQueryData(['parent-children', user?.id], (old: { data: User[] } | undefined) => {
+                if (!old?.data) return old;
                 return {
-                    ...c,
-                    student_profile: {
-                        ...c.student_profile,
-                        can_book_independently: !currentStatus,
-                    },
+                    ...old,
+                    data: old.data.map((c: User) => {
+                        if (c.id !== childId || !c.student_profile) return c;
+                        return {
+                            ...c,
+                            student_profile: {
+                                ...c.student_profile,
+                                can_book_independently: !c.student_profile.can_book_independently,
+                            },
+                        };
+                    }),
                 };
-            }));
+            });
+            return { previousChildren };
+        },
+        onError: (err, childId, context) => {
+            queryClient.setQueryData(['parent-children', user?.id], context?.previousChildren);
+            showApiError(err, 'حدث خطأ أثناء تغيير الصلاحية');
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['parent-children', user?.id] });
+        },
+    });
 
-            // إرسال الطلب للسيرفر
-            await api.patch(`/parent/children/${childId}/toggle-permission`);
-        } catch (error: unknown) {
-            showApiError(error, 'حدث خطأ أثناء تغيير الصلاحية');
-            fetchData(); // إعادة جلب البيانات الصحيحة في حال فشل الطلب
-        }
+    const handleTogglePermission = (childId: number) => {
+        togglePermissionMutation.mutate(childId);
     };
 
     if (loading) return (
@@ -164,8 +179,8 @@ export default function ChildrenManagementPage() {
                                 </div>
                             </div>
                             <div className="md:col-span-2 mt-4">
-                                <Button type="submit" disabled={isSubmitting} className="w-full h-14 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] text-lg rounded-[1.5rem]">
-                                    {isSubmitting ? (
+                                <Button type="submit" disabled={addChildMutation.isPending} className="w-full h-14 bg-gradient-to-r from-brand-600 via-brand-700 to-purple-600 hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] text-lg rounded-taj-xl">
+                                    {addChildMutation.isPending ? (
                                         <>
                                             <Loader2 className="w-5 h-5 animate-spin mr-2" />
                                             جاري المعالجة...
@@ -193,7 +208,7 @@ export default function ChildrenManagementPage() {
                             />
                         </div>
                     ) : (
-                        children.map((child, idx) => (
+                        children.map((child: User, idx: number) => (
                             <div key={child.id} className="group relative bg-white/80 backdrop-blur-md p-8 rounded-[2.5rem] shadow-xl border border-white/50 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 animate-fade-in-up" style={{ animationDelay: `${idx * 150}ms` }}>
                                 {/* Decorative background blurs inside card */}
                                 <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full -mr-10 -mt-10 blur-2xl group-hover:bg-indigo-500/10 transition-colors"></div>
@@ -224,7 +239,7 @@ export default function ChildrenManagementPage() {
                                                 <p className="text-[9px] text-gray-400 font-bold leading-tight">تفعيل إمكانية حجز الحصص والدفع بشكل مستقل.</p>
                                             </div>
                                             <button 
-                                                onClick={() => handleTogglePermission(child.id, child.student_profile?.can_book_independently ?? false)}
+                                                onClick={() => handleTogglePermission(child.id)}
                                                 className={`min-w-[80px] px-3 py-2.5 rounded-2xl text-[10px] font-bold transition-all duration-300 shadow-sm flex items-center justify-center gap-1.5 ${
                                                     child.student_profile?.can_book_independently 
                                                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100' 

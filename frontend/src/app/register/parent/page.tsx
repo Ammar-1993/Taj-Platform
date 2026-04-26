@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { PasswordStrength } from "@/components/ui/PasswordStrength";
+import { authService } from "@/services/api";
 
 export default function ParentRegisterPage() {
   const router = useRouter();
@@ -88,7 +89,7 @@ export default function ParentRegisterPage() {
     setError("");
 
     try {
-      const res = await api.post("/auth/register", {
+      const res = await authService.register({
         name,
         email,
         phone,
@@ -97,7 +98,8 @@ export default function ParentRegisterPage() {
       });
 
       setSuccessMsg("تم إنشاء حسابك بنجاح!");
-      login(res.data.data.token, res.data.data.user);
+      const { token, user } = res.data;
+      login(token, user);
 
       setTimeout(() => {
         router.push("/dashboard");

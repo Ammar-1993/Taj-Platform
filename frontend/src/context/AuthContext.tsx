@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
-import api from '@/lib/axios';
+import { authService } from '@/services/api';
 import { User } from '@/types'; // تأكد من أن واجهة User مُعرفة في هذا المسار
 
 interface AuthContextType {
@@ -31,8 +31,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             try {
                 // 🟢 التحديث 2: استخدام مسارات V1 الموحدة
-                const response = await api.get('/auth/me');
-                setUser(response.data.data);
+                const response = await authService.getMe();
+                setUser(response.data);
             } catch (error) {
                 console.warn("انتهت صلاحية الجلسة أو التوكن غير صالح", error);
                 Cookies.remove('auth_token');
@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const logout = async () => {
         try {
             // إتلاف التوكن من جهة الخادم (Best Practice)
-            await api.post('/auth/logout');
+            await authService.logout();
         } catch (e) {
             console.warn("فشل تسجيل الخروج من الخادم، سيتم مسح الجلسة محلياً", e);
         } finally {

@@ -16,7 +16,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const nextConfig = {
-  reactStrictMode: false, 
+  reactStrictMode: true, 
 
   // ==========================================
   // 🟢 الحل الجذري لمنع Vercel من تدمير كود Agora

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import api from "@/lib/axios";
-import { User, Subject } from "@/types";
+import { discoveryService } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+import { useQuery } from "@tanstack/react-query";
 import {
   Home as HomeIcon,
   HelpCircle,
@@ -24,64 +24,41 @@ import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { Card, CardHeader, CardContent, CardFooter, CardDescription, CardTitle } from "@/components/ui/Card";
 import TeacherReviewsModal from "@/components/discovery/TeacherReviewsModal";
+import { useDebounce } from "@/hooks";
 
 export default function Home() {
-  const [teachers, setTeachers] = useState<User[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [search, setSearch] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [sortBy, setSortBy] = useState("");
-  const [loading, setLoading] = useState(true);
   const [selectedTeacherForReviews, setSelectedTeacherForReviews] = useState<{ id: number; name: string } | null>(null);
+
+  const debouncedSearch = useDebounce(search, 500);
 
   const { user, loading: authLoading } = useAuth();
 
-  // 🟢 الطريقة الاحترافية: استخدام useCallback لمنع تحذيرات React
-  const fetchSubjects = useCallback(async () => {
-    try {
-      const res = await api.get("/discovery/subjects");
-      setSubjects(res.data.data);
-    } catch (error) {
-      console.error("خطأ في جلب المواد", error);
-    }
-  }, []);
+  // Fetch Subjects
+  const { data: subjectsData } = useQuery({
+    queryKey: ['discovery-subjects'],
+    queryFn: () => discoveryService.getSubjects(),
+    staleTime: 1000 * 60 * 30, // 30 minutes
+  });
 
-  const fetchTeachers = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await api.get("/discovery/teachers", {
-        params: {
-          search: search || undefined,
-          subject_id: subjectId || undefined,
-          sort_by: sortBy || undefined,
-        },
-      });
-      setTeachers(res.data.data.data);
-    } catch (error) {
-      console.error("خطأ في جلب المعلمين", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [search, subjectId, sortBy]);
+  // Fetch Teachers
+  const { data: teachersData, isLoading: loading } = useQuery({
+    queryKey: ['discovery-teachers', debouncedSearch, subjectId, sortBy],
+    queryFn: () => discoveryService.getTeachers({
+        search: debouncedSearch || undefined,
+        subject_id: subjectId || undefined,
+        sort_by: sortBy || undefined,
+    }),
+  });
 
-  // استدعاء جلب المواد مرة واحدة عند تحميل الصفحة
-  useEffect(() => {
-    fetchSubjects();
-  }, [fetchSubjects]);
-
-  // استدعاء جلب المعلمين مع تأخير (Debounce) ذكي
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      fetchTeachers();
-    }, 500);
-    
-    return () => clearTimeout(delayDebounceFn);
-  }, [fetchTeachers]);
+  const subjects = subjectsData?.data || [];
+  const teachers = teachersData?.data?.data || [];
 
   return (
     <div className="min-h-screen p-4 md:p-8 bg-gray-50/50">
       <div className="max-w-6xl mx-auto space-y-8">
-        {/* Hero Header */}
         <div className="animate-fade-up relative overflow-hidden bg-gradient-to-l from-brand-700 via-brand-600 to-purple-700 p-8 md:p-12 rounded-taj-xl shadow-xl text-white">
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-10">
             <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full bg-white blur-3xl"></div>
@@ -134,7 +111,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Modernized Search & Filters */}
         <div className="animate-fade-up-1 bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-taj-lg sm:rounded-taj-xl shadow-lg border border-white/50 flex flex-col lg:flex-row gap-4 justify-between items-center">
           <div className="w-full md:flex-1 relative">
             <Input
@@ -146,7 +122,6 @@ export default function Home() {
             />
           </div>
           
-          {/* حقل اختيار المادة */}
           <div className="w-full md:w-1/4 relative">
             <Select
               value={subjectId}
@@ -162,7 +137,6 @@ export default function Home() {
             </Select>
           </div>
 
-          {/* حقل الترتيب */}
           <div className="w-full md:w-1/4 relative">
             <Select
               value={sortBy}
@@ -175,7 +149,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Teacher Grid */}
         {loading ? (
           <div className="text-center py-20 text-gray-400 text-xl font-bold animate-pulse">
             جاري البحث...

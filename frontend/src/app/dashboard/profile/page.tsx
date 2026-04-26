@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import api from '@/lib/axios';
+import { teacherService, discoveryService } from '@/services/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import PageHeader from '@/components/ui/PageHeader';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { showApiError } from '@/hooks/useApiError';
-import { ApiResponse, Subject, TeacherProfile } from '@/types';
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -17,69 +17,63 @@ import RedirectCountdown from "@/components/ui/RedirectCountdown";
 
 export default function TeacherProfilePage() {
     const { user } = useAuth();
+    const queryClient = useQueryClient();
     
-    const [subjects, setSubjects] = useState<Subject[]>([]);
-    const [profile, setProfile] = useState<TeacherProfile | null>(null);
-    const [loading, setLoading] = useState(true);
+    // Fetch subjects
+    const { data: subjectsData } = useQuery({
+        queryKey: ['subjects'],
+        queryFn: () => discoveryService.getSubjects(),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+    
+    const subjects = subjectsData?.data || [];
+
+    // Fetch profile
+    const { data: profileData, isLoading: loading } = useQuery({
+        queryKey: ['teacher-profile', user?.id],
+        queryFn: () => teacherService.getProfile(),
+        enabled: !!user,
+    });
+
+    const profile = profileData?.data || null;
     
     // حالات الفورم
     const [subjectId, setSubjectId] = useState('');
     const [bio, setBio] = useState('');
     const [nationalIdFile, setNationalIdFile] = useState<File | null>(null);
     const [degreeFile, setDegreeFile] = useState<File | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [successRedirect, setSuccessRedirect] = useState(false);
 
+    // Sync form with profile data
     useEffect(() => {
-        if (user) fetchData();
-    }, [user]);
-
-    const fetchData = async () => {
-        try {
-            const [subjectsRes, profileRes] = await Promise.all([
-                api.get<ApiResponse<Subject[]>>('/discovery/subjects'),
-                api.get<ApiResponse<TeacherProfile>>('/profile/teacher')
-            ]);
-            
-            setSubjects(subjectsRes.data.data || []);
-            
-            if (profileRes.data?.data) {
-                const p = profileRes.data.data;
-                setProfile(p);
-                setSubjectId(p.subject_id.toString());
-                setBio(p.bio || '');
-            }
-        } catch (error) {
-            console.error("خطأ في جلب البيانات", error);
-        } finally {
-            setLoading(false);
+        if (profile) {
+            setSubjectId(profile.subject_id.toString());
+            setBio(profile.bio || '');
         }
-    };
+    }, [profile]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-
-        try {
-            const formData = new FormData();
-            formData.append('subject_id', subjectId);
-            formData.append('bio', bio);
-            if (nationalIdFile) formData.append('national_id', nationalIdFile);
-            if (degreeFile) formData.append('degree', degreeFile);
-
-            const res = await api.post<ApiResponse<TeacherProfile>>('/profile/teacher', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            toast.success(res.data.message || 'تم حفظ الملف الشخصي بنجاح.');
-            setProfile(res.data.data);
-            
-            // العودة للوحة بعد 3 ثواني
+    // Mutation for updating profile
+    const updateProfileMutation = useMutation({
+        mutationFn: (formData: FormData) => teacherService.updateProfile(formData),
+        onSuccess: (data) => {
+            toast.success(data.message || 'تم حفظ الملف الشخصي بنجاح.');
+            queryClient.invalidateQueries({ queryKey: ['teacher-profile', user?.id] });
             setSuccessRedirect(true);
-        } catch (error: unknown) {
+        },
+        onError: (error: unknown) => {
             showApiError(error, 'حدث خطأ أثناء الرفع');
-        } finally {
-            setIsSubmitting(false);
-        }
+        },
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append('subject_id', subjectId);
+        formData.append('bio', bio);
+        if (nationalIdFile) formData.append('national_id', nationalIdFile);
+        if (degreeFile) formData.append('degree', degreeFile);
+
+        updateProfileMutation.mutate(formData);
     };
 
     if (loading) return (
@@ -227,10 +221,10 @@ export default function TeacherProfilePage() {
 
                         <Button 
                             type="submit" 
-                            disabled={isSubmitting} 
-                            className="w-full h-14 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] text-lg rounded-[1.5rem]"
+                            disabled={updateProfileMutation.isPending} 
+                            className="w-full h-14 bg-gradient-to-r from-brand-600 via-brand-700 to-purple-600 hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] text-lg rounded-taj-xl"
                         >
-                            {isSubmitting ? (
+                            {updateProfileMutation.isPending ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin mr-2" />
                                     جاري المعالجة...

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import api from "@/lib/axios";
+import { reviewService } from "@/services/api";
 import { Booking } from "@/types";
+import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { showApiError } from "@/hooks/useApiError";
 import Modal from "@/components/ui/Modal";
@@ -16,24 +17,26 @@ interface ReviewModalProps {
 export const ReviewModal: React.FC<ReviewModalProps> = ({ pendingReview, onSuccess, onClose }) => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
-  const submitReview = async () => {
+  const reviewMutation = useMutation({
+    mutationFn: (data: { booking_id: number; rating: number; comment?: string }) => 
+        reviewService.create(data),
+    onSuccess: () => {
+        toast.success("تم إرسال التقييم بنجاح! شكراً لك. ⭐");
+        onSuccess();
+    },
+    onError: (err: unknown) => {
+        showApiError(err, "حدث خطأ أثناء التقييم");
+    }
+  });
+
+  const handleSubmit = () => {
     if (!pendingReview) return;
-    setIsSubmittingReview(true);
-    try {
-      await api.post("/reviews", {
+    reviewMutation.mutate({
         booking_id: pendingReview.id,
         rating: rating,
         comment: comment,
-      });
-      toast.success("تم إرسال التقييم بنجاح! شكراً لك. ⭐");
-      onSuccess();
-    } catch (err: unknown) {
-      showApiError(err, "حدث خطأ أثناء التقييم");
-    } finally {
-      setIsSubmittingReview(false);
-    }
+    });
   };
 
   if (!pendingReview) return null;
@@ -54,7 +57,6 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ pendingReview, onSucce
         </p>
       </div>
 
-      {/* النجوم */}
       <div className="flex justify-center gap-3 mb-6 cursor-pointer">
         {[1, 2, 3, 4, 5].map((star) => (
           <span
@@ -77,11 +79,11 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ pendingReview, onSucce
       />
 
       <Button
-        onClick={submitReview}
-        isLoading={isSubmittingReview}
+        onClick={handleSubmit}
+        isLoading={reviewMutation.isPending}
         className="w-full h-14 bg-gradient-to-l from-indigo-600 to-purple-600 rounded-2xl text-lg"
       >
-        {isSubmittingReview ? "جاري الإرسال..." : "إرسال التقييم"}
+        {reviewMutation.isPending ? "جاري الإرسال..." : "إرسال التقييم"}
       </Button>
     </Modal>
   );

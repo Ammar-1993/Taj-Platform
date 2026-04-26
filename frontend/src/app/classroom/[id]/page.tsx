@@ -2,14 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '@/lib/axios';
+import { bookingService } from '@/services/api';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
-import axios from 'axios';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { showApiError } from '@/hooks/useApiError';
-import { ApiResponse } from '@/types';
 import type { IAgoraRTCClient, ILocalVideoTrack } from 'agora-rtc-sdk-ng';
 import { Video, Lock, AlertTriangle, LogOut, PowerOff, MonitorUp, Info, Loader2, Coins } from 'lucide-react';
 
@@ -56,14 +54,8 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     useEffect(() => {
         const fetchAccess = async () => {
             try {
-                type AccessPayload = {
-                    channel_name: string;
-                    uid: number;
-                    role: string;
-                    token?: string;
-                };
-                const res = await api.get<ApiResponse<AccessPayload>>(`/bookings/${params.id}/classroom`);
-                const data = res.data.data;
+                const res = await bookingService.getClassroomAccess(Number(params.id));
+                const data = res.data;
                 
                 setChannelName(data.channel_name);
                 setUid(data.uid);
@@ -75,11 +67,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 
                 setLoading(false);
             } catch (err: unknown) {
-                if (axios.isAxiosError(err)) {
-                    setError(err.response?.data?.message || 'فشل الاتصال بالغرفة الافتراضية أو غير مصرح لك.');
-                } else {
-                    setError('حدث خطأ غير متوقع أثناء الاتصال بالغرفة.');
-                }
+                setError('فشل الاتصال بالغرفة الافتراضية أو غير مصرح لك.');
                 setLoading(false);
             }
         };
@@ -105,7 +93,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         setShowEndConfirm(false);
         setIsEnding(true);
         try {
-            await api.patch(`/bookings/${params.id}/complete`);
+            await bookingService.complete(Number(params.id));
             toast.success(
                 <div className="flex items-center gap-2">
                     تم إنهاء الحصة بنجاح! وتم إيداع الأرباح. <Coins className="w-4 h-4" />

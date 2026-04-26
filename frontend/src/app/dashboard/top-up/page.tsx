@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import api from '@/lib/axios';
+import { walletService } from '@/services/api';
 import PageHeader from '@/components/ui/PageHeader';
 import { showApiError } from '@/hooks/useApiError';
 import { Card, CardContent } from "@/components/ui/Card";
@@ -22,8 +22,8 @@ export default function TopUpPage() {
         // نحاكي تأخير الشبكة والبنك (ثانيتين)
         setTimeout(async () => {
             try {
-                // استخدام axios لضمان المسار الصحيح والتقاط الأخطاء
-                await api.post('/webhooks/payment', {
+                // استخدام الخدمة الموحدة بدلاً من api المباشر
+                await walletService.recordPayment({
                     data: {
                         id: "pay_test_" + Math.random().toString(36).substring(2, 9),
                         status: "paid",
@@ -34,8 +34,6 @@ export default function TopUpPage() {
 
                 setSuccessMsg(`تم شحن محفظتك بمبلغ ${amount} ريال بنجاح!`);
                 setIsProcessing(false);
-
-
             } catch (error: unknown) {
                 console.error(error);
                 showApiError(error, 'حدث خطأ في الاتصال بالبنك أو السيرفر. تحقق من مسار الـ Webhook.');
