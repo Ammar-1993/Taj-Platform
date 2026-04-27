@@ -47,65 +47,37 @@
 The following diagram illustrates the decoupled interaction between the **Next.js** presentation layer, the **Laravel** API heart, and the shared ecosystem services.
 
 ```mermaid
-graph TB
-    subgraph Users ["👥 User Ecosystem"]
-        direction LR
-        U1["Student / Parent"]
-        U2["Verified Teacher"]
-        A1["System Administrator"]
+graph TD
+    subgraph "Frontend Layer (User Facing)"
+        NJ[Next.js 14 App Router]
+        TW[Tailwind CSS / UI Components]
+        SC[Student/Teacher/Parent Portals]
     end
 
-    subgraph Frontend ["🎨 Presentation Layer (Next.js)"]
-        direction TB
-        NP["Next.js 14 App Router"]
-        TW["Tailwind CSS UI"]
-        AS["Axios Service Client"]
+    subgraph "Service Connectivity"
+        AX[Axios / REST API Calls]
+        AG[Agora RTC SDK / Live Video]
     end
 
-    subgraph Backend ["⚙️ Core Engine (Laravel)"]
-        direction TB
-        API["Laravel 12 REST API"]
-        FIL["Filament V3 Dashboard"]
-        SEC["Sanctum Auth & RBAC"]
+    subgraph "Backend Engine (Business Logic)"
+        LV[Laravel 12 API]
+        FL[Filament V3 Admin Panel]
+        SM[Sanctum Auth / RBAC]
     end
 
-    subgraph Infra ["💾 Data & Infrastructure"]
-        DB[("MySQL 8.0 Engine")]
-        S3["Public/Private Storage"]
+    subgraph "Data & Media"
+        DB[(MySQL 8.0)]
+        ST[Public/Private Storage]
     end
 
-    subgraph Cloud ["☁️ Ecosystem Services"]
-        AG["Agora RTC (Video/Audio)"]
-        STP["Stripe/PayTabs (Payments)"]
-    end
-
-    %% Interactions
-    U1 & U2 --- NP
-    A1 --- FIL
-    
-    NP --> AS
-    AS --> API
-    
-    API --- SEC
-    SEC --> DB
-    API --> DB
-    API --> S3
-    FIL --> DB
-    
-    NP -- "WebRTC SDK" --- AG
-    API -- "Server-side Events" --- AG
-    API -- "Gateway Integration" --- STP
-    
-    %% Styling
-    classDef frontend fill:#f0f7ff,stroke:#0070f3,stroke-width:2px;
-    classDef backend fill:#fff5f5,stroke:#ff2d20,stroke-width:2px;
-    classDef infra fill:#f6ffed,stroke:#52c41a,stroke-width:2px;
-    classDef cloud fill:#fffbe6,stroke:#faad14,stroke-width:2px;
-    
-    class NP,TW,AS frontend;
-    class API,FIL,SEC backend;
-    class DB,S3 infra;
-    class AG,STP cloud;
+    %% Flow Connections
+    NJ --> AX
+    AX --> LV
+    NJ --> AG
+    AG <-.-> LV
+    LV --> DB
+    LV --> ST
+    FL --> DB
 ```
 ---
 
