@@ -226,19 +226,16 @@ export default function StudentRegisterPage() {
             <div className="pt-2">
               <Button
                 type="submit"
-                disabled={loading}
-                className="w-full h-14"
+                isLoading={loading}
+                className="w-full group"
               >
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    جاري إنشاء الحساب...
-                  </span>
-                ) : (
+                {!loading ? (
                   <span className="flex items-center gap-2">
                     يلا نبدأ
                     <ArrowRight className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:-translate-x-1 transition-all" />
                   </span>
+                ) : (
+                  <span>جاري إنشاء الحساب...</span>
                 )}
               </Button>
             </div>
