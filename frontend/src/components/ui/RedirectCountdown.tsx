@@ -19,25 +19,6 @@ interface RedirectCountdownProps {
   onCancel?: () => void;
 }
 
-/**
- * RedirectCountdown
- * ─────────────────────────────────────────────────────────────
- * Displays an animated progress bar that counts down before
- * navigating to `href`. The user can:
- *   • Click "go now" to navigate immediately
- *   • Click "cancel" (× button) to abort the redirect entirely
- *
- * Usage (P1-08 — Sprint 2):
- *   Replace every `setTimeout(() => router.push('/dashboard'), 3000)`
- *   with a controlled, cancellable redirect.
- *
- * @example
- *   <RedirectCountdown
- *     href="/dashboard"
- *     message="تم الإرسال بنجاح!"
- *     seconds={4}
- *   />
- */
 export default function RedirectCountdown({
   href,
   seconds = 4,
@@ -87,10 +68,10 @@ export default function RedirectCountdown({
   const progress = ((seconds - remaining) / seconds) * 100;
 
   return (
-    <div className="mt-6 bg-indigo-50 border border-indigo-100 rounded-2xl p-4 space-y-3 animate-fade-in-up">
+    <div className="mt-6 bg-brand-50/50 border border-brand-100 rounded-taj-lg p-5 space-y-4 animate-fade-up shadow-sm">
       {/* Message + cancel button */}
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-bold text-indigo-700 flex items-center gap-2">
+        <p className="text-sm font-bold text-brand-700 flex items-center gap-2">
           <ArrowRight className="w-4 h-4 shrink-0" />
           {message}
         </p>
@@ -98,7 +79,7 @@ export default function RedirectCountdown({
           type="button"
           onClick={cancel}
           title={cancelLabel}
-          className="text-indigo-400 hover:text-indigo-700 transition-colors rounded-full p-1 hover:bg-indigo-100"
+          className="text-brand-400 hover:text-brand-700 transition-colors rounded-full p-1.5 hover:bg-brand-100"
           aria-label={cancelLabel}
         >
           <X className="w-4 h-4" />
@@ -106,20 +87,20 @@ export default function RedirectCountdown({
       </div>
 
       {/* Animated progress bar */}
-      <div className="h-1.5 w-full bg-indigo-100 rounded-full overflow-hidden">
+      <div className="h-2 w-full bg-brand-100/50 rounded-full overflow-hidden">
         <div
-          className="h-full bg-indigo-500 rounded-full transition-all duration-1000 ease-linear"
+          className="h-full bg-brand-600 rounded-full transition-all duration-1000 ease-linear shadow-[0_0_8px_rgba(var(--color-brand-600),0.3)]"
           style={{ width: `${progress}%` }}
         />
       </div>
 
       {/* Countdown + go-now link */}
-      <div className="flex items-center justify-between text-xs text-indigo-500 font-bold">
-        <span>{remaining} ثانية...</span>
+      <div className="flex items-center justify-between text-[10px] text-brand-500 font-bold uppercase tracking-wider">
+        <span>{remaining} ثانية متبقية...</span>
         <button
           type="button"
           onClick={navigate}
-          className="underline underline-offset-2 hover:text-indigo-700 transition-colors"
+          className="underline underline-offset-4 hover:text-brand-700 transition-colors"
         >
           {actionLabel}
         </button>

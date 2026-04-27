@@ -35,12 +35,12 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             type={currentType}
             dir={dir}
             className={cn(
-              "flex w-full rounded-taj-md border-2 border-transparent bg-surface-subtle hover:bg-surface-muted px-4 py-2.5 text-sm transition-all duration-300 outline-none",
+              "flex w-full rounded-taj-md border-2 border-transparent bg-surface-subtle hover:bg-surface-muted px-4 py-2.5 text-sm transition-all duration-200 outline-none",
               "file:border-0 file:bg-transparent file:text-sm file:font-medium",
               "placeholder:text-text-muted placeholder:tracking-normal font-bold text-text-primary",
-              "focus-visible:outline-none focus:ring-4 focus:ring-brand-100 focus:border-brand-500",
-              "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-text-muted disabled:opacity-70",
-              error && "border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50/30",
+              "focus-visible:outline-none focus:ring-4 focus:ring-brand-100/50 focus:border-brand-500 hover:border-brand-100",
+              "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-text-muted disabled:opacity-70 disabled:grayscale",
+              error && "border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50/30 animate-shake",
               icon ? (dir === 'ltr' ? "pl-10" : "pr-10") : "",
               isPassword ? (dir === 'ltr' ? "pr-10 tracking-widest" : "pl-10 tracking-widest") : "",
               className

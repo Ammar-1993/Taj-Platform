@@ -5,6 +5,7 @@ import Link from "next/link";
 import { discoveryService } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { useQuery } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 import {
   Home as HomeIcon,
   HelpCircle,
@@ -15,7 +16,6 @@ import {
   ListFilter,
   Star,
   SearchX,
-  CalendarDays,
   CalendarX,
 } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
@@ -205,8 +205,14 @@ export default function Home() {
                         ({teacher.teacher_profile?.reviews_count || 0} تقييم)
                       </span>
                     </button>
-                      <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
-                        <CalendarDays size={11} />
+                      <span className={cn(
+                        "text-[10px] font-bold flex items-center gap-1 transition-colors duration-300",
+                        (teacher.active_slots_count || 0) > 0 ? "text-emerald-600" : "text-gray-400"
+                      )}>
+                        <div className={cn(
+                          "w-1.5 h-1.5 rounded-full",
+                          (teacher.active_slots_count || 0) > 0 ? "bg-emerald-500 animate-pulse-dot" : "bg-gray-300"
+                        )} />
                         {(teacher.active_slots_count || 0) > 0
                           ? `${teacher.active_slots_count} موعد متاح`
                           : "لا توجد مواعيد"}

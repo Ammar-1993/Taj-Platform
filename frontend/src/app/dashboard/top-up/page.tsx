@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { CheckCircle2, Leaf, Star, Zap, Rocket, ShieldCheck, Loader2 } from "lucide-react";
 import RedirectCountdown from "@/components/ui/RedirectCountdown";
+import { cn } from "@/lib/utils";
 
 export default function TopUpPage() {
     const { user } = useAuth();
@@ -80,7 +81,7 @@ export default function TopUpPage() {
                         <div>
                             <label className="block text-gray-900 font-bold mb-4 mr-1 flex items-center gap-2">
                                 <span>اختر مبلغ الشحن (ريال سعودي):</span>
-                                <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full uppercase tracking-tighter">Amount</span>
+                                <span className="text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full uppercase tracking-tighter">Amount</span>
                             </label>
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                 {[50, 100, 200, 500].map((val) => {
@@ -90,23 +91,29 @@ export default function TopUpPage() {
                                         200: <Zap className="w-8 h-8" />, 
                                         500: <Rocket className="w-8 h-8" /> 
                                     };
+                                    const isActive = amount === val;
                                     return (
                                         <button
                                             key={val}
                                             onClick={() => setAmount(val)}
-                                            className={`relative group flex flex-col items-center gap-2 p-5 rounded-2xl font-bold border-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
-                                                amount === val 
-                                                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-indigo-100 shadow-lg' 
-                                                    : 'border-gray-100/50 bg-gray-50/50 hover:border-indigo-300 text-gray-500'
-                                            }`}
+                                            className={cn(
+                                                "relative group flex flex-col items-center gap-3 p-6 rounded-taj-xl font-bold border-2 transition-all duration-500 hover:-translate-y-2 active:scale-90 select-none",
+                                                "cubic-bezier(0.34, 1.56, 0.64, 1)",
+                                                isActive 
+                                                    ? "border-brand-600 bg-brand-50 text-brand-700 shadow-xl shadow-brand-600/20 ring-4 ring-brand-500/10 scale-105" 
+                                                    : "border-slate-100 bg-slate-50 text-slate-400 hover:border-brand-200 hover:bg-white"
+                                            )}
                                         >
-                                            <span className={`transition-transform group-hover:scale-125 ${amount === val ? 'scale-110' : 'grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100'}`}>
+                                            <span className={cn(
+                                                "transition-all duration-500 group-hover:rotate-12",
+                                                isActive ? "scale-125 text-brand-600" : "grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100"
+                                            )}>
                                                 {icons[val]}
                                             </span>
-                                            <span className="text-lg">{val}</span>
-                                            {amount === val && (
-                                                <div className="absolute -top-2 -right-2 w-5 h-5 bg-indigo-600 text-white rounded-full flex items-center justify-center text-[10px] ring-4 ring-white">
-                                                    <CheckCircle2 className="w-3 h-3" />
+                                            <span className="text-xl tracking-tighter">{val} <small className="text-[10px] font-bold">ريال</small></span>
+                                            {isActive && (
+                                                <div className="absolute -top-3 -right-3 w-6 h-6 bg-brand-600 text-white rounded-full flex items-center justify-center shadow-lg ring-4 ring-white animate-success-scale">
+                                                    <CheckCircle2 className="w-4 h-4" />
                                                 </div>
                                             )}
                                         </button>

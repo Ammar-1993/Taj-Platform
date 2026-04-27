@@ -24,6 +24,8 @@ export const metadata: Metadata = {
   description: "منصتك الأولى للدروس الخصوصية",
 };
 
+import { ViewTransitions } from "@/components/providers/ViewTransitions";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -34,8 +36,10 @@ export default function RootLayout({
       <body className={tajawal.className}>
         <ReactQueryProvider>
           <AuthProvider>
-            <ToastProvider />
-            {children}
+            <ViewTransitions>
+              <ToastProvider />
+              {children}
+            </ViewTransitions>
           </AuthProvider>
         </ReactQueryProvider>
       </body>

@@ -116,6 +116,16 @@ const config = {
           "0%, 100%": { opacity: "1" },
           "50%":      { opacity: "0.5" },
         },
+        shake: {
+          "0%, 100%": { transform: "translateX(0)" },
+          "25%":      { transform: "translateX(-4px)" },
+          "75%":      { transform: "translateX(4px)" },
+        },
+        successScale: {
+          "0%":   { transform: "scale(0.9)", opacity: "0" },
+          "50%":  { transform: "scale(1.05)" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        }
       },
 
       // ─── Animation utilities ──────────────────────────────
@@ -128,6 +138,8 @@ const config = {
         "fade-up-2":      "fadeUp 0.5s ease-out 0.2s both",
         "fade-up-3":      "fadeUp 0.5s ease-out 0.3s both",
         "pulse-dot":      "pulseDot 1.5s ease-in-out infinite",
+        "shake":          "shake 0.3s ease-in-out 0s 2",
+        "success-scale":  "successScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both",
       },
     },
   },

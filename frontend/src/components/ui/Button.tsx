@@ -12,22 +12,22 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "default", asChild = false, isLoading = false, children, disabled, ...props }, ref) => {
     
-    const baseClass = "inline-flex items-center justify-center whitespace-nowrap rounded-taj-sm text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 gap-2";
+    const baseClass = "relative inline-flex items-center justify-center whitespace-nowrap rounded-taj-sm text-sm font-bold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:grayscale active:scale-[0.98] gap-2 overflow-hidden select-none";
     
     // Variants use semantic brand tokens — do not use raw indigo-* classes
     const variants = {
-      default:     "bg-brand-600 text-white shadow-sm hover:bg-brand-700",
-      destructive: "bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-100 active:bg-rose-200",
-      outline:     "border-2 border-brand-100 bg-white hover:bg-brand-50 text-brand-700",
-      secondary:   "bg-slate-100 text-slate-900 hover:bg-slate-200",
-      ghost:       "hover:bg-slate-100 hover:text-slate-900",
-      link:        "text-brand-600 underline-offset-4 hover:underline focus-visible:underline",
+      default:     "bg-brand-600 text-white shadow-sm hover:bg-brand-700 hover:shadow-md active:bg-brand-800",
+      destructive: "bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-100 hover:border-rose-200 active:bg-rose-200 active:scale-[0.97]",
+      outline:     "border-2 border-brand-100 bg-white hover:bg-brand-50 hover:border-brand-200 text-brand-700 shadow-sm hover:shadow-md",
+      secondary:   "bg-slate-100 text-slate-900 hover:bg-slate-200 active:bg-slate-300",
+      ghost:       "hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200",
+      link:        "text-brand-600 underline-offset-4 hover:underline focus-visible:underline decoration-2",
       // gradient: special-case for hero CTAs only — avoid proliferating
-      gradient:    "bg-gradient-to-r from-brand-600 via-indigo-700 to-purple-600 text-white shadow-lg hover:shadow-brand-600/30 hover:-translate-y-0.5",
+      gradient:    "bg-gradient-to-r from-brand-600 via-indigo-700 to-purple-600 text-white shadow-lg hover:shadow-brand-600/30 hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm transition-all duration-300",
     };
 
     const sizes = {
-      default: "h-10 px-4 py-2",
+      default: "h-10 px-6 py-2",
       sm: "h-8 px-3 text-xs rounded-taj-sm",
       lg: "h-12 px-8 text-lg rounded-taj-md",
       icon: "h-10 w-10",
