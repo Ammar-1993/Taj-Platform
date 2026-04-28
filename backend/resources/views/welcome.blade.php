@@ -52,7 +52,6 @@
         </div>
         
         <div class="flex justify-center items-center gap-3 mb-4">
-            <i data-lucide="crown" class="w-10 h-10 text-amber-400 drop-shadow-md" stroke-width="2.5"></i>
             <h1 class="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-indigo-900 to-gray-900 tracking-tight pt-1">منصة تاج التعليمية</h1>
         </div>
         
