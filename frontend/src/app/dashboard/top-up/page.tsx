@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { walletService } from '@/services/api';
+import { paymentService } from '@/services/api';
 import PageHeader from '@/components/ui/PageHeader';
 import { showApiError } from '@/hooks/useApiError';
 import { Card, CardContent } from "@/components/ui/Card";
@@ -17,30 +17,24 @@ export default function TopUpPage() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
 
-    const handleMockPayment = async () => {
+    const handlePayment = async () => {
         setIsProcessing(true);
-        
-        // نحاكي تأخير الشبكة والبنك (ثانيتين)
-        setTimeout(async () => {
-            try {
-                // استخدام الخدمة الموحدة بدلاً من api المباشر
-                await walletService.recordPayment({
-                    data: {
-                        id: "pay_test_" + Math.random().toString(36).substring(2, 9),
-                        status: "paid",
-                        amount: amount * 100, // البنك يرسلها بالهللة
-                        metadata: { user_id: user?.id }
-                    }
-                });
 
-                setSuccessMsg(`تم شحن محفظتك بمبلغ ${amount} ريال بنجاح!`);
-                setIsProcessing(false);
-            } catch (error: unknown) {
-                console.error(error);
-                showApiError(error, 'حدث خطأ في الاتصال بالبنك أو السيرفر. تحقق من مسار الـ Webhook.');
-                setIsProcessing(false);
+        try {
+            // Create payment session with Moyasar
+            const response = await paymentService.createSession(amount);
+
+            if (response.data?.checkout_url) {
+                // Redirect to Moyasar checkout page
+                window.location.href = response.data.checkout_url;
+            } else {
+                throw new Error('لم يتم الحصول على رابط الدفع');
             }
-        }, 2000);
+        } catch (error: unknown) {
+            console.error(error);
+            showApiError(error, 'حدث خطأ في إنشاء جلسة الدفع');
+            setIsProcessing(false);
+        }
     };
 
     if (!user) return null;
@@ -123,20 +117,20 @@ export default function TopUpPage() {
                         </div>
 
                         <div className="space-y-6 pt-4 border-t border-gray-100">
-                            {/* Sandbox notice — replaces fake payment form (P0-01 fix) */}
-                            <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
-                                <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                            {/* Payment gateway notice */}
+                            <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="text-sm font-bold text-amber-800">بيئة تطوير — الشحن الفوري نشط</p>
-                                    <p className="text-xs text-amber-700 mt-0.5 font-medium leading-relaxed">
-                                        بوابة الدفع الحقيقية (مدى / فيزا / أبل باي) ستُفعَّل قريباً. حالياً سيُشحن رصيدك مباشرة بالمبلغ المختار لأغراض الاختبار.
+                                    <p className="text-sm font-bold text-blue-800">دفع آمن مع ميسر</p>
+                                    <p className="text-xs text-blue-700 mt-0.5 font-medium leading-relaxed">
+                                        جميع المعاملات محمية بتشفير SSL وتدعم البطاقات البنكية السعودية (مدى) والدولية (فيزا/ماستركارد).
                                     </p>
                                 </div>
                             </div>
                         </div>
 
                         <Button
-                            onClick={handleMockPayment}
+                            onClick={handlePayment}
                             disabled={isProcessing}
                             className="w-full h-14 text-xl"
                         >
