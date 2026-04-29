@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import DecorativeBackground from "@/components/ui/DecorativeBackground";
+import DecorativeBackground from "@/components/layout/DecorativeBackground";
 import { showApiError } from "@/hooks/useApiError";
 import {
   User as UserIcon,

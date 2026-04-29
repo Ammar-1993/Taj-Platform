@@ -10,11 +10,52 @@ import EmptyState from "@/components/ui/EmptyState";
 
 interface ParentDashboardProps {
   parentData: ParentDashboardData | null;
+  loading?: boolean;
 }
 
 export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   parentData,
+  loading = false,
 }) => {
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Sidebar: Wallet Skeleton */}
+        <div className="lg:col-span-1">
+          <div className="space-y-6 sticky top-28">
+            <div className="animate-pulse bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 p-6 rounded-taj-xl shadow-xl">
+              <div className="space-y-4">
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-12 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-10 bg-gray-200 rounded w-full"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Skeleton */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card variant="glass" className="p-6 animate-pulse">
+            <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="bg-gray-100 p-4 rounded-xl">
+                  <div className="flex justify-between items-center">
+                    <div className="space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-32"></div>
+                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                    <div className="h-8 bg-gray-200 rounded w-20"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   if (!parentData) return null;
 
   return (

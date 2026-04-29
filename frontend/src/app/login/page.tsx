@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import DecorativeBackground from "@/components/ui/DecorativeBackground";
+import DecorativeBackground from "@/components/layout/DecorativeBackground";
 import { Mail, Lock, ArrowRight } from "lucide-react";
 import ErrorBanner from "@/components/ui/ErrorBanner";
 import { Input } from "@/components/ui/Input";

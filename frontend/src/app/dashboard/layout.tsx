@@ -1,8 +1,5 @@
 import React from "react";
-import Sidebar from "@/components/dashboard/Sidebar";
-import AuthGuard from "@/components/ui/AuthGuard";
-import DecorativeBackground from "@/components/ui/DecorativeBackground";
-import MobileHeader from "@/components/dashboard/MobileHeader";
+import { Sidebar, AuthGuard, DecorativeBackground, MobileHeader } from "@/components/layout";
 
 export default function DashboardLayout({
   children,

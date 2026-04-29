@@ -41,7 +41,7 @@ export default function DashboardPage() {
     }
   }, [user, authLoading, router]);
 
-  if (authLoading || dataLoading) {
+  if (authLoading) {
     return <DashboardSkeleton />;
   }
 
@@ -85,7 +85,7 @@ export default function DashboardPage() {
         />
 
         {isParent ? (
-          <ParentDashboard parentData={parentData} />
+          <ParentDashboard parentData={parentData} loading={dataLoading} />
         ) : (
           <StudentTeacherDashboard
             isTeacher={isTeacher}
@@ -94,6 +94,7 @@ export default function DashboardPage() {
             notifications={notifications}
             markNotificationAsRead={markNotificationAsRead}
             onRefresh={fetchDashboardData}
+            loading={dataLoading}
           />
         )}
       </div>

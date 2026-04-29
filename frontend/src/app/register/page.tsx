@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import DecorativeBackground from "@/components/ui/DecorativeBackground";
+import DecorativeBackground from "@/components/layout/DecorativeBackground";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 

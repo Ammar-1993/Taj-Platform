@@ -7,9 +7,8 @@ import toast from "react-hot-toast";
 import { showApiError } from "@/hooks/useApiError";
 import { Card } from "@/components/ui/Card";
 import { ClipboardList } from "lucide-react";
-import { WalletWidget } from "./WalletWidget";
-import { TeacherNotifications } from "./TeacherNotifications";
-import { ResponsiveBookingTable } from "./ResponsiveBookingTable";
+import { WalletWidget } from "./wallet";
+import { TeacherNotifications, ResponsiveBookingTable } from "./bookings";
 
 interface StudentTeacherDashboardProps {
   isTeacher: boolean;
@@ -18,6 +17,7 @@ interface StudentTeacherDashboardProps {
   notifications: AppNotification[];
   markNotificationAsRead: (id: string) => void;
   onRefresh: () => void;
+  loading?: boolean;
 }
 
 export const StudentTeacherDashboard: React.FC<
@@ -29,6 +29,7 @@ export const StudentTeacherDashboard: React.FC<
   notifications,
   markNotificationAsRead,
   onRefresh,
+  loading = false,
 }) => {
   // حالات مربعات التأكيد
   const [confirmState, setConfirmState] = useState<{
@@ -73,7 +74,25 @@ export const StudentTeacherDashboard: React.FC<
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ============ SIDEBAR ============ */}
         <div className="lg:col-span-1">
-          <WalletWidget wallet={wallet} isTeacher={isTeacher} />
+          {loading ? (
+            <Card variant="glass" className="p-6 space-y-4 animate-pulse">
+              <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex justify-between items-center bg-gray-100 p-3 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-1.5 h-8 bg-gray-200 rounded-full"></div>
+                    <div className="space-y-1">
+                      <div className="h-4 bg-gray-200 rounded w-24"></div>
+                      <div className="h-3 bg-gray-200 rounded w-16"></div>
+                    </div>
+                  </div>
+                  <div className="h-5 bg-gray-200 rounded w-12"></div>
+                </div>
+              ))}
+            </Card>
+          ) : (
+            <WalletWidget wallet={wallet} isTeacher={isTeacher} />
+          )}
         </div>
 
         {/* ============ MAIN CONTENT ============ */}
@@ -87,18 +106,44 @@ export const StudentTeacherDashboard: React.FC<
             </h3>
           </div>
 
-          <TeacherNotifications 
-            isTeacher={isTeacher} 
-            notifications={notifications} 
-            markNotificationAsRead={markNotificationAsRead} 
-          />
+          {loading ? (
+            <div className="space-y-4">
+              {/* Notifications skeleton */}
+              <div className="bg-gray-100 p-4 rounded-xl animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              </div>
+              {/* Table skeleton */}
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="bg-gray-100 p-4 rounded-xl animate-pulse">
+                    <div className="flex justify-between items-center">
+                      <div className="space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-32"></div>
+                        <div className="h-3 bg-gray-200 rounded w-24"></div>
+                      </div>
+                      <div className="h-8 bg-gray-200 rounded w-20"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              <TeacherNotifications 
+                isTeacher={isTeacher} 
+                notifications={notifications} 
+                markNotificationAsRead={markNotificationAsRead} 
+              />
 
-          <ResponsiveBookingTable 
-            bookings={bookings} 
-            isTeacher={isTeacher}
-            onCancelClick={(id) => setConfirmState({ isOpen: true, type: "cancel", bookingId: id })}
-            onCompleteClick={(id) => setConfirmState({ isOpen: true, type: "complete", bookingId: id })}
-          />
+              <ResponsiveBookingTable 
+                bookings={bookings} 
+                isTeacher={isTeacher}
+                onCancelClick={(id: number) => setConfirmState({ isOpen: true, type: "cancel", bookingId: id })}
+                onCompleteClick={(id: number) => setConfirmState({ isOpen: true, type: "complete", bookingId: id })}
+              />
+            </>
+          )}
         </Card>
       </div>
 
