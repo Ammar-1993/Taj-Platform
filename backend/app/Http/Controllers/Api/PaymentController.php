@@ -8,6 +8,7 @@ use App\Services\WalletService;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 
+
 class PaymentController extends Controller
 {
     protected WalletService $walletService;
@@ -38,18 +39,18 @@ class PaymentController extends Controller
                 'Authorization' => 'Basic ' . base64_encode(config('services.moyasar.secret_key') . ':'),
                 'Content-Type' => 'application/json',
             ])->post('https://api.moyasar.com/v1/payments', [
-                'amount' => $amountInHalalas,
-                'currency' => 'SAR',
-                'description' => 'شحن المحفظة - ' . $user->name,
-                'callback_url' => config('app.url') . '/dashboard/top-up/success',
-                'source' => [
-                    'type' => 'creditcard',
-                ],
-                'metadata' => [
-                    'user_id' => $user->id,
-                    'type' => 'wallet_topup',
-                ],
-            ]);
+                        'amount' => $amountInHalalas,
+                        'currency' => 'SAR',
+                        'description' => 'شحن المحفظة - ' . $user->name,
+                        'callback_url' => config('app.url') . '/dashboard/top-up/success',
+                        'source' => [
+                            'type' => 'creditcard',
+                        ],
+                        'metadata' => [
+                            'user_id' => $user->id,
+                            'type' => 'wallet_topup',
+                        ],
+                    ]);
 
             if ($response->successful()) {
                 $paymentData = $response->json();
@@ -66,8 +67,11 @@ class PaymentController extends Controller
                     'body' => $response->body(),
                 ]);
 
+                // 🟢 هنا التعديل السحري: كشفنا محتوى رسالة ميسر الحقيقية ورابط العودة الذي تم إرساله
                 return response()->json([
-                    'error' => 'فشل في إنشاء جلسة الدفع'
+                    'error' => 'فشل في إنشاء جلسة الدفع',
+                    'moyasar_error_details' => $response->json(), // ماذا قالت ميسر بالضبط؟
+                    'debug_callback_url' => config('app.url') . '/dashboard/top-up/success', // هل رابطك المرسل صحيح؟
                 ], 400);
             }
 
@@ -75,7 +79,8 @@ class PaymentController extends Controller
             Log::error('Payment session creation error: ' . $e->getMessage());
 
             return response()->json([
-                'error' => 'خطأ في الاتصال ببوابة الدفع'
+                'error' => 'خطأ في الاتصال ببوابة الدفع',
+                'exception_details' => $e->getMessage() // 🟢 كشف سبب سقوط السيرفر إن حدث
             ], 500);
         }
     }
