@@ -23,13 +23,11 @@ export default function TopUpPage() {
         try {
             // Create payment session with Moyasar
             const response = await paymentService.createSession(amount);
+            const paymentData = response.data;
 
-            // 🟢 التعديل السحري: استخراج الرابط بذكاء سواء كان بداخل data أو في الاستجابة المباشرة
-            const responseData = (response as any).data || response;
-
-            if (responseData && responseData.checkout_url) {
+            if (paymentData && paymentData.checkout_url) {
                 // Redirect to Moyasar checkout page
-                window.location.href = responseData.checkout_url;
+                window.location.href = paymentData.checkout_url;
             } else {
                 throw new Error('لم يتم الحصول على رابط الدفع');
             }
