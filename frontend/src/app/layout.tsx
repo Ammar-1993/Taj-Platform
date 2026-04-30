@@ -10,6 +10,7 @@ const tajawal = Tajawal({
   weight: ["200", "300", "400", "500", "700", "800", "900"],
   display: "swap",
   variable: "--font-sans",
+  preload: false, // Prevent font download during build
 });
 
 const mono = IBM_Plex_Mono({
@@ -17,6 +18,7 @@ const mono = IBM_Plex_Mono({
   weight: ["400", "600"],
   display: "swap",
   variable: "--font-mono",
+  preload: false, // Prevent font download during build
 });
 
 export const metadata: Metadata = {
