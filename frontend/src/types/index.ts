@@ -58,6 +58,7 @@ export interface WalletTransaction {
 }
 
 export interface ApiResponse<T> {
+  status: string;
   data: T;
   message?: string;
   [key: string]: unknown;

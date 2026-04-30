@@ -55,10 +55,13 @@ class PaymentController extends Controller
                 $invoiceData = $response->json();
                 
                 return response()->json([
-                    'payment_id' => $invoiceData['id'],
-                    'checkout_url' => $invoiceData['url'], // 🟢 ميسر ستعطينا هنا رابط شاشة الدفع الجاهزة
-                    'amount' => $amount,
-                    'status' => $invoiceData['status'],
+                    'status' => 'success',
+                    'data' => [
+                        'payment_id' => $invoiceData['id'],
+                        'checkout_url' => $invoiceData['url'],
+                        'amount' => $amount,
+                        'status' => $invoiceData['status'],
+                    ],
                 ]);
             } else {
                 return response()->json([
