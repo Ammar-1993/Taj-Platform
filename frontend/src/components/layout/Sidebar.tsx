@@ -27,7 +27,7 @@ export default function Sidebar() {
         "border-b border-slate-100 flex items-center transition-all duration-300",
         isCollapsed ? "p-4 justify-center" : "p-6 justify-between"
       )}>
-        {!isCollapsed && <h3 className="text-2xl font-black text-brand-600 truncate tracking-tight">منصة تاج التعليمية</h3>}
+        {!isCollapsed && <h2 className="text-2xl font-black text-brand-600 truncate tracking-tight">منصة تاج 👑</h2>}
         <button 
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={cn(
