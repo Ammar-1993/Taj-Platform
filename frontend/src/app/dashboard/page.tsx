@@ -30,7 +30,7 @@ export default function DashboardPage() {
     pendingReview,
     dataLoading,
     fetchDashboardData,
-    setPendingReview,
+    dismissPendingReview,
     markNotificationAsRead,
   } = useDashboardData(user, isParent, isTeacher);
 
@@ -102,10 +102,10 @@ export default function DashboardPage() {
       <ReviewModal
         pendingReview={pendingReview}
         onSuccess={() => {
-          setPendingReview(null);
+          dismissPendingReview();
           fetchDashboardData();
         }}
-        onClose={() => setPendingReview(null)}
+        onClose={() => dismissPendingReview()}
       />
     </div>
   );

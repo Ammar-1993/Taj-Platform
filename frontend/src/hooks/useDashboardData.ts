@@ -6,6 +6,7 @@ import { User, Booking, AppNotification } from "@/types";
 export const useDashboardData = (user: User | null, isParent: boolean, isTeacher: boolean) => {
   const queryClient = useQueryClient();
   const [pendingReview, setPendingReview] = useState<Booking | null>(null);
+  const [dismissedReviewBookingIds, setDismissedReviewBookingIds] = useState<number[]>([]);
 
   // Fetch parent data
   const { data: parentData, isLoading: parentLoading } = useQuery({
@@ -36,13 +37,20 @@ export const useDashboardData = (user: User | null, isParent: boolean, isTeacher
   useEffect(() => {
     if (dashboardData?.bookings && !isTeacher && !isParent) {
       const unreviewedBooking = dashboardData.bookings.find(
-        (b) => b.status === "completed" && !b.review,
+        (b) => b.status === "completed" && !b.review && !dismissedReviewBookingIds.includes(b.id),
       );
       if (unreviewedBooking && !pendingReview) {
         setPendingReview(unreviewedBooking);
       }
     }
-  }, [dashboardData?.bookings, isTeacher, isParent, pendingReview]);
+  }, [dashboardData?.bookings, isTeacher, isParent, pendingReview, dismissedReviewBookingIds]);
+
+  const dismissPendingReview = () => {
+    if (pendingReview) {
+      setDismissedReviewBookingIds((prev) => [...prev, pendingReview.id]);
+    }
+    setPendingReview(null);
+  };
 
   // Mutation for notifications
   const markNotificationAsReadMutation = useMutation({
@@ -71,6 +79,7 @@ export const useDashboardData = (user: User | null, isParent: boolean, isTeacher
     dataLoading: !!user && (parentLoading || dashboardLoading),
     fetchDashboardData,
     setPendingReview,
+    dismissPendingReview,
     markNotificationAsRead: (id: string) => markNotificationAsReadMutation.mutate(id),
   };
 };
