@@ -21,40 +21,38 @@ class PaymentController extends Controller
     /**
      * Create a payment session with Moyasar gateway
      */
-    public function create(Request $request)
+   public function create(Request $request)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:10|max:5000', // 10-5000 SAR
+            'amount' => 'required|numeric|min:10|max:5000',
         ]);
 
         $amount = $request->input('amount');
         $user = $request->user();
-
-        // Convert amount to halalas (Moyasar expects amount in smallest currency unit)
         $amountInHalalas = $amount * 100;
 
         try {
-            // Create payment session with Moyasar
             $response = \Illuminate\Support\Facades\Http::withHeaders([
+                // 🟢 هنا لارافل سيبحث عن المفتاح في services.php
                 'Authorization' => 'Basic ' . base64_encode(config('services.moyasar.secret_key') . ':'),
                 'Content-Type' => 'application/json',
             ])->post('https://api.moyasar.com/v1/payments', [
-                        'amount' => $amountInHalalas,
-                        'currency' => 'SAR',
-                        'description' => 'شحن المحفظة - ' . $user->name,
-                        'callback_url' => 'https://taj-platform.vercel.app/dashboard/top-up/success',
-                        'source' => [
-                            'type' => 'creditcard',
-                        ],
-                        'metadata' => [
-                            'user_id' => $user->id,
-                            'type' => 'wallet_topup',
-                        ],
-                    ]);
+                'amount' => $amountInHalalas,
+                'currency' => 'SAR',
+                'description' => 'شحن المحفظة - ' . $user->name,
+                
+                // 🟢 استخدام المتغير الاحترافي الخاص بك بدلاً من الرابط اليدوي أو APP_URL
+                'callback_url' => env('FRONTEND_URL') . '/dashboard/top-up/success',
+                
+                'source' => ['type' => 'creditcard'],
+                'metadata' => [
+                    'user_id' => $user->id,
+                    'type' => 'wallet_topup',
+                ],
+            ]);
 
             if ($response->successful()) {
                 $paymentData = $response->json();
-
                 return response()->json([
                     'payment_id' => $paymentData['id'],
                     'checkout_url' => $paymentData['source']['transaction_url'] ?? null,
@@ -62,25 +60,17 @@ class PaymentController extends Controller
                     'status' => $paymentData['status'],
                 ]);
             } else {
-                Log::error('Moyasar payment creation failed', [
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-
-                // 🟢 هنا التعديل السحري: كشفنا محتوى رسالة ميسر الحقيقية ورابط العودة الذي تم إرساله
                 return response()->json([
                     'error' => 'فشل في إنشاء جلسة الدفع',
-                    'moyasar_error_details' => $response->json(), // ماذا قالت ميسر بالضبط؟
-                    'debug_callback_url' => config('app.url') . '/dashboard/top-up/success', // هل رابطك المرسل صحيح؟
+                    'moyasar_error_details' => $response->json(),
+                    // 🟢 للتحقق من أن الرابط الجديد تم اعتماده
+                    'debug_callback_url' => env('FRONTEND_URL') . '/dashboard/top-up/success',
                 ], 400);
             }
-
         } catch (\Exception $e) {
-            Log::error('Payment session creation error: ' . $e->getMessage());
-
             return response()->json([
                 'error' => 'خطأ في الاتصال ببوابة الدفع',
-                'exception_details' => $e->getMessage() // 🟢 كشف سبب سقوط السيرفر إن حدث
+                'exception_details' => $e->getMessage()
             ], 500);
         }
     }
