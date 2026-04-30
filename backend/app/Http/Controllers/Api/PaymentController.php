@@ -42,7 +42,7 @@ class PaymentController extends Controller
                         'amount' => $amountInHalalas,
                         'currency' => 'SAR',
                         'description' => 'شحن المحفظة - ' . $user->name,
-                        'callback_url' => config('app.url') . '/dashboard/top-up/success',
+                        'callback_url' => 'https://taj-platform.vercel.app/dashboard/top-up/success',
                         'source' => [
                             'type' => 'creditcard',
                         ],
