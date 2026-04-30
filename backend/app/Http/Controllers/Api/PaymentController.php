@@ -21,7 +21,7 @@ class PaymentController extends Controller
     /**
      * Create a payment session with Moyasar gateway
      */
-   public function create(Request $request)
+  public function create(Request $request)
     {
         $request->validate([
             'amount' => 'required|numeric|min:10|max:5000',
@@ -32,19 +32,19 @@ class PaymentController extends Controller
         $amountInHalalas = $amount * 100;
 
         try {
+            // 🟢 التعديل السحري: نستخدم رابط الفواتير (invoices) بدلاً من (payments)
             $response = \Illuminate\Support\Facades\Http::withHeaders([
-                // 🟢 هنا لارافل سيبحث عن المفتاح في services.php
                 'Authorization' => 'Basic ' . base64_encode(config('services.moyasar.secret_key') . ':'),
                 'Content-Type' => 'application/json',
-            ])->post('https://api.moyasar.com/v1/payments', [
+            ])->post('https://api.moyasar.com/v1/invoices', [ // <== هنا التغيير الأهم
                 'amount' => $amountInHalalas,
                 'currency' => 'SAR',
                 'description' => 'شحن المحفظة - ' . $user->name,
                 
-                // 🟢 استخدام المتغير الاحترافي الخاص بك بدلاً من الرابط اليدوي أو APP_URL
-                'callback_url' => env('FRONTEND_URL') . '/dashboard/top-up/success',
+                // 🟢 نظام الفواتير في ميسر يستخدم success_url للنجاح و back_url للإلغاء
+                'success_url' => env('FRONTEND_URL') . '/dashboard/top-up/success',
+                'back_url' => env('FRONTEND_URL') . '/dashboard/top-up',
                 
-                'source' => ['type' => 'creditcard'],
                 'metadata' => [
                     'user_id' => $user->id,
                     'type' => 'wallet_topup',
@@ -52,19 +52,18 @@ class PaymentController extends Controller
             ]);
 
             if ($response->successful()) {
-                $paymentData = $response->json();
+                $invoiceData = $response->json();
+                
                 return response()->json([
-                    'payment_id' => $paymentData['id'],
-                    'checkout_url' => $paymentData['source']['transaction_url'] ?? null,
+                    'payment_id' => $invoiceData['id'],
+                    'checkout_url' => $invoiceData['url'], // 🟢 ميسر ستعطينا هنا رابط شاشة الدفع الجاهزة
                     'amount' => $amount,
-                    'status' => $paymentData['status'],
+                    'status' => $invoiceData['status'],
                 ]);
             } else {
                 return response()->json([
                     'error' => 'فشل في إنشاء جلسة الدفع',
                     'moyasar_error_details' => $response->json(),
-                    // 🟢 للتحقق من أن الرابط الجديد تم اعتماده
-                    'debug_callback_url' => env('FRONTEND_URL') . '/dashboard/top-up/success',
                 ], 400);
             }
         } catch (\Exception $e) {
