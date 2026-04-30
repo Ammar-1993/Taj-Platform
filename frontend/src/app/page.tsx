@@ -71,7 +71,9 @@ export default function Home() {
                 <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight">منصة تاج التعليمية</h1>
               </div>
               <p className="text-indigo-200 text-base md:text-lg font-medium mt-1">
-                نخبة من المعلمين المعتمدين في جميع المواد — اختر معلمك وانطلق نحو التفوق.
+                نخبة من المعلمين المعتمدين في جميع المواد
+                <br />
+                اختر معلمك وانطلق نحو التفوق.
               </p>
             </div>
 
