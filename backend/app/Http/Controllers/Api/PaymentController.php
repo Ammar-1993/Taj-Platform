@@ -99,31 +99,61 @@ class PaymentController extends Controller
         }
 
         // 2. استخراج البيانات (بوابات الدفع غالباً ترسل المبالغ بالهللة/السنت)
-        $status = $request->input('data.status'); // حالة الدفع
-        $amountInHalalas = $request->input('data.amount');
+        // Handle different possible payload structures from Moyasar
+        $eventType = $request->input('type') ?: $request->input('event_type');
+        $paymentData = $request->input('data') ?: $request->all();
+
+        $status = $paymentData['status'] ?? null;
+        $amountInHalalas = $paymentData['amount'] ?? 0;
         $amount = $amountInHalalas / 100; // تحويل الهللات إلى ريالات
+        $paymentId = $paymentData['id'] ?? null;
 
         // الـ metadata هي بيانات نرسلها نحن وقت الدفع ليردها لنا البنك لنعرف من هو الدافع
-        $metadata = $request->input('data.metadata');
+        $metadata = $paymentData['metadata'] ?? [];
+
+        Log::info('Webhook parsed data:', [
+            'event_type' => $eventType,
+            'status' => $status,
+            'amount' => $amount,
+            'payment_id' => $paymentId,
+            'metadata' => $metadata,
+            'full_payload' => $request->all()
+        ]);
 
         // 3. التأكد من نجاح العملية ووجود رقم المستخدم
-        if ($status === 'paid' && isset($metadata['user_id']) && $metadata['type'] === 'wallet_topup') {
+        // Moyasar sends different status values, check for successful payment statuses
+        $successfulStatuses = ['paid', 'completed', 'captured', 'successful'];
+
+        if (in_array($status, $successfulStatuses) && isset($metadata['user_id']) && ($metadata['type'] ?? null) === 'wallet_topup' && $paymentId) {
             $user = User::find($metadata['user_id']);
 
             if ($user) {
+                // Check for duplicate processing
+                $existingTransaction = \App\Models\WalletTransaction::where('description', 'LIKE', '%عملية رقم: ' . $paymentId . '%')
+                    ->where('wallet_id', $user->wallet->id)
+                    ->first();
+
+                if ($existingTransaction) {
+                    Log::info('Payment already processed, skipping duplicate', [
+                        'payment_id' => $paymentId,
+                        'existing_transaction_id' => $existingTransaction->id
+                    ]);
+                    return response()->json(['message' => 'تمت معالجة هذه العملية مسبقاً'], 200);
+                }
+
                 try {
                     // 🚀 استدعاء المحرك المالي الجبار لشحن المحفظة
                     $this->walletService->processTransaction(
                         $user,
                         $amount,
                         'deposit', // إيداع
-                        'شحن المحفظة عبر البطاقة البنكية - عملية رقم: ' . $request->input('data.id')
+                        'شحن المحفظة عبر البطاقة البنكية - عملية رقم: ' . $paymentId
                     );
 
                     Log::info('Wallet topped up successfully', [
                         'user_id' => $user->id,
                         'amount' => $amount,
-                        'payment_id' => $request->input('data.id')
+                        'payment_id' => $paymentId
                     ]);
 
                     return response()->json(['message' => 'تم شحن المحفظة بنجاح'], 200);
@@ -132,14 +162,19 @@ class PaymentController extends Controller
                     Log::error('فشل في تحديث المحفظة: ' . $e->getMessage());
                     return response()->json(['error' => 'خطأ داخلي في السيرفر'], 500);
                 }
+            } else {
+                Log::warning('User not found for webhook', ['user_id' => $metadata['user_id']]);
             }
         }
 
         // إذا كانت العملية مرفوضة أو البيانات ناقصة
         Log::info('Webhook ignored - invalid status or missing data', [
+            'event_type' => $eventType,
             'status' => $status,
+            'successful_statuses' => $successfulStatuses,
             'has_user_id' => isset($metadata['user_id']),
-            'type' => $metadata['type'] ?? null
+            'type' => $metadata['type'] ?? null,
+            'has_payment_id' => !empty($paymentId)
         ]);
 
         return response()->json(['message' => 'تم تجاهل الطلب أو الحالة غير صالحة'], 400);
