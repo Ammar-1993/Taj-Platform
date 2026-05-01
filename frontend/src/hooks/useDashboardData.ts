@@ -7,26 +7,45 @@ export const useDashboardData = (user: User | null, isParent: boolean, isTeacher
   const queryClient = useQueryClient();
   const [pendingReview, setPendingReview] = useState<Booking | null>(null);
   const [dismissedReviewBookingIds, setDismissedReviewBookingIds] = useState<number[]>([]);
+  const [bookingPage, setBookingPage] = useState(1);
+
+  useEffect(() => {
+    setBookingPage(1);
+  }, [isParent, isTeacher, user?.id]);
 
   // Fetch parent data
+  const [parentBookingPage, setParentBookingPage] = useState(1);
+
+  useEffect(() => {
+    if (isParent) {
+      setParentBookingPage(1);
+    }
+  }, [isParent, user?.id]);
+
   const { data: parentData, isLoading: parentLoading } = useQuery({
-    queryKey: ['parentDashboard', user?.id],
-    queryFn: () => parentService.getDashboardData().then(res => res.data),
+    queryKey: ['parentDashboard', user?.id, parentBookingPage],
+    queryFn: () => parentService.getDashboardData(parentBookingPage).then(res => res.data),
     enabled: !!user && isParent,
   });
 
   // Fetch generic dashboard data
   const { data: dashboardData, isLoading: dashboardLoading, refetch: fetchDashboardData } = useQuery({
-    queryKey: ['dashboard', user?.id],
+    queryKey: ['dashboard', user?.id, bookingPage],
     queryFn: async () => {
       const [walletRes, bookingsRes, notifRes] = await Promise.all([
         walletService.getWallet(),
-        bookingService.getAll(),
+        bookingService.getAll({ page: bookingPage }),
         notificationService.getAll(),
       ]);
       return {
         wallet: walletRes.data,
-        bookings: bookingsRes.data.data, // Since getAll returns ApiResponse<{ data: Booking[] }>
+        bookings: bookingsRes.data.data,
+        bookingsMeta: {
+          current_page: bookingsRes.data.current_page,
+          last_page: bookingsRes.data.last_page,
+          per_page: bookingsRes.data.per_page,
+          total: bookingsRes.data.total,
+        },
         notifications: notifRes.data || [],
       };
     },
@@ -73,7 +92,13 @@ export const useDashboardData = (user: User | null, isParent: boolean, isTeacher
   return {
     wallet: dashboardData?.wallet || null,
     bookings: dashboardData?.bookings || [],
+    bookingPage,
+    setBookingPage,
+    bookingLastPage: dashboardData?.bookingsMeta?.last_page || 1,
     parentData: parentData || null,
+    parentBookingPage,
+    setParentBookingPage,
+    parentBookingLastPage: parentData?.bookings?.last_page || 1,
     notifications: dashboardData?.notifications || [],
     pendingReview,
     dataLoading: !!user && (parentLoading || dashboardLoading),

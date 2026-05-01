@@ -4,6 +4,10 @@ namespace App\Http\Requests\Parent;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @property string $name
+ * @property int $grade_level_id
+ */
 class UpdateChildRequest extends FormRequest
 {
     public function authorize(): bool

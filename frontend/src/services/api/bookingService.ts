@@ -1,13 +1,12 @@
 import api from "@/lib/axios";
-import { Booking, ApiResponse, ClassroomAccess } from "@/types";
+import { Booking, ApiResponse, PaginatedApiResponse, ClassroomAccess } from "@/types";
 
 export const bookingService = {
   /**
    * Get all bookings for the current user
    */
   getAll: async (params?: Record<string, string | number | undefined>) => {
-    const res = await api.get<ApiResponse<{ data: Booking[] }>>("/bookings", { params });
-    // Note: Some endpoints return { data: { data: [] } } due to pagination
+    const res = await api.get<PaginatedApiResponse<Booking>>("/bookings", { params });
     return res.data;
   },
 

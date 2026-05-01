@@ -203,7 +203,7 @@ export interface ParentDashboardData {
   parent_balance: string;
   total_spent: string;
   wallets: ChildWallet[];
-  bookings: Booking[];
+  bookings: PaginatedResponse<Booking>;
 }
 
 export interface ClassroomAccess {

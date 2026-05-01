@@ -9,11 +9,15 @@ import { Card } from "@/components/ui/Card";
 import { ClipboardList } from "lucide-react";
 import { WalletWidget } from "./wallet";
 import { TeacherNotifications, ResponsiveBookingTable } from "./bookings";
+import { PaginationControls } from "@/components/ui/PaginationControls";
 
 interface StudentTeacherDashboardProps {
   isTeacher: boolean;
   wallet: Wallet | null;
   bookings: Booking[];
+  bookingPage: number;
+  bookingLastPage: number;
+  setBookingPage: (page: number) => void;
   notifications: AppNotification[];
   markNotificationAsRead: (id: string) => void;
   onRefresh: () => void;
@@ -26,6 +30,9 @@ export const StudentTeacherDashboard: React.FC<
   isTeacher,
   wallet,
   bookings,
+  bookingPage,
+  bookingLastPage,
+  setBookingPage,
   notifications,
   markNotificationAsRead,
   onRefresh,
@@ -141,6 +148,13 @@ export const StudentTeacherDashboard: React.FC<
                 isTeacher={isTeacher}
                 onCancelClick={(id: number) => setConfirmState({ isOpen: true, type: "cancel", bookingId: id })}
                 onCompleteClick={(id: number) => setConfirmState({ isOpen: true, type: "complete", bookingId: id })}
+              />
+
+              <PaginationControls
+                page={bookingPage}
+                totalPages={bookingLastPage}
+                onPageChange={setBookingPage}
+                isLoading={loading}
               />
             </>
           )}

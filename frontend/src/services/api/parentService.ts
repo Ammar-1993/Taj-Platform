@@ -5,8 +5,10 @@ export const parentService = {
   /**
    * Get unified parent dashboard data
    */
-  getDashboardData: async () => {
-    const res = await api.get<ApiResponse<ParentDashboardData>>("/parent/dashboard");
+  getDashboardData: async (page?: number) => {
+    const res = await api.get<ApiResponse<ParentDashboardData>>("/parent/dashboard", {
+      params: { page },
+    });
     return res.data;
   },
 

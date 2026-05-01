@@ -4,6 +4,12 @@ namespace App\Http\Requests\Parent;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @property string $name
+ * @property string $email
+ * @property string $password
+ * @property int $grade_level_id
+ */
 class StoreChildRequest extends FormRequest
 {
     public function authorize(): bool

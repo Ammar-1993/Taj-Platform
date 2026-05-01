@@ -7,6 +7,7 @@ use App\Http\Requests\Parent\StoreChildRequest;
 use App\Http\Requests\Parent\UpdateChildRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -114,7 +115,7 @@ class ParentController extends Controller
     }
 
     // 5. جلب لوحة المراقبة الشاملة (الحجوزات والسجل المالي للأبناء)
-    public function getDashboardData(): JsonResponse
+    public function getDashboardData(Request $request): JsonResponse
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
@@ -122,14 +123,16 @@ class ParentController extends Controller
         // 1. جلب معرّفات (IDs) جميع أبناء هذا الولي
         $childrenIds = User::where('parent_id', $user->id)->pluck('id');
 
-        // 2. جلب جميع حجوزات الأبناء (مع بيانات الابن والمعلم)
+        // 2. حساب إجمالي الإنفاق (مجموع المبالغ المدفوعة للحجوزات المكتملة والمجدولة)
+        $totalSpent = \App\Models\Booking::whereIn('student_id', $childrenIds)
+            ->whereIn('status', ['completed', 'scheduled', 'in_progress'])
+            ->sum('net_paid');
+
+        // 3. جلب حجوزات الأبناء (مع بيانات الابن والمعلم) مع التصفح
         $bookings = \App\Models\Booking::whereIn('student_id', $childrenIds)
             ->with(['student:id,name', 'teacher:id,name', 'teacherSlot'])
             ->orderBy('created_at', 'desc')
-            ->get();
-
-        // 3. حساب إجمالي الإنفاق (مجموع المبالغ المدفوعة للحجوزات المكتملة والمجدولة)
-        $totalSpent = $bookings->whereIn('status', ['completed', 'scheduled', 'in_progress'])->sum('net_paid');
+            ->paginate(10);
 
         // 4. جلب محافظ الأبناء مع آخر العمليات المالية (الفواتير)
         $wallets = \App\Models\Wallet::whereIn('user_id', $childrenIds)

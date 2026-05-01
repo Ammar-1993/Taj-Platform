@@ -7,14 +7,21 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { WalletCards, Zap, Calendar, BookOpen } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
+import { PaginationControls } from "@/components/ui/PaginationControls";
 
 interface ParentDashboardProps {
   parentData: ParentDashboardData | null;
+  parentBookingPage: number;
+  parentBookingLastPage: number;
+  setParentBookingPage: (page: number) => void;
   loading?: boolean;
 }
 
 export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   parentData,
+  parentBookingPage,
+  parentBookingLastPage,
+  setParentBookingPage,
   loading = false,
 }) => {
   if (loading) {
@@ -57,6 +64,8 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   }
 
   if (!parentData) return null;
+
+  const bookings = parentData.bookings?.data || [];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -146,7 +155,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
           سجل حجوزات الأبناء الموحد
         </h3>
 
-        {!parentData.bookings || parentData.bookings.length === 0 ? (
+        {!bookings || bookings.length === 0 ? (
           <EmptyState
             icon={BookOpen}
             title="لا توجد حجوزات لأبنائك حتى الآن"
@@ -156,7 +165,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
         ) : (
           <>
             <div className="md:hidden space-y-4">
-              {parentData.bookings?.map((booking) => (
+              {bookings.map((booking) => (
                 <div key={booking.id} className="bg-white border border-border rounded-taj-lg p-4 shadow-sm flex flex-col gap-3">
                   <div className="flex justify-between items-center border-b border-surface-subtle pb-3">
                     <span className="font-bold text-brand-600">#{booking.id}</span>
@@ -225,7 +234,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-surface-subtle">
-                  {parentData.bookings?.map((booking) => (
+                  {bookings.map((booking) => (
                     <tr
                       key={booking.id}
                       className="hover:bg-brand-50/50 transition-all duration-200"
@@ -265,6 +274,13 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                 </tbody>
               </table>
             </div>
+
+            <PaginationControls
+              page={parentBookingPage}
+              totalPages={parentBookingLastPage}
+              onPageChange={setParentBookingPage}
+              isLoading={loading}
+            />
           </>
         )}
       </Card>

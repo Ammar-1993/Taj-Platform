@@ -25,7 +25,13 @@ export default function DashboardPage() {
   const {
     wallet,
     bookings,
+    bookingPage,
+    setBookingPage,
+    bookingLastPage,
     parentData,
+    parentBookingPage,
+    setParentBookingPage,
+    parentBookingLastPage,
     notifications,
     pendingReview,
     dataLoading,
@@ -85,12 +91,21 @@ export default function DashboardPage() {
         />
 
         {isParent ? (
-          <ParentDashboard parentData={parentData} loading={dataLoading} />
+          <ParentDashboard
+            parentData={parentData}
+            parentBookingPage={parentBookingPage}
+            parentBookingLastPage={parentBookingLastPage}
+            setParentBookingPage={setParentBookingPage}
+            loading={dataLoading}
+          />
         ) : (
           <StudentTeacherDashboard
             isTeacher={isTeacher}
             wallet={wallet}
             bookings={bookings}
+            bookingPage={bookingPage}
+            bookingLastPage={bookingLastPage}
+            setBookingPage={setBookingPage}
             notifications={notifications}
             markNotificationAsRead={markNotificationAsRead}
             onRefresh={fetchDashboardData}
