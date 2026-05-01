@@ -64,6 +64,36 @@ export interface ApiResponse<T> {
   [key: string]: unknown;
 }
 
+export interface PaginationLink {
+  url: string | null;
+  label: string;
+  active: boolean;
+}
+
+export interface PaginationMeta {
+  current_page: number;
+  from?: number;
+  last_page: number;
+  path: string;
+  per_page: number | string;
+  to?: number;
+  total: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+  from?: number;
+  to?: number;
+  path?: string;
+  links?: PaginationLink[];
+}
+
+export type PaginatedApiResponse<T> = ApiResponse<PaginatedResponse<T>>;
+
 export interface User {
   id: number;
   name: string;

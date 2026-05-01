@@ -30,6 +30,7 @@ import RedirectCountdown from "@/components/ui/RedirectCountdown";
 import EmptyState from "@/components/ui/EmptyState";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
+import { PaginationControls } from "@/components/ui/PaginationControls";
 import { formatDate } from "@/lib/formatters";
 
 export default function SupportPage() {
@@ -41,11 +42,12 @@ export default function SupportPage() {
   const [description, setDescription] = useState("");
   const [bookingId, setBookingId] = useState("");
   const [successRedirect, setSuccessRedirect] = useState(false);
+  const [ticketPage, setTicketPage] = useState(1);
 
   // Fetch tickets
   const { data: ticketsData, isLoading: ticketsLoading } = useQuery({
-    queryKey: ['support-tickets', user?.id],
-    queryFn: () => supportService.getAll(),
+    queryKey: ['support-tickets', user?.id, ticketPage],
+    queryFn: () => supportService.getAll(ticketPage),
     enabled: !!user,
   });
 
@@ -56,7 +58,8 @@ export default function SupportPage() {
     enabled: !!user,
   });
 
-  const tickets = ticketsData?.data || [];
+  const tickets = ticketsData?.data?.data || [];
+  const ticketLastPage = ticketsData?.data?.last_page || 1;
   const bookings = bookingsData?.data?.data || [];
   const loading = ticketsLoading || bookingsLoading;
 
@@ -203,8 +206,9 @@ export default function SupportPage() {
                 title="لم تقم بفتح أي تذكرة دعم فني حتى الآن."
               />
             ) : (
-              <div className="space-y-6">
-                {tickets.map((ticket: SupportTicket) => (
+              <>
+                <div className="space-y-6">
+                  {tickets.map((ticket: SupportTicket) => (
                   <div
                     key={ticket.id}
                     className="group relative bg-white/50 hover:bg-white transition-all duration-300 border-2 border-gray-50 rounded-[1.5rem] p-6 shadow-sm hover:shadow-xl hover:-translate-y-1"
@@ -251,7 +255,15 @@ export default function SupportPage() {
                     )}
                   </div>
                 ))}
-              </div>
+                </div>
+
+                <PaginationControls
+                  page={ticketPage}
+                  totalPages={ticketLastPage}
+                  onPageChange={setTicketPage}
+                  isLoading={ticketsLoading}
+                />
+              </>
             )}
           </Card>
         </div>

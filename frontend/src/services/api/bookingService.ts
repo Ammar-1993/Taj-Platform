@@ -5,8 +5,8 @@ export const bookingService = {
   /**
    * Get all bookings for the current user
    */
-  getAll: async () => {
-    const res = await api.get<ApiResponse<{ data: Booking[] }>>("/bookings");
+  getAll: async (params?: Record<string, string | number | undefined>) => {
+    const res = await api.get<ApiResponse<{ data: Booking[] }>>("/bookings", { params });
     // Note: Some endpoints return { data: { data: [] } } due to pagination
     return res.data;
   },

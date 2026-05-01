@@ -1,5 +1,5 @@
 import api from "@/lib/axios";
-import { Subject, ApiResponse, User, Review, GradeLevel, TeacherSlotsResponse } from "@/types";
+import { Subject, ApiResponse, PaginatedApiResponse, User, Review, GradeLevel, TeacherSlotsResponse } from "@/types";
 
 export const discoveryService = {
   /**
@@ -14,7 +14,7 @@ export const discoveryService = {
    * Get list of teachers with filters
    */
   getTeachers: async (params?: Record<string, string | number | undefined>) => {
-    const res = await api.get<ApiResponse<{ data: User[] }>>("/discovery/teachers", { params });
+    const res = await api.get<PaginatedApiResponse<User>>("/discovery/teachers", { params });
     return res.data;
   },
 
@@ -37,8 +37,11 @@ export const discoveryService = {
   /**
    * Get reviews for a specific teacher
    */
-  getTeacherReviews: async (teacherId: number) => {
-    const res = await api.get<ApiResponse<{ data: Review[] }>>(`/discovery/teachers/${teacherId}/reviews`);
+  getTeacherReviews: async (teacherId: number, page?: number) => {
+    const res = await api.get<PaginatedApiResponse<Review>>(
+      `/discovery/teachers/${teacherId}/reviews`,
+      { params: { page } },
+    );
     return res.data;
   },
 };

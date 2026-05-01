@@ -1,12 +1,14 @@
 import api from "@/lib/axios";
-import { ApiResponse, SupportTicket, SupportTicketCreatePayload } from "@/types";
+import { ApiResponse, PaginatedApiResponse, SupportTicket, SupportTicketCreatePayload } from "@/types";
 
 export const supportService = {
   /**
    * Get all support tickets for the current user
    */
-  getAll: async () => {
-    const res = await api.get<ApiResponse<SupportTicket[]>>("/support-tickets");
+  getAll: async (page?: number) => {
+    const res = await api.get<PaginatedApiResponse<SupportTicket>>("/support-tickets", {
+      params: { page },
+    });
     return res.data;
   },
 

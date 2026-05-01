@@ -125,8 +125,13 @@ Route::prefix('v1')->group(function () {
         });
 
         Route::get('/support-tickets', function (Request $request) {
+            $tickets = SupportTicket::where('user_id', $request->user()->id)
+                ->latest()
+                ->paginate(10);
+
             return response()->json([
-                'data' => SupportTicket::where('user_id', $request->user()->id)->latest()->get(),
+                'status' => 'success',
+                'data' => $tickets,
             ]);
         });
 

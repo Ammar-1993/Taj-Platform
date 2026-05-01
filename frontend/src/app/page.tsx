@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { discoveryService } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { PaginationControls } from "@/components/ui/PaginationControls";
 import {
   Home as HomeIcon,
   HelpCircle,
@@ -33,8 +34,13 @@ export default function Home() {
   const [selectedTeacherForReviews, setSelectedTeacherForReviews] = useState<{ id: number; name: string } | null>(null);
 
   const debouncedSearch = useDebounce(search, 500);
+  const [page, setPage] = useState(1);
 
   const { user, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, subjectId, sortBy]);
 
   // Fetch Subjects
   const { data: subjectsData } = useQuery({
@@ -45,11 +51,12 @@ export default function Home() {
 
   // Fetch Teachers
   const { data: teachersData, isLoading: loading } = useQuery({
-    queryKey: ['discovery-teachers', debouncedSearch, subjectId, sortBy],
+    queryKey: ['discovery-teachers', debouncedSearch, subjectId, sortBy, page],
     queryFn: () => discoveryService.getTeachers({
         search: debouncedSearch || undefined,
         subject_id: subjectId || undefined,
         sort_by: sortBy || undefined,
+        page,
     }),
   });
 
@@ -156,17 +163,18 @@ export default function Home() {
             جاري البحث...
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {teachers.length === 0 ? (
-              <div className="col-span-full">
-                <EmptyState
-                  icon={SearchX}
-                  title="لا يوجد معلمين يطابقون بحثك"
-                  subtitle="جرب تغيير كلمات البحث أو تصفية المواد"
-                />
-              </div>
-            ) : (
-              teachers.map((teacher, index) => (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {teachers.length === 0 ? (
+                <div className="col-span-full">
+                  <EmptyState
+                    icon={SearchX}
+                    title="لا يوجد معلمين يطابقون بحثك"
+                    subtitle="جرب تغيير كلمات البحث أو تصفية المواد"
+                  />
+                </div>
+              ) : (
+                teachers.map((teacher, index) => (
                 <Card
                   key={teacher.id}
                   className="animate-fade-up hover:border-brand-100 hover:-translate-y-1.5 group flex flex-col"
@@ -235,6 +243,14 @@ export default function Home() {
               ))
             )}
           </div>
+
+          <PaginationControls
+            page={teachersData?.data?.current_page || 1}
+            totalPages={teachersData?.data?.last_page || 1}
+            onPageChange={setPage}
+            isLoading={loading}
+          />
+        </>
         )}
 
         <TeacherReviewsModal

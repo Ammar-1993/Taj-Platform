@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { discoveryService } from "@/services/api";
 import { useQuery } from "@tanstack/react-query";
 import Modal from "@/components/ui/Modal";
 import { Star, MessageSquare, User, Loader2 } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
+import { PaginationControls } from "@/components/ui/PaginationControls";
 
 interface TeacherReviewsModalProps {
   teacherId: number | null;
@@ -20,9 +21,17 @@ export default function TeacherReviewsModal({
   isOpen,
   onClose,
 }: TeacherReviewsModalProps) {
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    if (isOpen) {
+      setPage(1);
+    }
+  }, [isOpen, teacherId]);
+
   const { data: reviewsData, isLoading: loading } = useQuery({
-    queryKey: ['teacher-reviews-public', teacherId],
-    queryFn: () => discoveryService.getTeacherReviews(teacherId!),
+    queryKey: ['teacher-reviews-public', teacherId, page],
+    queryFn: () => discoveryService.getTeacherReviews(teacherId!, page),
     enabled: isOpen && !!teacherId,
   });
 
@@ -43,7 +52,8 @@ export default function TeacherReviewsModal({
             subtitle="هذا المعلم لم يتلقَ أي تقييمات من الطلاب حتى الآن."
           />
         ) : (
-          <div className="grid grid-cols-1 gap-4 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-brand-100">
+          <>
+            <div className="grid grid-cols-1 gap-4 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-brand-100">
             {reviews.map((review) => (
               <div
                 key={review.id}
@@ -83,6 +93,14 @@ export default function TeacherReviewsModal({
               </div>
             ))}
           </div>
+
+          <PaginationControls
+            page={reviewsData?.data?.current_page || page}
+            totalPages={reviewsData?.data?.last_page || 1}
+            onPageChange={setPage}
+            isLoading={loading}
+          />
+        </>
         )}
       </div>
     </Modal>
