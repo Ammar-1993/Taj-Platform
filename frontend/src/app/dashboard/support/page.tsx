@@ -172,7 +172,7 @@ export default function SupportPage() {
 
                   <Button
                     type="submit"
-                    disabled={submitMutation.isPending || !subject || !description}
+                    disabled={submitMutation.isPending}
                     className="w-full h-14 bg-gradient-to-r from-indigo-600 to-indigo-800 hover:shadow-[0_8px_30px_rgb(79,70,229,0.3)] text-lg rounded-[1.5rem]"
                   >
                     {submitMutation.isPending ? (

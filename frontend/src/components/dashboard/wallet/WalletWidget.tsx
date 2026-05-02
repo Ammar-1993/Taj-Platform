@@ -43,15 +43,10 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
           </div>
 
           {isTeacher ? (
-            <div className="mt-6 flex gap-2">
-              <Button asChild variant="secondary" className="flex-1 bg-white/20 hover:bg-white/30 text-white border border-white/10 rounded-xl h-10 px-2 py-0 text-xs">
-                <Link href="/dashboard/schedule">
-                  إدارة الجدول <CalendarDays className="w-3.5 h-3.5 mr-1" />
-                </Link>
-              </Button>
-              <Button asChild variant="secondary" className="flex-1 bg-white/20 hover:bg-white/30 text-white border border-white/10 rounded-xl h-10 px-2 py-0 text-xs">
+            <div className="mt-6">
+              <Button asChild variant="secondary" className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/10 rounded-xl">
                 <Link href="/dashboard/payout">
-                  طلب سحب <Banknote className="w-3.5 h-3.5 mr-1" />
+                  طلب سحب <Banknote className="w-4 h-4 mr-2" />
                 </Link>
               </Button>
             </div>
