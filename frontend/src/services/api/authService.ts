@@ -59,4 +59,18 @@ export const authService = {
     const res = await api.get<ApiResponse<User>>("/auth/me");
     return res.data;
   },
+
+  /**
+   * Update current user profile
+   */
+  updateUser: async (data: {
+    name?: string;
+    current_password?: string;
+    password?: string;
+    password_confirmation?: string;
+    bio?: string;
+  }) => {
+    const res = await api.put<ApiResponse<User>>("/auth/me", data);
+    return res.data;
+  },
 };

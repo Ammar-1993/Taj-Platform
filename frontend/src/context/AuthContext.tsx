@@ -10,6 +10,7 @@ interface AuthContextType {
     loading: boolean;
     login: (token: string, userData: User) => void;
     logout: () => void;
+    setUser: (user: User) => void;
 }
 
 // 🟢 التحديث 1: إعطاء قيمة افتراضية undefined لحماية الـ Context لاحقاً
@@ -74,7 +75,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, logout, setUser }}>
             {children}
         </AuthContext.Provider>
     );

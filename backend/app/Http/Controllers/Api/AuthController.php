@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\PasswordChanged;
 
 class AuthController extends Controller
 {
@@ -164,5 +166,54 @@ class AuthController extends Controller
         }
 
         return response()->json(['message' => 'تم تسجيل الخروج بنجاح.']);
+    }
+
+    /**
+     * تحديث بيانات المستخدم
+     */
+    public function updateUser(Request $request): JsonResponse
+    {
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+
+        $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'current_password' => 'required_with:password|string',
+            'password' => 'sometimes|string|min:8|confirmed',
+            'bio' => 'sometimes|string|max:1000',
+        ]);
+
+        // تحديث الاسم إذا تم تقديمه
+        if ($request->has('name')) {
+            $user->name = $request->name;
+        }
+
+        // تحديث كلمة المرور إذا تم تقديمها
+        if ($request->has('password')) {
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'كلمة المرور الحالية غير صحيحة.'
+                ], 400);
+            }
+
+            $user->password = Hash::make($request->password);
+
+            // إرسال إشعار بتغيير كلمة المرور
+            Notification::send($user, new PasswordChanged());
+        }
+
+        // تحديث السيرة الذاتية إذا كان المستخدم معلماً
+        if ($request->has('bio') && $user->hasRole('teacher')) {
+            $user->teacherProfile()->update(['bio' => $request->bio]);
+        }
+
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'تم تحديث البيانات بنجاح.',
+            'data' => $user->load(['roles', 'studentProfile', 'teacherProfile', 'wallet'])
+        ]);
     }
 }

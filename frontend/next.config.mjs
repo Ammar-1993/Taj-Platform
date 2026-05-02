@@ -24,6 +24,10 @@ const nextConfig = {
   swcMinify: false, // إيقاف الضغط العنيف الذي يغير أسماء الدوال إلى r
   transpilePackages: ['agora-react-uikit', 'agora-rtc-sdk-ng'], // إجبار السيرفر على ترجمة المكتبة بشكل صحيح
 
+  images: {
+    domains: ['ui-avatars.com'],
+  },
+
   eslint: {
     ignoreDuringBuilds: false,
   },

@@ -62,6 +62,7 @@ Route::prefix('v1')->group(function () {
 
         // 1. المصادقة والجلسة (Auth Session)
         Route::get('/auth/me', [AuthController::class, 'me']);
+        Route::put('/auth/me', [AuthController::class, 'updateUser']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
 
         // 2. الملفات الشخصية (Profiles)
