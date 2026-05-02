@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import PageHeader from '@/components/ui/PageHeader';
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowLeft, Loader2 } from "lucide-react";
 import RedirectCountdown from "@/components/ui/RedirectCountdown";
 
 export default function PaymentSuccessPage() {
@@ -65,15 +65,18 @@ export default function PaymentSuccessPage() {
                                 </div>
                             </div>
                         ) : paymentStatus === 'success' ? (
-                            <div className="space-y-6">
-                                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                                    <CheckCircle2 className="w-8 h-8 text-green-600" />
+                            <div className="space-y-6 animate-fade-in-up">
+                                <div className="relative w-24 h-24 mx-auto">
+                                  <div className="absolute inset-0 bg-emerald-400/20 rounded-full animate-ping" />
+                                  <div className="relative w-24 h-24 bg-emerald-50 border border-emerald-100 rounded-full flex items-center justify-center shadow-inner">
+                                    <CheckCircle2 className="w-12 h-12 text-emerald-500" />
+                                  </div>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2">تم الشحن بنجاح! 🎉</h3>
-                                    <p className="text-sm text-gray-600 mb-4">
-                                        تم شحن محفظتك بنجاح. يمكنك الآن استخدام رصيدك للحجز مع المعلمين.
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-2">تم الشحن بنجاح! 🎉</h3>
+                                    <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                                        تم إضافة الرصيد لمحفظتك بنجاح. يمكنك الآن استخدام رصيدك لحجز حصص مع المعلمين.
                                     </p>
                                 </div>
 
@@ -85,22 +88,22 @@ export default function PaymentSuccessPage() {
 
                                 <Button
                                     onClick={() => router.push('/dashboard')}
-                                    className="w-full"
+                                    className="w-full h-12"
                                 >
                                     العودة إلى لوحة التحكم
-                                    <ArrowRight className="w-4 h-4 mr-2" />
+                                    <ArrowLeft className="w-4 h-4 mr-2" />
                                 </Button>
                             </div>
                         ) : (
-                            <div className="space-y-6">
-                                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
-                                    <CheckCircle2 className="w-8 h-8 text-red-600" />
+                            <div className="space-y-6 animate-fade-in-up">
+                                <div className="w-24 h-24 bg-rose-50 border border-rose-100 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                                    <XCircle className="w-12 h-12 text-rose-500" />
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2">فشل في الدفع</h3>
-                                    <p className="text-sm text-gray-600 mb-4">
-                                        حدث خطأ في معالجة الدفع. يرجى المحاولة مرة أخرى أو التواصل مع الدعم.
+                                    <h3 className="text-xl font-bold text-gray-900 mb-2">فشل في عملية الدفع</h3>
+                                    <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                                        حدث خطأ أثناء معالجة الدفع. يرجى المحاولة مرة أخرى أو التواصل مع الدعم.
                                     </p>
                                 </div>
 
@@ -108,15 +111,16 @@ export default function PaymentSuccessPage() {
                                     <Button
                                         onClick={() => router.push('/dashboard/top-up')}
                                         variant="outline"
-                                        className="w-full"
+                                        className="w-full h-12"
                                     >
                                         إعادة المحاولة
                                     </Button>
                                     <Button
                                         onClick={() => router.push('/dashboard')}
-                                        className="w-full"
+                                        className="w-full h-12"
                                     >
                                         العودة إلى لوحة التحكم
+                                        <ArrowLeft className="w-4 h-4 mr-2" />
                                     </Button>
                                 </div>
                             </div>

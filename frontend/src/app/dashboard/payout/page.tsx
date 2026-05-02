@@ -145,7 +145,7 @@ export default function PayoutPage() {
                                     onCancel={() => setSuccessRedirect(false)}
                                 />
                             ) : (
-                            <form onSubmit={handlePayoutSubmit} className="space-y-6">
+                            <form onSubmit={handlePayoutSubmit} className="space-y-6" noValidate>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">المبلغ المراد سحبه (ريال):</label>
                                     <Input 

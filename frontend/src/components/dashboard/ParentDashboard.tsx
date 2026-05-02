@@ -262,7 +262,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                       </td>
                       <td className="px-4 py-4">
                         <span className="font-bold font-mono text-text-primary" dir="ltr">
-                          {booking.net_paid}
+                          {formatCurrency(booking.net_paid)}
                         </span>
                         <span className="text-xs text-text-muted mr-1">ريال</span>
                       </td>

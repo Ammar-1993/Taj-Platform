@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Booking } from "@/types";
-import { formatTime, formatDate } from "@/lib/formatters";
+import { formatTime, formatDate, formatCurrency } from "@/lib/formatters";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/Button";
 import { Video, XCircle, Coins, BookOpen, Rocket } from "lucide-react";
@@ -87,7 +87,7 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 </div>
                 <div className="text-left">
                   <span className="font-bold font-mono text-text-primary" dir="ltr">
-                    {booking.net_paid}
+                    {formatCurrency(booking.net_paid)}
                   </span>
                   <span className="text-xs text-text-muted mr-1">ريال</span>
                 </div>
@@ -181,7 +181,7 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 {/* Amount */}
                 <td className="px-4 py-4 whitespace-nowrap">
                   <span className="font-bold font-mono text-text-primary" dir="ltr">
-                    {booking.net_paid}
+                    {formatCurrency(booking.net_paid)}
                   </span>
                   <span className="text-xs text-text-muted mr-1">ريال</span>
                 </td>

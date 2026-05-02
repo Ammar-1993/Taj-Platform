@@ -76,7 +76,7 @@ export default function TopUpPage() {
                                 <div>
                                     <label className="block text-gray-900 font-bold mb-4 mr-1 flex items-center gap-2">
                                         <span>اختر مبلغ الشحن (ريال سعودي):</span>
-                                        <span className="text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full uppercase tracking-tighter">Amount</span>
+                                        <span className="text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full font-bold">المبلغ</span>
                                     </label>
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                         {[50, 100, 200, 500].map((val) => {
@@ -148,8 +148,8 @@ export default function TopUpPage() {
                                     )}
                                 </Button>
                                 <div className="flex flex-col items-center gap-2">
-                                    <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest">Safe & Secure Payment</p>
-                                    <p className="text-center text-xs text-gray-400 font-bold italic">هذه بيئة اختبار آمنة. لن يتم خصم مبالغ حقيقية.</p>
+                                    <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest">دفع آمن ومحمي</p>
+                                    <p className="text-center text-xs text-gray-400 font-medium">هذه بيئة اختبار آمنة. لن يتم خصم مبالغ حقيقية.</p>
                                 </div>
                             </div>
                         )}
