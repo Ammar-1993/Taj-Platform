@@ -212,7 +212,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
               ))}
             </div>
 
-            <div className="hidden md:block overflow-x-auto">
+            <div className="hidden md:block w-full overflow-x-auto">
               <table className="w-full text-sm text-right">
                 <thead>
                   <tr className="bg-gradient-to-l from-surface-subtle to-surface-muted border-b border-border">
@@ -252,7 +252,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                       <td className="px-4 py-4 font-bold text-text-primary">
                         {booking.teacher?.name}
                       </td>
-                      <td className="px-4 py-4">
+                      <td className="px-4 py-4 whitespace-nowrap">
                         <div className="font-bold text-text-primary">
                           {formatDate(booking.booking_date, "medium")}
                         </div>

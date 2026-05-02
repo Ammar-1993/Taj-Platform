@@ -46,109 +46,190 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
   }
 
   return (
-    <div className="w-full overflow-hidden">
-      <table className="w-full text-sm text-right block md:table">
-        <thead className="hidden md:table-header-group">
-          <tr className="bg-gradient-to-l from-surface-subtle to-surface-muted border-b border-border">
-            <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider rounded-tr-taj-lg text-right">رقم</th>
-            <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">{isTeacher ? "الطالب" : "المعلم"}</th>
-            <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">التاريخ والوقت</th>
-            <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">المبلغ</th>
-            <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">الحالة</th>
-            <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider rounded-tl-taj-lg text-right">الإجراء</th>
-          </tr>
-        </thead>
-        <tbody className="block md:table-row-group">
-          {bookings.map((booking) => (
-            <tr
-              key={booking.id}
-              className="block md:table-row bg-white border border-border md:border-b md:border-surface-muted hover:bg-brand-50/50 hover:-translate-y-1 hover:shadow-md rounded-taj-lg md:rounded-none mb-4 md:mb-0 p-4 md:p-0 shadow-sm md:shadow-none transition-all duration-300 group"
-            >
-              <td className="flex justify-between items-center md:table-cell px-2 md:px-4 py-2 md:py-4 font-bold text-brand-600 border-b border-surface-muted md:border-none mb-3 md:mb-0">
-                <span className="md:hidden font-bold text-text-secondary text-xs">رقم الحجز:</span>
-                <span>#{booking.id}</span>
-              </td>
-              
-              <td className="block md:table-cell px-2 md:px-4 py-2 md:py-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 md:w-9 md:h-9 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-md flex items-center justify-center text-brand-600 font-bold text-sm shrink-0">
-                    {(isTeacher ? booking.student?.name : booking.teacher?.name)?.charAt(0) || "?"}
-                  </div>
-                  <div>
-                    <span className="block font-bold text-text-primary">
-                      {isTeacher ? booking.student?.name : booking.teacher?.name}
-                    </span>
-                    <span className="md:hidden text-xs text-text-secondary">
-                      {isTeacher ? "الطالب" : "المعلم"}
-                    </span>
-                  </div>
-                </div>
-              </td>
+    <>
+      {/* ─── Mobile: Card Layout (< md) ─────────────────────────────────── */}
+      <div className="md:hidden space-y-4">
+        {bookings.map((booking) => (
+          <div
+            key={booking.id}
+            className="bg-white border border-border rounded-taj-lg p-4 shadow-sm flex flex-col gap-3"
+          >
+            <div className="flex justify-between items-center border-b border-surface-subtle pb-3">
+              <span className="font-bold text-brand-600">#{booking.id}</span>
+              <StatusBadge status={booking.status} />
+            </div>
 
-              <td className="flex justify-between items-center md:table-cell px-2 md:px-4 py-2 md:py-4 bg-surface-subtle md:bg-transparent rounded-taj-md md:rounded-none mt-2 md:mt-0 p-3 md:p-0">
-                <span className="md:hidden font-bold text-text-secondary text-xs">الموعد:</span>
-                <div className="text-left md:text-right">
-                  <div className="font-bold text-text-primary text-sm md:text-base">
+            <div className="flex flex-col gap-2">
+              {/* Person */}
+              <div className="flex items-center gap-3 bg-surface-subtle p-3 rounded-taj-md">
+                <div className="w-9 h-9 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-md flex items-center justify-center text-brand-600 font-bold text-sm shrink-0">
+                  {(isTeacher ? booking.student?.name : booking.teacher?.name)?.charAt(0) || "?"}
+                </div>
+                <div>
+                  <span className="block font-bold text-text-primary text-sm">
+                    {isTeacher ? booking.student?.name : booking.teacher?.name}
+                  </span>
+                  <span className="text-xs text-text-secondary">
+                    {isTeacher ? "الطالب" : "المعلم"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Date + Amount */}
+              <div className="flex justify-between items-center bg-surface-subtle p-3 rounded-taj-md">
+                <div>
+                  <div className="font-bold text-text-primary text-sm">
                     {formatDate(booking.booking_date, "medium")}
                   </div>
-                  <div className="text-xs text-text-secondary md:text-text-muted mt-0.5">
+                  <div className="text-xs text-text-secondary mt-0.5">
                     {formatTime(booking.teacher_slot?.start_time)}
                   </div>
                 </div>
-              </td>
-
-              <td className="flex justify-between items-center md:table-cell px-2 md:px-4 py-2 md:py-4 bg-surface-subtle md:bg-transparent rounded-taj-md md:rounded-none mt-1 md:mt-0 p-3 md:p-0">
-                <span className="md:hidden font-bold text-text-secondary text-xs">المبلغ:</span>
-                <div className="text-left md:text-right">
+                <div className="text-left">
                   <span className="font-bold font-mono text-text-primary" dir="ltr">
                     {booking.net_paid}
                   </span>
                   <span className="text-xs text-text-muted mr-1">ريال</span>
                 </div>
-              </td>
+              </div>
 
-              <td className="flex justify-between items-center md:table-cell px-2 md:px-4 py-2 md:py-4 mt-2 md:mt-0">
-                <span className="md:hidden font-bold text-text-secondary text-xs">الحالة:</span>
-                <StatusBadge status={booking.status} />
-              </td>
-
-              <td className="flex justify-end md:table-cell px-2 md:px-4 py-2 md:py-4 mt-2 md:mt-0 pt-3 md:pt-4 border-t border-surface-muted md:border-none">
-                <div className="flex gap-2 justify-end">
-                  {(booking.status === "scheduled" || booking.status === "in_progress") && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => router.push(`/classroom/${booking.id}`)}
-                      className="bg-brand-50 border-brand-100 text-brand-700 hover:bg-brand-100 hover:text-brand-800 h-9"
-                    >
-                      دخول الفصل <Video className="w-3.5 h-3.5 mr-2" />
-                    </Button>
-                  )}
+              {/* Actions */}
+              {(booking.status === "scheduled" || booking.status === "in_progress") && (
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => router.push(`/classroom/${booking.id}`)}
+                    className="flex-1 bg-brand-50 border-brand-100 text-brand-700 hover:bg-brand-100 hover:text-brand-800 h-9"
+                  >
+                    دخول الفصل <Video className="w-3.5 h-3.5 mr-2" />
+                  </Button>
                   {isTeacher && booking.status === "scheduled" && (
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => onCancelClick(booking.id)}
-                      className="text-error-text hover:bg-error-bg hover:text-error-text h-9"
+                      className="text-error-text hover:bg-error-bg h-9"
                     >
-                      إلغاء طارئ <XCircle className="w-3.5 h-3.5 mr-2" />
+                      <XCircle className="w-3.5 h-3.5" />
                     </Button>
                   )}
                   {isTeacher && booking.status === "in_progress" && (
                     <Button
                       size="sm"
                       onClick={() => onCompleteClick(booking.id)}
-                      className="bg-success-text hover:bg-success-text/90 text-white h-9"
+                      className="bg-success-text hover:bg-success-text/90 text-white h-9 px-3"
                     >
-                      إنهاء وتحصيل <Coins className="w-3.5 h-3.5 mr-2" />
+                      إنهاء وتحصيل <Coins className="w-3.5 h-3.5 mr-1" />
                     </Button>
                   )}
                 </div>
-              </td>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ─── Desktop: Scrollable Table (>= md) ───────────────────────────── */}
+      <div className="hidden md:block w-full overflow-x-auto rounded-taj-lg">
+        <table className="min-w-[640px] w-full text-sm text-right">
+          <thead>
+            <tr className="bg-gradient-to-l from-surface-subtle to-surface-muted border-b border-border">
+              <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider rounded-tr-taj-lg text-right">رقم</th>
+              <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">
+                {isTeacher ? "الطالب" : "المعلم"}
+              </th>
+              <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">التاريخ والوقت</th>
+              <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">المبلغ</th>
+              <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">الحالة</th>
+              <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider rounded-tl-taj-lg text-right">الإجراء</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-surface-subtle">
+            {bookings.map((booking) => (
+              <tr
+                key={booking.id}
+                className="hover:bg-brand-50/50 transition-all duration-200 group"
+              >
+                {/* Booking ID */}
+                <td className="px-4 py-4 font-bold text-brand-600 whitespace-nowrap">
+                  #{booking.id}
+                </td>
+
+                {/* Person */}
+                <td className="px-4 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-md flex items-center justify-center text-brand-600 font-bold text-xs shrink-0">
+                      {(isTeacher ? booking.student?.name : booking.teacher?.name)?.charAt(0) || "?"}
+                    </div>
+                    <span className="font-bold text-text-primary">
+                      {isTeacher ? booking.student?.name : booking.teacher?.name}
+                    </span>
+                  </div>
+                </td>
+
+                {/* Date + Time — whitespace-nowrap prevents column collapse */}
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <div className="font-bold text-text-primary">
+                    {formatDate(booking.booking_date, "medium")}
+                  </div>
+                  <div className="text-xs text-text-muted mt-0.5">
+                    {formatTime(booking.teacher_slot?.start_time)}
+                  </div>
+                </td>
+
+                {/* Amount */}
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <span className="font-bold font-mono text-text-primary" dir="ltr">
+                    {booking.net_paid}
+                  </span>
+                  <span className="text-xs text-text-muted mr-1">ريال</span>
+                </td>
+
+                {/* Status */}
+                <td className="px-4 py-4">
+                  <StatusBadge status={booking.status} />
+                </td>
+
+                {/* Actions — whitespace-nowrap keeps button on one line */}
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <div className="flex gap-2 justify-end">
+                    {(booking.status === "scheduled" || booking.status === "in_progress") && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => router.push(`/classroom/${booking.id}`)}
+                        className="bg-brand-50 border-brand-100 text-brand-700 hover:bg-brand-100 hover:text-brand-800 h-9"
+                      >
+                        دخول الفصل <Video className="w-3.5 h-3.5 mr-2" />
+                      </Button>
+                    )}
+                    {isTeacher && booking.status === "scheduled" && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => onCancelClick(booking.id)}
+                        className="text-error-text hover:bg-error-bg hover:text-error-text h-9"
+                      >
+                        إلغاء طارئ <XCircle className="w-3.5 h-3.5 mr-2" />
+                      </Button>
+                    )}
+                    {isTeacher && booking.status === "in_progress" && (
+                      <Button
+                        size="sm"
+                        onClick={() => onCompleteClick(booking.id)}
+                        className="bg-success-text hover:bg-success-text/90 text-white h-9"
+                      >
+                        إنهاء وتحصيل <Coins className="w-3.5 h-3.5 mr-2" />
+                      </Button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 };
