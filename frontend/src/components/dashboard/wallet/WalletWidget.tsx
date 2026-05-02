@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Wallet } from "@/types";
 import { formatDate, formatCurrency } from "@/lib/formatters";
 import { 
-  WalletCards, CalendarDays, Banknote, Zap, BarChart2,
+  WalletCards, Banknote, Zap, BarChart2,
   Landmark, LifeBuoy
 } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
