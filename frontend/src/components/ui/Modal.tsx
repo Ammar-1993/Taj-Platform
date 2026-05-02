@@ -97,17 +97,21 @@ export default function Modal({
         // Reset browser default dialog styles
         "m-auto rounded-3xl border border-gray-100 bg-white p-0 shadow-2xl",
         "backdrop:bg-black/60 backdrop:backdrop-blur-sm",
-        // Entrance animation (Tailwind animate-in from tailwind-animate plugin)
+        // Entrance animation
         "open:animate-in open:fade-in open:zoom-in-95 open:duration-200",
-        "w-full",
+        // Cap height — flex is on the inner div, NOT here (flex on dialog breaks m-auto centering)
+        "w-full max-h-[90vh]",
         sizeMap[size]
       )}
     >
-      {/* Panel content — stop clicks inside from bubbling to backdrop handler */}
-      <div onClick={(e) => e.stopPropagation()} className="flex flex-col">
-        {/* Header */}
+      {/* Panel content — flex column so header is sticky, body scrolls */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="flex flex-col max-h-[90vh]"
+      >
+        {/* Header — pinned, never scrolls */}
         {(title || !hideCloseButton) && (
-          <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-6 py-5">
+          <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-6 py-5 shrink-0">
             {title && (
               <h2
                 id="modal-title"
@@ -128,8 +132,8 @@ export default function Modal({
           </div>
         )}
 
-        {/* Body */}
-        <div className="px-6 py-6">{children}</div>
+        {/* Body — grows to fill available height, scrolls with slim scrollbar */}
+        <div className="px-6 py-6 overflow-y-auto scrollbar-thin flex-1">{children}</div>
       </div>
     </dialog>
   );

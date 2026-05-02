@@ -147,6 +147,11 @@ export interface Review {
   teacher_id: number;
   rating: number;
   comment?: string;
+  created_at?: string;
+  student?: {
+    id: number;
+    name: string;
+  };
 }
 
 export interface Booking {
