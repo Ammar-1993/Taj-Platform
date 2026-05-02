@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -30,6 +31,11 @@ class AppServiceProvider extends ServiceProvider
         if (env('APP_ENV') === 'production') {
             URL::forceScheme('https');
         }
+
+        ResetPassword::createUrlUsing(function ($user, string $token) {
+            return env('FRONTEND_URL', config('app.url')).'/reset-password?token='.urlencode($token).'&email='.urlencode($user->email);
+        });
+
         // تقييد عام للـ API: 60 طلب في الدقيقة لكل IP
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());

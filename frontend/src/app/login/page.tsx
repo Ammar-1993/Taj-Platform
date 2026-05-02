@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import toast from "react-hot-toast";
 import DecorativeBackground from "@/components/layout/DecorativeBackground";
 import { Mail, Lock, ArrowRight } from "lucide-react";
 import ErrorBanner from "@/components/ui/ErrorBanner";
@@ -115,18 +114,12 @@ export default function LoginPage() {
               {/* حقل كلمة المرور */}
               <div className="relative">
                 <div className="absolute left-0 top-0 z-10">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      toast("لاستعادة كلمة المرور، تواصل مع الدعم الفني عبر لوحة التحكم.", {
-                        icon: "🔐",
-                        duration: 5000,
-                      })
-                    }
+                  <Link
+                    href="/forgot-password"
                     className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors bg-white px-2 py-0.5 rounded-md"
                   >
                     نسيت كلمة المرور؟
-                  </button>
+                  </Link>
                 </div>
                 <Input
                   label="كلمة المرور"

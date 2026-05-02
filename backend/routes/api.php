@@ -31,6 +31,8 @@ Route::prefix('v1')->group(function () {
     // 1. المصادقة (Auth)
     Route::prefix('auth')->group(function () {
         Route::post('/register', [AuthController::class, 'register']);
+        Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+        Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
         // 🟢 التعديل الأمني هنا: إضافة throttle:login لتقييد محاولات الدخول الخاطئة
         Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');

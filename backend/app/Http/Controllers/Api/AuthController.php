@@ -8,7 +8,9 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -17,17 +19,19 @@ class AuthController extends Controller
      */
     public function register(RegisterRequest $request): JsonResponse
     {
+        $data = $request->validated();
+
         // 1. إنشاء المستخدم الأساسي
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password),
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'],
+            'password' => Hash::make($data['password']),
             'is_active' => true,
         ]);
 
         // 2. تعيين الصلاحية (teacher, student, parent)
-        $user->assignRole($request->role);
+        $user->assignRole($data['role']);
 
         // 3. إنشاء محفظة مالية فارغة فوراً
         $user->wallet()->create(['balance' => 0.00]);
@@ -50,9 +54,10 @@ class AuthController extends Controller
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        $user = User::where('email', $request->email)->first();
+        $data = $request->validated();
+        $user = User::where('email', $data['email'])->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user || !Hash::check($data['password'], $user->password)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة.'
@@ -76,6 +81,60 @@ class AuthController extends Controller
                 'token' => $token
             ]
         ]);
+    }
+
+    /**
+     * إرسال رابط إعادة تعيين كلمة المرور إلى البريد الإلكتروني.
+     */
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ]);
+
+        $status = Password::sendResetLink($request->only('email'));
+
+        return $status === Password::RESET_LINK_SENT
+            ? response()->json([
+                'status' => 'success',
+                'message' => 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.'
+            ])
+            : response()->json([
+                'status' => 'error',
+                'message' => __($status),
+            ], 500);
+    }
+
+    /**
+     * إعادة تعيين كلمة المرور باستخدام الرمز المرسل عبر البريد.
+     */
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'token' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password),
+                    'remember_token' => Str::random(60),
+                ])->save();
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+            ? response()->json([
+                'status' => 'success',
+                'message' => 'تم إعادة تعيين كلمة المرور بنجاح.'
+            ])
+            : response()->json([
+                'status' => 'error',
+                'message' => __($status),
+            ], 400);
     }
 
     /**

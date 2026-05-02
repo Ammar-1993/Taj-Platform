@@ -24,6 +24,27 @@ export const authService = {
   },
 
   /**
+   * Send a password reset link to the user's email.
+   */
+  forgotPassword: async (email: string) => {
+    const res = await api.post<ApiResponse<unknown>>("/auth/forgot-password", { email });
+    return res.data;
+  },
+
+  /**
+   * Reset the user's password using the token sent by email.
+   */
+  resetPassword: async (data: {
+    email: string;
+    token: string;
+    password: string;
+    password_confirmation: string;
+  }) => {
+    const res = await api.post<ApiResponse<unknown>>("/auth/reset-password", data);
+    return res.data;
+  },
+
+  /**
    * Logout current user
    */
   logout: async () => {
