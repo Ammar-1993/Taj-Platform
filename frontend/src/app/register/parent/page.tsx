@@ -13,7 +13,7 @@ import {
   Lock,
   Loader2,
   CheckCircle,
-  ArrowRight,
+  ArrowLeft,
 } from "lucide-react";
 import ErrorBanner from "@/components/ui/ErrorBanner";
 import { Input } from "@/components/ui/Input";
@@ -236,7 +236,7 @@ export default function ParentRegisterPage() {
                     {!loading ? (
                       <span className="flex items-center gap-2">
                         تأكيد التسجيل والدخول
-                        <ArrowRight className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:-translate-x-1 transition-all" />
+                        <ArrowLeft className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                       </span>
                     ) : (
                       <span>جاري إنشاء الحساب...</span>
@@ -249,7 +249,7 @@ export default function ParentRegisterPage() {
                     href="/register"
                     className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-purple-700 font-bold transition-colors"
                   >
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowLeft className="w-3.5 h-3.5" />
                     العودة لاختيار نوع الحساب
                   </Link>
                 </div>

@@ -162,6 +162,7 @@ export default function SettingsPage() {
             <Input
               label="كلمة المرور الحالية"
               type="password"
+              dir="ltr"
               {...register("current_password")}
               placeholder="أدخل كلمة المرور الحالية"
             />
@@ -169,6 +170,7 @@ export default function SettingsPage() {
             <Input
               label="كلمة المرور الجديدة"
               type="password"
+              dir="ltr"
               {...register("password", {
                 minLength: { value: 8, message: "يجب أن تكون كلمة المرور 8 أحرف على الأقل" }
               })}
@@ -179,6 +181,7 @@ export default function SettingsPage() {
             <Input
               label="تأكيد كلمة المرور الجديدة"
               type="password"
+              dir="ltr"
               {...register("password_confirmation", {
                 validate: (value, formValues) =>
                   value === formValues.password || "كلمتا المرور غير متطابقتين"

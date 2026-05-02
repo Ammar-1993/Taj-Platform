@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { formatTime, formatDate } from "@/lib/formatters";
+import { formatTime, formatDate, roundToSlot } from "@/lib/formatters";
 import PageHeader from "@/components/ui/PageHeader";
 import toast from "react-hot-toast";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -148,6 +148,7 @@ export default function TeacherSchedulePage() {
                     required
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
+                    onBlur={(e) => setStartTime(roundToSlot(e.target.value))}
                   />
                 </div>
                 <div className="w-1/2">
@@ -159,6 +160,7 @@ export default function TeacherSchedulePage() {
                     required
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
+                    onBlur={(e) => setEndTime(roundToSlot(e.target.value))}
                   />
                 </div>
               </div>

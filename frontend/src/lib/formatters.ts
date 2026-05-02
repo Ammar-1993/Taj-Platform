@@ -9,6 +9,10 @@
  *   - 'ar-SA'   → Arabic (Saudi Arabia) text & calendar
  *   - 'u-nu-latn' → Override numeral system to Latin (1,2,3)
  *                   instead of Arabic-Indic (١,٢,٣)
+ *
+ * Added in Step-1 refactor:
+ *   - formatDatetime() → handles raw DB strings like "00:00:00 2026-05-20"
+ *   - roundToSlot()    → snaps HH:mm to nearest 30-min interval
  * ─────────────────────────────────────────────────────────────
  */
 
@@ -50,6 +54,29 @@ export function formatDate(
   }
 }
 
+/**
+ * Normalises a raw database datetime string that may arrive in the
+ * non-standard format "HH:mm:ss YYYY-MM-DD" (time before date),
+ * then formats it as a human-readable Arabic date.
+ *
+ * Falls back gracefully to formatDate() for already-valid ISO strings.
+ *
+ * @example
+ *   formatDatetime("00:00:00 2026-05-20", "long")  // "الأربعاء، 20 مايو 2026"
+ *   formatDatetime("2026-05-20T00:00:00", "medium") // "20 مايو 2026"
+ */
+export function formatDatetime(
+  raw: string | undefined | null,
+  format: "short" | "medium" | "long" = "medium"
+): string {
+  if (!raw) return "";
+  // Detect the quirky "HH:mm:ss YYYY-MM-DD" pattern and reorder to ISO
+  const dbPattern = /^(\d{2}:\d{2}:\d{2})\s+(\d{4}-\d{2}-\d{2})$/;
+  const match = raw.match(dbPattern);
+  const normalised = match ? `${match[2]}T${match[1]}` : raw;
+  return formatDate(normalised, format);
+}
+
 // ─── Time ─────────────────────────────────────────────────────
 
 /**
@@ -75,6 +102,27 @@ export function formatTime(timeStr: string | undefined | null): string {
   } catch {
     return timeStr ?? "";
   }
+}
+
+/**
+ * Snaps a HH:mm time string to the nearest 30-minute slot boundary.
+ * Prevents teachers from inadvertently creating slots at odd times
+ * like "07:18" — the result will be "07:30" instead.
+ *
+ * @example
+ *   roundToSlot("07:18") // "07:30"
+ *   roundToSlot("07:02") // "07:00"
+ *   roundToSlot("13:45") // "14:00"
+ */
+export function roundToSlot(timeStr: string): string {
+  if (!timeStr) return timeStr;
+  const [h, m] = timeStr.split(":").map(Number);
+  if (isNaN(h) || isNaN(m)) return timeStr;
+  const totalMinutes = h * 60 + m;
+  const rounded = Math.round(totalMinutes / 30) * 30;
+  const rh = Math.floor(rounded / 60) % 24;
+  const rm = rounded % 60;
+  return `${String(rh).padStart(2, "0")}:${String(rm).padStart(2, "0")}`;
 }
 
 // ─── Currency ─────────────────────────────────────────────────

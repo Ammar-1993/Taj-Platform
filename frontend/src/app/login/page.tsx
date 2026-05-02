@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import DecorativeBackground from "@/components/layout/DecorativeBackground";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowLeft } from "lucide-react";
 import ErrorBanner from "@/components/ui/ErrorBanner";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -149,7 +149,7 @@ export default function LoginPage() {
                 {!isLoading ? (
                   <span className="flex items-center gap-2">
                     تسجيل الدخول
-                    <ArrowRight className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:-translate-x-1 transition-all" />
+                    <ArrowLeft className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                   </span>
                 ) : (
                   <span>جاري الدخول...</span>

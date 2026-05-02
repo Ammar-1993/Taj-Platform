@@ -17,6 +17,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const isPassword = type === "password";
     const currentType = isPassword ? (showPassword ? "text" : "password") : type;
 
+    // Auto-enforce LTR for inputs where typing direction must be left-to-right
+    // (email addresses, phone numbers, passwords) even in an RTL page layout.
+    // An explicitly passed `dir` prop always takes priority.
+    const ltrTypes = new Set(["email", "tel", "password"]);
+    const resolvedDir: React.HTMLAttributes<HTMLInputElement>["dir"] =
+      dir ?? (ltrTypes.has(type ?? "") ? "ltr" : undefined);
+
     return (
       <div className="w-full">
         {label && (
@@ -26,14 +33,14 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         )}
         <div className="relative group w-full">
           {icon && (
-            <div className={cn("absolute top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-brand-600 transition-colors z-10 pointer-events-none", dir === 'ltr' ? 'left-3.5' : 'right-3.5')}>
+            <div className={cn("absolute top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-brand-600 transition-colors z-10 pointer-events-none", resolvedDir === 'ltr' ? 'left-3.5' : 'right-3.5')}>
               {icon}
             </div>
           )}
           <input
             id={finalId}
             type={currentType}
-            dir={dir}
+            dir={resolvedDir}
             className={cn(
               "flex w-full rounded-taj-md border-2 border-transparent bg-surface-subtle hover:bg-surface-muted px-4 py-2.5 text-sm transition-all duration-200 outline-none",
               "file:border-0 file:bg-transparent file:text-sm file:font-medium",
@@ -41,8 +48,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               "focus-visible:outline-none focus:ring-4 focus:ring-brand-100/50 focus:border-brand-500 hover:border-brand-100",
               "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-text-muted disabled:opacity-70 disabled:grayscale",
               error && "border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50/30 animate-shake",
-              icon ? (dir === 'ltr' ? "pl-10" : "pr-10") : "",
-              isPassword ? (dir === 'ltr' ? "pr-10 tracking-widest" : "pl-10 tracking-widest") : "",
+              // Align text to the left for LTR inputs (email/tel/password) in RTL context
+              resolvedDir === 'ltr' ? "text-left" : "",
+              icon ? (resolvedDir === 'ltr' ? "pl-10" : "pr-10") : "",
+              isPassword ? (resolvedDir === 'ltr' ? "pr-10 tracking-widest" : "pl-10 tracking-widest") : "",
               className
             )}
             ref={ref}
@@ -52,7 +61,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className={cn("absolute top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-colors p-1 focus:outline-none focus:text-indigo-600", dir === 'ltr' ? 'right-3' : 'left-3')}
+              className={cn("absolute top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-colors p-1 focus:outline-none focus:text-indigo-600", resolvedDir === 'ltr' ? 'right-3' : 'left-3')}
               title={showPassword ? "إخفاء كلمة المرور" : "عرض كلمة المرور"}
               aria-label={showPassword ? "إخفاء كلمة المرور" : "عرض كلمة المرور"}
               aria-live="polite"
