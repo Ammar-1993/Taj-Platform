@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import toast from "react-hot-toast";
 import DecorativeBackground from "@/components/layout/DecorativeBackground";
 import { Lock, Mail } from "lucide-react";
 import ErrorBanner from "@/components/ui/ErrorBanner";
@@ -10,6 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { authService } from "@/services/api";
+import { getApiErrorMessage } from "@/hooks/useApiError";
 
 interface ResetPasswordPageProps {
   searchParams: {
@@ -91,18 +91,15 @@ export default function ResetPasswordPage({ searchParams }: ResetPasswordPagePro
         password_confirmation: passwordConfirmation,
       });
 
+      // Inline card message is sufficient — no toast duplicate
       setSuccess("تم إعادة تعيين كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول.");
-      toast.success("تم إعادة تعيين كلمة المرور.");
       setPassword("");
       setPasswordConfirmation("");
-    } catch (error: unknown) {
-      const responseError = error as { response?: { data?: { message?: unknown } } };
-      const errorMessage =
-        typeof responseError.response?.data?.message === "string"
-          ? responseError.response.data.message
-          : "حدث خطأ أثناء إعادة تعيين كلمة المرور. تأكد من صحة البيانات وحاول لاحقاً.";
-
-      setError(errorMessage);
+    } catch (err: unknown) {
+      // getApiErrorMessage() translates "passwords.token" → Arabic automatically
+      setError(
+        getApiErrorMessage(err, "حدث خطأ أثناء إعادة تعيين كلمة المرور. تأكد من صحة البيانات وحاول لاحقاً.")
+      );
     } finally {
       setIsLoading(false);
     }
@@ -158,7 +155,7 @@ export default function ResetPasswordPage({ searchParams }: ResetPasswordPagePro
 
         <Card variant="glass">
           <CardContent className="p-6 sm:p-8">
-            <form className="space-y-5" onSubmit={handleSubmit}>
+            <form className="space-y-5" onSubmit={handleSubmit} noValidate>
               {error && <ErrorBanner message={error} onDismiss={() => setError("")} />}
               {success && (
                 <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-emerald-700 text-sm font-semibold animate-fade-in-up">

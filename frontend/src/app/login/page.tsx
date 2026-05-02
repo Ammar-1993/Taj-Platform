@@ -88,7 +88,7 @@ export default function LoginPage() {
         {/* صندوق تسجيل الدخول (Glassmorphism) */}
         <Card variant="glass">
           <CardContent className="p-6 sm:p-8">
-            <form className="space-y-5" onSubmit={handleSubmit}>
+            <form className="space-y-5" onSubmit={handleSubmit} noValidate>
             
             {error && <ErrorBanner message={error} />}
 
