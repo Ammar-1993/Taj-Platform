@@ -33,7 +33,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user, isTeache
             </div>
             <p className="text-indigo-200 text-sm md:text-base font-medium">
               {isParent
-                ? "لوحة المراقبة الشاملة لحجوزات ونفقات الأبناء"
+                ? "بوابة أولياء الأمور للمتابعة الشاملة وحجوزات نفقات الطلاب(الأبناء)"
                 : isTeacher
                 ? "بوابة المعلم لإدارة الحصص والأرباح"
                 : "بوابة الطالب لإدارة الحجوزات والمحفظة"}

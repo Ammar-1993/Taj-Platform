@@ -12,14 +12,19 @@ import { ParentDashboard } from "@/components/dashboard/ParentDashboard";
 import { StudentTeacherDashboard } from "@/components/dashboard/StudentTeacherDashboard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import dynamic from "next/dynamic";
-const ReviewModal = dynamic(() => import("@/components/dashboard/ReviewModal").then(mod => mod.ReviewModal), { ssr: false });
+const ReviewModal = dynamic(
+  () =>
+    import("@/components/dashboard/ReviewModal").then((mod) => mod.ReviewModal),
+  { ssr: false },
+);
 import { Role } from "@/types";
 
 export default function DashboardPage() {
   const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
 
-  const isTeacher = user?.roles?.some((r: Role) => r.name === "teacher") || false;
+  const isTeacher =
+    user?.roles?.some((r: Role) => r.name === "teacher") || false;
   const isParent = user?.roles?.some((r: Role) => r.name === "parent") || false;
 
   const {
@@ -60,10 +65,10 @@ export default function DashboardPage() {
           title={`مرحباً، ${user.name}`}
           subtitle={
             isParent
-              ? "لوحة المراقبة الشاملة لحجوزات ونفقات الأبناء"
+              ? "بوابة أولياء الأمور للمتابعة الشاملة وحجوزات نفقات الطلاب(الأبناء)"
               : isTeacher
-              ? "بوابة المعلم لإدارة الحصص والأرباح"
-              : "بوابة الطالب لإدارة الحجوزات والمحفظة"
+                ? "بوابة المعلم لإدارة الحصص والأرباح"
+                : "بوابة الطالب لإدارة الحجوزات والمحفظة"
           }
           icon={<Shield className="w-7 h-7" />}
           variant="indigo"
@@ -71,10 +76,16 @@ export default function DashboardPage() {
           actions={
             <>
               {!isTeacher && (
-                <Button asChild variant="outline" className="bg-white/20 border-white/20 text-white hover:bg-white/30 h-11 px-5 rounded-taj-md">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="bg-white/20 border-white/20 text-white hover:bg-white/30 h-11 px-5 rounded-taj-md"
+                >
                   <Link href="/">
                     <Search className="w-4 h-4 mr-2" />
-                    {isParent ? "اختر المعلم المفضل لأبنائك" : "اختر معلمك المفضل"}
+                    {isParent
+                      ? "اختر المعلم المفضل لأبنائك"
+                      : "اختر معلمك المفضل"}
                   </Link>
                 </Button>
               )}

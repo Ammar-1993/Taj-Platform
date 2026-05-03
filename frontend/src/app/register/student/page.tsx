@@ -96,7 +96,7 @@ export default function StudentRegisterPage() {
 
       // التوجيه الذكي لصفحة إعداد الملف لاختيار "المرحلة الدراسية"
       setTimeout(() => {
-        router.push("/dashboard/student-profile");
+        router.push("/dashboard/settings");
       }, 2000);
     } catch (error: unknown) {
       showApiError(
@@ -140,7 +140,7 @@ export default function StudentRegisterPage() {
                 </h3>
                 <p className="text-emerald-600 text-sm font-medium flex items-center justify-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  جاري توجيهك لاختيار مرحلتك الدراسية...
+                  جاري توجيهك لإكمال بيانات حسابك...
                 </p>
               </div>
             ) : (
@@ -252,8 +252,8 @@ export default function StudentRegisterPage() {
           </form>
         )}
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
-  </div>
-);
+  );
 }
