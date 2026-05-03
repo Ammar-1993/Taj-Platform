@@ -25,7 +25,7 @@ const nextConfig = {
   transpilePackages: ['agora-react-uikit', 'agora-rtc-sdk-ng'], // إجبار السيرفر على ترجمة المكتبة بشكل صحيح
 
   images: {
-    domains: ['ui-avatars.com'],
+    domains: ['ui-avatars.com', 'localhost', '127.0.0.1'],
   },
 
   eslint: {

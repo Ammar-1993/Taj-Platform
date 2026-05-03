@@ -181,6 +181,7 @@ class AuthController extends Controller
             'current_password' => 'required_with:password|string',
             'password' => 'sometimes|string|min:8|confirmed',
             'bio' => 'sometimes|string|max:1000',
+            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         // تحديث الاسم إذا تم تقديمه
@@ -206,6 +207,12 @@ class AuthController extends Controller
         // تحديث السيرة الذاتية إذا كان المستخدم معلماً
         if ($request->has('bio') && $user->hasRole('teacher')) {
             $user->teacherProfile()->update(['bio' => $request->bio]);
+        }
+
+        // حفظ الصورة الشخصية إذا تم رفعها
+        if ($request->hasFile('avatar')) {
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $user->avatar_url = '/storage/' . $path;
         }
 
         $user->save();

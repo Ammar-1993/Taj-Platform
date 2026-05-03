@@ -63,14 +63,12 @@ export const authService = {
   /**
    * Update current user profile
    */
-  updateUser: async (data: {
-    name?: string;
-    current_password?: string;
-    password?: string;
-    password_confirmation?: string;
-    bio?: string;
-  }) => {
-    const res = await api.put<ApiResponse<User>>("/auth/me", data);
+  updateUser: async (data: FormData | Record<string, unknown>) => {
+    const isFormData = data instanceof FormData;
+    const res = await api.post<ApiResponse<User>>("/auth/me", data, {
+      params: isFormData ? { _method: 'PUT' } : undefined,
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
+    });
     return res.data;
   },
 };

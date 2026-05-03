@@ -34,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl" className={`${tajawal.variable} ${mono.variable}`}>
+    <html lang="ar" dir="rtl" className={`${tajawal.variable} ${mono.variable}`} suppressHydrationWarning>
       <body className={tajawal.className}>
         <ReactQueryProvider>
           <AuthProvider>

@@ -12,7 +12,7 @@ import { showApiError } from '@/hooks/useApiError';
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { CheckCircle2, Clock, Info, User, FileText, FileBadge, GraduationCap, Rocket, Loader2, Edit3, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Clock, Info, User, FileText, GraduationCap, Rocket, Loader2, Edit3, ShieldCheck } from "lucide-react";
 import RedirectCountdown from "@/components/ui/RedirectCountdown";
 
 export default function TeacherProfilePage() {

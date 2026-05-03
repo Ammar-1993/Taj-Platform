@@ -99,6 +99,7 @@ export interface User {
   name: string;
   email: string;
   phone: string;
+  avatar_url?: string | null;
   is_active?: boolean;
   roles: Role[];
   wallet?: Wallet;

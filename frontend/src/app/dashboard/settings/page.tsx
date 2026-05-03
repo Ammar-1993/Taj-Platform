@@ -1,34 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useAuth } from "@/context/AuthContext";
 import { authService, discoveryService, profileService } from "@/services/api";
 import { useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import Image from "next/image";
 import {
   User as UserIcon,
   Lock as LockIcon,
   Mail,
   Phone,
-  BookOpen,
   Edit3,
-  Users,
   Loader2,
   Save,
   GraduationCap,
   Lightbulb,
   Shield,
   Fingerprint,
+  Camera,
+  Upload,
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { Textarea } from "@/components/ui/Textarea";
 import ErrorBanner from "@/components/ui/ErrorBanner";
 import { Select } from "@/components/ui/Select";
-import Link from "next/link";
+import { GradeLevel } from "@/types";
 
 interface ProfileFormData {
   name: string;
@@ -42,17 +42,32 @@ export default function SettingsPage() {
   const { user, setUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<ProfileFormData>({
     defaultValues: {
       name: user?.name || "",
       grade_level_id: user?.student_profile?.grade_level_id?.toString() || "",
     },
   });
+
+  // Sync form defaults if user changes (e.g. after update)
+  useEffect(() => {
+    if (user) {
+      reset({
+        name: user.name,
+        grade_level_id: user.student_profile?.grade_level_id?.toString() || "",
+      });
+    }
+  }, [user, reset]);
 
   // Fetch grade levels for student role
   const { data: gradesData } = useQuery({
@@ -62,29 +77,54 @@ export default function SettingsPage() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const gradeLevels = gradesData?.data || [];
+  const gradeLevels: GradeLevel[] = gradesData?.data || [];
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("حجم الصورة يجب أن لا يتجاوز 2 ميجابايت");
+        return;
+      }
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const onSubmit = async (data: ProfileFormData) => {
     setError("");
     setIsLoading(true);
 
     try {
-      const updateData: Record<string, unknown> = {};
+      const formData = new FormData();
+      let hasUserUpdates = false;
 
       if (data.name !== user?.name) {
-        updateData.name = data.name;
+        formData.append('name', data.name);
+        hasUserUpdates = true;
       }
 
       if (data.password) {
-        updateData.current_password = data.current_password;
-        updateData.password = data.password;
-        updateData.password_confirmation = data.password_confirmation;
+        formData.append('current_password', data.current_password);
+        formData.append('password', data.password);
+        formData.append('password_confirmation', data.password_confirmation);
+        hasUserUpdates = true;
+      }
+
+      if (avatarFile) {
+        formData.append('avatar', avatarFile);
+        hasUserUpdates = true;
       }
 
       const isStudent = user?.roles?.some(role => role.name === 'student');
 
-      if (Object.keys(updateData).length > 0) {
-        const response = await authService.updateUser(updateData);
+      if (hasUserUpdates) {
+        const response = await authService.updateUser(formData);
+        // Ensure we keep the local state in sync with the full response
         setUser(response.data);
       }
 
@@ -99,8 +139,10 @@ export default function SettingsPage() {
         setUser(updatedUser.data);
       }
 
-      if (Object.keys(updateData).length > 0 || (isStudent && data.grade_level_id !== user?.student_profile?.grade_level_id?.toString())) {
+      if (hasUserUpdates || (isStudent && data.grade_level_id !== user?.student_profile?.grade_level_id?.toString())) {
         toast.success("تم تحديث البيانات بنجاح.");
+        setAvatarFile(null);
+        setAvatarPreview(null);
       } else {
         toast("لم يتم إجراء أي تغييرات.");
       }
@@ -119,7 +161,20 @@ export default function SettingsPage() {
 
   const isStudent = user?.roles?.some(role => role.name === 'student');
 
-  // Extract initials for the avatar
+  // Helper to get correct avatar URL
+  const getAvatarUrl = () => {
+    if (avatarPreview) return avatarPreview;
+    if (user.avatar_url) {
+      // If it's already a full URL, return it
+      if (user.avatar_url.startsWith('http')) return user.avatar_url;
+      // Otherwise, prepend the base URL (assuming images are served from root)
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+      return `${baseUrl}${user.avatar_url.startsWith('/') ? '' : '/'}${user.avatar_url}`;
+    }
+    return null;
+  };
+
+  const finalAvatarUrl = getAvatarUrl();
   const nameInitial = user.name ? user.name.charAt(0) : "؟";
 
   return (
@@ -152,18 +207,62 @@ export default function SettingsPage() {
             </div>
 
             <div className="px-10 pb-10 pt-4 space-y-6">
-              {/* Avatar Row */}
-              <div className="flex items-center gap-4 p-4 bg-indigo-50/30 rounded-3xl border border-indigo-100/20">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md shrink-0 select-none border-4 border-white">
-                  {nameInitial}
+              {/* Avatar Upload Section */}
+              <div className="flex items-center gap-6 p-6 bg-indigo-50/30 rounded-[2rem] border border-indigo-100/20">
+                <div 
+                  className="relative group cursor-pointer"
+                  onClick={() => avatarInputRef.current?.click()}
+                >
+                  <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center transition-transform active:scale-95">
+                    {finalAvatarUrl ? (
+                      <div className="relative w-full h-full">
+                        <Image 
+                          src={finalAvatarUrl} 
+                          alt="Avatar" 
+                          fill
+                          className="object-cover" 
+                          unoptimized={finalAvatarUrl.startsWith('data:')}
+                        />
+                      </div>
+                    ) : (
+                      <span className="text-3xl font-bold text-white">{nameInitial}</span>
+                    )}
+                    
+                    <div className="absolute inset-0 bg-indigo-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                      <Camera className="w-7 h-7 text-white" />
+                    </div>
+                  </div>
+                  
+                  {/* Floating Upload Icon */}
+                  <div className="absolute -bottom-1 -left-1 w-7 h-7 bg-white rounded-full shadow-md flex items-center justify-center border-2 border-indigo-50 text-indigo-600 group-hover:scale-110 transition-transform z-20">
+                    <Upload className="w-3.5 h-3.5" />
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-700">
-                    الصورة الرمزية
+
+                <input 
+                  type="file" 
+                  ref={avatarInputRef} 
+                  className="hidden" 
+                  accept="image/*" 
+                  onChange={handleAvatarChange} 
+                />
+
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-slate-800">
+                    الصورة الشخصية
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5 font-medium">
-                    تُولد تلقائياً من الحرف الأول للاسم
+                  <p className="text-xs text-gray-500 mt-1 font-medium leading-relaxed">
+                    انقر لتغيير صورتك. الصيغ المدعومة: JPG, PNG. الحد الأقصى 2 ميجابايت.
                   </p>
+                  {avatarFile && (
+                    <button 
+                      type="button"
+                      onClick={() => { setAvatarFile(null); setAvatarPreview(null); }}
+                      className="mt-2 text-[10px] font-bold text-red-500 hover:text-red-600 underline underline-offset-2"
+                    >
+                      إلغاء التعديل
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -337,7 +436,7 @@ export default function SettingsPage() {
                       className="bg-gray-50/50 rounded-xl"
                     >
                       <option value="" disabled>-- اختر مرحلتك الدراسية --</option>
-                      {gradeLevels.map((grade: any) => (
+                      {gradeLevels.map((grade: GradeLevel) => (
                         <option key={grade.id} value={grade.id}>
                           {grade.name} (سعر الحصة: {grade.session_price} ريال)
                         </option>
