@@ -31,7 +31,7 @@ export default function PageHeader({
   return (
     <div 
       className={cn(
-        "relative overflow-hidden transition-all duration-300",
+        "relative transition-all duration-300",
         isDefault && "bg-white p-6 rounded-taj-lg shadow-sm border border-border",
         isIndigo && "bg-gradient-to-l from-brand-700 via-brand-600 to-brand-800 p-8 rounded-taj-xl shadow-md text-white",
         isGlass && "bg-white/80 backdrop-blur-xl p-8 rounded-taj-xl shadow-lg border border-white/50"

@@ -47,6 +47,10 @@ export default function SettingsPage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
+  // Holds the confirmed remote URL after a successful upload, preventing race conditions
+  // between clearing avatarPreview and the async AuthContext update.
+  const [savedAvatarUrl, setSavedAvatarUrl] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -124,8 +128,19 @@ export default function SettingsPage() {
 
       if (hasUserUpdates) {
         const response = await authService.updateUser(formData);
-        // Ensure we keep the local state in sync with the full response
         setUser(response.data);
+
+        // If an avatar was uploaded, grab the confirmed URL from the response
+        // and store it in local state BEFORE clearing the preview.
+        // This eliminates the race condition between async context propagation
+        // and local state clearing.
+        if (avatarFile && response.data.avatar_url) {
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+          const fullUrl = response.data.avatar_url.startsWith('http')
+            ? response.data.avatar_url
+            : `${baseUrl}${response.data.avatar_url.startsWith('/') ? '' : '/'}${response.data.avatar_url}`;
+          setSavedAvatarUrl(fullUrl);
+        }
       }
 
       // Handle Student Grade Level Update
@@ -142,7 +157,7 @@ export default function SettingsPage() {
       if (hasUserUpdates || (isStudent && data.grade_level_id !== user?.student_profile?.grade_level_id?.toString())) {
         toast.success("تم تحديث البيانات بنجاح.");
         setAvatarFile(null);
-        setAvatarPreview(null);
+        setAvatarPreview(null); // Safe to clear now — savedAvatarUrl will be used instead
       } else {
         toast("لم يتم إجراء أي تغييرات.");
       }
@@ -161,13 +176,12 @@ export default function SettingsPage() {
 
   const isStudent = user?.roles?.some(role => role.name === 'student');
 
-  // Helper to get correct avatar URL
+  // Helper to get correct avatar URL — priority: live preview > saved local > remote from context
   const getAvatarUrl = () => {
-    if (avatarPreview) return avatarPreview;
-    if (user.avatar_url) {
-      // If it's already a full URL, return it
+    if (avatarPreview) return avatarPreview;        // Actively selecting a new file
+    if (savedAvatarUrl) return savedAvatarUrl;       // Just uploaded, confirmed URL
+    if (user.avatar_url) {                           // Loaded fresh from the server
       if (user.avatar_url.startsWith('http')) return user.avatar_url;
-      // Otherwise, prepend the base URL (assuming images are served from root)
       const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
       return `${baseUrl}${user.avatar_url.startsWith('/') ? '' : '/'}${user.avatar_url}`;
     }

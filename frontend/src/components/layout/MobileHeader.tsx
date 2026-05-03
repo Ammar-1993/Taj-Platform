@@ -10,11 +10,12 @@ import {
   LogOut
 } from "lucide-react";
 import { useNavLinks } from "@/hooks/useNavLinks";
+import ProfileDropdown from "./ProfileDropdown";
 
 export default function MobileHeader() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navLinks = useNavLinks();
 
   // إغلاق القائمة الجانبية عند تغيير المسار (الانتقال لصفحة جديدة)
@@ -37,13 +38,26 @@ export default function MobileHeader() {
       {/* الشريط العلوي الثابت للموبايل */}
       <header className="md:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-surface-subtle px-4 py-4 flex items-center justify-between shadow-sm">
         <h2 className="text-xl font-bold text-brand-600">منصة تاج</h2>
-        <button 
-          onClick={() => setIsOpen(true)}
-          className="p-2 -mr-2 text-text-secondary hover:bg-brand-50 hover:text-brand-600 rounded-taj-sm transition-colors"
-          aria-label="Open menu"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
+        
+        <div className="flex items-center gap-3">
+          {/* Profile Dropdown Avatar */}
+          {user && (
+            <ProfileDropdown
+              userName={user.name}
+              imageUrl={user.avatar_url || null}
+              settingsPath="/dashboard/settings"
+              onLogout={logout}
+            />
+          )}
+          
+          <button 
+            onClick={() => setIsOpen(true)}
+            className="p-2 -mr-2 text-text-secondary hover:bg-brand-50 hover:text-brand-600 rounded-taj-sm transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+        </div>
       </header>
 
       {/* خلفية التعتيم (Overlay) */}

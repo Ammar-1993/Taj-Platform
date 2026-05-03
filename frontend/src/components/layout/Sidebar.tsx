@@ -81,7 +81,7 @@ export default function Sidebar() {
       </nav>
       
       <div className={cn(
-        "border-t border-slate-100 py-4",
+        "border-t border-slate-100 py-4 flex flex-col items-center gap-3",
         isCollapsed ? "px-2" : "px-4"
       )}>
         <button 

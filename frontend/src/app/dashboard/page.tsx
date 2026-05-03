@@ -11,6 +11,7 @@ import { Shield, Search, LogOut } from "lucide-react";
 import { ParentDashboard } from "@/components/dashboard/ParentDashboard";
 import { StudentTeacherDashboard } from "@/components/dashboard/StudentTeacherDashboard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
+import { ProfileDropdown } from "@/components/layout";
 import dynamic from "next/dynamic";
 const ReviewModal = dynamic(
   () =>
@@ -74,7 +75,7 @@ export default function DashboardPage() {
           variant="indigo"
           showBack={false}
           actions={
-            <>
+            <div className="flex items-center gap-3">
               {!isTeacher && (
                 <Button
                   asChild
@@ -97,7 +98,15 @@ export default function DashboardPage() {
                 <LogOut className="w-4 h-4 mr-2" />
                 تسجيل الخروج
               </Button>
-            </>
+              <div className="hidden md:block mr-2">
+                <ProfileDropdown
+                  userName={user.name}
+                  imageUrl={user.avatar_url || null}
+                  settingsPath="/dashboard/settings"
+                  onLogout={logout}
+                />
+              </div>
+            </div>
           }
         />
 
