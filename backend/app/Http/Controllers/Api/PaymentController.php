@@ -8,7 +8,6 @@ use App\Services\WalletService;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 
-
 class PaymentController extends Controller
 {
     protected WalletService $walletService;
@@ -21,7 +20,7 @@ class PaymentController extends Controller
     /**
      * Create a payment session with Moyasar gateway
      */
-  public function create(Request $request)
+    public function create(Request $request)
     {
         $request->validate([
             'amount' => 'required|numeric|min:10|max:5000',
@@ -32,19 +31,21 @@ class PaymentController extends Controller
         $amountInHalalas = $amount * 100;
 
         try {
-            // 🟢 التعديل السحري: نستخدم رابط الفواتير (invoices) بدلاً من (payments)
+            // 🟢 تجهيز رابط الواجهة الأمامية مع رابط احتياطي للحماية
+            $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+            // التأكد من إزالة أي / زائدة في نهاية الرابط
+            $frontendUrl = rtrim($frontendUrl, '/');
+
             $response = \Illuminate\Support\Facades\Http::withHeaders([
                 'Authorization' => 'Basic ' . base64_encode(config('services.moyasar.secret_key') . ':'),
                 'Content-Type' => 'application/json',
-            ])->post('https://api.moyasar.com/v1/invoices', [ // <== هنا التغيير الأهم
+            ])->post('https://api.moyasar.com/v1/invoices', [
                 'amount' => $amountInHalalas,
                 'currency' => 'SAR',
                 'description' => 'شحن المحفظة - ' . $user->name,
-                
-                // 🟢 نظام الفواتير في ميسر يستخدم success_url للنجاح و back_url للإلغاء
-                'success_url' => env('FRONTEND_URL') . '/dashboard/top-up/success',
-                'back_url' => env('FRONTEND_URL') . '/dashboard/top-up',
-                
+                // 🟢 استخدام المتغير المحمي
+                'success_url' => $frontendUrl . '/dashboard/top-up/success',
+                'back_url' => $frontendUrl . '/dashboard/top-up',
                 'metadata' => [
                     'user_id' => $user->id,
                     'type' => 'wallet_topup',
@@ -77,19 +78,129 @@ class PaymentController extends Controller
         }
     }
 
-    // هذا المسار سيتم استدعاؤه آلياً من خوادم بوابة الدفع (مثل ميسر)
+    /**
+     * التحقق من حالة الدفع يدوياً (للتغلب على تأخر الويب هوك)
+     */
+    public function verify(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|string',
+        ]);
+
+        $id = $request->input('id');
+        $user = $request->user();
+
+        try {
+            // 🟢 المحاولة الأولى: التحقق كعملية دفع (Payment) لأن ميسر يرسل رقم الدفع غالباً في الرابط
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'Authorization' => 'Basic ' . base64_encode(config('services.moyasar.secret_key') . ':'),
+            ])->get("https://api.moyasar.com/v1/payments/{$id}");
+
+            $invoiceData = null;
+
+            if ($response->successful()) {
+                $paymentData = $response->json();
+                
+                // إذا كان الدفع مرتبطاً بفاتورة، نجلب بيانات الفاتورة للحصول على الـ metadata
+                if (isset($paymentData['invoice_id']) && $paymentData['invoice_id']) {
+                    $invoiceId = $paymentData['invoice_id'];
+                    $invoiceResponse = \Illuminate\Support\Facades\Http::withHeaders([
+                        'Authorization' => 'Basic ' . base64_encode(config('services.moyasar.secret_key') . ':'),
+                    ])->get("https://api.moyasar.com/v1/invoices/{$invoiceId}");
+                    
+                    if ($invoiceResponse->successful()) {
+                        $invoiceData = $invoiceResponse->json();
+                        // نستخدم حالة الدفع الأصلية
+                        $invoiceData['status'] = $paymentData['status'];
+                    }
+                } else {
+                    // إذا لم تكن هناك فاتورة، نستخدم بيانات الدفع مباشرة (إذا كانت الـ metadata موجودة هناك)
+                    $invoiceData = $paymentData;
+                }
+            } else {
+                // 🟢 المحاولة الثانية: التحقق كفاتورة مباشرة (Invoice)
+                $response = \Illuminate\Support\Facades\Http::withHeaders([
+                    'Authorization' => 'Basic ' . base64_encode(config('services.moyasar.secret_key') . ':'),
+                ])->get("https://api.moyasar.com/v1/invoices/{$id}");
+
+                if ($response->successful()) {
+                    $invoiceData = $response->json();
+                }
+            }
+
+            if ($invoiceData) {
+                Log::info('Moyasar Verification Success (Manual):', $invoiceData);
+                
+                // التأكد من أن الفاتورة مدفوعة وتخص المستخدم الحالي
+                if (($invoiceData['status'] === 'paid' || $invoiceData['status'] === 'completed') && 
+                    isset($invoiceData['metadata']['user_id']) && 
+                    (int)$invoiceData['metadata']['user_id'] === $user->id) {
+                    
+                    // منع تكرار العملية (Idempotency)
+                    $existingTransaction = \App\Models\WalletTransaction::where('description', 'LIKE', '%' . $id . '%')
+                        ->where('wallet_id', $user->wallet->id)
+                        ->first();
+
+                    if (!$existingTransaction) {
+                        $amount = $invoiceData['amount'] / 100;
+                        
+                        $this->walletService->processTransaction(
+                            $user,
+                            $amount,
+                            'deposit',
+                            'شحن المحفظة عبر ميسر (تحقق يدوي) - رقم: ' . $id
+                        );
+
+                        Log::info('Wallet topped up via manual verification', [
+                            'user_id' => $user->id,
+                            'amount' => $amount,
+                            'id' => $id
+                        ]);
+                    }
+
+                    return response()->json([
+                        'status' => 'success',
+                        'message' => 'تم التحقق من الدفع وتحديث الرصيد',
+                        'balance' => $user->wallet()->first()->balance
+                    ]);
+                }
+
+                return response()->json([
+                    'status' => 'pending',
+                    'message' => 'الدفع لا يزال قيد المعالجة أو لم يكتمل',
+                    'moyasar_status' => $invoiceData['status']
+                ]);
+            }
+
+            Log::error('Moyasar Verification Failed:', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'id' => $id
+            ]);
+
+            return response()->json([
+                'error' => 'فشل في الاتصال بميسر أو الفاتورة غير موجودة',
+                'moyasar_status' => $response->status(),
+                'id_sent' => $id
+            ], 400);
+
+        } catch (\Exception $e) {
+            Log::error('Error verifying payment: ' . $e->getMessage());
+            return response()->json(['error' => 'خطأ في معالجة طلب التحقق'], 500);
+        }
+    }
+
+    /**
+     * مسار الويب هوك لاستقبال تنبيهات الدفع
+     */
     public function webhook(Request $request)
     {
-        // 1. توثيق العملية في ملفات الـ Log للرجوع إليها محاسبياً
         Log::info('Payment Webhook Received:', $request->all());
 
-        // في بيئة الإنتاج الحقيقية: يجب هنا التحقق من التوقيع (Signature)
-        // للتأكد من أن الطلب قادم فعلاً من بوابة الدفع وليس من مخترق.
         $signature = $request->header('X-Moyasar-Signature');
         $webhookSecret = config('services.moyasar.webhook_secret');
 
         if ($webhookSecret && $signature) {
-            // Verify webhook signature for production security
             $expectedSignature = hash_hmac('sha256', $request->getContent(), $webhookSecret);
 
             if (!hash_equals($expectedSignature, $signature)) {
@@ -98,62 +209,50 @@ class PaymentController extends Controller
             }
         }
 
-        // 2. استخراج البيانات (بوابات الدفع غالباً ترسل المبالغ بالهللة/السنت)
-        // Handle different possible payload structures from Moyasar
-        $eventType = $request->input('type') ?: $request->input('event_type');
-        $paymentData = $request->input('data') ?: $request->all();
+        $status = $request->input('data.status');
+        $amountInHalalas = $request->input('data.amount');
+        $amount = $amountInHalalas / 100;
+        
+        $metadata = $request->input('data.metadata');
 
-        $status = $paymentData['status'] ?? null;
-        $amountInHalalas = $paymentData['amount'] ?? 0;
-        $amount = $amountInHalalas / 100; // تحويل الهللات إلى ريالات
-        $paymentId = $paymentData['id'] ?? null;
+        // 🟢 الحل السحري: إذا كانت metadata فارغة، نبحث عن الفاتورة لاستخراج البيانات منها
+        if (empty($metadata) && $request->has('data.invoice_id')) {
+            $invoiceId = $request->input('data.invoice_id');
+            $secretKey = config('services.moyasar.secret_key');
 
-        // الـ metadata هي بيانات نرسلها نحن وقت الدفع ليردها لنا البنك لنعرف من هو الدافع
-        $metadata = $paymentData['metadata'] ?? [];
+            // جلب بيانات الفاتورة الأصلية من ميسر
+            $invoiceResponse = \Illuminate\Support\Facades\Http::withHeaders([
+                'Authorization' => 'Basic ' . base64_encode($secretKey . ':')
+            ])->get("https://api.moyasar.com/v1/invoices/{$invoiceId}");
 
-        Log::info('Webhook parsed data:', [
-            'event_type' => $eventType,
-            'status' => $status,
-            'amount' => $amount,
-            'payment_id' => $paymentId,
-            'metadata' => $metadata,
-            'full_payload' => $request->all()
-        ]);
+            if ($invoiceResponse->successful()) {
+                $metadata = $invoiceResponse->json('metadata');
+                Log::info('Fetched metadata from original invoice:', ['metadata' => $metadata]);
+            }
+        }
 
-        // 3. التأكد من نجاح العملية ووجود رقم المستخدم
-        // Moyasar sends different status values, check for successful payment statuses
-        $successfulStatuses = ['paid', 'completed', 'captured', 'successful'];
-
-        if (in_array($status, $successfulStatuses) && isset($metadata['user_id']) && ($metadata['type'] ?? null) === 'wallet_topup' && $paymentId) {
+        // التأكد من نجاح العملية ووجود البيانات الصحيحة
+        if (
+            ($status === 'paid' || $status === 'completed') && 
+            is_array($metadata) && 
+            isset($metadata['user_id']) && 
+            isset($metadata['type']) && 
+            $metadata['type'] === 'wallet_topup'
+        ) {
             $user = User::find($metadata['user_id']);
 
             if ($user) {
-                // Check for duplicate processing
-                $existingTransaction = \App\Models\WalletTransaction::where('description', 'LIKE', '%عملية رقم: ' . $paymentId . '%')
-                    ->where('wallet_id', $user->wallet->id)
-                    ->first();
-
-                if ($existingTransaction) {
-                    Log::info('Payment already processed, skipping duplicate', [
-                        'payment_id' => $paymentId,
-                        'existing_transaction_id' => $existingTransaction->id
-                    ]);
-                    return response()->json(['message' => 'تمت معالجة هذه العملية مسبقاً'], 200);
-                }
-
                 try {
-                    // 🚀 استدعاء المحرك المالي الجبار لشحن المحفظة
                     $this->walletService->processTransaction(
                         $user,
                         $amount,
-                        'deposit', // إيداع
-                        'شحن المحفظة عبر البطاقة البنكية - عملية رقم: ' . $paymentId
+                        'deposit',
+                        'شحن المحفظة عبر ميسر - عملية رقم: ' . $request->input('data.id')
                     );
 
                     Log::info('Wallet topped up successfully', [
                         'user_id' => $user->id,
                         'amount' => $amount,
-                        'payment_id' => $paymentId
                     ]);
 
                     return response()->json(['message' => 'تم شحن المحفظة بنجاح'], 200);
@@ -162,19 +261,13 @@ class PaymentController extends Controller
                     Log::error('فشل في تحديث المحفظة: ' . $e->getMessage());
                     return response()->json(['error' => 'خطأ داخلي في السيرفر'], 500);
                 }
-            } else {
-                Log::warning('User not found for webhook', ['user_id' => $metadata['user_id']]);
             }
         }
 
-        // إذا كانت العملية مرفوضة أو البيانات ناقصة
         Log::info('Webhook ignored - invalid status or missing data', [
-            'event_type' => $eventType,
             'status' => $status,
-            'successful_statuses' => $successfulStatuses,
-            'has_user_id' => isset($metadata['user_id']),
-            'type' => $metadata['type'] ?? null,
-            'has_payment_id' => !empty($paymentId)
+            'has_metadata' => is_array($metadata),
+            'metadata' => $metadata
         ]);
 
         return response()->json(['message' => 'تم تجاهل الطلب أو الحالة غير صالحة'], 400);

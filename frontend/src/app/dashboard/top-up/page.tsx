@@ -21,19 +21,26 @@ export default function TopUpPage() {
         setIsProcessing(true);
 
         try {
-            // Create payment session with Moyasar
-            const response = await paymentService.createSession(amount);
-            const paymentData = response.data;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const response: any = await paymentService.createSession(amount);
 
-            if (paymentData && paymentData.checkout_url) {
-                // Redirect to Moyasar checkout page
-                window.location.href = paymentData.checkout_url;
+            // 🟢 البحث العدواني: سنبحث عن الرابط في كل الطبقات المحتملة
+            const checkoutUrl = response?.checkout_url 
+                             || response?.data?.checkout_url 
+                             || response?.data?.data?.checkout_url;
+
+            if (checkoutUrl) {
+                // نجحنا! الطيران إلى ميسر
+                window.location.href = checkoutUrl;
             } else {
-                throw new Error('لم يتم الحصول على رابط الدفع');
+                // 🟢 الفخ: إذا لم يجده، سيطبع لنا شكل الاستجابة بالكامل لكي نعرف أين اختبأ الرابط!
+                throw new Error('لغز الرابط: ' + JSON.stringify(response));
             }
-        } catch (error: unknown) {
-            console.error(error);
-            showApiError(error, 'حدث خطأ في إنشاء جلسة الدفع');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
+            console.error("Payment Error:", error);
+            // إظهار رسالة الخطأ أو الفخ الذي نصبناه
+            showApiError(error, error.message || 'حدث خطأ في إنشاء جلسة الدفع');
             setIsProcessing(false);
         }
     };

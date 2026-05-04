@@ -47,9 +47,10 @@ export function getApiErrorMessage(
     "response" in error
   ) {
     const axiosError = error as {
-      response?: { data?: { message?: string } };
+      response?: { data?: { message?: string; error?: string } };
     };
-    const raw = axiosError.response?.data?.message;
+    const data = axiosError.response?.data;
+    const raw = data?.message || data?.error;
     if (raw) return translateApiError(raw);
   }
   return fallback;

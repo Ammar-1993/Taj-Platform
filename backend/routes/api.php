@@ -75,6 +75,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/wallet/payouts', [PayoutRequestController::class, 'index']);
         Route::post('/wallet/payouts', [PayoutRequestController::class, 'store']);
         Route::post('/payments/create', [PaymentController::class, 'create']);
+        Route::post('/payments/verify', [PaymentController::class, 'verify']);
 
         // 4. الحجوزات والحصص (Bookings)
         Route::get('/bookings', [BookingController::class, 'index']);

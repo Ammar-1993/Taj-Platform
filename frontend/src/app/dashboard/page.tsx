@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import PageHeader from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { Shield, Search, LogOut } from "lucide-react";
+import toast from "react-hot-toast";
 import { ParentDashboard } from "@/components/dashboard/ParentDashboard";
 import { StudentTeacherDashboard } from "@/components/dashboard/StudentTeacherDashboard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
@@ -28,6 +29,8 @@ export default function DashboardPage() {
     user?.roles?.some((r: Role) => r.name === "teacher") || false;
   const isParent = user?.roles?.some((r: Role) => r.name === "parent") || false;
 
+  const searchParams = useSearchParams();
+
   const {
     wallet,
     bookings,
@@ -45,6 +48,28 @@ export default function DashboardPage() {
     dismissPendingReview,
     markNotificationAsRead,
   } = useDashboardData(user, isParent, isTeacher);
+
+  const hasRefetched = useRef(false);
+
+  // Hydration fix: Refetch data if returning from a successful payment
+  useEffect(() => {
+    if (hasRefetched.current) return;
+
+    if (searchParams.get('payment') === 'success' || searchParams.get('status') === 'paid') {
+      hasRefetched.current = true;
+      const tid = toast.loading('جاري تحديث رصيد المحفظة...');
+      
+      // إعطاء فرصة بسيطة للقاعدة للتحديث ثم الجلب
+      setTimeout(async () => {
+        await fetchDashboardData();
+        toast.success('تم تحديث البيانات', { id: tid });
+      }, 500);
+
+      // تنظيف الرابط
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [searchParams, fetchDashboardData]);
 
   useEffect(() => {
     // حماية المسار: إذا انتهى التحميل ولم نجد مستخدماً، نوجهه لتسجيل الدخول

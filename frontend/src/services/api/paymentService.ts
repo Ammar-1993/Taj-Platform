@@ -16,4 +16,12 @@ export const paymentService = {
     const res = await api.post<ApiResponse<PaymentSession>>("/payments/create", { amount });
     return res.data;
   },
+
+  /**
+   * Manually verify a payment session
+   */
+  verify: async (id: string) => {
+    const res = await api.post<ApiResponse<unknown>>("/payments/verify", { id });
+    return res.data;
+  },
 };

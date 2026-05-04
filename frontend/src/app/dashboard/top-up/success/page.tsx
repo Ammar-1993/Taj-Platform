@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { paymentService } from '@/services/api';
 import PageHeader from '@/components/ui/PageHeader';
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { CheckCircle2, XCircle, ArrowLeft, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight, Loader2 } from "lucide-react";
 import RedirectCountdown from "@/components/ui/RedirectCountdown";
+import toast from 'react-hot-toast';
 
 export default function PaymentSuccessPage() {
     const { user } = useAuth();
@@ -15,21 +17,56 @@ export default function PaymentSuccessPage() {
     const searchParams = useSearchParams();
     const [isVerifying, setIsVerifying] = useState(true);
     const [paymentStatus, setPaymentStatus] = useState<'verifying' | 'success' | 'failed'>('verifying');
+    const hasVerified = useRef(false);
 
     useEffect(() => {
-        // Check payment status from URL parameters or verify with backend
+        if (hasVerified.current) return;
+        
+        const verifyPayment = async (id: string) => {
+            hasVerified.current = true;
+            const toastId = toast.loading('جاري التحقق من عملية الشحن وتحديث الرصيد...');
+            try {
+                // استدعاء التحقق المباشر من السيرفر
+                const response = (await paymentService.verify(id)) as { 
+                    status: string; 
+                    message?: string; 
+                    balance?: number 
+                };
+                console.log("Verification Response:", response);
+                
+                if (response.status === 'success') {
+                    toast.success('تم تحديث الرصيد بنجاح!', { id: toastId });
+                    setPaymentStatus('success');
+                } else {
+                    toast.error(response.message || 'الدفع لا يزال قيد المعالجة', { id: toastId });
+                    setPaymentStatus('success'); // Still show success UI as it might be pending
+                }
+            } catch (error: unknown) {
+                console.error("Payment verification failed:", error);
+                const axiosError = error as { response?: { data?: { error?: string } } };
+                const msg = axiosError.response?.data?.error || "فشل التحقق التلقائي، سيتم التحديث خلال دقائق";
+                toast.error(msg, { id: toastId });
+                setPaymentStatus('success');
+            } finally {
+                setIsVerifying(false);
+            }
+        };
+
         const paymentId = searchParams.get('id');
         const status = searchParams.get('status');
 
-        if (status === 'paid' || paymentId) {
-            // Payment was successful
+        console.log("Success Page Params:", { paymentId, status });
+
+        if (paymentId) {
+            verifyPayment(paymentId);
+        } else if (status === 'paid') {
             setPaymentStatus('success');
             setIsVerifying(false);
         } else if (status === 'failed') {
             setPaymentStatus('failed');
             setIsVerifying(false);
         } else {
-            // No clear status, assume success for now (webhook will handle actual verification)
+            // No clear status, assume success after delay (fallback)
             setTimeout(() => {
                 setPaymentStatus('success');
                 setIsVerifying(false);
@@ -42,13 +79,15 @@ export default function PaymentSuccessPage() {
     return (
         <div className="min-h-screen relative overflow-hidden bg-green-50/50 p-4 md:p-8 flex items-center justify-center">
             <div className="max-w-md w-full space-y-6">
-                <PageHeader
-                    title="معالجة الدفع"
-                    subtitle="جاري التحقق من عملية الشحن..."
-                    icon={<CheckCircle2 className="w-7 h-7" />}
-                    variant="default"
-                    showBack={false}
-                />
+                {isVerifying && (
+                    <PageHeader
+                        title="معالجة الدفع"
+                        subtitle="جاري التحقق من عملية الشحن..."
+                        icon={<CheckCircle2 className="w-7 h-7" />}
+                        variant="default"
+                        showBack={false}
+                    />
+                )}
 
                 <Card className="text-center">
                     <CardContent className="p-8">
@@ -82,16 +121,16 @@ export default function PaymentSuccessPage() {
 
                                 <RedirectCountdown
                                     message="سيتم توجيهك إلى لوحة التحكم خلال"
-                                    href="/dashboard"
+                                    href="/dashboard?payment=success"
                                     seconds={5}
                                 />
 
                                 <Button
-                                    onClick={() => router.push('/dashboard')}
+                                    onClick={() => router.push('/dashboard?payment=success')}
                                     className="w-full h-12"
                                 >
                                     العودة إلى لوحة التحكم
-                                    <ArrowLeft className="w-4 h-4 mr-2" />
+                                    <ArrowRight className="w-4 h-4 mr-2" />
                                 </Button>
                             </div>
                         ) : (
@@ -120,7 +159,7 @@ export default function PaymentSuccessPage() {
                                         className="w-full h-12"
                                     >
                                         العودة إلى لوحة التحكم
-                                        <ArrowLeft className="w-4 h-4 mr-2" />
+                                        <ArrowRight className="w-4 h-4 mr-2" />
                                     </Button>
                                 </div>
                             </div>
