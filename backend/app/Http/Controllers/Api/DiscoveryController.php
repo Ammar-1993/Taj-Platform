@@ -72,7 +72,9 @@ class DiscoveryController extends Controller
     // 4. جلب الأوقات المتاحة لمعلم محدد
     public function teacherSlots($teacherId): JsonResponse
     {
-        $teacher = User::role('teacher')->findOrFail($teacherId);
+        $teacher = User::role('teacher')
+            ->with(['teacherProfile.subject'])
+            ->findOrFail($teacherId);
 
         $slots = $teacher->teacherSlots()
             ->where('status', 'available')
@@ -86,6 +88,7 @@ class DiscoveryController extends Controller
         return response()->json([
             'status' => 'success', 
             'teacher_name' => $teacher->name,
+            'teacher' => $teacher,
             'data' => $slots
         ]);
     }

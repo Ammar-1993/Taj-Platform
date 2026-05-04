@@ -205,12 +205,27 @@ export default function Home() {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setSelectedTeacherForReviews({ id: teacher.id, name: teacher.name });
+                        if ((teacher.teacher_profile?.average_rating ?? 0) > 0) {
+                          setSelectedTeacherForReviews({ id: teacher.id, name: teacher.name });
+                        }
                       }}
-                      className="text-amber-500 font-bold flex items-center gap-1.5 text-lg hover:scale-105 transition-transform"
+                      className={cn(
+                        "font-bold flex items-center gap-1.5 transition-all",
+                        (teacher.teacher_profile?.average_rating ?? 0) > 0 
+                          ? "text-amber-500 hover:scale-105 text-lg" 
+                          : "text-slate-400 cursor-default text-sm"
+                      )}
                     >
-                      <Star size={18} className="fill-amber-500" />
-                      {teacher.teacher_profile?.average_rating || "0.00"}
+                      {(teacher.teacher_profile?.average_rating ?? 0) > 0 ? (
+                      <>
+                          <Star size={18} className="fill-amber-500" />
+                          {teacher.teacher_profile?.average_rating}
+                        </>
+                      ) : (
+                        <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full text-[10px] font-black tracking-wide border border-slate-200/50">
+                          جديد
+                        </span>
+                      )}
                       <span className="text-[10px] text-gray-400 font-medium mr-1">
                         ({teacher.teacher_profile?.reviews_count || 0} تقييم)
                       </span>
@@ -233,10 +248,10 @@ export default function Home() {
                         <Link href={`/teachers/${teacher.id}`}>احجز الآن</Link>
                       </Button>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-4 py-2 text-xs rounded-xl font-bold bg-gray-100 text-gray-400 cursor-not-allowed select-none w-full sm:w-auto justify-center">
+                      <Button disabled className="w-full sm:w-auto px-6 rounded-taj-lg bg-slate-100 text-slate-400 border-none cursor-not-allowed">
                         <CalendarX size={14} />
-                        لا توجد مواعيد متاحة
-                      </span>
+                        غير متاح حالياً
+                      </Button>
                     )}
                   </CardFooter>
                 </Card>

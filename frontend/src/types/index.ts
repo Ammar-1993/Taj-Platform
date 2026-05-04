@@ -122,6 +122,7 @@ export type SlotsByDate = Record<string, TeacherSlot[]>;
 export interface TeacherSlotsResponse {
   data: SlotsByDate;
   teacher_name: string;
+  teacher?: User;
   session_price?: string;
 }
 

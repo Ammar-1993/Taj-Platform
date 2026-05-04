@@ -24,7 +24,9 @@ import {
   Users, 
   Clock, 
   CircleDollarSign,
-  CheckCircle2
+  CheckCircle2,
+  BookOpen,
+  Star
 } from "lucide-react";
 
 export default function TeacherProfile({ params }: { params: { id: string } }) {
@@ -59,6 +61,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
 
   const slots = (slotsData?.data || {}) as SlotsByDate;
   const teacherName = slotsData?.teacher_name || "";
+  const teacher = slotsData?.teacher;
   const sessionPrice = slotsData?.session_price || null;
   const children = childrenData?.data || [];
 
@@ -110,13 +113,42 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
   return (
     <div className="min-h-screen p-4 md:p-8 bg-slate-50">
       <Card className="max-w-4xl mx-auto rounded-taj-xl p-6 md:p-10 border-none shadow-xl shadow-slate-200/50">
-        <div className="border-b border-slate-100 pb-8 mb-8">
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-            حجز موعد مع {teacherName}
-          </h1>
-          <p className="text-slate-500 mt-3 text-lg leading-relaxed">
-            اختر اليوم المناسب لك من الشريط الزمني ثم حدد الوقت المتاح لبدء رحلتك التعليمية.
-          </p>
+        <div className="border-b border-slate-100 pb-8 mb-8 flex flex-col md:flex-row md:items-center gap-6">
+          <div className="w-24 h-24 shrink-0 bg-gradient-to-br from-brand-50 to-purple-50 border border-brand-100/50 rounded-taj-lg flex items-center justify-center text-brand-600 font-bold text-4xl shadow-sm">
+            {teacherName.charAt(0)}
+          </div>
+          <div className="flex-1">
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+              {teacherName}
+            </h1>
+            <div className="flex flex-wrap items-center gap-4 mt-3">
+              <span className="inline-flex items-center gap-1.5 text-sm text-brand-700 bg-brand-50/80 px-3 py-1 rounded-taj-sm font-bold border border-brand-100/50">
+                <BookOpen size={16} />
+                {teacher?.teacher_profile?.subject?.name || "غير محدد"}
+              </span>
+              
+              <div className="flex items-center gap-1.5">
+                {(teacher?.teacher_profile?.average_rating ?? 0) > 0 ? (
+                  <div className="flex items-center gap-1.5 text-amber-500 font-bold text-lg">
+                    <Star size={20} className="fill-amber-500" />
+                    {teacher?.teacher_profile?.average_rating}
+                  </div>
+                ) : (
+                  <span className="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide border border-slate-200/50">
+                    جديد
+                  </span>
+                )}
+                <span className="text-xs text-slate-400 font-medium">
+                  ({teacher?.teacher_profile?.reviews_count || 0} تقييم)
+                </span>
+              </div>
+            </div>
+            {teacher?.teacher_profile?.bio && (
+              <p className="text-slate-500 mt-4 text-sm leading-relaxed max-w-2xl">
+                {teacher.teacher_profile.bio}
+              </p>
+            )}
+          </div>
         </div>
 
         {Object.keys(slots).length === 0 ? (
