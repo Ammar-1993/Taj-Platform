@@ -7,7 +7,7 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import PageHeader from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
-import { Shield, Search, LogOut } from "lucide-react";
+import { Shield, Search } from "lucide-react";
 import toast from "react-hot-toast";
 import { ParentDashboard } from "@/components/dashboard/ParentDashboard";
 import { StudentTeacherDashboard } from "@/components/dashboard/StudentTeacherDashboard";
@@ -115,14 +115,6 @@ export default function DashboardPage() {
                   </Link>
                 </Button>
               )}
-              <Button
-                variant="ghost"
-                onClick={logout}
-                className="md:hidden bg-rose-500/20 hover:bg-rose-500/40 text-white border border-rose-500/30 h-11 px-5 rounded-taj-md"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                تسجيل الخروج
-              </Button>
               <div className="hidden md:block mr-2">
                 <ProfileDropdown
                   userName={user.name}
