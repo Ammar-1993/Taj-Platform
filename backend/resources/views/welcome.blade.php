@@ -73,9 +73,9 @@
                 </div>
             </a>
             
-            <a href="/admin" target="_blank" rel="noopener noreferrer" class="group flex items-center justify-center gap-3 w-full px-6 py-4 bg-white/50 backdrop-blur-md border-2 border-indigo-50/50 text-indigo-900 font-bold rounded-2xl hover:bg-white hover:border-indigo-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <a href="/admin" target="_blank" rel="noopener noreferrer" class="group flex items-center justify-center gap-2 w-full px-6 py-4 text-slate-500 font-bold rounded-2xl hover:bg-slate-100/50 hover:text-slate-600 transition-all duration-300">
                 <span>دخول الإدارة</span>
-                <i data-lucide="shield-check" class="w-5 h-5 text-indigo-400 group-hover:text-indigo-600 group-hover:scale-110 transition-all"></i>
+                <i data-lucide="shield-check" class="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition-all"></i>
             </a>
         </div>
 
