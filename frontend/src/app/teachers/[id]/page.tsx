@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { discoveryService, bookingService, parentService } from "@/services/api";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { TeacherSlot, SlotsByDate } from "@/types";
-import { formatDatetime, formatDate, formatTime, roundToSlot } from "@/lib/formatters";
+import { formatDate, formatTime, roundToSlot } from "@/lib/formatters";
 import { showApiError } from "@/hooks/useApiError";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";

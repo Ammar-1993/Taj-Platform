@@ -192,15 +192,7 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 </div>
               ) : (
                 <div className="pt-1 text-center">
-                  {booking.status === "completed" ? (
-                    <span className="text-[11px] font-bold text-success-text bg-success-bg px-3 py-1.5 rounded-full inline-block whitespace-nowrap">
-                      اكتملت الحصة
-                    </span>
-                  ) : (
-                    <span className="text-[11px] font-bold text-text-muted bg-surface-muted px-3 py-1.5 rounded-full inline-block whitespace-nowrap">
-                      {booking.status === "cancelled" ? "تم الإلغاء" : "حصة مسترجعة"}
-                    </span>
-                  )}
+                  <span className="text-text-muted text-lg font-bold block">-</span>
                 </div>
               )}
             </div>
@@ -294,15 +286,7 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                       </>
                     ) : (
                       <>
-                        {booking.status === "completed" ? (
-                          <span className="text-[11px] font-bold text-success-text bg-success-bg px-3 py-1.5 rounded-full whitespace-nowrap">
-                            اكتملت الحصة
-                          </span>
-                        ) : (
-                          <span className="text-[11px] font-bold text-text-muted bg-surface-muted px-3 py-1.5 rounded-full whitespace-nowrap">
-                            {booking.status === "cancelled" ? "تم الإلغاء" : "حصة مسترجعة"}
-                          </span>
-                        )}
+                        <span className="text-text-muted text-lg font-bold block">-</span>
                       </>
                     )}
                   </div>
