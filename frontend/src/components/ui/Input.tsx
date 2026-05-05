@@ -52,6 +52,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               "focus-visible:outline-none focus:ring-4 focus:ring-brand-100/50 focus:border-brand-500 hover:border-brand-100",
               "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-text-muted disabled:opacity-70 disabled:grayscale",
               error && "border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50/30 animate-shake",
+              // Specific styling for date and time inputs to look uniform
+              (type === "date" || type === "time") && "appearance-none min-h-[45px] cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-50 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:transition-opacity",
               // Align text to the left for LTR inputs (email/tel/password) in RTL context
               resolvedDir === 'ltr' ? "text-left" : "",
               icon ? (resolvedDir === 'ltr' ? "pl-10" : "pr-10") : "",

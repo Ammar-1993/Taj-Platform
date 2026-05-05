@@ -12,7 +12,7 @@ import { showApiError } from '@/hooks/useApiError';
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { CheckCircle2, Clock, Info, User, FileText, GraduationCap, Rocket, Loader2, Edit3, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Clock, Info, User, FileText, GraduationCap, Rocket, Loader2, Edit3, ShieldCheck, UploadCloud } from "lucide-react";
 import RedirectCountdown from "@/components/ui/RedirectCountdown";
 
 export default function TeacherProfilePage() {
@@ -209,13 +209,26 @@ export default function TeacherProfilePage() {
                                             </span>
                                             {profile?.national_id_path && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-bold shadow-sm">مرفوعة مسبقاً</span>}
                                         </label>
-                                        <input 
-                                            type="file" 
-                                            accept=".jpg,.jpeg,.png,.pdf"
-                                            required={!profile?.national_id_path}
-                                            onChange={(e) => setNationalIdFile(e.target.files?.[0] || null)}
-                                            className="w-full text-xs text-indigo-400 file:ml-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 file:transition-all cursor-pointer" 
-                                        />
+                                        
+                                        <div className="flex flex-col gap-3">
+                                            <input 
+                                                id="national_id"
+                                                type="file" 
+                                                accept=".jpg,.jpeg,.png,.pdf"
+                                                required={!profile?.national_id_path}
+                                                onChange={(e) => setNationalIdFile(e.target.files?.[0] || null)}
+                                                className="hidden" 
+                                            />
+                                            <label 
+                                                htmlFor="national_id"
+                                                className="w-full h-14 bg-white border-2 border-indigo-100 rounded-xl flex items-center px-6 gap-3 cursor-pointer hover:border-indigo-600 hover:bg-indigo-50/50 transition-all text-sm font-bold text-gray-700 overflow-hidden"
+                                            >
+                                                <UploadCloud className="w-5 h-5 text-indigo-500 shrink-0" />
+                                                <span className="truncate">
+                                                    {nationalIdFile ? nationalIdFile.name : "اختر ملف الهوية الوطنية"}
+                                                </span>
+                                            </label>
+                                        </div>
                                     </div>
 
                                     <div className="group bg-purple-50/50 p-6 rounded-[2rem] border-2 border-dashed border-purple-100 hover:border-purple-400 hover:bg-white transition-all duration-300 relative overflow-hidden">
@@ -227,13 +240,26 @@ export default function TeacherProfilePage() {
                                             </span>
                                             {profile?.degree_path && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-bold shadow-sm">مرفوعة مسبقاً</span>}
                                         </label>
-                                        <input 
-                                            type="file" 
-                                            accept=".jpg,.jpeg,.png,.pdf"
-                                            required={!profile?.degree_path}
-                                            onChange={(e) => setDegreeFile(e.target.files?.[0] || null)}
-                                            className="w-full text-xs text-purple-400 file:ml-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-purple-600 file:text-white hover:file:bg-purple-700 file:transition-all cursor-pointer" 
-                                        />
+                                        
+                                        <div className="flex flex-col gap-3">
+                                            <input 
+                                                id="degree"
+                                                type="file" 
+                                                accept=".jpg,.jpeg,.png,.pdf"
+                                                required={!profile?.degree_path}
+                                                onChange={(e) => setDegreeFile(e.target.files?.[0] || null)}
+                                                className="hidden" 
+                                            />
+                                            <label 
+                                                htmlFor="degree"
+                                                className="w-full h-14 bg-white border-2 border-purple-100 rounded-xl flex items-center px-6 gap-3 cursor-pointer hover:border-purple-600 hover:bg-purple-50/50 transition-all text-sm font-bold text-gray-700 overflow-hidden"
+                                            >
+                                                <UploadCloud className="w-5 h-5 text-purple-500 shrink-0" />
+                                                <span className="truncate">
+                                                    {degreeFile ? degreeFile.name : "اختر ملف الشهادة الجامعية"}
+                                                </span>
+                                            </label>
+                                        </div>
                                     </div>
                                     
                                     <div className="pt-4">

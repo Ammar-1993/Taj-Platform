@@ -118,8 +118,7 @@ export default function PayoutPage() {
                                 الرصيد القابل للسحب
                             </h3>
                             <div className="mt-4 flex items-baseline gap-3 font-mono" dir="ltr">
-                            <span className="font-mono text-5xl font-bold tracking-tighter shadow-sm">{formatCurrency(walletInfo?.balance)}</span>
-                                <span className="text-indigo-200 font-bold font-sans text-xl uppercase">SAR</span>
+                                <span className="font-mono text-5xl font-bold tracking-tighter shadow-sm">{formatCurrency(walletInfo?.balance, 'label')}</span>
                             </div>
                             <div className="mt-6 h-1 w-full bg-white/20 rounded-full overflow-hidden">
                                 <div className="h-full bg-white/40 w-2/3 animate-shimmer"></div>
@@ -196,7 +195,7 @@ export default function PayoutPage() {
                                         (amount !== '' && amount > walletBalance) ||
                                         walletBalance < 50
                                     }
-                                    className="w-full h-14 bg-gradient-to-r from-emerald-600 via-emerald-700 to-green-800 hover:shadow-[0_12px_40px_rgba(16,185,129,0.3)] text-lg rounded-taj-xl"
+                                    className="w-full h-14 bg-gradient-to-r from-brand-600 via-brand-700 to-brand-800 hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] text-lg rounded-taj-xl"
                                 >
                                     {payoutMutation.isPending ? (
                                         <>
@@ -258,7 +257,7 @@ export default function PayoutPage() {
                                             </div>
                                             <div className="flex flex-row md:flex-col items-center md:items-end gap-6 md:gap-2 w-full md:w-auto pt-4 md:pt-0 border-t md:border-0 border-gray-100 mt-2 md:mt-0">
                                                 <div className="text-2xl font-bold font-mono text-emerald-600 flex items-baseline gap-1.5" dir="ltr">
-                                                    <span>{formatCurrency(payout.amount, 'code')}</span>
+                                                    <span>{formatCurrency(payout.amount, 'label')}</span>
                                                 </div>
                                                 <div>{renderStatusBadge(payout.status)}</div>
                                             </div>
@@ -277,4 +276,3 @@ export default function PayoutPage() {
         </div>
     );
 }
-

@@ -50,6 +50,7 @@ export default function SettingsPage() {
   // Holds the confirmed remote URL after a successful upload, preventing race conditions
   // between clearing avatarPreview and the async AuthContext update.
   const [savedAvatarUrl, setSavedAvatarUrl] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
 
   const {
     register,
@@ -72,6 +73,11 @@ export default function SettingsPage() {
       });
     }
   }, [user, reset]);
+
+  // Reset imageError when avatar URL or preview changes
+  useEffect(() => {
+    setImageError(false);
+  }, [user?.avatar_url, avatarPreview]);
 
   // Fetch grade levels for student role
   const { data: gradesData } = useQuery({
@@ -228,7 +234,7 @@ export default function SettingsPage() {
                   onClick={() => avatarInputRef.current?.click()}
                 >
                   <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center transition-transform active:scale-95">
-                    {finalAvatarUrl ? (
+                    {finalAvatarUrl && !imageError ? (
                       <div className="relative w-full h-full">
                         <Image 
                           src={finalAvatarUrl} 
@@ -236,6 +242,7 @@ export default function SettingsPage() {
                           fill
                           className="object-cover" 
                           unoptimized={finalAvatarUrl.startsWith('data:')}
+                          onError={() => setImageError(true)}
                         />
                       </div>
                     ) : (
@@ -306,8 +313,8 @@ export default function SettingsPage() {
                     className="flex w-full rounded-xl border-2 border-transparent bg-gray-50 px-4 py-2.5 text-sm font-bold text-gray-400 text-left pl-10 cursor-not-allowed opacity-70"
                   />
                 </div>
-                <p className="mt-1.5 text-[10px] text-gray-400 font-bold uppercase tracking-wider text-left">
-                  Verified Account
+                <p className="mt-1.5 text-[10px] text-green-600 font-bold uppercase tracking-wider text-left">
+                  حساب موثق
                 </p>
               </div>
 

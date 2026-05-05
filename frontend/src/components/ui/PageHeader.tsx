@@ -45,11 +45,11 @@ export default function PageHeader({
         </div>
       )}
 
-      <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div className="relative z-10 flex justify-between items-center w-full gap-4">
         <div className="flex items-center gap-5">
           {icon && (
             <div className={cn(
-              "w-14 h-14 rounded-taj-md flex items-center justify-center shrink-0 shadow-inner",
+              "w-12 h-12 md:w-14 md:h-14 rounded-taj-md flex items-center justify-center shrink-0 shadow-inner",
               isIndigo ? "bg-white/20 text-white" : "bg-brand-50 text-brand-600"
             )}>
               {icon}
@@ -58,7 +58,7 @@ export default function PageHeader({
           <div>
             <div className="flex items-center gap-3 mb-1">
               <h1 className={cn(
-                "text-2xl md:text-3xl font-bold tracking-tight",
+                "text-xl md:text-3xl font-bold tracking-tight",
                 isIndigo ? "text-white" : "text-text-primary"
               )}>
                 {title}
@@ -67,7 +67,7 @@ export default function PageHeader({
             </div>
             {subtitle && (
               <p className={cn(
-                "text-sm md:text-base font-medium opacity-80",
+                "hidden md:block text-sm md:text-base font-medium opacity-80",
                 isIndigo ? "text-brand-100" : "text-text-secondary"
               )}>
                 {subtitle}
@@ -76,13 +76,13 @@ export default function PageHeader({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+        <div className="flex items-center gap-3 shrink-0">
           {actions}
           {showBack && (
             <Link
               href={backHref}
               className={cn(
-                "px-5 py-2.5 rounded-taj-md text-sm font-bold transition-all duration-200 flex items-center gap-2",
+                "hidden md:flex px-5 py-2.5 rounded-taj-md text-sm font-bold transition-all duration-200 items-center gap-2",
                 isIndigo 
                   ? "bg-white/20 hover:bg-white/30 text-white border border-white/20" 
                   : "bg-surface-subtle hover:bg-surface-muted text-text-secondary border border-border"

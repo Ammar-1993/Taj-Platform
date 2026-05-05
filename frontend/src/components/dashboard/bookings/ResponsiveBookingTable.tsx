@@ -5,7 +5,7 @@ import { Booking } from "@/types";
 import { formatTime, formatDate, formatCurrency } from "@/lib/formatters";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/Button";
-import { Video, XCircle, Coins, BookOpen, Rocket } from "lucide-react";
+import { Video, XCircle, Coins, BookOpen, Rocket, Check } from "lucide-react";
 
 interface ResponsiveBookingTableProps {
   bookings: Booking[];
@@ -89,18 +89,17 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                   <span className="font-bold font-mono text-text-primary" dir="ltr">
                     {formatCurrency(booking.net_paid)}
                   </span>
-                  <span className="text-xs text-text-muted mr-1">ريال</span>
                 </div>
               </div>
 
               {/* Actions */}
-              {(booking.status === "scheduled" || booking.status === "in_progress") && (
+              {(booking.status === "scheduled" || booking.status === "in_progress") ? (
                 <div className="flex gap-2 pt-1">
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => router.push(`/classroom/${booking.id}`)}
-                    className="flex-1 bg-brand-50 border-brand-100 text-brand-700 hover:bg-brand-100 hover:text-brand-800 h-9"
+                    className="flex-1 bg-brand-50 border-brand-100 text-brand-700 hover:bg-brand-100 hover:text-brand-800 h-9 whitespace-nowrap"
                   >
                     دخول الفصل <Video className="w-3.5 h-3.5 mr-2" />
                   </Button>
@@ -118,10 +117,24 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                     <Button
                       size="sm"
                       onClick={() => onCompleteClick(booking.id)}
-                      className="bg-success-text hover:bg-success-text/90 text-white h-9 px-3"
+                      className="bg-success-text hover:bg-success-text/90 text-white h-9 px-3 whitespace-nowrap"
                     >
                       إنهاء وتحصيل <Coins className="w-3.5 h-3.5 mr-1" />
                     </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="pt-1 text-center">
+                  {booking.status === "completed" ? (
+                    <div className="flex justify-center">
+                      <div className="w-8 h-8 bg-success-bg text-success-text rounded-full flex items-center justify-center">
+                        <Check className="w-5 h-5" />
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-[11px] font-bold text-text-muted bg-surface-muted px-3 py-1.5 rounded-full inline-block whitespace-nowrap">
+                      {booking.status === "cancelled" ? "تم الإلغاء" : "حصة مسترجعة"}
+                    </span>
                   )}
                 </div>
               )}
@@ -132,17 +145,17 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
 
       {/* ─── Desktop: Scrollable Table (>= md) ───────────────────────────── */}
       <div className="hidden md:block w-full overflow-x-auto rounded-taj-lg">
-        <table className="min-w-[640px] w-full text-sm text-right">
+        <table className="min-w-full w-full text-sm text-right">
           <thead>
             <tr className="bg-gradient-to-l from-surface-subtle to-surface-muted border-b border-border">
-              <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider rounded-tr-taj-lg text-right">رقم</th>
-              <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">
+              <th className="px-2 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider rounded-tr-taj-lg text-right">رقم</th>
+              <th className="px-2 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">
                 {isTeacher ? "الطالب" : "المعلم"}
               </th>
-              <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">التاريخ والوقت</th>
-              <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">المبلغ</th>
-              <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">الحالة</th>
-              <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider rounded-tl-taj-lg text-right">الإجراء</th>
+              <th className="px-2 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">التاريخ والوقت</th>
+              <th className="px-2 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right whitespace-nowrap">المبلغ</th>
+              <th className="px-2 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">الحالة</th>
+              <th className="px-2 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider rounded-tl-taj-lg text-right">الإجراء</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-subtle">
@@ -152,12 +165,12 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 className="hover:bg-brand-50/50 transition-all duration-200 group"
               >
                 {/* Booking ID */}
-                <td className="px-4 py-4 font-bold text-brand-600 whitespace-nowrap">
+                <td className="px-2 py-4 font-bold text-brand-600 whitespace-nowrap">
                   #{booking.id}
                 </td>
 
                 {/* Person */}
-                <td className="px-4 py-4">
+                <td className="px-2 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-md flex items-center justify-center text-brand-600 font-bold text-xs shrink-0">
                       {(isTeacher ? booking.student?.name : booking.teacher?.name)?.charAt(0) || "?"}
@@ -169,7 +182,7 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 </td>
 
                 {/* Date + Time — whitespace-nowrap prevents column collapse */}
-                <td className="px-4 py-4 whitespace-nowrap">
+                <td className="px-2 py-4 whitespace-nowrap">
                   <div className="font-bold text-text-primary">
                     {formatDate(booking.booking_date, "medium")}
                   </div>
@@ -179,49 +192,63 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 </td>
 
                 {/* Amount */}
-                <td className="px-4 py-4 whitespace-nowrap">
+                <td className="px-2 py-4 whitespace-nowrap">
                   <span className="font-bold font-mono text-text-primary" dir="ltr">
                     {formatCurrency(booking.net_paid)}
                   </span>
-                  <span className="text-xs text-text-muted mr-1">ريال</span>
                 </td>
 
                 {/* Status */}
-                <td className="px-4 py-4">
+                <td className="px-2 py-4 whitespace-nowrap">
                   <StatusBadge status={booking.status} />
                 </td>
 
                 {/* Actions — whitespace-nowrap keeps button on one line */}
-                <td className="px-4 py-4 whitespace-nowrap">
+                <td className="px-2 py-4 whitespace-nowrap">
                   <div className="flex gap-2 justify-end">
-                    {(booking.status === "scheduled" || booking.status === "in_progress") && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => router.push(`/classroom/${booking.id}`)}
-                        className="bg-brand-50 border-brand-100 text-brand-700 hover:bg-brand-100 hover:text-brand-800 h-9"
-                      >
-                        دخول الفصل <Video className="w-3.5 h-3.5 mr-2" />
-                      </Button>
-                    )}
-                    {isTeacher && booking.status === "scheduled" && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => onCancelClick(booking.id)}
-                        className="text-error-text hover:bg-error-bg hover:text-error-text h-9"
-                      >
-                        إلغاء طارئ <XCircle className="w-3.5 h-3.5 mr-2" />
-                      </Button>
-                    )}
-                    {isTeacher && booking.status === "in_progress" && (
-                      <Button
-                        size="sm"
-                        onClick={() => onCompleteClick(booking.id)}
-                        className="bg-success-text hover:bg-success-text/90 text-white h-9"
-                      >
-                        إنهاء وتحصيل <Coins className="w-3.5 h-3.5 mr-2" />
-                      </Button>
+                    {(booking.status === "scheduled" || booking.status === "in_progress") ? (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => router.push(`/classroom/${booking.id}`)}
+                          className="bg-brand-50 border-brand-100 text-brand-700 hover:bg-brand-100 hover:text-brand-800 h-9 whitespace-nowrap"
+                        >
+                          دخول الفصل <Video className="w-3.5 h-3.5 mr-2" />
+                        </Button>
+                        {isTeacher && booking.status === "scheduled" && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => onCancelClick(booking.id)}
+                            className="w-9 h-9 p-0 text-error-text hover:bg-error-bg hover:text-error-text rounded-taj-md flex items-center justify-center shrink-0"
+                            title="إلغاء طارئ"
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {isTeacher && booking.status === "in_progress" && (
+                          <Button
+                            size="sm"
+                            onClick={() => onCompleteClick(booking.id)}
+                            className="bg-success-text hover:bg-success-text/90 text-white h-9 px-3 whitespace-nowrap"
+                          >
+                            إنهاء وتحصيل <Coins className="w-3.5 h-3.5 mr-1" />
+                          </Button>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {booking.status === "completed" ? (
+                          <div className="w-9 h-9 bg-success-bg text-success-text rounded-full flex items-center justify-center mx-auto">
+                            <Check className="w-5 h-5" />
+                          </div>
+                        ) : (
+                          <span className="text-[11px] font-bold text-text-muted bg-surface-muted px-3 py-1.5 rounded-full whitespace-nowrap">
+                            {booking.status === "cancelled" ? "تم الإلغاء" : "حصة مسترجعة"}
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                 </td>

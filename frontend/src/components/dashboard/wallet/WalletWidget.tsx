@@ -90,7 +90,7 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
                         : "إيداع/أرباح"}
                     </p>
                     <p className="text-xs text-gray-400 mt-0.5">
-                      {formatDate(tx.created_at, "short")}
+                      {formatDate(tx.created_at, "medium")}
                     </p>
                   </div>
                 </div>

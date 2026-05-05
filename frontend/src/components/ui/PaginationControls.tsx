@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface PaginationControlsProps {
   page: number;
@@ -19,7 +19,7 @@ export function PaginationControls({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+    <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3" dir="rtl">
       <Button
         size="sm"
         variant="outline"
@@ -27,8 +27,8 @@ export function PaginationControls({
         onClick={() => onPageChange(page - 1)}
         className="min-w-[110px]"
       >
-        <ArrowLeft className="w-4 h-4" />
         السابق
+        <ChevronRight className="w-4 h-4 ml-2" />
       </Button>
 
       <span className="text-sm text-gray-600 font-semibold">
@@ -42,8 +42,8 @@ export function PaginationControls({
         onClick={() => onPageChange(page + 1)}
         className="min-w-[110px]"
       >
+        <ChevronLeft className="w-4 h-4 mr-2" />
         التالي
-        <ArrowRight className="w-4 h-4" />
       </Button>
     </div>
   );

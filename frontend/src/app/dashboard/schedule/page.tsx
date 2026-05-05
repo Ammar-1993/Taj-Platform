@@ -218,10 +218,10 @@ export default function TeacherSchedulePage() {
                             key={slot.id}
                             className={`group relative overflow-hidden backdrop-blur-sm p-4.5 rounded-[1.5rem] border-2 flex flex-col gap-2 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
                               slot.status === "available"
-                                ? "border-emerald-100 bg-emerald-50/40 hover:bg-emerald-50"
+                                ? "border-emerald-200 bg-emerald-50/60 hover:bg-emerald-100/50"
                                 : slot.status === "booked"
-                                  ? "border-indigo-100 bg-indigo-50/40 hover:bg-indigo-50"
-                                  : "border-rose-100 bg-rose-50/40 hover:bg-rose-50"
+                                  ? "border-indigo-200 bg-indigo-50/60 hover:bg-indigo-100/50"
+                                  : "border-rose-200 bg-rose-50/60 hover:bg-rose-100/50"
                             }`}
                           >
                             <div className="flex justify-between items-start">
@@ -250,7 +250,7 @@ export default function TeacherSchedulePage() {
                                 {slot.status === "available" && (
                                 <button
                                     onClick={() => setDeleteConfirm({ isOpen: true, slotId: slot.id })}
-                                    className="w-9 h-9 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all duration-200 flex items-center justify-center shadow-sm group-hover:rotate-12"
+                                    className="opacity-0 group-hover:opacity-100 w-9 h-9 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all duration-300 flex items-center justify-center shadow-sm group-hover:rotate-12"
                                     title="حذف الموعد"
                                 >
                                     <Trash2 className="w-4 h-4" />
