@@ -118,7 +118,10 @@ export default function PayoutPage() {
                                 الرصيد القابل للسحب
                             </h3>
                             <div className="mt-4 flex items-baseline gap-3 font-mono" dir="ltr">
-                                <span className="font-mono text-5xl font-bold tracking-tighter shadow-sm">{formatCurrency(walletInfo?.balance, 'label')}</span>
+                                <div className="flex items-center justify-center gap-2" dir="ltr">
+                                  <span className="text-2xl font-sans opacity-80" dir="rtl">ريال</span>
+                                  <span className="font-mono text-5xl font-bold tracking-tighter shadow-sm" dir="ltr">{formatCurrency(walletInfo?.balance, "number")}</span>
+                                </div>
                             </div>
                             <div className="mt-6 h-1 w-full bg-white/20 rounded-full overflow-hidden">
                                 <div className="h-full bg-white/40 w-2/3 animate-shimmer"></div>
@@ -256,8 +259,9 @@ export default function PayoutPage() {
                                                 </div>
                                             </div>
                                             <div className="flex flex-row md:flex-col items-center md:items-end gap-6 md:gap-2 w-full md:w-auto pt-4 md:pt-0 border-t md:border-0 border-gray-100 mt-2 md:mt-0">
-                                                <div className="text-2xl font-bold font-mono text-emerald-600 flex items-baseline gap-1.5" dir="ltr">
-                                                    <span>{formatCurrency(payout.amount, 'label')}</span>
+                                                <div className="text-2xl font-bold font-mono text-emerald-600 flex items-center justify-end gap-1.5" dir="ltr">
+                                                    <span className="text-sm font-sans text-emerald-600" dir="rtl">ريال</span>
+                                                    <span dir="ltr">{formatCurrency(payout.amount, "number")}</span>
                                                 </div>
                                                 <div>{renderStatusBadge(payout.status)}</div>
                                             </div>

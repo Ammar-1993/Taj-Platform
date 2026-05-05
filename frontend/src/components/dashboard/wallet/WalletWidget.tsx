@@ -94,12 +94,14 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
                     </p>
                   </div>
                 </div>
-                <span
-                  className={`font-bold text-base ${tx.type === "withdrawal" ? "text-red-500" : "text-emerald-500"}`}
+                <div
+                  className={`flex items-center justify-end gap-1 font-bold font-mono ${tx.type === "withdrawal" ? "text-red-500" : "text-emerald-500"}`}
+                  dir="ltr"
                 >
+                  <span className="text-xs font-sans" dir="rtl">ريال</span>
+                  <span dir="ltr">{formatCurrency(tx.amount, "number")}</span>
                   {tx.type === "withdrawal" ? "-" : "+"}
-                  {formatCurrency(tx.amount)}
-                </span>
+                </div>
               </li>
             ))}
           </ul>

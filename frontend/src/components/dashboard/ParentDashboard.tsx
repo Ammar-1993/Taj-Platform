@@ -86,11 +86,11 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                 رصيد المحفظة الأساسية
               </h3>
             </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="font-mono text-4xl sm:text-5xl font-bold tracking-tight">
-                {formatCurrency(parentData.parent_balance)}
+            <div className="mt-3 flex items-baseline justify-end gap-2" dir="ltr">
+              <span className="text-purple-200 text-base sm:text-lg font-medium" dir="rtl">ريال</span>
+              <span className="font-mono text-4xl sm:text-5xl font-bold tracking-tight" dir="ltr">
+                {formatCurrency(parentData.parent_balance, "number")}
               </span>
-              <span className="text-purple-200 text-base sm:text-lg font-medium">ريال</span>
             </div>
 
             <Button asChild variant="secondary" className="mt-5 w-full bg-white/20 hover:bg-white/30 text-white border border-white/10 rounded-taj-md">
@@ -105,10 +105,10 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                 إجمالي الاستثمار في التعليم
               </h3>
               <div className="flex items-baseline gap-2">
-                <span className="font-mono text-2xl font-bold">
-                  {formatCurrency(parentData.total_spent)}
-                </span>
-                <span className="text-purple-200 text-xs">ريال</span>
+                <div className="flex items-center justify-end gap-1 font-bold font-mono text-white text-xl" dir="ltr">
+                  <span className="text-sm font-sans text-purple-200" dir="rtl">ريال</span>
+                  <span dir="ltr">{formatCurrency(parentData.total_spent, "number")}</span>
+                </div>
               </div>
             </div>
 
@@ -202,9 +202,10 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                           </div>
                         </div>
                         <div className="text-left">
-                          <span className="font-bold font-mono text-text-primary" dir="ltr">
-                            {formatCurrency(booking.net_paid)}
-                          </span>
+                          <div className="flex items-center justify-end gap-1 font-bold font-mono text-text-primary text-lg" dir="ltr">
+                            <span className="text-xs font-sans text-text-secondary" dir="rtl">ريال</span>
+                            <span dir="ltr">{formatCurrency(booking.net_paid, "number")}</span>
+                          </div>
                         </div>
                     </div>
                   </div>
@@ -261,10 +262,12 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        <span className="font-bold font-mono text-text-primary" dir="ltr">
-                          {formatCurrency(booking.net_paid)}
-                        </span>
-                        <span className="text-xs text-text-muted mr-1">ريال</span>
+                        <div className="flex items-center justify-end gap-1" dir="ltr">
+                          <span className="text-xs font-sans text-text-secondary" dir="rtl">ريال</span>
+                          <span className="font-bold font-mono text-text-primary" dir="ltr">
+                            {formatCurrency(booking.net_paid, "number")}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-4 py-4">
                       <StatusBadge status={booking.status} />

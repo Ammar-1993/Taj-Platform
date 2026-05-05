@@ -162,11 +162,11 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                   </div>
                 </div>
                 <div className="text-left">
-                  <div className="flex items-center justify-end gap-1">
+                  <div className="flex items-center justify-end gap-1" dir="ltr">
+                    <span className="text-text-secondary text-xs" dir="rtl">ريال</span>
                     <span className="font-bold font-mono text-text-primary" dir="ltr">
                       {formatCurrency(booking.net_paid, "number")}
                     </span>
-                    <span className="text-text-secondary text-xs">ريال</span>
                   </div>
                 </div>
               </div>
@@ -258,11 +258,11 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
 
                 {/* Amount */}
                 <td className="px-2 py-4 whitespace-nowrap">
-                  <div className="flex items-center justify-end gap-1">
+                  <div className="flex items-center justify-end gap-1" dir="ltr">
+                    <span className="text-text-secondary text-xs" dir="rtl">ريال</span>
                     <span className="font-bold font-mono text-text-primary" dir="ltr">
                       {formatCurrency(booking.net_paid, "number")}
                     </span>
-                    <span className="text-text-secondary text-xs">ريال</span>
                   </div>
                 </td>
 
