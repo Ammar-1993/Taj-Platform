@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { AppNotification } from "@/types";
 import { Bell, Check } from "lucide-react";
+import { formatDate, formatTime } from "@/lib/formatters";
 
 interface TeacherNotificationsProps {
   isTeacher: boolean;
@@ -13,7 +14,13 @@ export const TeacherNotifications: React.FC<TeacherNotificationsProps> = ({
   notifications,
   markNotificationAsRead,
 }) => {
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+
   if (!isTeacher || notifications.length === 0) return null;
+
+  const visibleNotifications = notifications.filter(n => !hiddenIds.has(n.id));
+
+  if (visibleNotifications.length === 0) return null;
 
   return (
     <div className="bg-gradient-to-l from-amber-50 to-yellow-50 border border-amber-200/60 p-5 rounded-2xl mb-6">
@@ -21,10 +28,10 @@ export const TeacherNotifications: React.FC<TeacherNotificationsProps> = ({
         <span className="w-7 h-7 bg-amber-200 rounded-lg flex items-center justify-center">
           <Bell className="w-4 h-4 text-amber-700" />
         </span>
-        إشعارات جديدة ({notifications.length})
+        إشعارات جديدة ({visibleNotifications.length})
       </h3>
       <div className="space-y-2">
-        {notifications.map((notif) => (
+        {visibleNotifications.map((notif) => (
           <div
             key={notif.id}
             className="bg-white/90 p-3 rounded-xl shadow-sm border border-amber-100 flex justify-between items-center hover:shadow-md transition-all duration-200"
@@ -32,11 +39,14 @@ export const TeacherNotifications: React.FC<TeacherNotificationsProps> = ({
             <p className="text-sm text-gray-800 font-bold">
               {notif.data.message} -{" "}
               <span className="text-indigo-600">
-                {notif.data.booking_date} الساعة {notif.data.time}
+                {formatDate(notif.data.booking_date, "medium")} الساعة {formatTime(notif.data.time)}
               </span>
             </p>
             <button
-              onClick={() => markNotificationAsRead(notif.id)}
+              onClick={() => {
+                setHiddenIds(prev => new Set(prev).add(notif.id));
+                markNotificationAsRead(notif.id);
+              }}
               className="text-xs bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg text-amber-700 flex items-center gap-1 transition-all duration-200 font-bold"
             >
               تحديد كمقروء <Check className="w-3.5 h-3.5" />
