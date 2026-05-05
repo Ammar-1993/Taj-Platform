@@ -127,7 +127,7 @@ export function roundToSlot(timeStr: string): string {
 
 // ─── Currency ─────────────────────────────────────────────────
 
-type CurrencyStyle = "label" | "code";
+type CurrencyStyle = "label" | "code" | "number";
 
 /**
  * Formats a number or API string as Saudi Riyal currency.
@@ -147,13 +147,18 @@ export function formatCurrency(
   style: CurrencyStyle = "label"
 ): string {
   const num = parseFloat(String(amount ?? 0));
-  if (isNaN(num)) return style === "code" ? "0.00 SAR" : "0.00 ريال";
+  if (isNaN(num)) {
+    if (style === "code") return "0.00 SAR";
+    if (style === "number") return "0.00";
+    return "0.00 ريال";
+  }
 
   const formatted = num.toLocaleString(LOCALE, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 
+  if (style === "number") return formatted;
   return style === "code" ? `${formatted} SAR` : `${formatted} ريال`;
 }
 
