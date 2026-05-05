@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { discoveryService, bookingService, parentService } from "@/services/api";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { TeacherSlot, SlotsByDate } from "@/types";
-import { formatDatetime, formatTime, roundToSlot } from "@/lib/formatters";
+import { formatDatetime, formatDate, formatTime, roundToSlot } from "@/lib/formatters";
 import { showApiError } from "@/hooks/useApiError";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -26,7 +26,8 @@ import {
   CircleDollarSign,
   CheckCircle2,
   BookOpen,
-  Star
+  Star,
+  X
 } from "lucide-react";
 
 export default function TeacherProfile({ params }: { params: { id: string } }) {
@@ -112,7 +113,14 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen p-4 md:p-8 bg-slate-50">
-      <Card className="max-w-4xl mx-auto rounded-taj-xl p-6 md:p-10 border-none shadow-xl shadow-slate-200/50">
+      <Card className="max-w-4xl mx-auto rounded-taj-xl p-6 md:p-10 border-none shadow-xl shadow-slate-200/50 relative">
+        <button 
+          onClick={() => router.back()} 
+          className="absolute top-6 left-6 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors z-10"
+          aria-label="إغلاق"
+        >
+          <X size={24} />
+        </button>
         <div className="border-b border-slate-100 pb-8 mb-8 flex flex-col md:flex-row md:items-center gap-6">
           <div className="w-24 h-24 shrink-0 bg-gradient-to-br from-brand-50 to-purple-50 border border-brand-100/50 rounded-taj-lg flex items-center justify-center text-brand-600 font-bold text-4xl shadow-sm">
             {teacherName.charAt(0)}
@@ -144,7 +152,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
               </div>
             </div>
             {teacher?.teacher_profile?.bio && (
-              <p className="text-slate-500 mt-4 text-sm leading-relaxed max-w-2xl">
+              <p className="text-slate-500 mt-4 text-sm leading-loose max-w-3xl text-right">
                 {teacher.teacher_profile.bio}
               </p>
             )}
@@ -174,8 +182,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
                             : "border-transparent bg-slate-100 text-slate-400 hover:bg-slate-200 hover:border-slate-300"
                       )}
                     >
-                      <span className="text-[10px] uppercase tracking-widest mb-1.5 font-bold opacity-60">يوم</span>
-                      <span className="block text-sm font-black leading-none">{formatDatetime(date, 'medium')}</span>
+                      <span className="block text-sm font-black leading-none">{formatDate(date, 'long')}</span>
                     </button>
                   ))}
                 </div>
@@ -188,8 +195,8 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
                     <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2.5">
                       <Clock className="w-6 h-6 text-brand-500" /> الأوقات المتاحة للحجز
                     </h3>
-                    <span className="text-xs text-brand-600 font-bold bg-white px-4 py-2 rounded-full border border-brand-100 shadow-sm">
-                      {formatDatetime(activeDate, 'medium')}
+                    <span className="text-xs text-brand-600 font-bold bg-white px-4 py-2 rounded-full border border-brand-100 shadow-sm flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5" /> مدة الحصة: 60 دقيقة
                     </span>
                   </div>
                   
