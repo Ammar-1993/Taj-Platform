@@ -5,7 +5,7 @@ import { Booking } from "@/types";
 import { formatTime, formatDate, formatCurrency } from "@/lib/formatters";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/Button";
-import { Video, XCircle, Coins, BookOpen, Rocket, Check, MoreVertical } from "lucide-react";
+import { Video, XCircle, Coins, BookOpen, Rocket, MoreVertical } from "lucide-react";
 
 // ─── Dropdown Component for Secondary Actions ──────────────────────────────────
 function BookingDropdown({
