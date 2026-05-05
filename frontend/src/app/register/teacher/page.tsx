@@ -194,7 +194,8 @@ export default function TeacherRegisterPage() {
                                 required 
                                 value={phone} 
                                 onChange={e => {
-                                    setPhone(e.target.value);
+                                    const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                                    setPhone(val);
                                     if (phoneError) setPhoneError("");
                                 }} 
                                 onBlur={validatePhone}
@@ -233,7 +234,7 @@ export default function TeacherRegisterPage() {
                             >
                                 {!loading ? (
                                     <span className="flex items-center gap-2">
-                                        إنشاء الحساب
+                                        إنشاء حساب معلم
                                         <ArrowLeft className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                                     </span>
                                 ) : (

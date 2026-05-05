@@ -196,7 +196,8 @@ export default function ParentRegisterPage() {
                     required
                     value={phone}
                     onChange={(e) => {
-                      setPhone(e.target.value);
+                      const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                      setPhone(val);
                       if (phoneError) setPhoneError("");
                     }}
                     onBlur={validatePhone}
@@ -235,7 +236,7 @@ export default function ParentRegisterPage() {
                   >
                     {!loading ? (
                       <span className="flex items-center gap-2">
-                        تأكيد التسجيل والدخول
+                        إنشاء حساب ولي أمر
                         <ArrowLeft className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                       </span>
                     ) : (
