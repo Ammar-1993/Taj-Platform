@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { discoveryService, bookingService, parentService } from "@/services/api";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { TeacherSlot, SlotsByDate } from "@/types";
-import { formatTime } from "@/lib/formatters";
+import { formatDatetime, formatTime, roundToSlot } from "@/lib/formatters";
 import { showApiError } from "@/hooks/useApiError";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -175,7 +175,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
                       )}
                     >
                       <span className="text-[10px] uppercase tracking-widest mb-1.5 font-bold opacity-60">يوم</span>
-                      <span className="block text-sm font-black leading-none">{date}</span>
+                      <span className="block text-sm font-black leading-none">{formatDatetime(date, 'medium')}</span>
                     </button>
                   ))}
                 </div>
@@ -189,7 +189,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
                       <Clock className="w-6 h-6 text-brand-500" /> الأوقات المتاحة للحجز
                     </h3>
                     <span className="text-xs text-brand-600 font-bold bg-white px-4 py-2 rounded-full border border-brand-100 shadow-sm">
-                      {activeDate}
+                      {formatDatetime(activeDate, 'medium')}
                     </span>
                   </div>
                   
@@ -201,9 +201,9 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
                         className="group relative border-2 border-transparent bg-white hover:border-brand-500 hover:bg-brand-50 text-slate-700 font-bold py-4 px-5 rounded-taj-md transition-all duration-300 flex flex-col items-center justify-center gap-1 shadow-sm hover:shadow-brand-600/10 active:scale-95 overflow-hidden"
                       >
                         <div className="absolute inset-0 bg-brand-600/0 group-hover:bg-brand-600/5 transition-colors" />
-                        <span className="text-lg text-brand-700 group-hover:text-brand-800 tracking-tight">{formatTime(slot.start_time)}</span>
+                        <span className="text-lg text-brand-700 group-hover:text-brand-800 tracking-tight">{formatTime(roundToSlot(slot.start_time))}</span>
                         <span className="text-[10px] text-slate-400 font-bold opacity-70">
-                          إلى {formatTime(slot.end_time)}
+                          إلى {formatTime(roundToSlot(slot.end_time))}
                         </span>
                       </button>
                     ))}
@@ -215,7 +215,12 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
 
       <Modal
         isOpen={bookingModal.isOpen && !!bookingModal.slot}
-        onClose={() => !bookMutation.isSuccess && setBookingModal({ isOpen: false, slot: null })}
+        onClose={() => {
+          setBookingModal({ isOpen: false, slot: null });
+          if (bookMutation.isSuccess) {
+            bookMutation.reset();
+          }
+        }}
         title={bookMutation.isSuccess ? "تم الحجز بنجاح!" : "تأكيد الحجز"}
       >
         {bookingModal.slot && (
@@ -234,7 +239,10 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
                   href="/dashboard" 
                   seconds={5} 
                   message="جاري توجيهك للوحة التحكم لمتابعة حجزك..." 
-                  onCancel={() => setBookingModal({ isOpen: false, slot: null })}
+                  onCancel={() => {
+                    setBookingModal({ isOpen: false, slot: null });
+                    bookMutation.reset();
+                  }}
                 />
               </div>
             ) : (
@@ -242,9 +250,9 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
                 <div className="bg-slate-50 rounded-taj-lg p-5 border border-slate-100 flex flex-col items-center justify-center gap-2">
                   <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">توقيت الحصة المختارة</span>
                   <p className="text-lg font-black text-slate-900 flex items-center gap-3">
-                    <span className="text-brand-600">{formatTime(bookingModal.slot.start_time)}</span>
+                    <span className="text-brand-600">{formatTime(roundToSlot(bookingModal.slot.start_time))}</span>
                     <span className="text-slate-300 font-light">←</span>
-                    <span className="text-brand-600">{formatTime(bookingModal.slot.end_time)}</span>
+                    <span className="text-brand-600">{formatTime(roundToSlot(bookingModal.slot.end_time))}</span>
                   </p>
                 </div>
 
