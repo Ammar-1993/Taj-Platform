@@ -5,12 +5,13 @@ import { Eye, EyeOff } from "lucide-react"
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   icon?: React.ReactNode;
   label?: string;
+  labelAction?: React.ReactNode;
   error?: string;
   hint?: string;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, icon, dir, label, error, hint, id, ...props }, ref) => {
+  ({ className, type, icon, dir, label, labelAction, error, hint, id, ...props }, ref) => {
     const [showPassword, setShowPassword] = React.useState(false);
     const inputId = React.useId();
     const finalId = id || inputId;
@@ -27,9 +28,12 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={finalId} className="block text-sm font-bold text-text-primary mb-1.5">
-            {label}
-          </label>
+          <div className="flex justify-between items-center mb-1.5">
+            <label htmlFor={finalId} className="block text-sm font-bold text-text-primary">
+              {label}
+            </label>
+            {labelAction}
+          </div>
         )}
         <div className="relative group w-full">
           {icon && (

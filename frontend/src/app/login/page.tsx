@@ -112,31 +112,29 @@ export default function LoginPage() {
               />
 
               {/* حقل كلمة المرور */}
-              <div className="relative">
-                <div className="absolute left-0 top-0 z-10">
+              <Input
+                label="كلمة المرور"
+                labelAction={
                   <Link
                     href="/forgot-password"
-                    className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors bg-white px-2 py-0.5 rounded-md"
+                    className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
                   >
                     نسيت كلمة المرور؟
                   </Link>
-                </div>
-                <Input
-                  label="كلمة المرور"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (passwordError) setPasswordError("");
-                  }}
-                  onBlur={validatePassword}
-                  error={passwordError}
-                  placeholder="••••••••"
-                  dir="ltr"
-                  icon={<Lock className="w-4 h-4" />}
-                />
-              </div>
+                }
+                type="password"
+                required
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (passwordError) setPasswordError("");
+                }}
+                onBlur={validatePassword}
+                error={passwordError}
+                placeholder="••••••••"
+                dir="ltr"
+                icon={<Lock className="w-4 h-4" />}
+              />
             </div>
 
             {/* زر الإرسال */}

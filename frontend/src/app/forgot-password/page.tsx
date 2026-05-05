@@ -118,6 +118,7 @@ export default function ForgotPasswordPage() {
                     onBlur={validateEmail}
                     error={emailError}
                     placeholder="name@taj.com"
+                    dir="ltr"
                     icon={<Mail className="w-4 h-4" />}
                   />
                 </div>
