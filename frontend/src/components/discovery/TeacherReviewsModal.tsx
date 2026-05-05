@@ -128,7 +128,7 @@ export default function TeacherReviewsModal({
                             className={
                               review.rating >= star
                                 ? "fill-amber-400 text-amber-400"
-                                : "text-gray-200 fill-gray-200"
+                                : "text-slate-300 fill-transparent"
                             }
                           />
                         ))}

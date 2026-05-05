@@ -124,9 +124,9 @@ export default function Modal({
               <button
                 onClick={onClose}
                 aria-label="إغلاق"
-                className="mr-auto text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl p-1.5 transition-colors flex-shrink-0"
+                className="mr-auto text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl p-1.5 transition-colors flex-shrink-0 flex items-center justify-center"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             )}
           </div>
