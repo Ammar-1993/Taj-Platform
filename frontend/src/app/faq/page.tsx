@@ -172,7 +172,7 @@ export default function FAQPage() {
                       key={faqIndex}
                       className={`group border transition-all duration-300 overflow-hidden rounded-[1.25rem] ${
                         isOpen 
-                          ? "bg-white/95 backdrop-blur-xl shadow-lg border-indigo-200 ring-4 ring-indigo-50" 
+                          ? "bg-brand-50/50 backdrop-blur-xl shadow-lg border-brand-200 ring-4 ring-brand-50" 
                           : "bg-white/60 hover:bg-white/90 border-white backdrop-blur-sm shadow-sm hover:shadow-md"
                       }`}
                     >
@@ -182,14 +182,14 @@ export default function FAQPage() {
                         aria-expanded={isOpen}
                       >
                         <div className="flex items-center gap-4">
-                          <span className={`drop-shadow-sm text-indigo-500 transition-transform duration-500 ${isOpen ? "scale-110 rotate-6" : "opacity-80 group-hover:scale-110"}`}>
+                          <span className={`drop-shadow-sm text-brand-500 transition-transform duration-500 ${isOpen ? "scale-110 rotate-6" : "opacity-80 group-hover:scale-110"}`}>
                             {faq.icon}
                           </span>
-                          <h3 className={`text-sm md:text-base font-bold transition-colors duration-300 ${isOpen ? "text-indigo-700" : "text-slate-700 group-hover:text-indigo-600"}`}>
+                          <h3 className={`text-sm md:text-base font-bold transition-colors duration-300 ${isOpen ? "text-brand-700" : "text-slate-700 group-hover:text-brand-600"}`}>
                             {faq.q}
                           </h3>
                         </div>
-                        <div className={`shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-500 ${isOpen ? "bg-indigo-600 border-indigo-600 text-white rotate-45 shadow-md" : "bg-slate-50 text-slate-400 border-slate-200 group-hover:border-indigo-300 group-hover:text-indigo-500 group-hover:bg-indigo-50"}`}>
+                        <div className={`shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-500 ${isOpen ? "bg-brand-600 border-brand-600 text-white rotate-45 shadow-md" : "bg-slate-50 text-slate-600 border-slate-200 group-hover:border-brand-300 group-hover:text-brand-600 group-hover:bg-brand-50"}`}>
                           <Plus className="w-4 h-4 stroke-[3]" />
                         </div>
                       </button>
