@@ -186,33 +186,11 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     );
 
     return (
-        <div className="h-screen w-full bg-gray-900 flex flex-col" dir="rtl">
-            {/* الشريط العلوي */}
-            <div className="bg-gray-800 text-white p-4 flex flex-col sm:flex-row justify-between items-center shadow-md border-b border-gray-700 gap-4">
-                <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full animate-pulse ${inCall ? 'bg-red-500' : 'bg-green-500'}`}></div>
-                    <h1 className="font-bold text-lg">
-                        {isTeacher ? 'لوحة تحكم المعلم' : 'الفصل الافتراضي'} — حصة #{params.id}
-                    </h1>
-                </div>
-
-                <div className="flex gap-3">
-                    {isTeacher ? (
-                        <>
-                            <button onClick={handleLeave} className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2">خروج مؤقت <LogOut className="w-4 h-4" /></button>
-                            <button onClick={() => setShowEndConfirm(true)} disabled={isEnding} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-bold shadow-lg transition disabled:opacity-50 flex items-center gap-2">
-                                {isEnding ? 'جاري الإنهاء...' : <>إنهاء الحصة وتحصيل الأرباح <PowerOff className="w-4 h-4" /></>}
-                            </button>
-                        </>
-                    ) : (
-                        <button onClick={handleLeave} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2">مغادرة الحصة <LogOut className="w-4 h-4" /></button>
-                    )}
-                </div>
-            </div>
-            
-            <div className="flex-1 w-full relative flex flex-col md:flex-row">
+        <div className="h-screen w-full bg-slate-950 flex flex-col overflow-hidden" dir="rtl">
+            {/* الشريط العلوي (تحول لشريط تحكم سفلي احترافي) */}
+            <div className="flex-1 w-full relative flex flex-col md:flex-row overflow-hidden">
                 {/* 1. حاوية الفيديو */}
-                <div className="flex-1 relative bg-black flex items-center justify-center">
+                <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
                     {!inCall ? (
                         <div className="flex flex-col items-center justify-center space-y-6 p-8 text-center animate-fade-in-up">
                             <div className="w-20 h-20 bg-blue-900/50 rounded-full flex items-center justify-center mb-2 text-blue-400">
@@ -233,29 +211,54 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
 
                 {/* 2. شريط أدوات المعلم الجانبي */}
                 {isTeacher && inCall && (
-                    <div className="w-full md:w-72 bg-gray-800 border-r border-gray-700 p-6 flex flex-col gap-5 shadow-inner">
-                        <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">أدوات التحكم السريعة</h3>
+                    <div className="w-full md:w-72 bg-slate-900 border-r border-slate-800 p-6 flex flex-col gap-5 shadow-2xl z-10">
+                        <h3 className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">أدوات التحكم السريعة</h3>
                         
                         {/* 🟢 الزر الفعال الجديد: مشاركة الشاشة */}
                         <button 
                             onClick={toggleScreenShare} 
-                            className={`p-4 rounded-2xl flex items-center gap-4 transition group border ${isSharing ? 'bg-green-600 border-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.4)]' : 'bg-gray-700/80 border-gray-600 hover:bg-gray-600 text-gray-200'}`}
+                            className={`h-12 px-4 rounded-lg flex items-center gap-3 transition group border ${isSharing ? 'bg-emerald-600 border-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-200'}`}
                         >
-                            <MonitorUp className="w-8 h-8 group-hover:scale-110 transition" />
+                            <MonitorUp className="w-5 h-5 group-hover:scale-110 transition" />
                             <div className="text-right flex-1">
                                 <div className="text-sm font-bold">{isSharing ? 'إيقاف المشاركة' : 'مشاركة الشاشة'}</div>
-                                <div className={`text-xs mt-1 ${isSharing ? 'text-green-200' : 'text-gray-400'}`}>عرض الملفات للطلاب</div>
                             </div>
                         </button>
 
                         <div className="mt-auto bg-blue-900/10 border border-blue-800/30 p-4 rounded-xl flex gap-2">
                             <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-                            <p className="text-xs text-blue-400/80 text-right leading-relaxed font-medium">
+                            <p className="text-xs text-slate-400 text-right leading-relaxed">
                                 ميزة كتم صوت الطلاب ستتوفر عند تفعيل WebSocket في الإصدار القادم.
                             </p>
                         </div>
                     </div>
                 )}
+            </div>
+
+            {/* الشريط السفلي (Control Bar) */}
+            <div className="h-24 shrink-0 bg-slate-900 text-white p-4 flex flex-col sm:flex-row justify-between items-center shadow-[0_-4px_20px_rgba(0,0,0,0.4)] border-t border-slate-800 gap-4 z-20">
+                <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${inCall ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></div>
+                    <div className="text-right">
+                        <h1 className="font-bold text-sm md:text-base leading-tight">
+                            {isTeacher ? 'لوحة تحكم المعلم' : 'الفصل الافتراضي'}
+                        </h1>
+                        <p className="text-[10px] text-slate-500 font-medium mt-0.5">حصة رقم #{params.id}</p>
+                    </div>
+                </div>
+
+                <div className="flex gap-3">
+                    {isTeacher ? (
+                        <>
+                            <button onClick={handleLeave} className="bg-slate-700 hover:bg-slate-600 px-5 py-2.5 rounded-lg text-xs md:text-sm font-bold transition flex items-center gap-2 border border-slate-600">خروج مؤقت <LogOut className="w-4 h-4" /></button>
+                            <button onClick={() => setShowEndConfirm(true)} disabled={isEnding} className="bg-red-600 hover:bg-red-700 px-5 py-2.5 rounded-lg text-xs md:text-sm font-bold shadow-lg transition disabled:opacity-50 flex items-center gap-2">
+                                {isEnding ? 'جاري الإنهاء...' : <>إنهاء الحصة وتحصيل الأرباح <PowerOff className="w-4 h-4" /></>}
+                            </button>
+                        </>
+                    ) : (
+                        <button onClick={handleLeave} className="bg-red-600 hover:bg-red-700 px-6 py-2.5 rounded-lg text-xs md:text-sm font-bold transition flex items-center gap-2 shadow-lg">مغادرة الحصة <LogOut className="w-4 h-4" /></button>
+                    )}
+                </div>
             </div>
 
             <ConfirmDialog

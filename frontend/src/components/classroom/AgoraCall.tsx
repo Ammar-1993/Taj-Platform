@@ -19,9 +19,32 @@ type AgoraCallProps = {
 };
 
 export default function AgoraCall({ rtcProps, callbacks }: AgoraCallProps) {
+    const styleProps = {
+        videoMode: {
+            max: 'contain' as const,
+            min: 'cover' as const,
+        },
+        UIKitContainer: {
+            height: '100%',
+            width: '100%',
+            backgroundColor: '#0f172a',
+        },
+        localBtnContainer: {
+            backgroundColor: 'transparent',
+            bottom: '20px',
+        },
+        maxViewContainer: {
+            backgroundColor: '#0f172a',
+        }
+    };
+
     return (
-        <div className="w-full h-full flex items-center justify-center">
-            <AgoraUIKit rtcProps={rtcProps} callbacks={callbacks} />
+        <div className="w-full h-full flex items-center justify-center overflow-hidden bg-slate-950">
+            <AgoraUIKit 
+                rtcProps={rtcProps} 
+                callbacks={callbacks} 
+                styleProps={styleProps}
+            />
         </div>
     );
 }
