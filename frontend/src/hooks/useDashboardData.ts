@@ -32,9 +32,10 @@ export const useDashboardData = (user: User | null, isParent: boolean, isTeacher
   const { data: dashboardData, isLoading: dashboardLoading, refetch: fetchDashboardData } = useQuery({
     queryKey: ['dashboard', user?.id, bookingPage],
     queryFn: async () => {
+      // For parents, we mainly want the wallet/notifications from this generic call
       const [walletRes, bookingsRes, notifRes] = await Promise.all([
         walletService.getWallet(),
-        bookingService.getAll({ page: bookingPage }),
+        !isParent ? bookingService.getAll({ page: bookingPage }) : Promise.resolve({ data: { data: [], current_page: 1, last_page: 1, per_page: 10, total: 0 } }),
         notificationService.getAll(),
       ]);
       return {
@@ -49,7 +50,7 @@ export const useDashboardData = (user: User | null, isParent: boolean, isTeacher
         notifications: notifRes.data || [],
       };
     },
-    enabled: !!user && !isParent,
+    enabled: !!user,
   });
 
   // Handle pending review seeding

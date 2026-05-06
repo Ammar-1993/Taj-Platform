@@ -1,16 +1,20 @@
 import React from "react";
 import Link from "next/link";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { ParentDashboardData } from "@/types";
+import { ParentDashboardData, Wallet } from "@/types";
 import { formatTime, formatDate, formatCurrency } from "@/lib/formatters";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { WalletCards, Zap, Calendar, BookOpen } from "lucide-react";
+import { 
+  WalletCards, Zap, Calendar, BookOpen, 
+  BarChart2, Landmark, LifeBuoy 
+} from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import { PaginationControls } from "@/components/ui/PaginationControls";
 
 interface ParentDashboardProps {
   parentData: ParentDashboardData | null;
+  wallet: Wallet | null;
   parentBookingPage: number;
   parentBookingLastPage: number;
   setParentBookingPage: (page: number) => void;
@@ -19,6 +23,7 @@ interface ParentDashboardProps {
 
 export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   parentData,
+  wallet,
   parentBookingPage,
   parentBookingLastPage,
   setParentBookingPage,
@@ -37,6 +42,8 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                 <div className="h-10 bg-gray-200 rounded w-full"></div>
               </div>
             </div>
+            <div className="animate-pulse h-64 bg-gray-200 rounded-taj-xl"></div>
+            <div className="animate-pulse h-32 bg-gray-200 rounded-taj-xl"></div>
           </div>
         </div>
 
@@ -66,13 +73,13 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   if (!parentData) return null;
 
   const bookings = parentData.bookings?.data || [];
+  const transactions = wallet?.transactions?.data || [];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Sidebar: Wallet */}
-      <div className="lg:col-span-1">
-        <div className="space-y-6 sticky top-28">
-          {/* 💰 Parent Wallet Card */}
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      {/* Sidebar: Wallet, Transactions, and Help Center */}
+      <div className="lg:col-span-1 space-y-6 sticky top-24">
+        {/* 💰 Parent Wallet Card */}
         <div className="animate-fade-up-1 relative overflow-hidden bg-gradient-to-br from-brand-600 via-purple-600 to-violet-700 p-6 rounded-taj-xl shadow-xl text-white">
           <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
             <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white blur-2xl"></div>
@@ -141,9 +148,78 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                 ))
               )}
             </div>
-            </div>
           </div>
         </div>
+
+        {/* 📊 Recent Transactions */}
+        <Card variant="glass" className="animate-fade-up-2 p-5 border-border bg-white/80 backdrop-blur-sm">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold text-text-primary text-sm flex items-center gap-2">
+              <span className="w-8 h-8 bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center">
+                <BarChart2 className="w-4 h-4" />
+              </span>
+              آخر العمليات المالية
+            </h3>
+            <Link href="/dashboard/payout" className="text-xs font-bold text-brand-600 hover:text-brand-700 transition-colors">
+              عرض الكل
+            </Link>
+          </div>
+
+          {transactions.length === 0 ? (
+            <EmptyState icon={Landmark} title="لا توجد عمليات سابقة" className="py-6" />
+          ) : (
+            <ul className="space-y-3">
+              {transactions.slice(0, 3).map((tx) => (
+                <li
+                  key={tx.id}
+                  className="flex justify-between items-center text-sm p-3 rounded-xl bg-surface-subtle hover:bg-surface-muted transition-all duration-200 group border border-transparent hover:border-border"
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-1 h-8 rounded-full ${tx.type === "withdrawal" ? "bg-red-500" : "bg-green-500"}`}
+                    ></div>
+                    <div>
+                      <p className="font-bold text-text-primary text-xs leading-tight">
+                        {tx.description}
+                      </p>
+                      <p className="text-[10px] text-text-muted mt-1 font-medium">
+                        {formatDate(tx.created_at, "medium")}
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    className={`flex items-center justify-end gap-1 font-bold font-mono text-sm ${tx.type === "withdrawal" ? "text-red-500" : "text-green-500"}`}
+                    dir="ltr"
+                  >
+                    <span className="text-[10px] font-sans" dir="rtl">ريال</span>
+                    <span dir="ltr">
+                      {tx.type === "withdrawal" ? "-" : "+"}
+                      {formatCurrency(tx.amount, "number")}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+
+        {/* 🛟 Help Center Card */}
+        <Card variant="glass" className="animate-fade-up-3 p-5 border-border bg-white/80 backdrop-blur-sm">
+          <h3 className="font-bold text-text-primary text-sm mb-3 flex items-center gap-2">
+            <span className="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
+              <LifeBuoy className="w-4 h-4" />
+            </span>
+            مركز المساعدة
+          </h3>
+          <p className="text-xs text-text-secondary mb-4 leading-relaxed font-medium">
+            هل تواجه مشكلة؟ فريق الدعم متاح لمساعدتك في أي وقت.
+          </p>
+          <Button asChild variant="outline" className="w-full border-blue-100 text-blue-700 hover:bg-blue-50 hover:text-blue-800 rounded-taj-md text-xs font-bold h-10">
+            <Link href="/dashboard/support">
+              فتح تذكرة دعم فني
+            </Link>
+          </Button>
+        </Card>
       </div>
 
       {/* Bookings Table */}

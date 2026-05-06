@@ -130,6 +130,7 @@ export default function DashboardPage() {
         {isParent ? (
           <ParentDashboard
             parentData={parentData}
+            wallet={wallet}
             parentBookingPage={parentBookingPage}
             parentBookingLastPage={parentBookingLastPage}
             setParentBookingPage={setParentBookingPage}
