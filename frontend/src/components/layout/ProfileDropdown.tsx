@@ -103,7 +103,7 @@ export default function ProfileDropdown({
       {/* ─── Dropdown Menu ─── */}
       {isOpen && (
         <div
-          className="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-surface-muted py-1 min-w-[210px] z-[100] animate-in fade-in slide-in-from-top-2 duration-200 origin-top-left"
+          className="absolute right-0 md:left-0 md:right-auto top-full mt-2 bg-white rounded-xl shadow-xl border border-surface-muted py-1 min-w-[210px] z-[100] animate-in fade-in slide-in-from-top-2 duration-200 origin-top-right md:origin-top-left"
           dir="rtl"
           role="menu"
         >
