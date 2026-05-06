@@ -1,5 +1,7 @@
 import React from "react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { ChevronRight } from "lucide-react";
 
 interface PageHeaderProps {
   title: string;
@@ -31,10 +33,10 @@ export default function PageHeader({
   return (
     <div 
       className={cn(
-        "relative transition-all duration-300",
-        isDefault && "bg-white p-6 rounded-taj-lg shadow-sm border border-border",
-        isIndigo && "bg-gradient-to-l from-brand-700 via-brand-600 to-brand-800 p-8 rounded-taj-xl shadow-md text-white",
-        isGlass && "bg-white/80 backdrop-blur-xl p-8 rounded-taj-xl shadow-lg border border-white/50"
+        "relative transition-all duration-300 overflow-hidden",
+        isDefault && "bg-white p-5 sm:p-6 rounded-taj-lg shadow-sm border border-border",
+        isIndigo && "bg-gradient-to-l from-brand-700 via-brand-600 to-brand-800 p-6 sm:p-8 rounded-taj-xl shadow-md text-white",
+        isGlass && "bg-white/80 backdrop-blur-xl p-6 sm:p-8 rounded-taj-xl shadow-lg border border-white/50"
       )}
     >
       {/* Decorative Background for Premium Variants */}
@@ -45,20 +47,20 @@ export default function PageHeader({
         </div>
       )}
 
-      <div className="relative z-10 flex justify-between items-center w-full gap-4">
-        <div className="flex items-center gap-5">
+      <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center w-full gap-5">
+        <div className="flex items-start sm:items-center gap-4 sm:gap-5">
           {icon && (
             <div className={cn(
-              "w-12 h-12 md:w-14 md:h-14 rounded-taj-md flex items-center justify-center shrink-0 shadow-inner",
+              "w-11 h-11 md:w-14 md:h-14 rounded-taj-md flex items-center justify-center shrink-0 shadow-inner",
               isIndigo ? "bg-white/20 text-white" : "bg-brand-50 text-brand-600"
             )}>
               {icon}
             </div>
           )}
-          <div>
-            <div className="flex items-center gap-3 mb-1">
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
               <h1 className={cn(
-                "text-xl md:text-3xl font-bold tracking-tight",
+                "text-lg sm:text-2xl md:text-3xl font-bold tracking-tight truncate",
                 isIndigo ? "text-white" : "text-text-primary"
               )}>
                 {title}
@@ -67,7 +69,7 @@ export default function PageHeader({
             </div>
             {subtitle && (
               <p className={cn(
-                "hidden md:block text-sm md:text-base font-medium opacity-80",
+                "text-xs sm:text-sm md:text-base font-medium opacity-90 leading-relaxed",
                 isIndigo ? "text-brand-100" : "text-text-secondary"
               )}>
                 {subtitle}
@@ -76,19 +78,20 @@ export default function PageHeader({
           </div>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
-          {actions}
+        <div className="flex items-center gap-3 w-full sm:w-auto shrink-0 mt-2 sm:mt-0">
+          {actions && <div className="flex-1 sm:flex-none">{actions}</div>}
           {showBack && (
             <Link
               href={backHref}
               className={cn(
-                "hidden md:flex px-5 py-2.5 rounded-taj-md text-sm font-bold transition-all duration-200 items-center gap-2",
+                "flex px-4 py-2 sm:px-5 sm:py-2.5 rounded-taj-md text-xs sm:text-sm font-bold transition-all duration-200 items-center justify-center gap-2",
                 isIndigo 
-                  ? "bg-white/20 hover:bg-white/30 text-white border border-white/20" 
+                  ? "bg-white/20 hover:bg-white/30 text-white border border-white/20 shadow-sm" 
                   : "bg-surface-subtle hover:bg-surface-muted text-text-secondary border border-border"
               )}
             >
-              {backLabel}
+              <ChevronRight className="w-4 h-4 md:hidden" />
+              <span>{backLabel}</span>
             </Link>
           )}
         </div>
@@ -96,6 +99,3 @@ export default function PageHeader({
     </div>
   );
 }
-
-// Utility import needed
-import { cn } from "@/lib/utils";
