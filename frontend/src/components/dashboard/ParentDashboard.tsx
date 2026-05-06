@@ -75,6 +75,31 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   const bookings = parentData.bookings?.data || [];
   const transactions = wallet?.transactions?.data || [];
 
+  /**
+   * Cleans up the transaction description by removing technical jargon/UUIDs
+   * and providing a more user-friendly Arabic text.
+   */
+  const getFriendlyDescription = (desc: string) => {
+    if (!desc) return "عملية مالية";
+    
+    // Mapping common technical descriptions to friendly Arabic text
+    if (desc.toLowerCase().includes("top-up") || desc.toLowerCase().includes("deposit")) {
+      return "شحن المحفظة";
+    }
+    
+    if (desc.toLowerCase().includes("booking") || desc.toLowerCase().includes("deduction")) {
+      // If the description contains a child's name in parentheses or after a colon, keep it
+      const childMatch = desc.match(/\(([^)]+)\)/) || desc.match(/:\s*([^\s]+)/);
+      if (childMatch) {
+        return `خصم حجز (${childMatch[1]})`;
+      }
+      return "خصم حجز حصة";
+    }
+
+    // Fallback: Remove UUIDs or long hex strings
+    return desc.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, "").replace(/:\s*$/, "").trim() || "عملية مالية";
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
       {/* Sidebar: Wallet, Transactions, and Help Center */}
@@ -160,7 +185,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
               </span>
               آخر العمليات المالية
             </h3>
-            <Link href="/dashboard/payout" className="text-xs font-bold text-brand-600 hover:text-brand-700 transition-colors">
+            <Link href="/dashboard/top-up" className="text-xs font-bold text-brand-600 hover:text-brand-700 transition-colors">
               عرض الكل
             </Link>
           </div>
@@ -178,9 +203,9 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                     <div
                       className={`w-1 h-8 rounded-full ${tx.type === "withdrawal" ? "bg-red-500" : "bg-green-500"}`}
                     ></div>
-                    <div>
-                      <p className="font-bold text-text-primary text-xs leading-tight">
-                        {tx.description}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-text-primary text-xs leading-tight truncate">
+                        {getFriendlyDescription(tx.description)}
                       </p>
                       <p className="text-[10px] text-text-muted mt-1 font-medium">
                         {formatDate(tx.created_at, "medium")}
@@ -188,14 +213,14 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                     </div>
                   </div>
                   <div
-                    className={`flex items-center justify-end gap-1 font-bold font-mono text-sm ${tx.type === "withdrawal" ? "text-red-500" : "text-green-500"}`}
+                    className="flex items-center justify-end gap-1 font-bold font-mono text-sm"
                     dir="ltr"
                   >
-                    <span className="text-[10px] font-sans" dir="rtl">ريال</span>
-                    <span dir="ltr">
+                    <span className={tx.type === "withdrawal" ? "text-red-500" : "text-green-500"}>
                       {tx.type === "withdrawal" ? "-" : "+"}
                       {formatCurrency(tx.amount, "number")}
                     </span>
+                    <span className="text-[10px] font-sans text-text-muted" dir="rtl">ريال</span>
                   </div>
                 </li>
               ))}
