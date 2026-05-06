@@ -137,22 +137,24 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
               
               <div className="flex items-center gap-1.5">
                 {(teacher?.teacher_profile?.average_rating ?? 0) > 0 ? (
-                  <div className="flex items-center gap-1.5 text-amber-500 font-bold text-lg">
-                    <Star size={20} className="fill-amber-500" />
-                    {teacher?.teacher_profile?.average_rating}
-                  </div>
+                  <>
+                    <div className="flex items-center gap-1.5 text-amber-500 font-bold text-lg">
+                      <Star size={20} className="fill-amber-500" />
+                      {teacher?.teacher_profile?.average_rating}
+                    </div>
+                    <span className="text-xs text-slate-400 font-medium">
+                      ({teacher?.teacher_profile?.reviews_count || 0} تقييم)
+                    </span>
+                  </>
                 ) : (
                   <span className="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide border border-slate-200/50">
                     جديد
                   </span>
                 )}
-                <span className="text-xs text-slate-400 font-medium">
-                  ({teacher?.teacher_profile?.reviews_count || 0} تقييم)
-                </span>
               </div>
             </div>
             {teacher?.teacher_profile?.bio && (
-              <p className="text-slate-500 mt-4 text-sm leading-loose max-w-3xl text-right">
+              <p className="text-slate-500 mt-4 text-sm leading-relaxed max-w-3xl text-right">
                 {teacher.teacher_profile.bio}
               </p>
             )}
