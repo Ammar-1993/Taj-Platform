@@ -212,14 +212,14 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                     </div>
                   </div>
                   <div
-                    className="flex items-center justify-end gap-1 font-bold font-mono text-sm"
+                    className="flex items-center gap-1"
                     dir="ltr"
                   >
-                    <span className={tx.type === "withdrawal" ? "text-red-500" : "text-green-500"}>
+                    <span className="text-gray-500 text-sm">ريال</span>
+                    <span className={`font-medium font-mono text-sm ${tx.type === "withdrawal" ? "text-red-500" : "text-green-500"}`}>
                       {tx.type === "withdrawal" ? "-" : "+"}
                       {formatCurrency(tx.amount, "number")}
                     </span>
-                    <span className="text-[10px] font-sans text-text-muted" dir="rtl">ريال</span>
                   </div>
                 </li>
               ))}
