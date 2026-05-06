@@ -10,6 +10,7 @@ import {
   LogOut
 } from "lucide-react";
 import { useNavLinks } from "@/hooks/useNavLinks";
+import ProfileDropdown from "./ProfileDropdown";
 
 export default function MobileHeader() {
   const [isOpen, setIsOpen] = useState(false);
@@ -36,11 +37,16 @@ export default function MobileHeader() {
     <>
       {/* الشريط العلوي الثابت للموبايل - بتصميم RTL عصري */}
       <header className="md:hidden sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm">
-        {/* اليسار: صورة المستخدم أو الإشعارات للتوازن البصري */}
+        {/* اليسار: قائمة الملف الشخصي (معدلة لتجنب القطع) */}
         <div className="flex items-center">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-50 to-indigo-50 border border-brand-100 flex items-center justify-center text-brand-600 font-bold text-sm shadow-sm">
-            {user?.name ? user.name.charAt(0).toUpperCase() : 'T'}
-          </div>
+          {user && (
+            <ProfileDropdown 
+              userName={user.name}
+              imageUrl={user.avatar_url || null}
+              settingsPath="/dashboard/settings"
+              onLogout={logout}
+            />
+          )}
         </div>
 
         {/* المنتصف: البراند */}
