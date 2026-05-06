@@ -95,7 +95,7 @@ export default function RedirectCountdown({
       </div>
 
       {/* Countdown + go-now link */}
-      <div className="flex items-center justify-between text-[10px] text-brand-500 font-bold uppercase tracking-wider">
+      <div className="flex items-center justify-between text-[10px] text-brand-500 font-bold">
         <span>{remaining} ثانية متبقية...</span>
         <button
           type="button"

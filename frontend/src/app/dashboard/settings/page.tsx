@@ -199,7 +199,7 @@ export default function SettingsPage() {
 
   return (
     <div className="p-4 md:p-8">
-      <div className="relative z-10 max-w-7xl mx-auto space-y-8 tracking-tight" dir="rtl">
+      <div className="relative z-10 max-w-7xl mx-auto space-y-8" dir="rtl">
         {/* ── Page Header ── */}
         <PageHeader
           title="إعدادات الحساب"
@@ -313,7 +313,7 @@ export default function SettingsPage() {
                     className="flex w-full rounded-xl border-2 border-transparent bg-gray-50 px-4 py-2.5 text-sm font-bold text-gray-400 text-left pl-10 cursor-not-allowed opacity-70"
                   />
                 </div>
-                <p className="mt-1.5 text-[10px] text-green-600 font-bold uppercase tracking-wider text-left">
+                <p className="mt-1.5 text-[10px] text-green-600 font-bold text-left">
                   حساب موثق
                 </p>
               </div>

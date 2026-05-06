@@ -31,10 +31,10 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
 }) => {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Sidebar: Wallet Skeleton */}
-        <div className="lg:col-span-1">
-          <div className="space-y-6 sticky top-28">
+        <div className="w-full lg:w-80 lg:shrink-0">
+          <div className="space-y-6 lg:sticky lg:top-28">
             <div className="animate-pulse bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 p-6 rounded-taj-xl shadow-xl">
               <div className="space-y-4">
                 <div className="h-4 bg-gray-200 rounded w-1/2"></div>
@@ -48,7 +48,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
         </div>
 
         {/* Main Content Skeleton */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="flex-1 min-w-0 space-y-6">
           <Card variant="glass" className="p-6 animate-pulse">
             <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
             <div className="space-y-3">
@@ -101,9 +101,9 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+    <div className="flex flex-col lg:flex-row gap-6 items-start">
       {/* Sidebar: Wallet, Transactions, and Help Center */}
-      <div className="lg:col-span-1 space-y-6 sticky top-24">
+      <div className="w-full lg:w-80 lg:shrink-0 space-y-6 lg:sticky lg:top-24">
         {/* 💰 Parent Wallet Card */}
         <div className="animate-fade-up-1 relative overflow-hidden bg-gradient-to-br from-brand-600 via-purple-600 to-violet-700 p-6 rounded-taj-xl shadow-xl text-white">
           <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
@@ -119,10 +119,10 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
               </h3>
             </div>
             <div className="mt-3 flex items-baseline justify-end gap-2" dir="ltr">
-              <span className="text-purple-200 text-base sm:text-lg font-medium" dir="rtl">ريال</span>
               <span className="font-mono text-4xl sm:text-5xl font-bold tracking-tight" dir="ltr">
                 {formatCurrency(parentData.parent_balance, "number")}
               </span>
+              <span className="text-purple-200 text-base sm:text-lg font-medium" dir="rtl">ريال</span>
             </div>
 
             <Button asChild variant="secondary" className="mt-5 w-full bg-white/20 hover:bg-white/30 text-white border border-white/10 rounded-taj-md">
@@ -138,15 +138,15 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
               </h3>
               <div className="flex items-baseline gap-2">
                 <div className="flex items-center justify-end gap-1 font-bold font-mono text-white text-xl" dir="ltr">
-                  <span className="text-sm font-sans text-purple-200" dir="rtl">ريال</span>
                   <span dir="ltr">{formatCurrency(parentData.total_spent, "number")}</span>
+                  <span className="text-sm font-sans text-purple-200" dir="rtl">ريال</span>
                 </div>
               </div>
             </div>
 
             {/* محافظ الأبناء */}
             <div className="mt-5 pt-3 border-t border-white/20">
-              <h4 className="text-[10px] uppercase tracking-wider font-black mb-2 text-purple-200">
+              <h4 className="text-[10px] font-black mb-2 text-purple-200">
                 أرصدة محافظ الأبناء:
               </h4>
               {parentData.wallets?.length === 0 ? (
@@ -166,10 +166,10 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                         </div>
                         <span className="font-bold text-xs">{w.user.name}</span>
                       </div>
-                      <span className="font-bold text-xs">
-                        {w.balance}{" "}
-                        <span className="text-[10px] text-purple-200">ريال</span>
-                      </span>
+                      <div className="flex items-center gap-1" dir="ltr">
+                        <span className="font-bold text-xs">{w.balance}</span>
+                        <span className="text-[10px] text-purple-200" dir="rtl">ريال</span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -215,11 +215,11 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                     className="flex items-center gap-1"
                     dir="ltr"
                   >
-                    <span className="text-gray-500 text-sm">ريال</span>
                     <span className={`font-medium font-mono text-sm ${tx.type === "withdrawal" ? "text-red-500" : "text-green-500"}`}>
                       {tx.type === "withdrawal" ? "-" : "+"}
                       {formatCurrency(tx.amount, "number")}
                     </span>
+                    <span className="text-gray-500 text-sm" dir="rtl">ريال</span>
                   </div>
                 </li>
               ))}
@@ -244,7 +244,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
       </div>
 
       {/* Bookings Table */}
-      <Card className="lg:col-span-2 animate-fade-up-1 p-6 border-border bg-white/80 backdrop-blur-sm">
+      <Card className="flex-1 min-w-0 animate-fade-up-1 p-6 border-border bg-white/80 backdrop-blur-sm">
         <h3 className="font-bold text-xl text-text-primary mb-6 flex items-center gap-2">
           <span className="w-9 h-9 bg-brand-50 text-brand-600 rounded-taj-md flex items-center justify-center">
             <Calendar className="w-5 h-5" />
@@ -300,8 +300,8 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                         </div>
                         <div className="text-left">
                           <div className="flex items-center justify-end gap-1 font-bold font-mono text-text-primary text-lg" dir="ltr">
-                            <span className="text-xs font-sans text-text-secondary" dir="rtl">ريال</span>
                             <span dir="ltr">{formatCurrency(booking.net_paid, "number")}</span>
+                            <span className="text-xs font-sans text-text-secondary" dir="rtl">ريال</span>
                           </div>
                         </div>
                     </div>
@@ -314,19 +314,19 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
               <table className="w-full text-sm text-right">
                 <thead>
                   <tr className="bg-gradient-to-l from-surface-subtle to-surface-muted border-b border-border">
-                    <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider rounded-tr-taj-lg text-right">
+                    <th className="px-4 py-4 text-xs font-bold text-text-secondary text-right rounded-tr-taj-lg">
                       الابن
                     </th>
-                    <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">
+                    <th className="px-4 py-4 text-xs font-bold text-text-secondary text-right">
                       المعلم
                     </th>
-                    <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">
+                    <th className="px-4 py-4 text-xs font-bold text-text-secondary text-right">
                       التاريخ والوقت
                     </th>
-                    <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">
+                    <th className="px-4 py-4 text-xs font-bold text-text-secondary text-right">
                       التكلفة
                     </th>
-                    <th className="px-4 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider rounded-tl-taj-lg text-right">
+                    <th className="px-4 py-4 text-xs font-bold text-text-secondary text-right rounded-tl-taj-lg">
                       الحالة
                     </th>
                   </tr>
@@ -360,10 +360,10 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                       </td>
                       <td className="px-4 py-4">
                         <div className="flex items-center justify-end gap-1" dir="ltr">
-                          <span className="text-xs font-sans text-text-secondary" dir="rtl">ريال</span>
                           <span className="font-bold font-mono text-text-primary" dir="ltr">
                             {formatCurrency(booking.net_paid, "number")}
                           </span>
+                          <span className="text-xs font-sans text-text-secondary" dir="rtl">ريال</span>
                         </div>
                       </td>
                       <td className="px-4 py-4">

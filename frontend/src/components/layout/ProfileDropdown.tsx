@@ -108,7 +108,7 @@ export default function ProfileDropdown({
           role="menu"
         >
           <div className="px-4 py-2 border-b border-surface-subtle mb-1">
-            <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-0.5">الحساب</p>
+            <p className="text-[10px] font-bold text-text-muted mb-0.5">الحساب</p>
             <p className="text-sm font-bold text-text-primary truncate">{userName}</p>
           </div>
 

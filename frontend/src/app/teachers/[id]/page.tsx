@@ -126,7 +126,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
             {teacherName.charAt(0)}
           </div>
           <div className="flex-1">
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-3xl font-extrabold text-slate-900">
               {teacherName}
             </h1>
             <div className="flex flex-wrap items-center gap-4 mt-3">
@@ -147,7 +147,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
                     </span>
                   </>
                 ) : (
-                  <span className="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide border border-slate-200/50">
+                  <span className="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full text-[10px] font-black border border-slate-200/50">
                     جديد
                   </span>
                 )}
@@ -171,7 +171,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
             <div className="space-y-10">
               {/* Date Selection Grid */}
               <div className="flex flex-col gap-5">
-                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest px-1">اختر اليوم</h3>
+                <h3 className="text-sm font-bold text-slate-400 px-1">اختر اليوم</h3>
                 <div className="flex items-center gap-4 overflow-x-auto pb-4 scrollbar-hide scroll-smooth no-scrollbar">
                   {Object.keys(slots).map((date) => (
                     <button
@@ -210,7 +210,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
                         className="group relative border-2 border-transparent bg-white hover:border-brand-500 hover:bg-brand-50 text-slate-700 font-bold py-4 px-5 rounded-taj-md transition-all duration-300 flex flex-col items-center justify-center gap-1 shadow-sm hover:shadow-brand-600/10 active:scale-95 overflow-hidden"
                       >
                         <div className="absolute inset-0 bg-brand-600/0 group-hover:bg-brand-600/5 transition-colors" />
-                        <span className="text-lg text-brand-700 group-hover:text-brand-800 tracking-tight">{formatTime(roundToSlot(slot.start_time))}</span>
+                        <span className="text-lg text-brand-700 group-hover:text-brand-800">{formatTime(roundToSlot(slot.start_time))}</span>
                         <span className="text-[10px] text-slate-400 font-bold opacity-70">
                           إلى {formatTime(roundToSlot(slot.end_time))}
                         </span>
@@ -240,7 +240,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
                   <div className="absolute inset-0 bg-emerald-400/20 rounded-full animate-ping" />
                   <CheckCircle2 className="w-12 h-12 text-emerald-500 relative z-10" />
                 </div>
-                <h3 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">تهانينا!</h3>
+                <h3 className="text-2xl font-black text-slate-900 mb-3">تهانينا!</h3>
                 <p className="text-slate-500 text-sm max-w-[320px] mx-auto leading-relaxed font-bold">
                   لقد أتممت حجز موعدك بنجاح. سنقوم بإرسال تنبيه لك قبل موعد الحصة.
                 </p>
@@ -257,7 +257,7 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
             ) : (
               <>
                 <div className="bg-slate-50 rounded-taj-lg p-5 border border-slate-100 flex flex-col items-center justify-center gap-2">
-                  <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">توقيت الحصة المختارة</span>
+                  <span className="text-xs text-slate-400 font-bold">توقيت الحصة المختارة</span>
                   <p className="text-lg font-black text-slate-900 flex items-center gap-3">
                     <span className="text-brand-600">{formatTime(roundToSlot(bookingModal.slot.start_time))}</span>
                     <span className="text-slate-300 font-light">←</span>

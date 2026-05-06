@@ -104,7 +104,7 @@ export default function TeacherSchedulePage() {
   return (
     <div className="p-4 md:p-8">
       
-      <div className="relative z-10 max-w-7xl mx-auto space-y-8 tracking-tight">
+      <div className="relative z-10 max-w-7xl mx-auto space-y-8">
         
         <PageHeader
           title="إدارة جدول المواعيد"
@@ -231,7 +231,7 @@ export default function TeacherSchedulePage() {
                                         {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
                                     </div>
                                     <div
-                                        className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full inline-flex items-center gap-1.5 ${
+                                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1.5 ${
                                         slot.status === "available"
                                             ? "bg-emerald-100 text-emerald-700"
                                             : slot.status === "booked"

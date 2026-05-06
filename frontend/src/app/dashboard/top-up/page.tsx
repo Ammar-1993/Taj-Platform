@@ -50,7 +50,7 @@ export default function TopUpPage() {
     return (
         <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 md:p-8 flex items-center justify-center">
 
-            <div className="relative z-10 max-w-2xl w-full space-y-8 tracking-tight">
+            <div className="relative z-10 max-w-2xl w-full space-y-8">
 
                 <PageHeader
                     title="شحن المحفظة"
@@ -112,7 +112,7 @@ export default function TopUpPage() {
                                                     )}>
                                                         {icons[val]}
                                                     </span>
-                                                    <span className="text-xl tracking-tighter">{val} <small className="text-[10px] font-bold">ريال</small></span>
+                                                    <span className="text-xl">{val} <small className="text-[10px] font-bold">ريال</small></span>
                                                     {isActive && (
                                                         <div className="absolute -top-3 -right-3 w-6 h-6 bg-brand-600 text-white rounded-full flex items-center justify-center shadow-lg ring-4 ring-white animate-success-scale">
                                                             <CheckCircle2 className="w-4 h-4" />
@@ -155,7 +155,7 @@ export default function TopUpPage() {
                                     )}
                                 </Button>
                                 <div className="flex flex-col items-center gap-2">
-                                    <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest">دفع آمن ومحمي</p>
+                                    <p className="text-center text-[10px] text-gray-400 font-bold">دفع آمن ومحمي</p>
                                     <p className="text-center text-xs text-gray-400 font-medium">هذه بيئة اختبار آمنة. لن يتم خصم مبالغ حقيقية.</p>
                                 </div>
                             </div>

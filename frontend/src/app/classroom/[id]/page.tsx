@@ -212,7 +212,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 {/* 2. شريط أدوات المعلم الجانبي */}
                 {isTeacher && inCall && (
                     <div className="w-full md:w-72 bg-slate-900 border-r border-slate-800 p-6 flex flex-col gap-5 shadow-2xl z-10">
-                        <h3 className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">أدوات التحكم السريعة</h3>
+                        <h3 className="text-slate-500 text-xs font-bold mb-2">أدوات التحكم السريعة</h3>
                         
                         {/* 🟢 الزر الفعال الجديد: مشاركة الشاشة */}
                         <button 

@@ -17,9 +17,9 @@ interface WalletWidgetProps {
 
 export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher }) => {
   return (
-    <div className="space-y-6 sticky top-28">
+    <div className="space-y-6 lg:sticky lg:top-28">
       {/* 💰 Wallet Card — Premium Gradient */}
-      <div className="animate-fade-in-up-delay relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-violet-700 p-6 rounded-3xl shadow-xl text-white">
+      <div className="animate-fade-in-up-delay relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-violet-700 p-6 rounded-taj-xl shadow-xl text-white">
         {/* Decorative Pattern */}
         <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
           <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white blur-2xl"></div>
@@ -33,18 +33,18 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
               رصيد المحفظة
             </h3>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-4xl sm:text-5xl font-bold tracking-tight">
-              {wallet?.balance || "0.00"}
+          <div className="mt-3 flex items-baseline gap-2" dir="ltr">
+            <span className="text-4xl sm:text-5xl font-bold">
+              {formatCurrency(wallet?.balance || 0, "number")}
             </span>
-            <span className="text-purple-200 text-base sm:text-lg font-medium">
+            <span className="text-purple-200 text-base sm:text-lg font-medium" dir="rtl">
               ريال
             </span>
           </div>
 
           {isTeacher ? (
             <div className="mt-6">
-              <Button asChild variant="secondary" className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/10 rounded-xl">
+              <Button asChild variant="secondary" className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/10 rounded-taj-md">
                 <Link href="/dashboard/payout">
                   طلب سحب <Banknote className="w-4 h-4 mr-2" />
                 </Link>
@@ -52,7 +52,7 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
             </div>
           ) : (
             <div className="mt-6">
-              <Button asChild variant="secondary" className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/10 rounded-xl">
+              <Button asChild variant="secondary" className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/10 rounded-taj-md">
                 <Link href="/dashboard/top-up">
                   شحن المحفظة <Zap className="w-4 h-4 mr-2" />
                 </Link>
@@ -64,7 +64,7 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
 
       {/* 📊 Transaction History */}
       <Card variant="glass" className="animate-fade-in-up-delay-2 p-6">
-        <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <h3 className="font-bold text-text-primary mb-4 flex items-center gap-2">
           <span className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
             <BarChart2 className="w-4 h-4" />
           </span>
@@ -77,19 +77,19 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
             {wallet?.transactions?.data?.slice(0, 3).map((tx) => (
               <li
                 key={tx.id}
-                className="flex justify-between items-center text-sm p-3 rounded-xl bg-gray-50/80 hover:bg-gray-100 transition-all duration-200 group"
+                className="flex justify-between items-center text-sm p-3 rounded-xl bg-surface-subtle hover:bg-surface-muted transition-all duration-200 group border border-transparent hover:border-border"
               >
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-1.5 h-8 rounded-full ${tx.type === "withdrawal" ? "bg-red-500" : "bg-emerald-500"}`}
                   ></div>
-                  <div>
-                    <p className="font-bold text-gray-800">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-text-primary truncate">
                       {tx.type === "withdrawal"
                         ? "خصم حجز/تجميد"
                         : "إيداع/أرباح"}
                     </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-text-muted mt-0.5">
                       {formatDate(tx.created_at, "medium")}
                     </p>
                   </div>
@@ -98,11 +98,11 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
                   className="flex items-center gap-1"
                   dir="ltr"
                 >
-                  <span className="text-gray-500 text-sm">ريال</span>
                   <span className={`font-medium font-mono text-sm ${tx.type === "withdrawal" ? "text-red-500" : "text-emerald-500"}`}>
                     {tx.type === "withdrawal" ? "-" : "+"}
                     {formatCurrency(tx.amount, "number")}
                   </span>
+                  <span className="text-gray-500 text-sm" dir="rtl">ريال</span>
                 </div>
               </li>
             ))}
@@ -112,16 +112,16 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
 
       {/* 🛟 Support Center */}
       <Card variant="glass" className="animate-fade-in-up-delay-2 p-6">
-        <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+        <h3 className="font-bold text-text-primary mb-3 flex items-center gap-2">
           <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
             <LifeBuoy className="w-4 h-4" />
           </span>
           مركز المساعدة
         </h3>
-        <p className="text-sm text-gray-500 mb-4 leading-relaxed">
+        <p className="text-sm text-text-muted mb-4 leading-relaxed">
           هل تواجه مشكلة؟ فريق الدعم متاح لمساعدتك في أي وقت.
         </p>
-        <Button asChild className="w-full bg-gradient-to-l from-blue-600 to-indigo-600 text-white rounded-xl">
+        <Button asChild className="w-full bg-gradient-to-l from-blue-600 to-indigo-600 text-white rounded-taj-md">
           <Link href="/dashboard/support">
             فتح تذكرة دعم فني
           </Link>

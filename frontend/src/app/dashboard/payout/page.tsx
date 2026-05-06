@@ -96,7 +96,7 @@ export default function PayoutPage() {
     return (
         <div className="p-4 md:p-8">
             
-            <div className="relative z-10 max-w-7xl mx-auto space-y-8 tracking-tight">
+            <div className="relative z-10 max-w-7xl mx-auto space-y-8">
                 
                 <PageHeader
                     title="سحب الأرباح والأرصدة"

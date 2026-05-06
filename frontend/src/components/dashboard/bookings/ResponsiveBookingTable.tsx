@@ -163,10 +163,10 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 </div>
                 <div className="text-left">
                   <div className="flex items-center justify-end gap-1" dir="ltr">
-                    <span className="text-text-secondary text-xs" dir="rtl">ريال</span>
                     <span className="font-bold font-mono text-text-primary" dir="ltr">
                       {formatCurrency(booking.net_paid, "number")}
                     </span>
+                    <span className="text-text-secondary text-xs" dir="rtl">ريال</span>
                   </div>
                 </div>
               </div>
@@ -205,14 +205,14 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
         <table className="min-w-full w-full text-sm text-right">
           <thead>
             <tr className="bg-gradient-to-l from-surface-subtle to-surface-muted border-b border-border">
-              <th className="px-2 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider rounded-tr-taj-lg text-right">رقم</th>
-              <th className="px-2 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">
+              <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right rounded-tr-taj-lg">رقم</th>
+              <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right">
                 {isTeacher ? "الطالب" : "المعلم"}
               </th>
-              <th className="px-2 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">التاريخ والوقت</th>
-              <th className="px-2 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right whitespace-nowrap">المبلغ</th>
-              <th className="px-2 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">الحالة</th>
-              <th className="px-2 py-4 text-xs font-bold text-text-secondary uppercase tracking-wider rounded-tl-taj-lg text-right">الإجراء</th>
+              <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right">التاريخ والوقت</th>
+              <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right whitespace-nowrap">المبلغ</th>
+              <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right">الحالة</th>
+              <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right rounded-tl-taj-lg">الإجراء</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-subtle">
@@ -251,10 +251,10 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 {/* Amount */}
                 <td className="px-2 py-4 whitespace-nowrap">
                   <div className="flex items-center justify-end gap-1" dir="ltr">
-                    <span className="text-text-secondary text-xs" dir="rtl">ريال</span>
                     <span className="font-bold font-mono text-text-primary" dir="ltr">
                       {formatCurrency(booking.net_paid, "number")}
                     </span>
+                    <span className="text-text-secondary text-xs" dir="rtl">ريال</span>
                   </div>
                 </td>
 

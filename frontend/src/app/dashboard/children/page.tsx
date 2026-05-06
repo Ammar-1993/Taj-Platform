@@ -120,7 +120,7 @@ export default function ChildrenManagementPage() {
     return (
         <div className="min-h-screen relative overflow-hidden bg-gray-50/50 p-4 md:p-8 flex items-start justify-center">
             
-            <div className="relative z-10 max-w-6xl w-full space-y-8 tracking-tight">
+            <div className="relative z-10 max-w-6xl w-full space-y-8">
                 
                 <PageHeader
                     title="إدارة أفراد العائلة"
@@ -225,7 +225,7 @@ export default function ChildrenManagementPage() {
 
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center bg-gray-50/50 p-4 rounded-2xl border border-gray-100 shadow-sm">
-                                        <span className="text-[10px] font-bold uppercase text-gray-400">المرحلة الدراسية</span>
+                                        <span className="text-[10px] font-bold text-gray-400">المرحلة الدراسية</span>
                                         <span className="bg-white/50 backdrop-blur-sm text-indigo-700 px-4 py-1.5 rounded-xl text-sm font-bold shadow-sm ring-1 ring-indigo-100/50">
                                             {child.student_profile?.grade_level?.name || 'غير محدد'}
                                         </span>
