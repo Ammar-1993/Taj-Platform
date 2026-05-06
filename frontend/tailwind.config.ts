@@ -78,6 +78,33 @@ const config = {
           subtle:  "var(--color-surface-subtle)",
           muted:   "var(--color-surface-muted)",
         },
+        // Status colors
+        success: {
+          bg:   "var(--color-success-bg)",
+          text: "var(--color-success-text)",
+        },
+        warning: {
+          bg:   "var(--color-warning-bg)",
+          text: "var(--color-warning-text)",
+        },
+        error: {
+          bg:   "var(--color-error-bg)",
+          text: "var(--color-error-text)",
+        },
+        info: {
+          bg:   "var(--color-info-bg)",
+          text: "var(--color-info-text)",
+        },
+        neutral: {
+          bg:   "var(--color-neutral-bg)",
+          text: "var(--color-neutral-text)",
+        },
+        // Text specific
+        text: {
+          primary:   "var(--color-text-primary)",
+          secondary: "var(--color-text-secondary)",
+          muted:     "var(--color-text-muted)",
+        },
       },
 
       // ─── Border Radius (4-level scale) ───────────────────

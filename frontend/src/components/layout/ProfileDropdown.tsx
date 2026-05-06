@@ -103,20 +103,20 @@ export default function ProfileDropdown({
       {/* ─── Dropdown Menu ─── */}
       {isOpen && (
         <div
-          className="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-slate-100 py-1 min-w-[210px] z-[100] animate-in fade-in slide-in-from-top-2 duration-200 origin-top-left"
+          className="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-surface-muted py-1 min-w-[210px] z-[100] animate-in fade-in slide-in-from-top-2 duration-200 origin-top-left"
           dir="rtl"
           role="menu"
         >
-          <div className="px-4 py-2 border-b border-slate-50 mb-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">الحساب</p>
-            <p className="text-sm font-bold text-slate-700 truncate">{userName}</p>
+          <div className="px-4 py-2 border-b border-surface-subtle mb-1">
+            <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-0.5">الحساب</p>
+            <p className="text-sm font-bold text-text-primary truncate">{userName}</p>
           </div>
 
           {/* Account Settings */}
           <Link
             href={settingsPath}
             onClick={() => setIsOpen(false)}
-            className="flex items-center gap-3 px-4 py-3 cursor-pointer w-full transition-colors text-slate-600 font-bold hover:text-brand-600 hover:bg-brand-50/50"
+            className="flex items-center gap-3 px-4 py-3 cursor-pointer w-full transition-colors text-text-secondary font-bold hover:text-brand-600 hover:bg-brand-50/50"
             role="menuitem"
           >
             <User className="w-4 h-4 shrink-0" />
@@ -124,7 +124,7 @@ export default function ProfileDropdown({
           </Link>
 
           {/* Divider */}
-          <div className="border-b border-slate-50 mx-2" />
+          <div className="border-b border-surface-subtle mx-2" />
 
           {/* Logout */}
           <button
@@ -136,7 +136,7 @@ export default function ProfileDropdown({
             className="flex items-center gap-3 px-4 py-3 cursor-pointer w-full transition-colors text-error-text font-bold hover:bg-error-bg/50"
             role="menuitem"
           >
-            <LogOut className="w-4 h-4 shrink-0" />
+            <LogOut className="w-4 h-4 shrink-0 text-error-text" />
             <span>تسجيل الخروج</span>
           </button>
         </div>
