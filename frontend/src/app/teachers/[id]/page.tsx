@@ -7,6 +7,7 @@ import { discoveryService, bookingService, parentService } from "@/services/api"
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { TeacherSlot, SlotsByDate } from "@/types";
 import { formatDate, formatTime, roundToSlot } from "@/lib/formatters";
+import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { showApiError } from "@/hooks/useApiError";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -302,9 +303,11 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
                       <CircleDollarSign className="w-5 h-5" />
                       إجمالي المبلغ
                     </span>
-                    <span className="font-mono font-black text-brand-800 text-xl" dir="ltr">
-                      {sessionPrice} ريال
-                    </span>
+                    <CurrencyDisplay 
+                      amount={sessionPrice} 
+                      size="lg" 
+                      className="text-brand-800"
+                    />
                   </div>
                 )}
 

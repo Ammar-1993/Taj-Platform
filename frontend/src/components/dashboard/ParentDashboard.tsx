@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { ParentDashboardData, Wallet } from "@/types";
-import { formatTime, formatDate, formatCurrency } from "@/lib/formatters";
+import { formatTime, formatDate } from "@/lib/formatters";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { 
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import { PaginationControls } from "@/components/ui/PaginationControls";
+import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 
 interface ParentDashboardProps {
   parentData: ParentDashboardData | null;
@@ -118,12 +119,11 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                 رصيد المحفظة الأساسية
               </h3>
             </div>
-            <div className="mt-3 flex items-baseline justify-end gap-2" dir="ltr">
-              <span className="font-mono text-4xl sm:text-5xl font-bold tracking-tight" dir="ltr">
-                {formatCurrency(parentData.parent_balance, "number")}
-              </span>
-              <span className="text-purple-200 text-base sm:text-lg font-medium" dir="rtl">ريال</span>
-            </div>
+            <CurrencyDisplay 
+              amount={parentData.parent_balance} 
+              size="xl" 
+              className="mt-3 !justify-end text-white"
+            />
 
             <Button asChild variant="secondary" className="mt-5 w-full bg-white/20 hover:bg-white/30 text-white border border-white/10 rounded-taj-md">
               <Link href="/dashboard/top-up">
@@ -136,12 +136,11 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
               <h3 className="text-purple-200 text-xs font-bold mb-1">
                 إجمالي الاستثمار في التعليم
               </h3>
-              <div className="flex items-baseline gap-2">
-                <div className="flex items-center justify-end gap-1 font-bold font-mono text-white text-xl" dir="ltr">
-                  <span dir="ltr">{formatCurrency(parentData.total_spent, "number")}</span>
-                  <span className="text-sm font-sans text-purple-200" dir="rtl">ريال</span>
-                </div>
-              </div>
+              <CurrencyDisplay 
+                amount={parentData.total_spent} 
+                size="lg" 
+                className="!justify-start text-white"
+              />
             </div>
 
             {/* محافظ الأبناء */}
@@ -166,10 +165,11 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                         </div>
                         <span className="font-bold text-xs">{w.user.name}</span>
                       </div>
-                      <div className="flex items-center gap-1" dir="ltr">
-                        <span className="font-bold text-xs">{w.balance}</span>
-                        <span className="text-[10px] text-purple-200" dir="rtl">ريال</span>
-                      </div>
+                      <CurrencyDisplay 
+                        amount={w.balance} 
+                        size="sm" 
+                        className="text-white"
+                      />
                     </div>
                   ))}
                 </div>
@@ -200,7 +200,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-1 h-8 rounded-full ${tx.type === "withdrawal" ? "bg-red-500" : "bg-green-500"}`}
+                      className={`w-1 h-8 rounded-full ${tx.type === "withdrawal" || parseFloat(String(tx.amount)) < 0 ? "bg-red-500" : "bg-green-500"}`}
                     ></div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-text-primary text-xs leading-tight truncate">
@@ -211,16 +211,12 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                       </p>
                     </div>
                   </div>
-                  <div
-                    className="flex items-center gap-1"
-                    dir="ltr"
-                  >
-                    <span className={`font-medium font-mono text-sm ${tx.type === "withdrawal" ? "text-red-500" : "text-green-500"}`}>
-                      {tx.type === "withdrawal" ? "-" : "+"}
-                      {formatCurrency(tx.amount, "number")}
-                    </span>
-                    <span className="text-gray-500 text-sm" dir="rtl">ريال</span>
-                  </div>
+                  <CurrencyDisplay 
+                    amount={tx.amount} 
+                    showSign 
+                    colorStatus 
+                    size="md"
+                  />
                 </li>
               ))}
             </ul>
@@ -299,10 +295,11 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                           </div>
                         </div>
                         <div className="text-left">
-                          <div className="flex items-center justify-end gap-1 font-bold font-mono text-text-primary text-lg" dir="ltr">
-                            <span dir="ltr">{formatCurrency(booking.net_paid, "number")}</span>
-                            <span className="text-xs font-sans text-text-secondary" dir="rtl">ريال</span>
-                          </div>
+                          <CurrencyDisplay 
+                            amount={booking.net_paid} 
+                            size="lg" 
+                            className="text-text-primary"
+                          />
                         </div>
                     </div>
                   </div>
@@ -359,12 +356,11 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        <div className="flex items-center justify-end gap-1" dir="ltr">
-                          <span className="font-bold font-mono text-text-primary" dir="ltr">
-                            {formatCurrency(booking.net_paid, "number")}
-                          </span>
-                          <span className="text-xs font-sans text-text-secondary" dir="rtl">ريال</span>
-                        </div>
+                        <CurrencyDisplay 
+                          amount={booking.net_paid} 
+                          size="md" 
+                          className="text-text-primary"
+                        />
                       </td>
                       <td className="px-4 py-4">
                       <StatusBadge status={booking.status} />

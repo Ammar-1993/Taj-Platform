@@ -30,7 +30,7 @@ When generating code or UI components for this project, you MUST strictly adhere
 - The platform is strictly Arabic (`dir="rtl"`).
 - Always consider RTL flow: logical properties (`ms-`, `me-`, `ps-`, `pe-`) are preferred over physical ones (`ml-`, `mr-`).
 - Icons trailing text should be on the left; leading icons on the right.
-- **Bidi Text:** When mixing numbers and Arabic words (e.g., Currency), ALWAYS wrap them in strict Flex containers to prevent visual swapping (e.g., `<div className="flex items-center gap-1" dir="ltr"><span>+50.00</span><span className="dir-rtl">ريال</span></div>`).
+- **Bidi Text:** When mixing numbers and Arabic words (e.g., Currency), ALWAYS use the `<CurrencyDisplay />` component. It uses a strict LTR Flex container to prevent visual swapping (e.g., `<div className="flex items-center gap-1" dir="ltr"><span className="text-xs">ر.س</span><span className="font-medium">50.00</span></div>`).
 
 ### 2. Custom Tailwind Theme (Taj Design System)
 
@@ -45,8 +45,9 @@ NEVER format dates, times, or currencies manually in the components. ALWAYS impo
 - `formatDate(date, 'short' | 'medium' | 'long')`: For human-readable dates.
 - `formatDatetime(rawDbString, 'medium')`: To parse raw DB strings like "00:00:00 2026-05-20".
 - `formatTime(time)`: For 12h Arabic time format.
-- `formatCurrency(amount, 'label')`: Automatically appends "ريال" and forces 2 decimal places using Latin numerals.
+- `formatCurrency(amount, 'label')`: Automatically appends "ر.س" and forces 2 decimal places using Latin numerals.
 - _Rule:_ The platform uses the locale `ar-SA-u-nu-latn` to force Arabic text but Latin numerals (1, 2, 3).
+- **CRITICAL:** Use `<CurrencyDisplay amount={value} />` for all visual currency elements instead of raw `formatCurrency` in JSX.
 
 ### 4. Component Structure & Quality
 

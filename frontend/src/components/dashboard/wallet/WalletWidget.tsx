@@ -3,12 +3,13 @@ import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Wallet } from "@/types";
-import { formatDate, formatCurrency } from "@/lib/formatters";
+import { formatDate } from "@/lib/formatters";
 import { 
   WalletCards, Banknote, Zap, BarChart2,
   Landmark, LifeBuoy
 } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
+import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 
 interface WalletWidgetProps {
   wallet: Wallet | null;
@@ -33,14 +34,11 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
               رصيد المحفظة
             </h3>
           </div>
-          <div className="mt-3 flex items-baseline gap-2" dir="ltr">
-            <span className="text-4xl sm:text-5xl font-bold">
-              {formatCurrency(wallet?.balance || 0, "number")}
-            </span>
-            <span className="text-purple-200 text-base sm:text-lg font-medium" dir="rtl">
-              ريال
-            </span>
-          </div>
+          <CurrencyDisplay 
+            amount={wallet?.balance || 0} 
+            size="xl" 
+            className="mt-3 !justify-start text-white"
+          />
 
           {isTeacher ? (
             <div className="mt-6">
@@ -81,11 +79,11 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className={`w-1.5 h-8 rounded-full ${tx.type === "withdrawal" ? "bg-red-500" : "bg-emerald-500"}`}
+                    className={`w-1.5 h-8 rounded-full ${tx.type === "withdrawal" || parseFloat(String(tx.amount)) < 0 ? "bg-red-500" : "bg-emerald-500"}`}
                   ></div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-text-primary truncate">
-                      {tx.type === "withdrawal"
+                      {tx.type === "withdrawal" || parseFloat(String(tx.amount)) < 0
                         ? "خصم حجز/تجميد"
                         : "إيداع/أرباح"}
                     </p>
@@ -94,16 +92,12 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
                     </p>
                   </div>
                 </div>
-                <div
-                  className="flex items-center gap-1"
-                  dir="ltr"
-                >
-                  <span className={`font-medium font-mono text-sm ${tx.type === "withdrawal" ? "text-red-500" : "text-emerald-500"}`}>
-                    {tx.type === "withdrawal" ? "-" : "+"}
-                    {formatCurrency(tx.amount, "number")}
-                  </span>
-                  <span className="text-gray-500 text-sm" dir="rtl">ريال</span>
-                </div>
+                <CurrencyDisplay 
+                  amount={tx.amount} 
+                  showSign 
+                  colorStatus 
+                  size="md"
+                />
               </li>
             ))}
           </ul>

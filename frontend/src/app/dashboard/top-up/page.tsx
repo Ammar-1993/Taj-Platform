@@ -82,7 +82,7 @@ export default function TopUpPage() {
                             <div className="space-y-8">
                                 <div>
                                     <label className="block text-gray-900 font-bold mb-4 mr-1 flex items-center gap-2">
-                                        <span>اختر مبلغ الشحن (ريال سعودي):</span>
+                                        <span>اختر مبلغ الشحن (ر.س):</span>
                                         <span className="text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full font-bold">المبلغ</span>
                                     </label>
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -112,7 +112,7 @@ export default function TopUpPage() {
                                                     )}>
                                                         {icons[val]}
                                                     </span>
-                                                    <span className="text-xl">{val} <small className="text-[10px] font-bold">ريال</small></span>
+                                                    <span className="text-xl">{val} <small className="text-[10px] font-bold">ر.س</small></span>
                                                     {isActive && (
                                                         <div className="absolute -top-3 -right-3 w-6 h-6 bg-brand-600 text-white rounded-full flex items-center justify-center shadow-lg ring-4 ring-white animate-success-scale">
                                                             <CheckCircle2 className="w-4 h-4" />
@@ -149,7 +149,7 @@ export default function TopUpPage() {
                                         </>
                                     ) : (
                                         <>
-                                            <span>ادفع {amount} ريال واشحن المحفظة</span>
+                                            <span>ادفع {amount} ر.س واشحن المحفظة</span>
                                             <Rocket className="w-5 h-5 mr-3" />
                                         </>
                                     )}

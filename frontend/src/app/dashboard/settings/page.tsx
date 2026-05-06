@@ -459,7 +459,7 @@ export default function SettingsPage() {
                       <option value="" disabled>-- اختر مرحلتك الدراسية --</option>
                       {gradeLevels.map((grade: GradeLevel) => (
                         <option key={grade.id} value={grade.id}>
-                          {grade.name} (سعر الحصة: {grade.session_price} ريال)
+                          {grade.name} (سعر الحصة: {grade.session_price} ر.س)
                         </option>
                       ))}
                     </Select>

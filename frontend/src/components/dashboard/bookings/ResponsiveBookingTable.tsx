@@ -2,10 +2,11 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Booking } from "@/types";
-import { formatTime, formatDate, formatCurrency } from "@/lib/formatters";
+import { formatTime, formatDate } from "@/lib/formatters";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/Button";
 import { Video, XCircle, Coins, BookOpen, Rocket, MoreVertical } from "lucide-react";
+import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 
 // ─── Dropdown Component for Secondary Actions ──────────────────────────────────
 function BookingDropdown({
@@ -162,12 +163,11 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                   </div>
                 </div>
                 <div className="text-left">
-                  <div className="flex items-center justify-end gap-1" dir="ltr">
-                    <span className="font-bold font-mono text-text-primary" dir="ltr">
-                      {formatCurrency(booking.net_paid, "number")}
-                    </span>
-                    <span className="text-text-secondary text-xs" dir="rtl">ريال</span>
-                  </div>
+                  <CurrencyDisplay 
+                    amount={booking.net_paid} 
+                    size="md" 
+                    className="text-text-primary"
+                  />
                 </div>
               </div>
 
@@ -250,12 +250,11 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
 
                 {/* Amount */}
                 <td className="px-2 py-4 whitespace-nowrap">
-                  <div className="flex items-center justify-end gap-1" dir="ltr">
-                    <span className="font-bold font-mono text-text-primary" dir="ltr">
-                      {formatCurrency(booking.net_paid, "number")}
-                    </span>
-                    <span className="text-text-secondary text-xs" dir="rtl">ريال</span>
-                  </div>
+                  <CurrencyDisplay 
+                    amount={booking.net_paid} 
+                    size="md" 
+                    className="text-text-primary"
+                  />
                 </td>
 
                 {/* Status */}

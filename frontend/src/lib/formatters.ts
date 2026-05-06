@@ -134,13 +134,13 @@ type CurrencyStyle = "label" | "code" | "number";
  * Always uses Latin numerals. Always 2 decimal places.
  *
  * @param amount  number or string from API (e.g. "1500.50" or 35)
- * @param style   'label' → "1,500.50 ريال"  (dashboard, cards)
+ * @param style   'label' → "1,500.50 ر.س"  (dashboard, cards)
  *                'code'  → "1,500.50 SAR"   (payout, financial docs)
  *
  * @example
- *   formatCurrency("1500.5")          // "1,500.50 ريال"
+ *   formatCurrency("1500.5")          // "1,500.50 ر.س"
  *   formatCurrency(35, "code")        // "35.00 SAR"
- *   formatCurrency(0)                 // "0.00 ريال"
+ *   formatCurrency(0)                 // "0.00 ر.س"
  */
 export function formatCurrency(
   amount: number | string | undefined | null,
@@ -150,7 +150,7 @@ export function formatCurrency(
   if (isNaN(num)) {
     if (style === "code") return "0.00 SAR";
     if (style === "number") return "0.00";
-    return "0.00 ريال";
+    return "0.00 ر.س";
   }
 
   const formatted = num.toLocaleString(LOCALE, {
@@ -159,7 +159,7 @@ export function formatCurrency(
   });
 
   if (style === "number") return formatted;
-  return style === "code" ? `${formatted} SAR` : `${formatted} ريال`;
+  return style === "code" ? `${formatted} SAR` : `${formatted} ر.س`;
 }
 
 // ─── Rating ───────────────────────────────────────────────────
