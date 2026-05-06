@@ -74,7 +74,7 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
           <EmptyState icon={Landmark} title="لا توجد عمليات سابقة" className="py-8" />
         ) : (
           <ul className="space-y-2">
-            {wallet?.transactions?.data?.slice(0, 5).map((tx) => (
+            {wallet?.transactions?.data?.slice(0, 3).map((tx) => (
               <li
                 key={tx.id}
                 className="flex justify-between items-center text-sm p-3 rounded-xl bg-gray-50/80 hover:bg-gray-100 transition-all duration-200 group"
@@ -95,12 +95,14 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
                   </div>
                 </div>
                 <div
-                  className={`flex items-center justify-end gap-1 font-bold font-mono ${tx.type === "withdrawal" ? "text-red-500" : "text-emerald-500"}`}
+                  className="flex items-center justify-end gap-1 font-bold font-mono text-sm"
                   dir="ltr"
                 >
-                  <span className="text-xs font-sans" dir="rtl">ريال</span>
-                  <span dir="ltr">{formatCurrency(tx.amount, "number")}</span>
-                  {tx.type === "withdrawal" ? "-" : "+"}
+                  <span className={tx.type === "withdrawal" ? "text-red-500" : "text-emerald-500"}>
+                    {tx.type === "withdrawal" ? "-" : "+"}
+                    {formatCurrency(tx.amount, "number")}
+                  </span>
+                  <span className="text-xs font-sans text-gray-400" dir="rtl">ريال</span>
                 </div>
               </li>
             ))}

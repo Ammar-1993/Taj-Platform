@@ -193,7 +193,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
             <EmptyState icon={Landmark} title="لا توجد عمليات سابقة" className="py-6" />
           ) : (
             <ul className="space-y-3">
-              {transactions.slice(0, 3).map((tx) => (
+              {transactions.slice(0, 2).map((tx) => (
                 <li
                   key={tx.id}
                   className="flex justify-between items-center text-sm p-3 rounded-xl bg-surface-subtle hover:bg-surface-muted transition-all duration-200 group border border-transparent hover:border-border"
