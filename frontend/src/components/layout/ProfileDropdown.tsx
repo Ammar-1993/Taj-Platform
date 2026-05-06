@@ -103,7 +103,7 @@ export default function ProfileDropdown({
       {/* ─── Dropdown Menu ─── */}
       {isOpen && (
         <div
-          className="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-gray-100 py-1 min-w-[200px] z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+          className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-gray-100 py-1 min-w-[200px] z-50 animate-in fade-in slide-in-from-top-2 duration-200 origin-top-right"
           dir="rtl"
           role="menu"
         >
@@ -111,7 +111,7 @@ export default function ProfileDropdown({
           <Link
             href={settingsPath}
             onClick={() => setIsOpen(false)}
-            className="flex items-center gap-3 px-4 py-3 cursor-pointer w-full transition-colors text-slate-600 font-medium hover:text-blue-600 hover:bg-slate-50"
+            className="flex items-center gap-3 px-4 py-3 cursor-pointer w-full transition-colors text-slate-600 font-medium hover:text-blue-600 hover:bg-slate-50 text-right"
             role="menuitem"
           >
             <User className="w-4 h-4 shrink-0" />
@@ -119,7 +119,7 @@ export default function ProfileDropdown({
           </Link>
 
           {/* Divider */}
-          <div className="border-b border-gray-100" />
+          <div className="border-b border-gray-100 mx-2" />
 
           {/* Logout */}
           <button
@@ -128,7 +128,7 @@ export default function ProfileDropdown({
               setIsOpen(false);
               onLogout();
             }}
-            className="flex items-center gap-3 px-4 py-3 cursor-pointer w-full transition-colors text-slate-600 font-medium hover:text-blue-600 hover:bg-slate-50"
+            className="flex items-center gap-3 px-4 py-3 cursor-pointer w-full transition-colors text-slate-600 font-medium hover:text-blue-600 hover:bg-slate-50 text-right"
             role="menuitem"
           >
             <LogOut className="w-4 h-4 shrink-0" />
