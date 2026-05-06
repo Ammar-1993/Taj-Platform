@@ -14,7 +14,7 @@ import { useNavLinks } from "@/hooks/useNavLinks";
 export default function MobileHeader() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navLinks = useNavLinks();
 
   // إغلاق القائمة الجانبية عند تغيير المسار (الانتقال لصفحة جديدة)
@@ -34,10 +34,21 @@ export default function MobileHeader() {
 
   return (
     <>
-      {/* الشريط العلوي الثابت للموبايل */}
-      <header className="md:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-surface-subtle px-4 py-4 flex items-center justify-between shadow-sm">
-        <h2 className="text-xl font-bold text-brand-600">منصة تاج</h2>
+      {/* الشريط العلوي الثابت للموبايل - بتصميم RTL عصري */}
+      <header className="md:hidden sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm">
+        {/* اليسار: صورة المستخدم أو الإشعارات للتوازن البصري */}
+        <div className="flex items-center">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-50 to-indigo-50 border border-brand-100 flex items-center justify-center text-brand-600 font-bold text-sm shadow-sm">
+            {user?.name ? user.name.charAt(0).toUpperCase() : 'T'}
+          </div>
+        </div>
+
+        {/* المنتصف: البراند */}
+        <h2 className="text-lg font-bold text-brand-600 absolute left-1/2 -translate-x-1/2 whitespace-nowrap">
+          منصة تاج التعليمية 👑
+        </h2>
         
+        {/* اليمين: زر القائمة الجانبية (البداية الطبيعية في RTL) */}
         <button 
           onClick={() => setIsOpen(true)}
           className="p-2 -mr-2 text-text-secondary hover:bg-brand-50 hover:text-brand-600 rounded-taj-sm transition-colors"
@@ -50,19 +61,19 @@ export default function MobileHeader() {
       {/* خلفية التعتيم (Overlay) */}
       {isOpen && (
         <div 
-          className="md:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+          className="md:hidden fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* درج القائمة الجانبية (Slide-out Drawer) */}
       <div 
-        className={`md:hidden fixed inset-y-0 right-0 z-50 w-72 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${
+        className={`md:hidden fixed inset-y-0 right-0 z-[70] w-72 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="p-6 border-b border-surface-subtle flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-brand-600">منصة تاج</h2>
+          <h2 className="text-xl font-bold text-brand-600">منصة تاج التعليمية 👑</h2>
           <button 
             onClick={() => setIsOpen(false)}
             className="p-2 -ml-2 text-text-muted hover:bg-surface-subtle hover:text-text-primary rounded-taj-sm transition-colors"
