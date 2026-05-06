@@ -145,8 +145,8 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
             </div>
 
             {/* محافظ الأبناء */}
-            <div className="mt-6 pt-4 border-t border-white/20">
-              <h4 className="text-xs font-bold mb-3 text-purple-200">
+            <div className="mt-5 pt-3 border-t border-white/20">
+              <h4 className="text-[10px] uppercase tracking-wider font-black mb-2 text-purple-200">
                 أرصدة محافظ الأبناء:
               </h4>
               {parentData.wallets?.length === 0 ? (
@@ -154,23 +154,25 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                   لا يوجد أبناء مضافين بعد.
                 </p>
               ) : (
-                parentData.wallets?.map((w) => (
-                  <div
-                    key={w.id}
-                    className="flex justify-between items-center text-sm mb-2 bg-white/10 backdrop-blur-sm p-2.5 rounded-taj-md border border-white/5"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 bg-white/20 rounded-taj-sm flex items-center justify-center text-xs font-bold">
-                        {w.user.name.charAt(0)}
+                <div className="space-y-1.5">
+                  {parentData.wallets?.map((w) => (
+                    <div
+                      key={w.id}
+                      className="flex justify-between items-center text-sm bg-white/10 backdrop-blur-sm p-2 rounded-taj-md border border-white/5"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-white/20 rounded-taj-sm flex items-center justify-center text-[10px] font-bold">
+                          {w.user.name.charAt(0)}
+                        </div>
+                        <span className="font-bold text-xs">{w.user.name}</span>
                       </div>
-                      <span className="font-bold">{w.user.name}</span>
+                      <span className="font-bold text-xs">
+                        {w.balance}{" "}
+                        <span className="text-[10px] text-purple-200">ريال</span>
+                      </span>
                     </div>
-                    <span className="font-bold">
-                      {w.balance}{" "}
-                      <span className="text-xs text-purple-200">ريال</span>
-                    </span>
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
             </div>
           </div>
@@ -178,16 +180,13 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
 
         {/* 📊 Recent Transactions */}
         <Card variant="glass" className="animate-fade-up-2 p-5 border-border bg-white/80 backdrop-blur-sm">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center mb-4">
             <h3 className="font-bold text-text-primary text-sm flex items-center gap-2">
               <span className="w-8 h-8 bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center">
                 <BarChart2 className="w-4 h-4" />
               </span>
               آخر العمليات المالية
             </h3>
-            <Link href="/dashboard/top-up" className="text-xs font-bold text-brand-600 hover:text-brand-700 transition-colors">
-              عرض الكل
-            </Link>
           </div>
 
           {transactions.length === 0 ? (
@@ -228,18 +227,15 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
           )}
         </Card>
 
-        {/* 🛟 Help Center Card */}
-        <Card variant="glass" className="animate-fade-up-3 p-5 border-border bg-white/80 backdrop-blur-sm">
+        {/* 🛟 Help Center Card - Compact Banner */}
+        <Card variant="glass" className="animate-fade-up-3 p-4 border-border bg-white/80 backdrop-blur-sm">
           <h3 className="font-bold text-text-primary text-sm mb-3 flex items-center gap-2">
             <span className="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
               <LifeBuoy className="w-4 h-4" />
             </span>
             مركز المساعدة
           </h3>
-          <p className="text-xs text-text-secondary mb-4 leading-relaxed font-medium">
-            هل تواجه مشكلة؟ فريق الدعم متاح لمساعدتك في أي وقت.
-          </p>
-          <Button asChild variant="outline" className="w-full border-blue-100 text-blue-700 hover:bg-blue-50 hover:text-blue-800 rounded-taj-md text-xs font-bold h-10">
+          <Button asChild variant="outline" className="w-full border-blue-100 text-blue-700 hover:bg-blue-50 hover:text-blue-800 rounded-taj-md text-xs font-bold h-9">
             <Link href="/dashboard/support">
               فتح تذكرة دعم فني
             </Link>
