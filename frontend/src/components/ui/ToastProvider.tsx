@@ -10,7 +10,7 @@ export default function ToastProvider() {
         duration: 3500,
         style: {
           direction: "rtl",
-          fontFamily: "Tajawal, sans-serif",
+          fontFamily: "Cairo, sans-serif",
           fontWeight: "700",
           borderRadius: "16px",
           padding: "14px 28px",

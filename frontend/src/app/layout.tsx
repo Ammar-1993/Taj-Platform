@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { Tajawal, IBM_Plex_Mono } from "next/font/google";
+import { Cairo, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import ToastProvider from "@/components/ui/ToastProvider";
 import ReactQueryProvider from "@/context/ReactQueryProvider";
 
-const tajawal = Tajawal({
+const cairo = Cairo({
   subsets: ["arabic", "latin"],
-  weight: ["200", "300", "400", "500", "700", "800", "900"],
+  weight: ["200", "300", "400", "500", "600", "700", "800", "900"],
   display: "swap",
   variable: "--font-sans",
   preload: false, // Prevent font download during build
@@ -34,8 +34,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl" className={`${tajawal.variable} ${mono.variable}`} suppressHydrationWarning>
-      <body className={tajawal.className}>
+    <html lang="ar" dir="rtl" className={`${cairo.variable} ${mono.variable}`} suppressHydrationWarning>
+      <body className={cairo.className}>
         <ReactQueryProvider>
           <AuthProvider>
             <ViewTransitions>

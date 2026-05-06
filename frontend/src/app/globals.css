@@ -70,7 +70,7 @@
     --gradient-surface: linear-gradient(180deg, #ffffff, #f8fafc);
 
     /* Typography tokens */
-    --font-sans: 'Tajawal', system-ui, sans-serif;   /* set by next/font via CSS var */
+    --font-sans: 'Cairo', system-ui, sans-serif;   /* set by next/font via CSS var */
     --font-mono: 'IBM Plex Mono', monospace;          /* set by next/font via CSS var */
 
     /* Radius scale (4 levels only) */
