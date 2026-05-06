@@ -177,28 +177,30 @@ export default function Home() {
                 teachers.map((teacher, index) => (
                 <Card
                   key={teacher.id}
-                  className="animate-fade-up hover:border-brand-100 hover:-translate-y-1.5 group flex flex-col"
+                  className="animate-fade-up hover:border-brand-100 hover:-translate-y-1.5 group flex flex-col h-full"
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
-                  <CardHeader className="flex flex-row items-center gap-4 mb-1 pb-2">
-                    <div className="w-16 h-16 shrink-0 bg-gradient-to-br from-brand-50 to-purple-50 border border-brand-100/50 rounded-taj-lg flex items-center justify-center text-brand-600 font-bold text-xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-                      {teacher.name.charAt(0)}
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg text-gray-900 mb-1.5">
-                        {teacher.name}
-                      </CardTitle>
-                      <span className="inline-flex items-center gap-1.5 text-xs text-brand-700 bg-brand-50/80 px-2.5 py-1 rounded-taj-sm font-bold">
-                        <BookOpen size={14} />
-                        {teacher.teacher_profile?.subject?.name || "غير محدد"}
-                      </span>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="flex-1">
-                    <CardDescription className="line-clamp-2 h-10 leading-relaxed text-xs">
-                      {teacher.teacher_profile?.bio || "لا توجد نبذة تعريفية."}
-                    </CardDescription>
-                  </CardContent>
+                  <div className="flex-1 flex flex-col">
+                    <CardHeader className="flex flex-row items-center gap-4 mb-1 pb-2">
+                      <div className="w-16 h-16 shrink-0 bg-gradient-to-br from-brand-50 to-purple-50 border border-brand-100/50 rounded-taj-lg flex items-center justify-center text-brand-600 font-bold text-xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                        {teacher.name.charAt(0)}
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg text-gray-900 mb-1.5">
+                          {teacher.name}
+                        </CardTitle>
+                        <span className="inline-flex items-center gap-1.5 text-xs text-brand-700 bg-brand-50/80 px-2.5 py-1 rounded-taj-sm font-bold">
+                          <BookOpen size={14} />
+                          {teacher.teacher_profile?.subject?.name || "غير محدد"}
+                        </span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex-1">
+                      <CardDescription className="text-sm text-slate-500 leading-relaxed line-clamp-3">
+                        {teacher.teacher_profile?.bio || "لا توجد نبذة تعريفية."}
+                      </CardDescription>
+                    </CardContent>
+                  </div>
                   <CardFooter className="flex flex-col sm:flex-row justify-between items-center pt-5 border-t border-gray-50 mt-auto gap-4 sm:gap-0">
                     <div className="flex flex-col items-center sm:items-start gap-1">
                     <button 
@@ -217,7 +219,7 @@ export default function Home() {
                       )}
                     >
                       {(teacher.teacher_profile?.average_rating ?? 0) > 0 ? (
-                      <>
+                        <>
                           <Star size={18} className="fill-amber-500" />
                           {teacher.teacher_profile?.average_rating}
                         </>
@@ -226,9 +228,11 @@ export default function Home() {
                           جديد
                         </span>
                       )}
-                      <span className="text-[10px] text-gray-400 font-medium mr-1">
-                        ({teacher.teacher_profile?.reviews_count || 0} تقييم)
-                      </span>
+                      {(teacher.teacher_profile?.average_rating ?? 0) > 0 && (
+                        <span className="text-[10px] text-gray-400 font-medium mr-1">
+                          ({teacher.teacher_profile?.reviews_count || 0} تقييم)
+                        </span>
+                      )}
                     </button>
                       <span className={cn(
                         "text-[10px] font-bold flex items-center gap-1 transition-colors duration-300",
@@ -248,7 +252,7 @@ export default function Home() {
                         <Link href={`/teachers/${teacher.id}`}>احجز الآن</Link>
                       </Button>
                     ) : (
-                      <Button disabled className="w-full sm:w-auto px-6 rounded-taj-lg bg-slate-100 text-slate-400 border-none cursor-not-allowed">
+                      <Button disabled className="w-full sm:w-auto px-6 rounded-taj-lg bg-slate-100 text-slate-500 font-medium border-none cursor-not-allowed">
                         <CalendarX size={14} />
                         غير متاح حالياً
                       </Button>
