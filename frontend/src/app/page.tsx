@@ -8,7 +8,6 @@ import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { PaginationControls } from "@/components/ui/PaginationControls";
 import {
-  Home as HomeIcon,
   HelpCircle,
   LogIn,
   UserPlus,
@@ -18,6 +17,7 @@ import {
   Star,
   SearchX,
   CalendarX,
+  ChevronRight,
 } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Input";
@@ -89,9 +89,9 @@ export default function Home() {
                 <div className="h-10 md:h-12 w-full md:w-32 bg-white/20 animate-pulse rounded-taj-md md:rounded-taj-lg"></div>
               ) : user ? (
                 <Button asChild variant="default" className="flex-1 md:flex-none py-3.5 bg-white text-brand-700 hover:bg-gray-50">
-                  <Link href="/dashboard">
-                    <span>لوحة التحكم</span>
-                    <HomeIcon className="w-5 h-5" strokeWidth={2.5} />
+                  <Link href="/dashboard" className="flex items-center gap-2">
+                    <ChevronRight className="w-5 h-5" strokeWidth={2.5} />
+                    <span>العودة إلى لوحة التحكم</span>
                   </Link>
                 </Button>
               ) : (
