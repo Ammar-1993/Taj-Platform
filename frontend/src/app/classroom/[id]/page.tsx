@@ -168,6 +168,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         role: userRole, 
         layout: 1,
         disableRtm: true,
+        mode: 'rtc' as const, // إضافة وضع RTC لتحسين سرعة الاستجابة في الحصص المباشرة
     };
 
     if (authLoading || loading) return (

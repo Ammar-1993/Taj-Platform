@@ -5,3 +5,6 @@ frontend/.env
 frontend/.next/
 .idea/
 .vscode/
+
+# Gemini Files
+.GEMINI.md

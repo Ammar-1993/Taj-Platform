@@ -28,13 +28,16 @@ class ClassroomController extends Controller
         }
 
         // في الإنتاج: هنا نستخدم RtcTokenBuilder2 لتوليد التوكن باستخدام APP_ID و APP_CERTIFICATE
-        // للتبسيط والاختبار: سنرسل اسم الغرفة فقط، وسنضبط Agora في الفرونت-اند لتعمل بوضع (Testing Mode)
+        // التعديل: سنعطي دور 'host' لكل من المعلم والطالب لتمكين التواصل الثنائي (صوت وصورة)
+        // أما المراقبين (مثل ولي الأمر) فسيبقون بـ دور 'audience'
+        $role = ($user->id === $booking->teacher_id || $user->id === $booking->student_id) ? 'host' : 'audience';
+
         return response()->json([
             'status' => 'success',
             'data' => [
                 'channel_name' => $booking->agora_channel,
                 'uid' => $user->id,
-                'role' => $user->hasRole('teacher') ? 'host' : 'audience',
+                'role' => $role,
             ]
         ]);
     }
