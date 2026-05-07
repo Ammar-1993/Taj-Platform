@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { formatTime, formatDate, roundToSlot, formatToArabic12Hour } from "@/lib/formatters";
+import { formatDate, roundToSlot, formatToArabic12Hour } from "@/lib/formatters";
 import PageHeader from "@/components/ui/PageHeader";
 import toast from "react-hot-toast";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
