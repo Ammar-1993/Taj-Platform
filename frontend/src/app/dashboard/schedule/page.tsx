@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { formatTime, formatDate, roundToSlot } from "@/lib/formatters";
+import { formatTime, formatDate, roundToSlot, formatToArabic12Hour } from "@/lib/formatters";
 import PageHeader from "@/components/ui/PageHeader";
 import toast from "react-hot-toast";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -33,6 +33,20 @@ export default function TeacherSchedulePage() {
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+
+  const handleStartTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newStartTime = e.target.value;
+    setStartTime(newStartTime);
+
+    if (newStartTime) {
+      const [hours, minutes] = newStartTime.split(":").map(Number);
+      if (!isNaN(hours) && !isNaN(minutes)) {
+        const endHours = (hours + 1) % 24;
+        const newEndTime = `${String(endHours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+        setEndTime(newEndTime);
+      }
+    }
+  };
 
   // Mutation for adding a slot
   const addSlotMutation = useMutation({
@@ -147,8 +161,16 @@ export default function TeacherSchedulePage() {
                     type="time"
                     required
                     value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    onBlur={(e) => setStartTime(roundToSlot(e.target.value))}
+                    onChange={handleStartTimeChange}
+                    onBlur={(e) => {
+                      const rounded = roundToSlot(e.target.value);
+                      setStartTime(rounded);
+                      if (rounded) {
+                        const [hours, minutes] = rounded.split(":").map(Number);
+                        const endHours = (hours + 1) % 24;
+                        setEndTime(`${String(endHours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`);
+                      }
+                    }}
                   />
                 </div>
                 <div className="w-1/2">
@@ -228,7 +250,7 @@ export default function TeacherSchedulePage() {
                                 <div className="space-y-2">
                                     <div className="font-bold text-gray-900 text-base flex items-center gap-1.5">
                                         <Clock className="w-4 h-4 text-gray-500" />
-                                        {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                                        {formatToArabic12Hour(slot.start_time)} - {formatToArabic12Hour(slot.end_time)}
                                     </div>
                                     <div
                                         className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1.5 ${

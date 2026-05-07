@@ -105,6 +105,26 @@ export function formatTime(timeStr: string | undefined | null): string {
 }
 
 /**
+ * Formats a 24-hour time string (HH:mm) to a 12-hour Arabic formatted string:
+ * "14:30" -> "02:30 م"
+ * "08:00" -> "08:00 ص"
+ */
+export function formatToArabic12Hour(time24: string | undefined | null): string {
+  if (!time24) return "";
+  try {
+    const [hStr, mStr] = time24.split(":");
+    let h = parseInt(hStr, 10);
+    const m = mStr.substring(0, 2); // Ensure we only get HH:mm even if HH:mm:ss is passed
+    const ampm = h >= 12 ? "م" : "ص";
+    h = h % 12;
+    h = h ? h : 12;
+    return `${String(h).padStart(2, "0")}:${m} ${ampm}`;
+  } catch {
+    return time24 ?? "";
+  }
+}
+
+/**
  * Snaps a HH:mm time string to the nearest 30-minute slot boundary.
  * Prevents teachers from inadvertently creating slots at odd times
  * like "07:18" — the result will be "07:30" instead.
