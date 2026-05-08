@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('password');
             $table->foreignId('parent_id')->nullable()->constrained('users')->nullOnDelete();
             $table->boolean('is_active')->default(true)->index();
+            $table->string('avatar_url')->nullable();
             $table->timestamp('last_login_at')->nullable();
             $table->string('last_login_ip')->nullable();
             $table->json('metadata')->nullable();
