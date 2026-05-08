@@ -7,9 +7,23 @@ import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import PermissionModal from '@/components/classroom/PermissionModal';
 import { showApiError } from '@/hooks/useApiError';
 import type { IAgoraRTCClient, ILocalVideoTrack } from 'agora-rtc-sdk-ng';
-import { Video, Lock, AlertTriangle, LogOut, PowerOff, MonitorUp, Info, Loader2, Coins } from 'lucide-react';
+import { 
+    Video, 
+    VideoOff,
+    Mic,
+    MicOff,
+    Lock, 
+    AlertTriangle, 
+    LogOut, 
+    PowerOff, 
+    MonitorUp, 
+    Info, 
+    Loader2, 
+    Coins 
+} from 'lucide-react';
 
 const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID || '039c4b2d111b488f8069bb00c583aa04';
 
@@ -37,6 +51,13 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     const [error, setError] = useState('');
     const [inCall, setInCall] = useState(false);
     const [isEnding, setIsEnding] = useState(false);
+
+    // 🔐 حالات صلاحيات الميديا
+    const [showPermissionModal, setShowPermissionModal] = useState(false);
+    const [cameraStatus, setCameraStatus] = useState<'pending' | 'granted' | 'denied'>('pending');
+    const [micStatus, setMicStatus] = useState<'pending' | 'granted' | 'denied'>('pending');
+    const [isCameraEnabled, setIsCameraEnabled] = useState(true);
+    const [isMicEnabled, setIsMicEnabled] = useState(true);
 
     // 🟢 حالات مشاركة الشاشة (العميل المزدوج)
     const [isSharing, setIsSharing] = useState(false);
@@ -106,6 +127,61 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         }
     };
 
+    // 🔐 طلب الصلاحيات
+    const handleJoinRequest = () => {
+        setShowPermissionModal(true);
+    };
+
+    const requestMediaPermissions = async () => {
+        setShowPermissionModal(false);
+        try {
+            // محاولة الحصول على الميديا
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            
+            // نجاح الوصول
+            setCameraStatus('granted');
+            setMicStatus('granted');
+            
+            // إغلاق التراكات المؤقتة فوراً، Agora سيتولى فتحها
+            stream.getTracks().forEach(track => track.stop());
+            
+            setInCall(true);
+        } catch (err: unknown) {
+            console.error("Permission request failed:", err);
+            
+            const errorName = err instanceof Error ? err.name : '';
+
+            if (errorName === 'NotAllowedError' || errorName === 'PermissionDeniedError') {
+                setCameraStatus('denied');
+                setMicStatus('denied');
+                setIsCameraEnabled(false);
+                setIsMicEnabled(false);
+                
+                // حتى لو رفض، نسمح له بالدخول لمشاهدة الآخرين
+                setInCall(true);
+                toast.error("تم رفض الوصول للكاميرا والميكروفون.");
+            } else {
+                toast.error("حدث خطأ أثناء محاولة الوصول للكاميرا والميكروفون.");
+            }
+        }
+    };
+
+    // 🛠 التعامل مع النقر على الأزرار المحظورة
+    const handleDeniedClick = (type: 'camera' | 'mic') => {
+        toast((t) => (
+            <div className="text-right" dir="rtl">
+                <p className="font-bold mb-1">عذراً، لقد تم حظر الوصول {type === 'camera' ? 'للكاميرا' : 'للميكروفون'}.</p>
+                <p className="text-sm">يرجى النقر على أيقونة القفل 🔒 في شريط عنوان المتصفح (URL) لاختيار &apos;سماح&apos; (Allow) ثم تحديث الصفحة.</p>
+                <button 
+                    onClick={() => toast.dismiss(t.id)}
+                    className="mt-2 text-xs bg-blue-600 text-white px-3 py-1 rounded"
+                >
+                    حسناً
+                </button>
+            </div>
+        ), { duration: 6000, icon: '🔒' });
+    };
+
     // 💻 🟢 دالة مشاركة الشاشة السحرية (العميل المزدوج)
     const toggleScreenShare = async () => {
         // استدعاء المكتبة داخلياً لتجنب مشاكل Vercel SSR
@@ -168,7 +244,10 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         role: userRole, 
         layout: 1,
         disableRtm: true,
-        mode: 'rtc' as const, // إضافة وضع RTC لتحسين سرعة الاستجابة في الحصص المباشرة
+        mode: 'rtc' as const,
+        // نمرر الإعدادات الأولية بناءً على الصلاحيات
+        initialCamera: cameraStatus === 'granted' && isCameraEnabled,
+        initialMic: micStatus === 'granted' && isMicEnabled,
     };
 
     if (authLoading || loading) return (
@@ -201,12 +280,22 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                                 <h2 className="text-3xl font-bold text-white mb-3">هل أنت مستعد لبدء الحصة؟</h2>
                                 <p className="text-gray-400 text-lg">تأكد من إضاءة الغرفة وعمل الميكروفون بشكل جيد قبل الدخول.</p>
                             </div>
-                            <button onClick={() => setInCall(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-10 rounded-full shadow-xl transition transform hover:scale-105 hover:-translate-y-1 text-lg ring-4 ring-blue-600/30">
+                            <button 
+                                onClick={handleJoinRequest} 
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-10 rounded-full shadow-xl transition transform hover:scale-105 hover:-translate-y-1 text-lg ring-4 ring-blue-600/30"
+                            >
                                 انضمام للمكالمة المرئية
                             </button>
                         </div>
                     ) : (
-                        <AgoraCall rtcProps={rtcProps} callbacks={{ EndCall: () => handleLeave() }} />
+                        <AgoraCall 
+                            rtcProps={rtcProps} 
+                            callbacks={{ EndCall: () => handleLeave() }}
+                            isCameraEnabled={isCameraEnabled}
+                            isMicEnabled={isMicEnabled}
+                            onToggleCamera={() => setIsCameraEnabled(!isCameraEnabled)}
+                            onToggleMic={() => setIsMicEnabled(!isMicEnabled)}
+                        />
                     )}
                 </div>
 
@@ -248,6 +337,39 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                     </div>
                 </div>
 
+                {/* أزرار التحكم في الميديا */}
+                {inCall && (
+                    <div className="flex gap-4">
+                        {/* زر الميكروفون */}
+                        <button
+                            onClick={micStatus === 'denied' ? () => handleDeniedClick('mic') : () => setIsMicEnabled(!isMicEnabled)}
+                            className={`p-3 rounded-full transition-all border-2 ${
+                                micStatus === 'denied' 
+                                    ? 'bg-gray-800/50 border-red-900/50 text-red-500 opacity-60' 
+                                    : !isMicEnabled 
+                                        ? 'bg-red-500/20 border-red-500 text-red-500' 
+                                        : 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700'
+                            }`}
+                        >
+                            {micStatus === 'denied' || !isMicEnabled ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                        </button>
+
+                        {/* زر الكاميرا */}
+                        <button
+                            onClick={cameraStatus === 'denied' ? () => handleDeniedClick('camera') : () => setIsCameraEnabled(!isCameraEnabled)}
+                            className={`p-3 rounded-full transition-all border-2 ${
+                                cameraStatus === 'denied' 
+                                    ? 'bg-gray-800/50 border-red-900/50 text-red-500 opacity-60' 
+                                    : !isCameraEnabled 
+                                        ? 'bg-red-500/20 border-red-500 text-red-500' 
+                                        : 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700'
+                            }`}
+                        >
+                            {cameraStatus === 'denied' || !isCameraEnabled ? <VideoOff className="w-6 h-6" /> : <Video className="w-6 h-6" />}
+                        </button>
+                    </div>
+                )}
+
                 <div className="flex gap-3">
                     {isTeacher ? (
                         <>
@@ -261,6 +383,12 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                     )}
                 </div>
             </div>
+
+            <PermissionModal 
+                isOpen={showPermissionModal}
+                onClose={() => setShowPermissionModal(false)}
+                onRequest={requestMediaPermissions}
+            />
 
             <ConfirmDialog
                 isOpen={showEndConfirm}
