@@ -47,25 +47,6 @@ Route::prefix('v1')->group(function () {
         Route::get('/teachers/{id}/reviews', [DiscoveryController::class, 'teacherReviews']);
     });
 
-    // 🚀 Clever Workaround: Manual Migration Trigger (Production Free Tier)
-    // Visit: YOUR_PRODUCTION_URL/api/v1/sys/migrate-seed?secret=TAJ_SECRET_2026
-    Route::get('/sys/migrate-seed', function (Request $request) {
-        if ($request->query('secret') !== 'TAJ_SECRET_2026') {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
-
-        try {
-            Artisan::call('migrate:fresh', ['--seed' => true, '--force' => true]);
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Database successfully migrated and seeded!',
-                'output' => Artisan::output()
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
-        }
-    });
-
     // 3. مسارات عامة أخرى
     Route::get('/public/subjects', function () {
         return response()->json([
