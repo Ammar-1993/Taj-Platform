@@ -70,7 +70,7 @@ class ParentController extends Controller
     }
 
     // 3. تعديل بيانات الابن
-    public function updateChild(UpdateChildRequest $request, $id): JsonResponse
+    public function updateChild(UpdateChildRequest $request, int $id): JsonResponse
     {
         $user = $request->user();
 
@@ -91,7 +91,7 @@ class ParentController extends Controller
     }
 
     // 4. تفعيل/تعطيل صلاحية الحجز والدفع للابن
-    public function toggleBookingPermission($id): JsonResponse
+    public function toggleBookingPermission(int $id): JsonResponse
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
@@ -130,7 +130,7 @@ class ParentController extends Controller
 
         // 3. جلب حجوزات الأبناء (مع بيانات الابن والمعلم) مع التصفح
         $bookings = \App\Models\Booking::whereIn('student_id', $childrenIds)
-            ->with(['student:id,name', 'teacher:id,name', 'teacherSlot'])
+            ->with(['student:id,name', 'teacher:id,name', 'teacherSlot', 'review'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 

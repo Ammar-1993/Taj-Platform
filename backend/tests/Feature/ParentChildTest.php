@@ -21,6 +21,7 @@ class ParentChildTest extends TestCase
         parent::setUp();
         Role::firstOrCreate(['name' => 'parent']);
         Role::firstOrCreate(['name' => 'student']);
+        Role::firstOrCreate(['name' => 'teacher']);
         
         /** @var User $parent */
         $parent = User::factory()->create();
@@ -95,5 +96,66 @@ class ParentChildTest extends TestCase
                          ->patchJson("/api/v1/parent/children/{$childOfOther->id}/toggle-permission");
 
         $response->assertStatus(404);
+    }
+
+    public function test_parent_can_monitor_children_dashboard_data()
+    {
+        // 1. Setup: Create Child, Subject, Teacher, Slot, and Booking
+        $child = User::factory()->create(['parent_id' => $this->parent->id]);
+        $child->assignRole('student');
+        $child->studentProfile()->create(['grade_level_id' => $this->grade->id]);
+        $child->wallet()->create(['balance' => 0]);
+
+        $subject = \App\Models\Subject::create(['name' => 'Math', 'is_active' => true]);
+
+        $teacher = User::factory()->create();
+        $teacher->assignRole('teacher');
+        $teacher->teacherProfile()->create([
+            'subject_id' => $subject->id,
+            'bio' => 'Test Bio',
+            'is_verified' => true,
+            'hourly_rate' => 100
+        ]);
+
+        $slot = \App\Models\TeacherSlot::create([
+            'teacher_id' => $teacher->id,
+            'slot_date' => now()->addDay()->toDateString(),
+            'start_time' => now()->addDay()->setTime(10, 0, 0),
+            'end_time' => now()->addDay()->setTime(11, 0, 0),
+            'is_booked' => true
+        ]);
+
+        $booking = \App\Models\Booking::create([
+            'student_id' => $child->id,
+            'teacher_id' => $teacher->id,
+            'booked_by_id' => $this->parent->id,
+            'teacher_slot_id' => $slot->id,
+            'booking_date' => now()->addDay(),
+            'session_price' => 100,
+            'net_paid' => 100,
+            'agora_channel' => 'test-channel-123',
+            'status' => 'completed' // Marked as completed to test review
+        ]);
+
+        // Add a review (Feedback)
+        $booking->review()->create([
+            'student_id' => $child->id,
+            'teacher_id' => $teacher->id,
+            'rating' => 5,
+            'comment' => 'Excellent teacher!'
+        ]);
+
+        // 2. Act: Call the dashboard API
+        $response = $this->actingAs($this->parent)
+                         ->getJson('/api/v1/parent/dashboard');
+
+        // 3. Assert: Verify the monitoring data
+        $response->assertStatus(200)
+                 ->assertJsonPath('data.total_spent', "100.00")
+                 ->assertJsonCount(1, 'data.bookings.data')
+                 ->assertJsonPath('data.bookings.data.0.student.name', $child->name)
+                 ->assertJsonPath('data.bookings.data.0.teacher.name', $teacher->name)
+                 ->assertJsonPath('data.bookings.data.0.review.rating', 5)
+                 ->assertJsonPath('data.bookings.data.0.review.comment', 'Excellent teacher!');
     }
 }
