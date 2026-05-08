@@ -19,8 +19,12 @@ class DiscoveryTest extends TestCase
         parent::setUp();
         Role::firstOrCreate(['name' => 'teacher']);
         
-        $subject = Subject::create(['name' => 'Math', 'is_active' => true]);
-        GradeLevel::create(['name' => 'Primary 1', 'session_price' => 50]);
+        $grade = GradeLevel::create(['name' => 'Primary 1', 'session_price' => 50]);
+        $subject = Subject::create([
+            'grade_level_id' => $grade->id,
+            'name' => 'Math', 
+            'is_active' => true
+        ]);
         
         $teacher = User::factory()->create();
         $teacher->assignRole('teacher');
@@ -33,8 +37,8 @@ class DiscoveryTest extends TestCase
         TeacherSlot::create([
             'teacher_id' => $teacher->id,
             'slot_date' => now()->addDay()->toDateString(),
-            'start_time' => '10:00',
-            'end_time' => '11:00',
+            'start_time' => '10:00:00',
+            'end_time' => '11:00:00',
             'status' => 'available'
         ]);
     }

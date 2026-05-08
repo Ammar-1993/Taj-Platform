@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Booking;
 use App\Models\TeacherProfile;
 use App\Models\Subject;
+use App\Models\GradeLevel;
 use App\Models\TeacherSlot;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -30,7 +31,14 @@ class ReviewTest extends TestCase
 
         $this->teacher = User::factory()->create();
         $this->teacher->assignRole('teacher');
-        $subject = Subject::create(['name' => 'Math', 'is_active' => true]);
+        
+        $grade = GradeLevel::create(['name' => 'Secondary', 'session_price' => 100.00]);
+        $subject = Subject::create([
+            'grade_level_id' => $grade->id,
+            'name' => 'Math', 
+            'is_active' => true
+        ]);
+        
         $this->teacher->teacherProfile()->create([
             'subject_id' => $subject->id,
             'bio' => 'Test Bio',
@@ -41,8 +49,8 @@ class ReviewTest extends TestCase
         $slot = TeacherSlot::create([
             'teacher_id' => $this->teacher->id,
             'slot_date' => now()->addDay()->toDateString(),
-            'start_time' => '10:00',
-            'end_time' => '11:00',
+            'start_time' => '10:00:00',
+            'end_time' => '11:00:00',
             'status' => 'booked'
         ]);
 

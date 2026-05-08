@@ -63,7 +63,7 @@ class SupportTicketTest extends TestCase
                          ->getJson('/api/v1/support-tickets');
 
         $response->assertStatus(200)
-                 ->assertJsonCount(2, 'data')
+                 ->assertJsonCount(2, 'data.data')
                  ->assertJsonFragment(['subject' => 'تذكرة 1'])
                  ->assertJsonFragment(['subject' => 'تذكرة 2']);
     }

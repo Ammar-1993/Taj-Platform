@@ -60,7 +60,12 @@ class ProfileTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('teacher');
 
-        $subject = Subject::create(['name' => 'Mathematics', 'is_active' => true]);
+        $grade = GradeLevel::create(['name' => 'Secondary', 'session_price' => 100.00]);
+        $subject = Subject::create([
+            'grade_level_id' => $grade->id,
+            'name' => 'Mathematics', 
+            'is_active' => true
+        ]);
 
         $payload = [
             'subject_id' => $subject->id,
