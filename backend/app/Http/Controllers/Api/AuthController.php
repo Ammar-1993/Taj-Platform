@@ -73,6 +73,12 @@ class AuthController extends Controller
             ], 403);
         }
 
+        // تحديث بيانات آخر تسجيل دخول
+        $user->forceFill([
+            'last_login_at' => now(),
+            'last_login_ip' => $request->ip(),
+        ])->save();
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
