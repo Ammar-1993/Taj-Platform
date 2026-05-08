@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('wallet_id')->constrained()->restrictOnDelete();
             $table->foreignId('booking_id')->nullable()->constrained()->restrictOnDelete();
-            $table->decimal('amount', 10, 2);
+            $table->decimal('amount', 12, 2);
             $table->string('type');
             $table->string('description');
             $table->timestamps();

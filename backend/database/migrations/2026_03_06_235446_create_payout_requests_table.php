@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('payout_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->restrictOnDelete();
-            $table->decimal('amount', 8, 2);
+            $table->decimal('amount', 12, 2)->unsigned();
             $table->string('bank_name');
             $table->text('iban');
             $table->enum('status', ['pending', 'approved', 'transferred', 'rejected'])->default('pending');

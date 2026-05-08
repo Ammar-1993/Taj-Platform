@@ -25,9 +25,9 @@ return new class extends Migration
             $table->boolean('is_free_trial')->default(false);
 
             $table->date('booking_date');
-            $table->decimal('session_price', 8, 2);
-            $table->decimal('discount_amount', 8, 2)->default(0.00);
-            $table->decimal('net_paid', 8, 2);
+            $table->decimal('session_price', 12, 2)->unsigned();
+            $table->decimal('discount_amount', 12, 2)->unsigned()->default(0.00);
+            $table->decimal('net_paid', 12, 2)->unsigned();
 
             $table->string('agora_channel')->unique();
 

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('grade_levels', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->decimal('session_price', 8, 2);
+            $table->decimal('session_price', 12, 2)->unsigned();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
