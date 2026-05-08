@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('subjects', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('grade_level_id')->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->string('icon_path')->nullable();
             $table->boolean('is_active')->default(true);

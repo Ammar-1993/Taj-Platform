@@ -11,26 +11,30 @@ class MasterDataSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. زرع المواد الدراسية
-        $subjects = ['الرياضيات', 'اللغة الإنجليزية', 'الفيزياء', 'الكيمياء', 'البرمجة', 'القدرات والتحصيلي'];
-        foreach ($subjects as $subject) {
-            Subject::create(['name' => $subject, 'is_active' => true]);
-        }
-
-        // 2. زرع المراحل الدراسية وأسعارها الافتراضية للحصة
+        // 1. زرع المراحل الدراسية وأسعارها الافتراضية للحصة
         $grades = [
-            ['name' => 'المرحلة الابتدائية', 'price' => 50.00],
-            ['name' => 'المرحلة المتوسطة', 'price' => 70.00],
-            ['name' => 'المرحلة الثانوية', 'price' => 100.00],
-            ['name' => 'القدرات والتحصيلي', 'price' => 150.00],
+            'primary' => GradeLevel::create(['name' => 'المرحلة الابتدائية', 'session_price' => 50.00, 'is_active' => true]),
+            'middle' => GradeLevel::create(['name' => 'المرحلة المتوسطة', 'session_price' => 70.00, 'is_active' => true]),
+            'secondary' => GradeLevel::create(['name' => 'المرحلة الثانوية', 'session_price' => 100.00, 'is_active' => true]),
+            'competitive' => GradeLevel::create(['name' => 'القدرات والتحصيلي', 'session_price' => 150.00, 'is_active' => true]),
         ];
-        
-        foreach ($grades as $grade) {
-            GradeLevel::create([
-                'name' => $grade['name'], 
-                'session_price' => $grade['price'], 
-                'is_active' => true
-            ]);
+
+        // 2. زرع المواد الدراسية وربطها بالمراحل
+        $subjectMappings = [
+            'primary' => ['الرياضيات (ابتدائي)', 'اللغة العربية', 'العلوم'],
+            'middle' => ['الرياضيات (متوسط)', 'اللغة الإنجليزية', 'الحاسب الآلي'],
+            'secondary' => ['الفيزياء', 'الكيمياء', 'الأحياء', 'الرياضيات (ثانوي)'],
+            'competitive' => ['القدرات - كمي', 'القدرات - لفظي', 'التحصيلي - علمي'],
+        ];
+
+        foreach ($subjectMappings as $gradeKey => $subjectList) {
+            foreach ($subjectList as $subjectName) {
+                Subject::create([
+                    'grade_level_id' => $grades[$gradeKey]->id,
+                    'name' => $subjectName,
+                    'is_active' => true
+                ]);
+            }
         }
 
         // 3. زرع كود خصم ترويجي للاختبار

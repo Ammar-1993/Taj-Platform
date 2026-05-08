@@ -106,7 +106,11 @@ class ParentChildTest extends TestCase
         $child->studentProfile()->create(['grade_level_id' => $this->grade->id]);
         $child->wallet()->create(['balance' => 0]);
 
-        $subject = \App\Models\Subject::create(['name' => 'Math', 'is_active' => true]);
+        $subject = \App\Models\Subject::create([
+            'name' => 'Math', 
+            'grade_level_id' => $this->grade->id,
+            'is_active' => true
+        ]);
 
         $teacher = User::factory()->create();
         $teacher->assignRole('teacher');

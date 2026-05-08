@@ -42,7 +42,7 @@ class UsersTableSeeder extends Seeder
         ]);
         $teacher1->assignRole('teacher');
         $teacher1->teacherProfile()->create([
-            'subject_id' => 1, // نفترض 1 = رياضيات
+            'subject_id' => \App\Models\Subject::where('name', 'الرياضيات (ثانوي)')->first()->id,
             'bio' => 'معلم رياضيات بخبرة 10 سنوات في تبسيط المناهج، متخصص في تأسيس الطلاب للمرحلة الثانوية والقدرات.',
             'is_verified' => true,
             'average_rating' => 4.8,
@@ -65,7 +65,7 @@ class UsersTableSeeder extends Seeder
         ]);
         $teacher2->assignRole('teacher');
         $teacher2->teacherProfile()->create([
-            'subject_id' => 2, // نفترض 2 = لغة إنجليزية
+            'subject_id' => \App\Models\Subject::where('name', 'اللغة الإنجليزية')->first()->id,
             'bio' => 'مدرسة لغة إنجليزية معتمدة، أركز على مهارات المحادثة والاستماع بطرق تفاعلية ممتعة.',
             'is_verified' => true,
             'average_rating' => 5.0,
@@ -86,7 +86,7 @@ class UsersTableSeeder extends Seeder
         ]);
         $teacher3->assignRole('teacher');
         $teacher3->teacherProfile()->create([
-            'subject_id' => 3, // نفترض 3 = فيزياء
+            'subject_id' => \App\Models\Subject::where('name', 'الفيزياء')->first()->id,
             'bio' => 'شغوف بتعليم الفيزياء وربطها بالواقع العملي والتجارب العلمية.',
             'is_verified' => true,
             'average_rating' => 4.5,
@@ -107,7 +107,7 @@ class UsersTableSeeder extends Seeder
         ]);
         $teacher4->assignRole('teacher');
         $teacher4->teacherProfile()->create([
-            'subject_id' => 4, // نفترض 4 = كيمياء
+            'subject_id' => \App\Models\Subject::where('name', 'الكيمياء')->first()->id,
             'bio' => 'معلم كيمياء متخصص في تبسيط التفاعلات وتجارب المعمل للطلاب.',
             'is_verified' => true,
             'average_rating' => 4.9,
@@ -132,7 +132,7 @@ class UsersTableSeeder extends Seeder
         ]);
         $student1->assignRole('student');
         $student1->studentProfile()->create([
-            'grade_level_id' => 3, // ثانوية
+            'grade_level_id' => \App\Models\GradeLevel::where('name', 'المرحلة الثانوية')->first()->id,
             'can_book_independently' => true
         ]);
         $student1->wallet()->create(['balance' => 500.00]); // مشحونة للتجارب
@@ -165,7 +165,7 @@ class UsersTableSeeder extends Seeder
         ]);
         $child1->assignRole('student');
         $child1->studentProfile()->create([
-            'grade_level_id' => 2, // متوسطة
+            'grade_level_id' => \App\Models\GradeLevel::where('name', 'المرحلة المتوسطة')->first()->id,
             'can_book_independently' => false // لا يمكنه الدفع، يعتمد على محفظة والده
         ]);
         $child1->wallet()->create(['balance' => 0.00]);
@@ -181,7 +181,7 @@ class UsersTableSeeder extends Seeder
         ]);
         $child2->assignRole('student');
         $child2->studentProfile()->create([
-            'grade_level_id' => 1, // ابتدائية
+            'grade_level_id' => \App\Models\GradeLevel::where('name', 'المرحلة الابتدائية')->first()->id,
             'can_book_independently' => false
         ]);
         $child2->wallet()->create(['balance' => 0.00]);
