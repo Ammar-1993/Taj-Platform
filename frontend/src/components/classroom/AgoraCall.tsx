@@ -171,7 +171,7 @@ export default function AgoraCall({
 
             {isScreenSharingActive ? (
                 /* 🖥️ Responsive Screen Share Layout */
-                <div className="w-full h-full flex flex-col md:flex-row relative">
+                <div className="w-full h-full flex flex-col relative">
                     {/* Primary Content (Screen) */}
                     <div className="flex-1 bg-black relative">
                         {isSharing && localScreenTrack ? (
@@ -181,27 +181,27 @@ export default function AgoraCall({
                         ) : null}
                     </div>
 
-                    {/* Participant Thumbnails (Horizontal on Mobile, Vertical on Desktop) */}
-                    <div className="absolute bottom-28 md:bottom-auto md:top-20 right-4 md:right-6 flex flex-row md:flex-col gap-3 z-10">
+                    {/* Participant Thumbnails (floating bottom-right) */}
+                    <div className="absolute bottom-4 right-4 flex flex-row md:flex-col gap-3 z-10">
                         {/* Local Camera Thumbnail (Only for Host) */}
                         {rtcProps.role === 'host' && (
-                            <div className="w-24 h-32 md:w-32 md:h-44 bg-slate-900 rounded-2xl overflow-hidden border border-white/10 shadow-2xl transition-all hover:scale-105">
-                                <div ref={localVideoRef} className="w-full h-full">
+                            <div className="w-24 h-32 rounded-lg shadow-xl border border-slate-700 bg-slate-900 overflow-hidden relative transition-all hover:scale-105">
+                                <div ref={localVideoRef} className="w-full h-full [&>video]:object-cover">
                                     {!isCameraEnabled && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
-                                            <User className="w-8 md:w-12 h-8 md:h-12 opacity-10" />
+                                            <User className="w-8 h-8 opacity-10" />
                                         </div>
                                     )}
                                 </div>
-                                <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] font-bold text-white border border-white/5">أنت</div>
+                                <div className="absolute bottom-1 right-1 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded text-[10px] font-bold text-white border border-white/5">أنت</div>
                             </div>
                         )}
 
                         {/* Remote Participant Thumbnails */}
                         {remoteUsers.filter(u => Number(u.uid) < 1000000000).map(user => (
-                            <div key={user.uid} className="w-24 h-32 md:w-32 md:h-44 bg-slate-900 rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative transition-all hover:scale-105">
+                            <div key={user.uid} className="w-24 h-32 rounded-lg shadow-xl border border-slate-700 bg-slate-900 overflow-hidden relative transition-all hover:scale-105">
                                 <RemotePlayer user={user} />
-                                <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] font-bold text-white border border-white/5">مشارك</div>
+                                <div className="absolute bottom-1 right-1 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded text-[10px] font-bold text-white border border-white/5">مشارك</div>
                             </div>
                         ))}
                     </div>
@@ -209,12 +209,14 @@ export default function AgoraCall({
             ) : (
                 /* 👥 Responsive Grid Layout (Vertical on Mobile, Horizontal on Desktop) */
                 <div className={cn(
-                    "w-full h-full grid gap-3 p-3 md:p-6 lg:p-8",
-                    rtcProps.role === 'host' ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"
+                    "w-full h-full grid gap-4",
+                    (rtcProps.role === 'host' ? 1 : 0) + remoteUsers.filter(u => Number(u.uid) < 1000000000).length > 1
+                        ? "grid-cols-1 md:grid-cols-2"
+                        : "grid-cols-1 max-w-4xl mx-auto"
                 )}>
                     {/* Local Participant (Only for Host) */}
                     {rtcProps.role === 'host' && (
-                        <div className="relative bg-slate-900 rounded-3xl overflow-hidden border border-white/5 shadow-inner flex items-center justify-center">
+                        <div className="relative bg-slate-900 rounded-xl overflow-hidden border border-white/5 shadow-inner flex items-center justify-center">
                             <div ref={localVideoRef} className="w-full h-full [&>video]:object-cover" />
                             {!isCameraEnabled && (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 bg-slate-900">
@@ -222,7 +224,7 @@ export default function AgoraCall({
                                     <span className="text-sm font-medium tracking-wide">الكاميرا متوقفة</span>
                                 </div>
                             )}
-                            <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-lg px-4 py-2 rounded-2xl text-xs md:text-sm font-bold border border-white/10 flex items-center gap-2 shadow-xl">
+                            <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-lg px-4 py-2 rounded-lg text-xs md:text-sm font-bold border border-white/10 flex items-center gap-2 shadow-xl">
                                 أنت
                                 {!isMicEnabled && <MicOff className="w-4 h-4 text-red-400" />}
                             </div>
@@ -232,16 +234,16 @@ export default function AgoraCall({
                     {/* Remote Participant */}
                     {remoteUsers.length > 0 ? (
                         remoteUsers.filter(u => Number(u.uid) < 1000000000).map(user => (
-                            <div key={user.uid} className="relative bg-slate-900 rounded-3xl overflow-hidden border border-white/5 shadow-inner">
+                            <div key={user.uid} className="relative bg-slate-900 rounded-xl overflow-hidden border border-white/5 shadow-inner">
                                 <RemotePlayer user={user} />
-                                <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-lg px-4 py-2 rounded-2xl text-xs md:text-sm font-bold border border-white/10 flex items-center gap-2 shadow-xl">
+                                <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-lg px-4 py-2 rounded-lg text-xs md:text-sm font-bold border border-white/10 flex items-center gap-2 shadow-xl">
                                     مشارك
                                     {!user.hasAudio && <MicOff className="w-4 h-4 text-red-400" />}
                                 </div>
                             </div>
                         ))
                     ) : (
-                        <div className="relative bg-slate-900/40 rounded-3xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center text-slate-600">
+                        <div className="relative bg-slate-900/40 rounded-xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center text-slate-600">
                             <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
                                 <Loader2 className="w-8 h-8 animate-spin opacity-20" />
                             </div>

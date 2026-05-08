@@ -305,7 +305,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
             </div>
 
             {/* 2. Main Content Area */}
-            <div className="flex-1 h-full w-full relative">
+            <div className="flex-1 relative overflow-hidden p-2 md:p-4">
                 {!inCall ? (
                     <div className="h-full flex flex-col items-center justify-center space-y-8 p-8 text-center animate-fade-in-up bg-slate-950 relative">
                         {/* Background subtle glow */}
@@ -338,43 +338,43 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 )}
             </div>
 
-            {/* 3. Floating Control Dock - Responsive Scaling */}
+            {/* 3. Fixed Bottom Control Dock */}
             {inCall && userRole === 'host' && (
-                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-6 md:gap-8 bg-slate-900/80 backdrop-blur-2xl px-8 py-5 md:px-10 md:py-6 rounded-[40px] z-50 shadow-[0_25px_60px_rgba(0,0,0,0.8)] border border-white/10 transition-all scale-90 sm:scale-100 md:scale-110">
+                <div className="h-20 shrink-0 bg-slate-900 border-t border-slate-800 flex items-center justify-center z-50 gap-6 w-full">
                     {/* Mic Toggle */}
                     <button
                         onClick={micStatus === 'denied' ? () => handleDeniedClick('mic') : () => setIsMicEnabled(!isMicEnabled)}
-                        className={`p-4 rounded-2xl transition-all duration-300 hover:scale-110 active:scale-90 ${
+                        className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 ${
                             micStatus === 'denied' 
                                 ? 'bg-red-900/40 text-red-500 border border-red-500/20' 
                                 : !isMicEnabled 
-                                    ? 'bg-red-500/30 text-red-500 border border-red-500/30' 
-                                    : 'bg-slate-800 text-white hover:bg-slate-700 border border-white/5'
+                                    ? 'bg-slate-700 text-red-400 border border-slate-600' 
+                                    : 'bg-slate-800 text-white hover:bg-slate-700 border border-slate-600'
                         }`}
                     >
-                        {micStatus === 'denied' || !isMicEnabled ? <MicOff className="w-6 h-6 md:w-7 md:h-7" /> : <Mic className="w-6 h-6 md:w-7 md:h-7" />}
+                        {micStatus === 'denied' || !isMicEnabled ? <MicOff className="w-5 h-5 sm:w-6 sm:h-6" /> : <Mic className="w-5 h-5 sm:w-6 sm:h-6" />}
                     </button>
 
                     {/* End Call Button */}
                     <button 
                         onClick={isTeacher ? () => setShowEndConfirm(true) : handleLeave} 
-                        className="bg-red-600 hover:bg-red-700 p-6 md:p-7 rounded-[32px] text-white shadow-[0_15px_30px_rgba(220,38,38,0.4)] transition-all transform hover:scale-110 active:scale-90 hover:rotate-2"
+                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20 transition-all transform hover:scale-105 active:scale-95"
                     >
-                        {isTeacher ? <PowerOff className="w-8 h-8 md:w-10 md:h-10" /> : <LogOut className="w-8 h-8 md:w-10 md:h-10" />}
+                        {isTeacher ? <PowerOff className="w-5 h-5 sm:w-6 sm:h-6" /> : <LogOut className="w-5 h-5 sm:w-6 sm:h-6" />}
                     </button>
 
                     {/* Camera Toggle */}
                     <button
                         onClick={cameraStatus === 'denied' ? () => handleDeniedClick('camera') : () => setIsCameraEnabled(!isCameraEnabled)}
-                        className={`p-4 rounded-2xl transition-all duration-300 hover:scale-110 active:scale-90 ${
+                        className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 ${
                             cameraStatus === 'denied' 
                                 ? 'bg-red-900/40 text-red-500 border border-red-500/20' 
                                 : !isCameraEnabled 
-                                    ? 'bg-red-500/30 text-red-500 border border-red-500/30' 
-                                    : 'bg-slate-800 text-white hover:bg-slate-700 border border-white/5'
+                                    ? 'bg-slate-700 text-red-400 border border-slate-600' 
+                                    : 'bg-slate-800 text-white hover:bg-slate-700 border border-slate-600'
                         }`}
                     >
-                        {cameraStatus === 'denied' || !isCameraEnabled ? <VideoOff className="w-6 h-6 md:w-7 md:h-7" /> : <Video className="w-6 h-6 md:w-7 md:h-7" />}
+                        {cameraStatus === 'denied' || !isCameraEnabled ? <VideoOff className="w-5 h-5 sm:w-6 sm:h-6" /> : <Video className="w-5 h-5 sm:w-6 sm:h-6" />}
                     </button>
                 </div>
             )}
