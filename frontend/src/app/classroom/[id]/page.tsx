@@ -20,7 +20,6 @@ import {
     LogOut, 
     PowerOff, 
     MonitorUp, 
-    Info, 
     Loader2, 
     Coins 
 } from 'lucide-react';
