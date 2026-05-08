@@ -242,22 +242,16 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         token: agoraToken,
         uid: uid,
         role: userRole, 
-        layout: 1,
-        disableRtm: true,
-        mode: 'rtc' as const,
-        // نمرر الإعدادات الأولية بناءً على الصلاحيات
-        initialCamera: cameraStatus === 'granted' && isCameraEnabled,
-        initialMic: micStatus === 'granted' && isMicEnabled,
     };
 
     if (authLoading || loading) return (
-        <div className="h-screen flex items-center justify-center font-bold text-xl animate-pulse bg-gray-900 text-white gap-3" dir="rtl">
-            جاري تجهيز الفصل الافتراضي وتشفير الاتصال... <Lock className="w-6 h-6" />
+        <div className="h-[100dvh] flex items-center justify-center font-bold text-xl animate-pulse bg-gray-900 text-white gap-3" dir="rtl">
+            جاري تجهيز الفصل الافتراضي... <Lock className="w-6 h-6" />
         </div>
     );
     
     if (error) return (
-        <div className="h-screen flex flex-col items-center justify-center bg-gray-900 text-white" dir="rtl">
+        <div className="h-[100dvh] flex flex-col items-center justify-center bg-gray-900 text-white" dir="rtl">
             <AlertTriangle className="text-red-500 w-16 h-16 mb-4" />
             <h2 className="font-bold text-2xl mb-2">عذراً، حدث خطأ</h2>
             <p className="text-gray-400 mb-6">{error}</p>
@@ -266,123 +260,99 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     );
 
     return (
-        <div className="h-screen w-full bg-slate-950 flex flex-col overflow-hidden" dir="rtl">
-            {/* الشريط العلوي (تحول لشريط تحكم سفلي احترافي) */}
-            <div className="flex-1 w-full relative flex flex-col md:flex-row overflow-hidden">
-                {/* 1. حاوية الفيديو */}
-                <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
-                    {!inCall ? (
-                        <div className="flex flex-col items-center justify-center space-y-6 p-8 text-center animate-fade-in-up">
-                            <div className="w-20 h-20 bg-blue-900/50 rounded-full flex items-center justify-center mb-2 text-blue-400">
-                                <Video className="w-10 h-10" />
-                            </div>
-                            <div>
-                                <h2 className="text-3xl font-bold text-white mb-3">هل أنت مستعد لبدء الحصة؟</h2>
-                                <p className="text-gray-400 text-lg">تأكد من إضاءة الغرفة وعمل الميكروفون بشكل جيد قبل الدخول.</p>
-                            </div>
-                            <button 
-                                onClick={handleJoinRequest} 
-                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-10 rounded-full shadow-xl transition transform hover:scale-105 hover:-translate-y-1 text-lg ring-4 ring-blue-600/30"
-                            >
-                                انضمام للمكالمة المرئية
-                            </button>
-                        </div>
-                    ) : (
-                        <AgoraCall 
-                            rtcProps={rtcProps} 
-                            callbacks={{ EndCall: () => handleLeave() }}
-                            isCameraEnabled={isCameraEnabled}
-                            isMicEnabled={isMicEnabled}
-                            onToggleCamera={() => setIsCameraEnabled(!isCameraEnabled)}
-                            onToggleMic={() => setIsMicEnabled(!isMicEnabled)}
-                        />
-                    )}
-                </div>
-
-                {/* 2. شريط أدوات المعلم الجانبي */}
-                {isTeacher && inCall && (
-                    <div className="w-full md:w-72 bg-slate-900 border-r border-slate-800 p-6 flex flex-col gap-5 shadow-2xl z-10">
-                        <h3 className="text-slate-500 text-xs font-bold mb-2">أدوات التحكم السريعة</h3>
-                        
-                        {/* 🟢 الزر الفعال الجديد: مشاركة الشاشة */}
-                        <button 
-                            onClick={toggleScreenShare} 
-                            className={`h-12 px-4 rounded-lg flex items-center gap-3 transition group border ${isSharing ? 'bg-emerald-600 border-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-200'}`}
-                        >
-                            <MonitorUp className="w-5 h-5 group-hover:scale-110 transition" />
-                            <div className="text-right flex-1">
-                                <div className="text-sm font-bold">{isSharing ? 'إيقاف المشاركة' : 'مشاركة الشاشة'}</div>
-                            </div>
-                        </button>
-
-                        <div className="mt-auto bg-blue-900/10 border border-blue-800/30 p-4 rounded-xl flex gap-2">
-                            <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-                            <p className="text-xs text-slate-400 text-right leading-relaxed">
-                                ميزة كتم صوت الطلاب ستتوفر عند تفعيل WebSocket في الإصدار القادم.
-                            </p>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* الشريط السفلي (Control Bar) */}
-            <div className="h-24 shrink-0 bg-slate-900 text-white p-4 flex flex-col sm:flex-row justify-between items-center shadow-[0_-4px_20px_rgba(0,0,0,0.4)] border-t border-slate-800 gap-4 z-20">
-                <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${inCall ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></div>
+        <div className="h-[100dvh] w-full bg-slate-950 text-white flex flex-col overflow-hidden relative" dir="rtl">
+            
+            {/* 1. Floating Header (Room Info) */}
+            <div className="absolute top-0 left-0 w-full p-4 bg-gradient-to-b from-black/80 to-transparent z-50 flex justify-between items-center pointer-events-none">
+                <div className="flex items-center gap-3 pointer-events-auto">
+                    <div className={`w-2.5 h-2.5 rounded-full ${inCall ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></div>
                     <div className="text-right">
-                        <h1 className="font-bold text-sm md:text-base leading-tight">
+                        <h1 className="font-bold text-sm leading-tight drop-shadow-md">
                             {isTeacher ? 'لوحة تحكم المعلم' : 'الفصل الافتراضي'}
                         </h1>
-                        <p className="text-[10px] text-slate-500 font-medium mt-0.5">حصة رقم #{params.id}</p>
+                        <p className="text-[10px] text-slate-300 font-medium opacity-80 mt-0.5 drop-shadow-md">حصة رقم #{params.id}</p>
                     </div>
                 </div>
 
-                {/* أزرار التحكم في الميديا */}
-                {inCall && (
-                    <div className="flex gap-4">
-                        {/* زر الميكروفون */}
-                        <button
-                            onClick={micStatus === 'denied' ? () => handleDeniedClick('mic') : () => setIsMicEnabled(!isMicEnabled)}
-                            className={`p-3 rounded-full transition-all border-2 ${
-                                micStatus === 'denied' 
-                                    ? 'bg-gray-800/50 border-red-900/50 text-red-500 opacity-60' 
-                                    : !isMicEnabled 
-                                        ? 'bg-red-500/20 border-red-500 text-red-500' 
-                                        : 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700'
-                            }`}
-                        >
-                            {micStatus === 'denied' || !isMicEnabled ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-                        </button>
-
-                        {/* زر الكاميرا */}
-                        <button
-                            onClick={cameraStatus === 'denied' ? () => handleDeniedClick('camera') : () => setIsCameraEnabled(!isCameraEnabled)}
-                            className={`p-3 rounded-full transition-all border-2 ${
-                                cameraStatus === 'denied' 
-                                    ? 'bg-gray-800/50 border-red-900/50 text-red-500 opacity-60' 
-                                    : !isCameraEnabled 
-                                        ? 'bg-red-500/20 border-red-500 text-red-500' 
-                                        : 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700'
-                            }`}
-                        >
-                            {cameraStatus === 'denied' || !isCameraEnabled ? <VideoOff className="w-6 h-6" /> : <Video className="w-6 h-6" />}
-                        </button>
-                    </div>
+                {isTeacher && inCall && (
+                    <button 
+                        onClick={toggleScreenShare} 
+                        className={`pointer-events-auto p-2 rounded-xl transition border ${isSharing ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-slate-900/60 backdrop-blur-md border-slate-700 text-slate-200'}`}
+                    >
+                        <MonitorUp className="w-5 h-5" />
+                    </button>
                 )}
-
-                <div className="flex gap-3">
-                    {isTeacher ? (
-                        <>
-                            <button onClick={handleLeave} className="bg-slate-700 hover:bg-slate-600 px-5 py-2.5 rounded-lg text-xs md:text-sm font-bold transition flex items-center gap-2 border border-slate-600">خروج مؤقت <LogOut className="w-4 h-4" /></button>
-                            <button onClick={() => setShowEndConfirm(true)} disabled={isEnding} className="bg-red-600 hover:bg-red-700 px-5 py-2.5 rounded-lg text-xs md:text-sm font-bold shadow-lg transition disabled:opacity-50 flex items-center gap-2">
-                                {isEnding ? 'جاري الإنهاء...' : <>إنهاء الحصة وتحصيل الأرباح <PowerOff className="w-4 h-4" /></>}
-                            </button>
-                        </>
-                    ) : (
-                        <button onClick={handleLeave} className="bg-red-600 hover:bg-red-700 px-6 py-2.5 rounded-lg text-xs md:text-sm font-bold transition flex items-center gap-2 shadow-lg">مغادرة الحصة <LogOut className="w-4 h-4" /></button>
-                    )}
-                </div>
             </div>
+
+            {/* 2. Main Content Area */}
+            <div className="flex-1 h-full w-full relative">
+                {!inCall ? (
+                    <div className="h-full flex flex-col items-center justify-center space-y-6 p-8 text-center animate-fade-in-up bg-slate-900">
+                        <div className="w-20 h-20 bg-blue-900/50 rounded-full flex items-center justify-center mb-2 text-blue-400">
+                            <Video className="w-10 h-10" />
+                        </div>
+                        <div>
+                            <h2 className="text-3xl font-bold text-white mb-3">هل أنت مستعد لبدء الحصة؟</h2>
+                            <p className="text-gray-400 text-lg max-w-md mx-auto leading-relaxed">تأكد من إضاءة الغرفة وعمل الميكروفون بشكل جيد قبل الدخول.</p>
+                        </div>
+                        <button 
+                            onClick={handleJoinRequest} 
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded-full shadow-2xl transition transform hover:scale-105 active:scale-95 text-lg ring-4 ring-blue-600/30"
+                        >
+                            انضمام الآن
+                        </button>
+                    </div>
+                ) : (
+                    <AgoraCall 
+                        rtcProps={rtcProps} 
+                        isCameraEnabled={isCameraEnabled}
+                        isMicEnabled={isMicEnabled}
+                        isSharing={isSharing}
+                        localScreenTrack={screenTrack}
+                    />
+                )}
+            </div>
+
+            {/* 3. Floating Control Dock */}
+            {inCall && (
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-slate-900/90 backdrop-blur-xl px-6 py-4 rounded-full z-50 shadow-[0_10px_40px_rgba(0,0,0,0.6)] border border-white/10 scale-90 sm:scale-100 transition-transform">
+                    {/* Mic Toggle */}
+                    <button
+                        onClick={micStatus === 'denied' ? () => handleDeniedClick('mic') : () => setIsMicEnabled(!isMicEnabled)}
+                        className={`p-3 rounded-full transition-all ${
+                            micStatus === 'denied' 
+                                ? 'bg-red-900/30 text-red-500' 
+                                : !isMicEnabled 
+                                    ? 'bg-red-500/20 text-red-500' 
+                                    : 'bg-slate-800 text-white hover:bg-slate-700'
+                        }`}
+                    >
+                        {micStatus === 'denied' || !isMicEnabled ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                    </button>
+
+                    {/* End Call Button */}
+                    <button 
+                        onClick={isTeacher ? () => setShowEndConfirm(true) : handleLeave} 
+                        className="bg-red-600 hover:bg-red-700 p-4 rounded-full text-white shadow-lg transition transform hover:scale-110 active:scale-90"
+                    >
+                        {isTeacher ? <PowerOff className="w-7 h-7" /> : <LogOut className="w-7 h-7" />}
+                    </button>
+
+                    {/* Camera Toggle */}
+                    <button
+                        onClick={cameraStatus === 'denied' ? () => handleDeniedClick('camera') : () => setIsCameraEnabled(!isCameraEnabled)}
+                        className={`p-3 rounded-full transition-all ${
+                            cameraStatus === 'denied' 
+                                ? 'bg-red-900/30 text-red-500' 
+                                : !isCameraEnabled 
+                                    ? 'bg-red-500/20 text-red-500' 
+                                    : 'bg-slate-800 text-white hover:bg-slate-700'
+                        }`}
+                    >
+                        {cameraStatus === 'denied' || !isCameraEnabled ? <VideoOff className="w-6 h-6" /> : <Video className="w-6 h-6" />}
+                    </button>
+                </div>
+            )}
 
             <PermissionModal 
                 isOpen={showPermissionModal}
