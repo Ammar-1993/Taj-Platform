@@ -8,7 +8,7 @@ import AgoraRTC, {
     IAgoraRTCRemoteUser,
     ILocalVideoTrack
 } from 'agora-rtc-sdk-ng';
-import { Loader2, User, MicOff } from 'lucide-react';
+import { Loader2, User, MicOff, WifiOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type AgoraCallProps = {
@@ -37,6 +37,7 @@ export default function AgoraCall({
     const [localAudioTrack, setLocalAudioTrack] = useState<IMicrophoneAudioTrack | null>(null);
     const [remoteUsers, setRemoteUsers] = useState<IAgoraRTCRemoteUser[]>([]);
     const [isJoined, setIsJoined] = useState(false);
+    const [networkQuality, setNetworkQuality] = useState(0);
 
     const localVideoRef = useRef<HTMLDivElement>(null);
     const localScreenRef = useRef<HTMLDivElement>(null);
@@ -72,25 +73,37 @@ export default function AgoraCall({
                     }
                 });
 
+                client.on("network-quality", (stats) => {
+                    if (isMounted) {
+                        setNetworkQuality(stats.downlinkNetworkQuality);
+                    }
+                });
+
                 const { appId, channel, token, uid } = propsRef.current;
                 await client.join(appId, channel, token, uid);
                 
                 try {
-                    const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
-                    
-                    if (isMounted) {
-                        vTrack = videoTrack;
-                        aTrack = audioTrack;
-                        setLocalAudioTrack(audioTrack);
-                        setLocalVideoTrack(videoTrack);
+                    // فقط إذا كان الدور host، نقوم بفتح الكاميرا والمايكروفون
+                    if (propsRef.current.role === 'host') {
+                        const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
                         
-                        await client.publish([audioTrack, videoTrack]);
-                        audioTrack.setEnabled(isMicEnabled);
-                        videoTrack.setEnabled(isCameraEnabled);
-                        setIsJoined(true);
+                        if (isMounted) {
+                            vTrack = videoTrack;
+                            aTrack = audioTrack;
+                            setLocalAudioTrack(audioTrack);
+                            setLocalVideoTrack(videoTrack);
+                            
+                            await client.publish([audioTrack, videoTrack]);
+                            audioTrack.setEnabled(isMicEnabled);
+                            videoTrack.setEnabled(isCameraEnabled);
+                            setIsJoined(true);
+                        } else {
+                            audioTrack.close();
+                            videoTrack.close();
+                        }
                     } else {
-                        audioTrack.close();
-                        videoTrack.close();
+                        // إذا كان audience، نعتبره منضماً بمجرد نجاح join العميل
+                        if (isMounted) setIsJoined(true);
                     }
                 } catch (e) {
                     console.error("Error creating tracks:", e);
@@ -138,11 +151,20 @@ export default function AgoraCall({
         );
     }
 
-    const remoteScreenUser = remoteUsers.find(u => Number(u.uid) > 10000);
+    // الكشف عن مشاركة الشاشة (الـ UID الضخم)
+    const remoteScreenUser = remoteUsers.find(u => Number(u.uid) >= 1000000000);
     const isScreenSharingActive = isSharing || !!remoteScreenUser;
 
     return (
         <div className="w-full h-full relative bg-slate-950 overflow-hidden">
+            {/* مؤشر جودة الشبكة */}
+            {networkQuality > 3 && (
+                <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[60] bg-red-600/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 text-white text-xs font-bold animate-bounce shadow-xl border border-red-500/20">
+                    <WifiOff className="w-4 h-4" />
+                    اتصال الإنترنت لديك ضعيف حالياً
+                </div>
+            )}
+
             {isScreenSharingActive ? (
                 /* 🖥️ Responsive Screen Share Layout */
                 <div className="w-full h-full flex flex-col md:flex-row relative">
@@ -157,20 +179,22 @@ export default function AgoraCall({
 
                     {/* Participant Thumbnails (Horizontal on Mobile, Vertical on Desktop) */}
                     <div className="absolute bottom-28 md:bottom-auto md:top-20 right-4 md:right-6 flex flex-row md:flex-col gap-3 z-10">
-                        {/* Local Camera Thumbnail */}
-                        <div className="w-24 h-32 md:w-32 md:h-44 bg-slate-900 rounded-2xl overflow-hidden border border-white/10 shadow-2xl transition-all hover:scale-105">
-                            <div ref={localVideoRef} className="w-full h-full">
-                                {!isCameraEnabled && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
-                                        <User className="w-8 md:w-12 h-8 md:h-12 opacity-10" />
-                                    </div>
-                                )}
+                        {/* Local Camera Thumbnail (Only for Host) */}
+                        {rtcProps.role === 'host' && (
+                            <div className="w-24 h-32 md:w-32 md:h-44 bg-slate-900 rounded-2xl overflow-hidden border border-white/10 shadow-2xl transition-all hover:scale-105">
+                                <div ref={localVideoRef} className="w-full h-full">
+                                    {!isCameraEnabled && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
+                                            <User className="w-8 md:w-12 h-8 md:h-12 opacity-10" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] font-bold text-white border border-white/5">أنت</div>
                             </div>
-                            <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] font-bold text-white border border-white/5">أنت</div>
-                        </div>
+                        )}
 
                         {/* Remote Participant Thumbnails */}
-                        {remoteUsers.filter(u => Number(u.uid) <= 10000).map(user => (
+                        {remoteUsers.filter(u => Number(u.uid) < 1000000000).map(user => (
                             <div key={user.uid} className="w-24 h-32 md:w-32 md:h-44 bg-slate-900 rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative transition-all hover:scale-105">
                                 <RemotePlayer user={user} isCover />
                                 <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] font-bold text-white border border-white/5">مشارك</div>
@@ -180,25 +204,30 @@ export default function AgoraCall({
                 </div>
             ) : (
                 /* 👥 Responsive Grid Layout (Vertical on Mobile, Horizontal on Desktop) */
-                <div className="w-full h-full grid grid-cols-1 md:grid-cols-2 gap-3 p-3 md:p-6 lg:p-8">
-                    {/* Local Participant */}
-                    <div className="relative bg-slate-900 rounded-3xl overflow-hidden border border-white/5 shadow-inner flex items-center justify-center">
-                        <div ref={localVideoRef} className="w-full h-full [&>video]:object-cover" />
-                        {!isCameraEnabled && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 bg-slate-900">
-                                <User className="w-20 h-20 mb-4 opacity-5" />
-                                <span className="text-sm font-medium tracking-wide">الكاميرا متوقفة</span>
+                <div className={cn(
+                    "w-full h-full grid gap-3 p-3 md:p-6 lg:p-8",
+                    rtcProps.role === 'host' ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"
+                )}>
+                    {/* Local Participant (Only for Host) */}
+                    {rtcProps.role === 'host' && (
+                        <div className="relative bg-slate-900 rounded-3xl overflow-hidden border border-white/5 shadow-inner flex items-center justify-center">
+                            <div ref={localVideoRef} className="w-full h-full [&>video]:object-cover" />
+                            {!isCameraEnabled && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 bg-slate-900">
+                                    <User className="w-20 h-20 mb-4 opacity-5" />
+                                    <span className="text-sm font-medium tracking-wide">الكاميرا متوقفة</span>
+                                </div>
+                            )}
+                            <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-lg px-4 py-2 rounded-2xl text-xs md:text-sm font-bold border border-white/10 flex items-center gap-2 shadow-xl">
+                                أنت
+                                {!isMicEnabled && <MicOff className="w-4 h-4 text-red-400" />}
                             </div>
-                        )}
-                        <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-lg px-4 py-2 rounded-2xl text-xs md:text-sm font-bold border border-white/10 flex items-center gap-2 shadow-xl">
-                            أنت
-                            {!isMicEnabled && <MicOff className="w-4 h-4 text-red-400" />}
                         </div>
-                    </div>
+                    )}
 
                     {/* Remote Participant */}
                     {remoteUsers.length > 0 ? (
-                        remoteUsers.filter(u => Number(u.uid) <= 10000).map(user => (
+                        remoteUsers.filter(u => Number(u.uid) < 1000000000).map(user => (
                             <div key={user.uid} className="relative bg-slate-900 rounded-3xl overflow-hidden border border-white/5 shadow-inner">
                                 <RemotePlayer user={user} isCover />
                                 <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-lg px-4 py-2 rounded-2xl text-xs md:text-sm font-bold border border-white/10 flex items-center gap-2 shadow-xl">

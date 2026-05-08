@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Peterujah\Agora\Agora;
+use Peterujah\Agora\User as AgoraUser;
+use Peterujah\Agora\Roles as AgoraRoles;
+use Peterujah\Agora\Builders\RtcToken;
 
 class ClassroomController extends Controller
 {
@@ -27,10 +31,25 @@ class ClassroomController extends Controller
             $booking->update(['student_joined_at' => now()]);
         }
 
-        // في الإنتاج: هنا نستخدم RtcTokenBuilder2 لتوليد التوكن باستخدام APP_ID و APP_CERTIFICATE
-        // التعديل: سنعطي دور 'host' لكل من المعلم والطالب لتمكين التواصل الثنائي (صوت وصورة)
-        // أما المراقبين (مثل ولي الأمر) فسيبقون بـ دور 'audience'
+        // تحديد الدور: المعلم والطالب هم "host" (إرسال واستقبال)، المراقبين "audience" (استقبال فقط)
         $role = ($user->id === $booking->teacher_id || $user->id === $booking->student_id) ? 'host' : 'audience';
+
+        // توليد التوكن باستخدام مكتبة Peterujah/Agora
+        $appId = config('services.agora.app_id');
+        $appCertificate = config('services.agora.app_certificate');
+        
+        $token = null;
+        if ($appId && $appCertificate) {
+            $client = new Agora($appId, $appCertificate);
+            $client->setExpiration(now()->addHours(2)->timestamp);
+
+            $agoraUser = new AgoraUser($user->id);
+            $agoraUser->setChannel($booking->agora_channel);
+            $agoraUser->setRole($role === 'host' ? AgoraRoles::RTC_PUBLISHER : AgoraRoles::RTC_SUBSCRIBER);
+            $agoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
+
+            $token = RtcToken::buildTokenWithUid($client, $agoraUser);
+        }
 
         return response()->json([
             'status' => 'success',
@@ -38,6 +57,7 @@ class ClassroomController extends Controller
                 'channel_name' => $booking->agora_channel,
                 'uid' => $user->id,
                 'role' => $role,
+                'token' => $token,
             ]
         ]);
     }

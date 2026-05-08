@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d55c313debcf0fa8b9acc774ded6ab67",
+    "content-hash": "2910085733debaa383891a749a2d78d2",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -3889,6 +3889,62 @@
                 }
             ],
             "time": "2025-09-03T16:03:54+00:00"
+        },
+        {
+            "name": "peterujah/php-agora-tokens",
+            "version": "1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/peterujah/php-agora-tokens.git",
+                "reference": "4feeb4538601606aa4cb0ead420923535ceb64ff"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/peterujah/php-agora-tokens/zipball/4feeb4538601606aa4cb0ead420923535ceb64ff",
+                "reference": "4feeb4538601606aa4cb0ead420923535ceb64ff",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "php": "^7.0 || ^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.2-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Peterujah\\Agora\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ujah Chigozie",
+                    "email": "ujahchigozie@gmail.com"
+                }
+            ],
+            "description": "This package is a Composer-friendly rewrite of Agora,s PHP token generator.",
+            "keywords": [
+                "agora",
+                "agora WebRTC ",
+                "agora live-streaming",
+                "agora rtc",
+                "agora rtm",
+                "agora-tokens",
+                "php",
+                "php agora"
+            ],
+            "support": {
+                "issues": "https://github.com/peterujah/php-agora-tokens/issues",
+                "source": "https://github.com/peterujah/php-agora-tokens/tree/1.1.0"
+            },
+            "time": "2025-05-16T01:12:09+00:00"
         },
         {
             "name": "phpoption/phpoption",

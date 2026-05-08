@@ -24,7 +24,7 @@ import {
     Coins 
 } from 'lucide-react';
 
-const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID || '039c4b2d111b488f8069bb00c583aa04';
+const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID || '';
 
 // استدعاء مكون الكاميرا الآمن من SSR
 const AgoraCall = dynamic(() => import('@/components/classroom/AgoraCall'), { 
@@ -201,8 +201,8 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
             // 1. إنشاء عميل (مستخدم) جديد مخصص للشاشة فقط
             const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
             
-            // نعطي شاشة المعلم ID مختلف (مثلاً رقم المعلم + 10000) لكي لا يتعارض مع كاميرته
-            const screenUid = uid + 10000; 
+            // نعطي شاشة المعلم ID مختلف (رقم ضخم جداً) لكي لا يتعارض أبداً مع كاميرته أو أي طالب
+            const screenUid = uid + 1000000000; 
 
             await client.join(AGORA_APP_ID, channelName, agoraToken, screenUid);
 
@@ -273,6 +273,17 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                     </div>
                 </div>
 
+                {/* زر الخروج للمراقبين (أولياء الأمور) */}
+                {!isTeacher && userRole === 'audience' && (
+                    <button 
+                        onClick={handleLeave}
+                        className="pointer-events-auto bg-red-600/20 hover:bg-red-600/40 text-red-500 border border-red-500/30 px-4 py-2 rounded-xl flex items-center gap-2 transition-all backdrop-blur-md"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        <span className="font-bold text-sm">مغادرة الغرفة</span>
+                    </button>
+                )}
+
                 {isTeacher && inCall && (
                     <button 
                         onClick={toggleScreenShare} 
@@ -323,7 +334,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
             </div>
 
             {/* 3. Floating Control Dock - Responsive Scaling */}
-            {inCall && (
+            {inCall && userRole === 'host' && (
                 <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-6 md:gap-8 bg-slate-900/80 backdrop-blur-2xl px-8 py-5 md:px-10 md:py-6 rounded-[40px] z-50 shadow-[0_25px_60px_rgba(0,0,0,0.8)] border border-white/10 transition-all scale-90 sm:scale-100 md:scale-110">
                     {/* Mic Toggle */}
                     <button

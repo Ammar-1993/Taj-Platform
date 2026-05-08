@@ -42,4 +42,9 @@ return [
         'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
     ],
 
+    'agora' => [
+        'app_id' => env('AGORA_APP_ID'),
+        'app_certificate' => env('AGORA_APP_CERTIFICATE'),
+    ],
+
 ];
