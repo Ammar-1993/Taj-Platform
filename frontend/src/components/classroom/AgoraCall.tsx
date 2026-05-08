@@ -200,7 +200,7 @@ export default function AgoraCall({
                         {/* Remote Participant Thumbnails */}
                         {remoteUsers.filter(u => Number(u.uid) < 1000000000).map(user => (
                             <div key={user.uid} className="w-24 h-32 md:w-32 md:h-44 bg-slate-900 rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative transition-all hover:scale-105">
-                                <RemotePlayer user={user} isCover />
+                                <RemotePlayer user={user} />
                                 <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] font-bold text-white border border-white/5">مشارك</div>
                             </div>
                         ))}
@@ -233,7 +233,7 @@ export default function AgoraCall({
                     {remoteUsers.length > 0 ? (
                         remoteUsers.filter(u => Number(u.uid) < 1000000000).map(user => (
                             <div key={user.uid} className="relative bg-slate-900 rounded-3xl overflow-hidden border border-white/5 shadow-inner">
-                                <RemotePlayer user={user} isCover />
+                                <RemotePlayer user={user} />
                                 <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-lg px-4 py-2 rounded-2xl text-xs md:text-sm font-bold border border-white/10 flex items-center gap-2 shadow-xl">
                                     مشارك
                                     {!user.hasAudio && <MicOff className="w-4 h-4 text-red-400" />}
@@ -254,7 +254,7 @@ export default function AgoraCall({
     );
 }
 
-function RemotePlayer({ user, isPrimary, isCover }: { user: IAgoraRTCRemoteUser, isPrimary?: boolean, isCover?: boolean }) {
+function RemotePlayer({ user, isPrimary }: { user: IAgoraRTCRemoteUser, isPrimary?: boolean }) {
     const videoRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
