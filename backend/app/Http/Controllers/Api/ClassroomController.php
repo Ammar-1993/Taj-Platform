@@ -39,16 +39,26 @@ class ClassroomController extends Controller
         $appCertificate = config('services.agora.app_certificate');
         
         $token = null;
+        $screenToken = null;
         if ($appId && $appCertificate) {
             $client = new Agora($appId, $appCertificate);
             $client->setExpiration(now()->addHours(2)->timestamp);
 
+            // 1. التوكن الأساسي (للكاميرا والمايكروفون)
             $agoraUser = new AgoraUser($user->id);
             $agoraUser->setChannel($booking->agora_channel);
             $agoraUser->setRole($role === 'host' ? AgoraRoles::RTC_PUBLISHER : AgoraRoles::RTC_SUBSCRIBER);
             $agoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
-
             $token = RtcToken::buildTokenWithUid($client, $agoraUser);
+
+            // 2. توكن مشاركة الشاشة (فقط للمعلم بـ UID مختلف)
+            if ($user->id === $booking->teacher_id) {
+                $screenAgoraUser = new AgoraUser($user->id + 1000000000);
+                $screenAgoraUser->setChannel($booking->agora_channel);
+                $screenAgoraUser->setRole(AgoraRoles::RTC_PUBLISHER);
+                $screenAgoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
+                $screenToken = RtcToken::buildTokenWithUid($client, $screenAgoraUser);
+            }
         }
 
         return response()->json([
@@ -58,6 +68,7 @@ class ClassroomController extends Controller
                 'uid' => $user->id,
                 'role' => $role,
                 'token' => $token,
+                'screen_token' => $screenToken,
             ]
         ]);
     }

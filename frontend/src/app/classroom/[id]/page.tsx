@@ -43,6 +43,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     
     const [channelName, setChannelName] = useState('');
     const [agoraToken, setAgoraToken] = useState<string | null>(null);
+    const [screenToken, setScreenToken] = useState<string | null>(null);
     const [uid, setUid] = useState<number>(0);
     const [userRole, setUserRole] = useState<'host' | 'audience'>('audience');
     
@@ -83,6 +84,10 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 
                 if (data.token) {
                     setAgoraToken(data.token);
+                }
+
+                if (data.screen_token) {
+                    setScreenToken(data.screen_token);
                 }
                 
                 setLoading(false);
@@ -204,7 +209,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
             // نعطي شاشة المعلم ID مختلف (رقم ضخم جداً) لكي لا يتعارض أبداً مع كاميرته أو أي طالب
             const screenUid = uid + 1000000000; 
 
-            await client.join(AGORA_APP_ID, channelName, agoraToken, screenUid);
+            await client.join(AGORA_APP_ID, channelName, screenToken || agoraToken, screenUid);
 
             // 2. طلب إذن مشاركة الشاشة من المتصفح
             // نمرر "disable" للصوت لتجنب صدى الصوت، سنكتفي بمايكروفون الكاميرا

@@ -219,5 +219,6 @@ export interface ClassroomAccess {
   uid: number;
   role: 'host' | 'audience';
   token?: string;
+  screen_token?: string;
 }
 
