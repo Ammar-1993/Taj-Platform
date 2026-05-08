@@ -40,6 +40,7 @@ return new class extends Migration
             $table->json('metadata')->nullable();
 
             $table->timestamps();
+            $table->softDeletes();
 
             // فهارس مركبة (Composite Indexes) بدلاً من الفهرس الفردي الضعيف
             $table->index(['teacher_id', 'status', 'booking_date']);

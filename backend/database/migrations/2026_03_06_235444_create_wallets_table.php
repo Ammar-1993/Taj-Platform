@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->unique()->constrained()->restrictOnDelete();
             $table->decimal('balance', 10, 2)->default(0.00);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
