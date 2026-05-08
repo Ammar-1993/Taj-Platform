@@ -135,11 +135,15 @@ export default function AgoraCall({
     }, [isMicEnabled, localAudioTrack]);
 
     useEffect(() => {
-        if (localVideoTrack && localVideoRef.current) localVideoTrack.play(localVideoRef.current);
+        if (localVideoTrack && localVideoRef.current) {
+            localVideoTrack.play(localVideoRef.current, { fit: 'cover' });
+        }
     }, [localVideoTrack]);
 
     useEffect(() => {
-        if (localScreenTrack && localScreenRef.current) localScreenTrack.play(localScreenRef.current);
+        if (localScreenTrack && localScreenRef.current) {
+            localScreenTrack.play(localScreenRef.current, { fit: 'contain' });
+        }
     }, [localScreenTrack]);
 
     if (!isJoined) {
@@ -254,15 +258,16 @@ function RemotePlayer({ user, isPrimary, isCover }: { user: IAgoraRTCRemoteUser,
     const videoRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (user.videoTrack && videoRef.current) user.videoTrack.play(videoRef.current);
+        if (user.videoTrack && videoRef.current) {
+            // استخدام 'contain' لمشاركة الشاشة و 'cover' للكاميرا
+            const fitMode = isPrimary ? 'contain' : 'cover';
+            user.videoTrack.play(videoRef.current, { fit: fitMode });
+        }
         if (user.audioTrack) user.audioTrack.play();
-    }, [user.videoTrack, user.audioTrack]);
+    }, [user.videoTrack, user.audioTrack, isPrimary]);
 
     return (
-        <div ref={videoRef} className={cn(
-            "w-full h-full transition-opacity duration-500",
-            isPrimary ? "[&>video]:object-contain" : isCover ? "[&>video]:object-cover" : "[&>video]:object-cover"
-        )}>
+        <div ref={videoRef} className="w-full h-full transition-opacity duration-500">
             {!user.hasVideo && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-slate-500">
                     <User className="w-20 h-20 opacity-5" />
