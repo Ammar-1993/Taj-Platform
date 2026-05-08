@@ -261,24 +261,29 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     return (
         <div className="h-[100dvh] w-full bg-slate-950 text-white flex flex-col overflow-hidden relative" dir="rtl">
             
-            {/* 1. Floating Header (Room Info) */}
-            <div className="absolute top-0 left-0 w-full p-4 bg-gradient-to-b from-black/80 to-transparent z-50 flex justify-between items-center pointer-events-none">
-                <div className="flex items-center gap-3 pointer-events-auto">
+            {/* 1. Floating Header (Room Info) - Responsive Padding */}
+            <div className="absolute top-0 left-0 w-full p-4 md:p-6 lg:p-8 bg-gradient-to-b from-black/90 via-black/40 to-transparent z-50 flex justify-between items-center pointer-events-none">
+                <div className="flex items-center gap-4 pointer-events-auto bg-black/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/5">
                     <div className={`w-2.5 h-2.5 rounded-full ${inCall ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></div>
                     <div className="text-right">
-                        <h1 className="font-bold text-sm leading-tight drop-shadow-md">
+                        <h1 className="font-bold text-sm md:text-base lg:text-lg leading-tight drop-shadow-lg">
                             {isTeacher ? 'لوحة تحكم المعلم' : 'الفصل الافتراضي'}
                         </h1>
-                        <p className="text-[10px] text-slate-300 font-medium opacity-80 mt-0.5 drop-shadow-md">حصة رقم #{params.id}</p>
+                        <p className="text-[10px] md:text-xs text-slate-300 font-medium opacity-90 mt-0.5 drop-shadow-md">حصة رقم #{params.id}</p>
                     </div>
                 </div>
 
                 {isTeacher && inCall && (
                     <button 
                         onClick={toggleScreenShare} 
-                        className={`pointer-events-auto p-2 rounded-xl transition border ${isSharing ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-slate-900/60 backdrop-blur-md border-slate-700 text-slate-200'}`}
+                        className={`pointer-events-auto p-3 md:p-4 rounded-2xl transition-all duration-300 border shadow-2xl hover:scale-105 active:scale-95 group flex items-center gap-2 ${
+                            isSharing 
+                                ? 'bg-emerald-600 border-emerald-500 text-white' 
+                                : 'bg-slate-900/80 backdrop-blur-xl border-white/10 text-slate-200 hover:bg-slate-800'
+                        }`}
                     >
-                        <MonitorUp className="w-5 h-5" />
+                        <MonitorUp className="w-5 h-5 md:w-6 md:h-6 transition-transform group-hover:rotate-3" />
+                        <span className="hidden md:inline font-bold text-sm">{isSharing ? 'إيقاف المشاركة' : 'مشاركة الشاشة'}</span>
                     </button>
                 )}
             </div>
@@ -286,17 +291,22 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
             {/* 2. Main Content Area */}
             <div className="flex-1 h-full w-full relative">
                 {!inCall ? (
-                    <div className="h-full flex flex-col items-center justify-center space-y-6 p-8 text-center animate-fade-in-up bg-slate-900">
-                        <div className="w-20 h-20 bg-blue-900/50 rounded-full flex items-center justify-center mb-2 text-blue-400">
-                            <Video className="w-10 h-10" />
+                    <div className="h-full flex flex-col items-center justify-center space-y-8 p-8 text-center animate-fade-in-up bg-slate-950 relative">
+                        {/* Background subtle glow */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
+                        
+                        <div className="w-24 h-24 md:w-32 md:h-32 bg-blue-900/30 rounded-[40px] flex items-center justify-center mb-4 text-blue-400 border border-blue-500/20 shadow-[0_20px_50px_rgba(30,58,138,0.3)] transform -rotate-6">
+                            <Video className="w-12 h-12 md:w-16 md:h-16" />
                         </div>
-                        <div>
-                            <h2 className="text-3xl font-bold text-white mb-3">هل أنت مستعد لبدء الحصة؟</h2>
-                            <p className="text-gray-400 text-lg max-w-md mx-auto leading-relaxed">تأكد من إضاءة الغرفة وعمل الميكروفون بشكل جيد قبل الدخول.</p>
+                        <div className="relative z-10">
+                            <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">هل أنت مستعد؟</h2>
+                            <p className="text-slate-400 text-lg md:text-xl max-w-lg mx-auto leading-relaxed font-medium">
+                                انضم الآن وباشر رحلتك التعليمية. تأكد من جودة الاتصال وإضاءة المكان.
+                            </p>
                         </div>
                         <button 
                             onClick={handleJoinRequest} 
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded-full shadow-2xl transition transform hover:scale-105 active:scale-95 text-lg ring-4 ring-blue-600/30"
+                            className="relative z-10 bg-blue-600 hover:bg-blue-700 text-white font-black py-5 px-16 rounded-[28px] shadow-[0_20px_50px_rgba(37,99,235,0.4)] transition-all transform hover:scale-105 active:scale-95 text-xl tracking-wide ring-8 ring-blue-600/20 hover:ring-blue-600/40"
                         >
                             انضمام الآن
                         </button>
@@ -312,43 +322,43 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 )}
             </div>
 
-            {/* 3. Floating Control Dock */}
+            {/* 3. Floating Control Dock - Responsive Scaling */}
             {inCall && (
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-slate-900/90 backdrop-blur-xl px-6 py-4 rounded-full z-50 shadow-[0_10px_40px_rgba(0,0,0,0.6)] border border-white/10 scale-90 sm:scale-100 transition-transform">
+                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-6 md:gap-8 bg-slate-900/80 backdrop-blur-2xl px-8 py-5 md:px-10 md:py-6 rounded-[40px] z-50 shadow-[0_25px_60px_rgba(0,0,0,0.8)] border border-white/10 transition-all scale-90 sm:scale-100 md:scale-110">
                     {/* Mic Toggle */}
                     <button
                         onClick={micStatus === 'denied' ? () => handleDeniedClick('mic') : () => setIsMicEnabled(!isMicEnabled)}
-                        className={`p-3 rounded-full transition-all ${
+                        className={`p-4 rounded-2xl transition-all duration-300 hover:scale-110 active:scale-90 ${
                             micStatus === 'denied' 
-                                ? 'bg-red-900/30 text-red-500' 
+                                ? 'bg-red-900/40 text-red-500 border border-red-500/20' 
                                 : !isMicEnabled 
-                                    ? 'bg-red-500/20 text-red-500' 
-                                    : 'bg-slate-800 text-white hover:bg-slate-700'
+                                    ? 'bg-red-500/30 text-red-500 border border-red-500/30' 
+                                    : 'bg-slate-800 text-white hover:bg-slate-700 border border-white/5'
                         }`}
                     >
-                        {micStatus === 'denied' || !isMicEnabled ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                        {micStatus === 'denied' || !isMicEnabled ? <MicOff className="w-6 h-6 md:w-7 md:h-7" /> : <Mic className="w-6 h-6 md:w-7 md:h-7" />}
                     </button>
 
                     {/* End Call Button */}
                     <button 
                         onClick={isTeacher ? () => setShowEndConfirm(true) : handleLeave} 
-                        className="bg-red-600 hover:bg-red-700 p-4 rounded-full text-white shadow-lg transition transform hover:scale-110 active:scale-90"
+                        className="bg-red-600 hover:bg-red-700 p-6 md:p-7 rounded-[32px] text-white shadow-[0_15px_30px_rgba(220,38,38,0.4)] transition-all transform hover:scale-110 active:scale-90 hover:rotate-2"
                     >
-                        {isTeacher ? <PowerOff className="w-7 h-7" /> : <LogOut className="w-7 h-7" />}
+                        {isTeacher ? <PowerOff className="w-8 h-8 md:w-10 md:h-10" /> : <LogOut className="w-8 h-8 md:w-10 md:h-10" />}
                     </button>
 
                     {/* Camera Toggle */}
                     <button
                         onClick={cameraStatus === 'denied' ? () => handleDeniedClick('camera') : () => setIsCameraEnabled(!isCameraEnabled)}
-                        className={`p-3 rounded-full transition-all ${
+                        className={`p-4 rounded-2xl transition-all duration-300 hover:scale-110 active:scale-90 ${
                             cameraStatus === 'denied' 
-                                ? 'bg-red-900/30 text-red-500' 
+                                ? 'bg-red-900/40 text-red-500 border border-red-500/20' 
                                 : !isCameraEnabled 
-                                    ? 'bg-red-500/20 text-red-500' 
-                                    : 'bg-slate-800 text-white hover:bg-slate-700'
+                                    ? 'bg-red-500/30 text-red-500 border border-red-500/30' 
+                                    : 'bg-slate-800 text-white hover:bg-slate-700 border border-white/5'
                         }`}
                     >
-                        {cameraStatus === 'denied' || !isCameraEnabled ? <VideoOff className="w-6 h-6" /> : <Video className="w-6 h-6" />}
+                        {cameraStatus === 'denied' || !isCameraEnabled ? <VideoOff className="w-6 h-6 md:w-7 md:h-7" /> : <Video className="w-6 h-6 md:w-7 md:h-7" />}
                     </button>
                 </div>
             )}
