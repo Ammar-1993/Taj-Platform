@@ -35,7 +35,7 @@ return new class extends Migration
             $table->timestamp('student_joined_at')->nullable();
             $table->timestamp('completed_at')->nullable();
 
-            $table->enum('status', ['pending_payment', 'scheduled', 'in_progress', 'completed', 'cancelled', 'refunded'])->default('pending_payment');
+            $table->enum('status', ['pending_payment', 'scheduled', 'in_progress', 'completed', 'cancelled', 'refunded'])->default('pending_payment')->index();
 
             $table->json('metadata')->nullable();
 

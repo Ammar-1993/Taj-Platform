@@ -12,10 +12,10 @@ return new class extends Migration
         Schema::create('teacher_slots', function (Blueprint $table) {
             $table->id();
             $table->foreignId('teacher_id')->constrained('users')->cascadeOnDelete();
-            $table->date('slot_date');
+            $table->date('slot_date')->index();
             $table->time('start_time');
             $table->time('end_time');
-            $table->enum('status', ['available', 'booked'])->default('available');
+            $table->enum('status', ['available', 'booked'])->default('available')->index();
             $table->timestamps();
 
             // Composite Index لتسريع البحث
