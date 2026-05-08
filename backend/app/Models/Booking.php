@@ -60,6 +60,7 @@ class Booking extends Model
             'teacher_joined_at' => 'datetime',
             'student_joined_at' => 'datetime',
             'completed_at' => 'datetime',
+            'metadata' => 'array',
         ];
     }
 

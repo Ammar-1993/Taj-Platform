@@ -15,6 +15,7 @@ class TeacherProfile extends Model
             'is_verified' => 'boolean',
             'average_rating' => 'decimal:2',
             'reviews_count' => 'integer',
+            'metadata' => 'array',
         ];
     }
 

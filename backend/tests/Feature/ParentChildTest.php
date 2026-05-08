@@ -158,4 +158,14 @@ class ParentChildTest extends TestCase
                  ->assertJsonPath('data.bookings.data.0.review.rating', 5)
                  ->assertJsonPath('data.bookings.data.0.review.comment', 'Excellent teacher!');
     }
+
+    public function test_json_metadata_column_is_functional()
+    {
+        $this->parent->update([
+            'metadata' => ['theme' => 'dark', 'notifications' => true]
+        ]);
+
+        $this->assertEquals('dark', $this->parent->refresh()->metadata['theme']);
+        $this->assertTrue($this->parent->metadata['notifications']);
+    }
 }

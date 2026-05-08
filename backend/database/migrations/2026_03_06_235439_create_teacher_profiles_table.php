@@ -21,6 +21,7 @@ return new class extends Migration
             $table->boolean('is_verified')->default(false);
             $table->decimal('average_rating', 3, 2)->default(0.00);
             $table->integer('reviews_count')->default(0);
+            $table->json('metadata')->nullable();
             $table->timestamps();
         });
     }

@@ -37,6 +37,8 @@ return new class extends Migration
 
             $table->enum('status', ['pending_payment', 'scheduled', 'in_progress', 'completed', 'cancelled', 'refunded'])->default('pending_payment');
 
+            $table->json('metadata')->nullable();
+
             $table->timestamps();
 
             // فهارس مركبة (Composite Indexes) بدلاً من الفهرس الفردي الضعيف
