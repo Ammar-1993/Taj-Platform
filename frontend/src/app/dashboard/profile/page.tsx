@@ -275,7 +275,7 @@ export default function TeacherProfilePage() {
                             {profile?.is_verified && isDirty && (
                                 <div className="bg-amber-50/80 backdrop-blur-sm text-amber-700 px-5 py-3 rounded-2xl text-sm font-bold flex items-center gap-2 border border-amber-200 animate-fade-in-up">
                                     <Info className="w-5 h-5" />
-                                    تنبيه: حفظ التعديلات سيؤدي إلى إعادة حسابك لحالة "قيد المراجعة".
+                                    تنبيه: حفظ التعديلات سيؤدي إلى إعادة حسابك لحالة &quot;قيد المراجعة&quot;.
                                 </div>
                             )}
                             <Button 
