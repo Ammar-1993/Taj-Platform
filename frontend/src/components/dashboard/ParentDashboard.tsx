@@ -1,17 +1,17 @@
 import React from "react";
 import Link from "next/link";
-import StatusBadge from "@/components/ui/StatusBadge";
 import { ParentDashboardData, Wallet } from "@/types";
-import { formatTime, formatDate } from "@/lib/formatters";
+import { formatDate } from "@/lib/formatters";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { 
-  WalletCards, Zap, Calendar, BookOpen, 
+  WalletCards, Zap, Calendar, 
   BarChart2, Landmark, LifeBuoy 
 } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import { PaginationControls } from "@/components/ui/PaginationControls";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
+import { ResponsiveBookingTable } from "./bookings";
 
 interface ParentDashboardProps {
   parentData: ParentDashboardData | null;
@@ -30,6 +30,15 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   setParentBookingPage,
   loading = false,
 }) => {
+  // Action handlers for unified table (parents primarily view)
+  const handleCancelClick = (id: number) => {
+    console.log("Parent requested cancellation info for:", id);
+  };
+
+  const handleCompleteClick = (id: number) => {
+    console.log("Parent requested completion info for:", id);
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col lg:flex-row gap-6">
@@ -187,15 +196,15 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
         {/* 📊 Recent Transactions — Refined Glass */}
         <Card className="animate-fade-up-2 p-6 bg-white/40 backdrop-blur-xl border-white/60 shadow-[0_10px_30px_rgba(0,0,0,0.02)] rounded-[2rem]">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="font-black text-slate-800 text-xs flex items-center gap-2">
-              <span className="w-10 h-10 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center shadow-sm">
-                <BarChart2 className="w-5 h-5" />
+            <h3 className="text-xs font-bold text-slate-800 flex items-center gap-2 whitespace-nowrap">
+              <span className="w-8 h-8 bg-brand-50 text-brand-600 rounded-xl flex items-center justify-center shadow-sm">
+                <BarChart2 className="w-4 h-4" />
               </span>
               آخر العمليات المالية
             </h3>
             <Link 
               href="/dashboard/financial-record" 
-              className="text-[10px] font-black text-brand-600 hover:text-white hover:bg-brand-600 bg-brand-50 px-4 py-2 rounded-full transition-all duration-300"
+              className="text-[10px] font-black text-brand-600 hover:text-white hover:bg-brand-600 bg-brand-50 px-3 py-1.5 rounded-full transition-all duration-300 whitespace-nowrap"
             >
               عرض الكل
             </Link>
@@ -238,23 +247,23 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
         </Card>
 
         {/* 🛟 Help Center Card — High-Detail Unified */}
-        <Card className="animate-fade-up-3 p-8 bg-gradient-to-br from-blue-50/50 to-white/50 backdrop-blur-xl border-blue-100/50 shadow-[0_10px_30px_rgba(59,130,246,0.05)] rounded-[2rem] relative overflow-hidden group hover:shadow-lg transition-all duration-500">
+        <Card className="animate-fade-up-3 p-6 bg-gradient-to-br from-blue-50/50 to-white/50 backdrop-blur-xl border-blue-100/50 shadow-[0_10px_30px_rgba(59,130,246,0.05)] rounded-[2rem] relative overflow-hidden group hover:shadow-lg transition-all duration-500">
           <div className="absolute -right-8 -bottom-8 text-blue-100/50 opacity-40 group-hover:scale-125 group-hover:rotate-12 transition-transform duration-1000 ease-out pointer-events-none">
-            <LifeBuoy size={160} strokeWidth={1} />
+            <LifeBuoy size={140} strokeWidth={1} />
           </div>
 
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200 group-hover:rotate-[360deg] transition-transform duration-1000">
-                <LifeBuoy className="w-6 h-6" />
+              <div className="w-8 h-8 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-200 group-hover:rotate-[360deg] transition-transform duration-1000">
+                <LifeBuoy className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="font-black text-slate-800 text-lg leading-none">مركز المساعدة</h3>
-                <span className="text-[10px] text-blue-600 font-black uppercase tracking-widest">Support Hub</span>
+                <h3 className="font-bold text-slate-800 text-xs leading-none">مركز المساعدة</h3>
+                <span className="text-[9px] text-blue-600 font-black uppercase tracking-widest">Support Hub</span>
               </div>
             </div>
             
-            <p className="text-xs text-slate-500 mb-6 leading-relaxed font-bold max-w-[80%]">
+            <p className="text-[10px] text-slate-500 mb-5 leading-relaxed font-bold max-w-[90%]">
               هل تواجه مشكلة؟ فريق الدعم متاح لمساعدتك في أي وقت لحل جميع استفساراتك.
             </p>
             
@@ -268,145 +277,34 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
         </Card>
       </div>
 
-      {/* Bookings Table */}
-      <Card className="flex-1 min-w-0 animate-fade-up-1 p-6 border-border bg-white/80 backdrop-blur-sm">
-        <h3 className="font-bold text-xl text-text-primary mb-6 flex items-center gap-2">
-          <span className="w-9 h-9 bg-brand-50 text-brand-600 rounded-taj-md flex items-center justify-center">
-            <Calendar className="w-5 h-5" />
-          </span>
-          سجل حجوزات الأبناء الموحد
-        </h3>
+      {/* Bookings Table — Standardized with isParent role */}
+      <Card className="flex-1 min-w-0 animate-fade-up-1 p-6 border-border bg-white/80 backdrop-blur-sm rounded-[2rem] h-fit shadow-sm">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="font-black text-xl text-slate-800 flex items-center gap-3">
+            <span className="w-10 h-10 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center shadow-sm">
+              <Calendar className="w-5 h-5" />
+            </span>
+            سجل حجوزات الأبناء الموحد
+          </h3>
+        </div>
 
-        {!bookings || bookings.length === 0 ? (
-          <EmptyState
-            icon={BookOpen}
-            title="لا توجد حجوزات لأبنائك حتى الآن"
-            subtitle="ابدأ بحجز حصص لأبنائك مع نخبة المعلمين"
-            action={{ label: "ابحث عن معلم", href: "/dashboard/teachers" }}
-          />
-        ) : (
-          <>
-            <div className="md:hidden space-y-4">
-              {bookings.map((booking) => (
-                <div key={booking.id} className="bg-white border border-border rounded-taj-lg p-4 shadow-sm flex flex-col gap-3">
-                  <div className="flex justify-between items-center border-b border-surface-subtle pb-3">
-                    <span className="font-bold text-brand-600">#{booking.id}</span>
-                    <StatusBadge status={booking.status} />
-                  </div>
-                  
-                  <div className="flex flex-col gap-2">
-                    <div className="flex justify-between items-center bg-surface-subtle p-3 rounded-taj-md">
-                      <span className="text-xs text-text-secondary font-bold">الابن</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-brand-50 rounded flex items-center justify-center text-brand-600 font-bold text-xs">
-                          {booking.student?.name?.charAt(0) || "?"}
-                        </div>
-                        <span className="font-bold text-brand-700 text-sm">
-                          {booking.student?.name}
-                        </span>
-                      </div>
-                    </div>
+        <ResponsiveBookingTable 
+          bookings={bookings} 
+          isTeacher={false}
+          isParent={true}
+          onCancelClick={handleCancelClick}
+          onCompleteClick={handleCompleteClick}
+        />
 
-                    <div className="flex justify-between items-center bg-surface-subtle p-3 rounded-taj-md">
-                      <span className="text-xs text-text-secondary font-bold">المعلم</span>
-                      <span className="font-bold text-text-primary text-sm">
-                        {booking.teacher?.name}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center bg-surface-subtle p-3 rounded-taj-md mt-1">
-                        <div>
-                          <div className="font-bold text-text-primary text-sm">
-                            {formatDate(booking.booking_date, "medium")}
-                          </div>
-                          <div className="text-xs text-text-secondary mt-0.5">
-                            {formatTime(booking.teacher_slot?.start_time)}
-                          </div>
-                        </div>
-                        <div className="text-left">
-                          <CurrencyDisplay 
-                            amount={booking.net_paid} 
-                            size="lg" 
-                            className="text-text-primary"
-                          />
-                        </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="hidden md:block w-full overflow-x-auto">
-              <table className="w-full text-sm text-right">
-                <thead>
-                  <tr className="bg-gradient-to-l from-surface-subtle to-surface-muted border-b border-border">
-                    <th className="px-4 py-4 text-xs font-bold text-text-secondary text-right rounded-tr-taj-lg">
-                      الابن
-                    </th>
-                    <th className="px-4 py-4 text-xs font-bold text-text-secondary text-right">
-                      المعلم
-                    </th>
-                    <th className="px-4 py-4 text-xs font-bold text-text-secondary text-right">
-                      التاريخ والوقت
-                    </th>
-                    <th className="px-4 py-4 text-xs font-bold text-text-secondary text-right">
-                      التكلفة
-                    </th>
-                    <th className="px-4 py-4 text-xs font-bold text-text-secondary text-right rounded-tl-taj-lg">
-                      الحالة
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-surface-subtle">
-                  {bookings.map((booking) => (
-                    <tr
-                      key={booking.id}
-                      className="hover:bg-brand-50/50 transition-all duration-200"
-                    >
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-sm flex items-center justify-center text-brand-600 font-bold text-xs">
-                            {booking.student?.name?.charAt(0) || "?"}
-                          </div>
-                          <span className="font-bold text-brand-700">
-                            {booking.student?.name}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 font-bold text-text-primary">
-                        {booking.teacher?.name}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="font-bold text-text-primary">
-                          {formatDate(booking.booking_date, "medium")}
-                        </div>
-                        <div className="text-xs text-text-muted mt-0.5">
-                          {formatTime(booking.teacher_slot?.start_time)}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <CurrencyDisplay 
-                          amount={booking.net_paid} 
-                          size="md" 
-                          className="text-text-primary"
-                        />
-                      </td>
-                      <td className="px-4 py-4">
-                      <StatusBadge status={booking.status} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
+        {bookings.length > 0 && (
+          <div className="mt-8 border-t border-slate-100 pt-6">
             <PaginationControls
               page={parentBookingPage}
               totalPages={parentBookingLastPage}
               onPageChange={setParentBookingPage}
               isLoading={loading}
             />
-          </>
+          </div>
         )}
       </Card>
     </div>

@@ -70,15 +70,15 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
       {/* 📊 Transaction History — Refined Glass */}
       <Card className="animate-fade-in-up-delay-2 p-6 bg-white/40 backdrop-blur-xl border-white/60 shadow-[0_10px_30px_rgba(0,0,0,0.02)] rounded-[2rem]">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="font-bold text-slate-800 flex items-center gap-2">
-            <span className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-sm">
-              <BarChart2 className="w-5 h-5" />
+          <h3 className="text-xs font-bold text-slate-800 flex items-center gap-2 whitespace-nowrap">
+            <span className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
+              <BarChart2 className="w-4 h-4" />
             </span>
             آخر العمليات المالية
           </h3>
           <Link 
             href="/dashboard/financial-record" 
-            className="text-xs font-black text-indigo-600 hover:text-white hover:bg-indigo-600 bg-indigo-50/50 px-4 py-2 rounded-full transition-all duration-300"
+            className="text-[10px] font-black text-indigo-600 hover:text-white hover:bg-indigo-600 bg-indigo-50/50 px-3 py-1.5 rounded-full transition-all duration-300 whitespace-nowrap"
           >
             عرض الكل
           </Link>
@@ -123,23 +123,23 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
       </Card>
 
       {/* 🛟 Support Center — High-Detail */}
-      <Card className="animate-fade-in-up-delay-2 p-8 bg-gradient-to-br from-blue-50/50 to-white/50 backdrop-blur-xl border-blue-100/50 shadow-[0_10px_30px_rgba(59,130,246,0.05)] rounded-[2rem] relative overflow-hidden group hover:shadow-lg transition-all duration-500">
+      <Card className="animate-fade-in-up-delay-2 p-6 bg-gradient-to-br from-blue-50/50 to-white/50 backdrop-blur-xl border-blue-100/50 shadow-[0_10px_30px_rgba(59,130,246,0.05)] rounded-[2rem] relative overflow-hidden group hover:shadow-lg transition-all duration-500">
         <div className="absolute -right-8 -bottom-8 text-blue-100/50 opacity-40 group-hover:scale-125 group-hover:rotate-12 transition-transform duration-1000 ease-out pointer-events-none">
-          <LifeBuoy size={160} strokeWidth={1} />
+          <LifeBuoy size={140} strokeWidth={1} />
         </div>
         
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200 group-hover:rotate-[360deg] transition-transform duration-1000">
-              <LifeBuoy className="w-6 h-6" />
+            <div className="w-8 h-8 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-200 group-hover:rotate-[360deg] transition-transform duration-1000">
+              <LifeBuoy className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-black text-slate-800 text-lg leading-none">مركز المساعدة</h3>
-              <span className="text-[10px] text-blue-600 font-black uppercase tracking-widest">Support Hub</span>
+              <h3 className="font-bold text-slate-800 text-xs leading-none">مركز المساعدة</h3>
+              <span className="text-[9px] text-blue-600 font-black uppercase tracking-widest">Support Hub</span>
             </div>
           </div>
           
-          <p className="text-xs text-slate-500 mb-6 leading-relaxed font-bold max-w-[80%]">
+          <p className="text-[10px] text-slate-500 mb-5 leading-relaxed font-bold max-w-[90%]">
             هل تواجه مشكلة؟ فريق الدعم متاح لمساعدتك في أي وقت لحل جميع استفساراتك.
           </p>
           

@@ -87,6 +87,7 @@ function BookingDropdown({
 interface ResponsiveBookingTableProps {
   bookings: Booking[];
   isTeacher: boolean;
+  isParent?: boolean;
   onCancelClick: (id: number) => void;
   onCompleteClick: (id: number) => void;
 }
@@ -94,6 +95,7 @@ interface ResponsiveBookingTableProps {
 export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
   bookings,
   isTeacher,
+  isParent = false,
   onCancelClick,
   onCompleteClick,
 }) => {
@@ -106,15 +108,15 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
           <BookOpen className="w-10 h-10" />
         </div>
         <h4 className="text-xl font-bold text-text-primary mb-2">
-          ليس لديك أي حجوزات حتى الآن
+          {isParent ? "لا توجد حجوزات لأبنائك حتى الآن" : "ليس لديك أي حجوزات حتى الآن"}
         </h4>
         <p className="text-text-muted text-sm mb-6">
-          ابدأ رحلتك التعليمية بحجز حصتك الأولى مع نخبة المعلمين
+          {isParent ? "ابدأ بحجز حصص لأبنائك مع نخبة المعلمين" : "ابدأ رحلتك التعليمية بحجز حصتك الأولى مع نخبة المعلمين"}
         </p>
         {!isTeacher && (
           <Button asChild className="px-6 rounded-taj-lg font-bold">
-            <Link href="/">
-              احجز حصتك الأولى <Rocket className="w-4 h-4 mr-2" />
+            <Link href={isParent ? "/dashboard/teachers" : "/"}>
+              {isParent ? "ابحث عن معلم" : "احجز حصتك الأولى"} <Rocket className="w-4 h-4 mr-2" />
             </Link>
           </Button>
         )}
@@ -137,20 +139,42 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
             </div>
 
             <div className="flex flex-col gap-2">
-              {/* Person */}
-              <div className="flex items-center gap-3 bg-surface-subtle p-3 rounded-taj-md">
-                <div className="w-9 h-9 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-md flex items-center justify-center text-brand-600 font-bold text-sm shrink-0">
-                  {(isTeacher ? booking.student?.name : booking.teacher?.name)?.charAt(0) || "?"}
+              {/* Person(s) */}
+              {isParent ? (
+                <>
+                  <div className="flex items-center justify-between bg-surface-subtle p-3 rounded-taj-md">
+                    <span className="text-xs text-text-secondary font-bold">الابن</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 bg-brand-50 rounded flex items-center justify-center text-brand-600 font-bold text-xs">
+                        {booking.student?.name?.charAt(0) || "?"}
+                      </div>
+                      <span className="font-bold text-brand-700 text-sm">
+                        {booking.student?.name}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between bg-surface-subtle p-3 rounded-taj-md">
+                    <span className="text-xs text-text-secondary font-bold">المعلم</span>
+                    <span className="font-bold text-text-primary text-sm">
+                      {booking.teacher?.name}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center gap-3 bg-surface-subtle p-3 rounded-taj-md">
+                  <div className="w-9 h-9 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-md flex items-center justify-center text-brand-600 font-bold text-sm shrink-0">
+                    {(isTeacher ? booking.student?.name : booking.teacher?.name)?.charAt(0) || "?"}
+                  </div>
+                  <div>
+                    <span className="block font-bold text-text-primary text-sm">
+                      {isTeacher ? booking.student?.name : booking.teacher?.name}
+                    </span>
+                    <span className="text-xs text-text-secondary">
+                      {isTeacher ? "الطالب" : "المعلم"}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <span className="block font-bold text-text-primary text-sm">
-                    {isTeacher ? booking.student?.name : booking.teacher?.name}
-                  </span>
-                  <span className="text-xs text-text-secondary">
-                    {isTeacher ? "الطالب" : "المعلم"}
-                  </span>
-                </div>
-              </div>
+              )}
 
               {/* Date + Amount */}
               <div className="flex justify-between items-center bg-surface-subtle p-3 rounded-taj-md">
@@ -171,29 +195,31 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 </div>
               </div>
 
-              {/* Actions */}
-              {(booking.status === "scheduled" || booking.status === "in_progress") ? (
-                <div className="flex gap-2 pt-1 items-center">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => router.push(`/classroom/${booking.id}`)}
-                    className="flex-1 bg-brand-50 border-brand-100 text-brand-700 hover:bg-brand-100 hover:text-brand-800 h-9 whitespace-nowrap"
-                  >
-                    دخول الفصل <Video className="w-3.5 h-3.5 mr-2" />
-                  </Button>
-                  
-                  <BookingDropdown
-                    booking={booking}
-                    isTeacher={isTeacher}
-                    onCancelClick={onCancelClick}
-                    onCompleteClick={onCompleteClick}
-                  />
-                </div>
-              ) : (
-                <div className="pt-1 text-center">
-                  <span className="text-text-muted text-lg font-bold block">-</span>
-                </div>
+              {/* Actions (Hidden for Parent) */}
+              {!isParent && (
+                (booking.status === "scheduled" || booking.status === "in_progress") ? (
+                  <div className="flex gap-2 pt-1 items-center">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => router.push(`/classroom/${booking.id}`)}
+                      className="flex-1 bg-brand-50 border-brand-100 text-brand-700 hover:bg-brand-100 hover:text-brand-800 h-9 whitespace-nowrap"
+                    >
+                      دخول الفصل <Video className="w-3.5 h-3.5 mr-2" />
+                    </Button>
+                    
+                    <BookingDropdown
+                      booking={booking}
+                      isTeacher={isTeacher}
+                      onCancelClick={onCancelClick}
+                      onCompleteClick={onCompleteClick}
+                    />
+                  </div>
+                ) : (
+                  <div className="pt-1 text-center">
+                    <span className="text-text-muted text-lg font-bold block">-</span>
+                  </div>
+                )
               )}
             </div>
           </div>
@@ -205,14 +231,21 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
         <table className="min-w-full w-full text-sm text-right">
           <thead>
             <tr className="bg-gradient-to-l from-surface-subtle to-surface-muted border-b border-border">
-              <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right rounded-tr-taj-lg">رقم</th>
-              <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right">
-                {isTeacher ? "الطالب" : "المعلم"}
-              </th>
+              <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right rounded-tr-taj-lg whitespace-nowrap">رقم الحجز</th>
+              {isParent ? (
+                <>
+                  <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right">الابن</th>
+                  <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right">المعلم</th>
+                </>
+              ) : (
+                <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right">
+                  {isTeacher ? "الطالب" : "المعلم"}
+                </th>
+              )}
               <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right">التاريخ والوقت</th>
               <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right whitespace-nowrap">المبلغ</th>
-              <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right">الحالة</th>
-              <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right rounded-tl-taj-lg">الإجراء</th>
+              <th className={`px-2 py-4 text-xs font-bold text-text-secondary text-right ${isParent ? 'rounded-tl-taj-lg' : ''}`}>الحالة</th>
+              {!isParent && <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right rounded-tl-taj-lg">الإجراء</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-subtle">
@@ -226,19 +259,35 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                   #{booking.id}
                 </td>
 
-                {/* Person */}
-                <td className="px-2 py-4 whitespace-nowrap">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-md flex items-center justify-center text-brand-600 font-bold text-xs shrink-0">
-                      {(isTeacher ? booking.student?.name : booking.teacher?.name)?.charAt(0) || "?"}
+                {/* Person(s) */}
+                {isParent ? (
+                  <>
+                    <td className="px-2 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-sm flex items-center justify-center text-brand-600 font-bold text-[10px] shrink-0">
+                          {booking.student?.name?.charAt(0) || "?"}
+                        </div>
+                        <span className="font-bold text-brand-700">{booking.student?.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-2 py-4 font-bold text-text-primary whitespace-nowrap">
+                      {booking.teacher?.name}
+                    </td>
+                  </>
+                ) : (
+                  <td className="px-2 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-md flex items-center justify-center text-brand-600 font-bold text-xs shrink-0">
+                        {(isTeacher ? booking.student?.name : booking.teacher?.name)?.charAt(0) || "?"}
+                      </div>
+                      <span className="font-bold text-text-primary">
+                        {isTeacher ? booking.student?.name : booking.teacher?.name}
+                      </span>
                     </div>
-                    <span className="font-bold text-text-primary">
-                      {isTeacher ? booking.student?.name : booking.teacher?.name}
-                    </span>
-                  </div>
-                </td>
+                  </td>
+                )}
 
-                {/* Date + Time — whitespace-nowrap prevents column collapse */}
+                {/* Date + Time */}
                 <td className="px-2 py-4 whitespace-nowrap">
                   <div className="font-bold text-text-primary">
                     {formatDate(booking.booking_date, "medium")}
@@ -253,7 +302,7 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                   <CurrencyDisplay 
                     amount={booking.net_paid} 
                     size="md" 
-                    className="text-text-primary"
+                    className="text-text-primary font-bold"
                   />
                 </td>
 
@@ -262,34 +311,34 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                   <StatusBadge status={booking.status} />
                 </td>
 
-                {/* Actions — whitespace-nowrap keeps button on one line */}
-                <td className="px-2 py-4 whitespace-nowrap">
-                  <div className="flex gap-2 justify-end items-center">
-                    {(booking.status === "scheduled" || booking.status === "in_progress") ? (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => router.push(`/classroom/${booking.id}`)}
-                          className="bg-brand-50 border-brand-100 text-brand-700 hover:bg-brand-100 hover:text-brand-800 h-9 whitespace-nowrap"
-                        >
-                          دخول الفصل <Video className="w-3.5 h-3.5 mr-2" />
-                        </Button>
-                        
-                        <BookingDropdown
-                          booking={booking}
-                          isTeacher={isTeacher}
-                          onCancelClick={onCancelClick}
-                          onCompleteClick={onCompleteClick}
-                        />
-                      </>
-                    ) : (
-                      <>
+                {/* Actions (Hidden for Parent) */}
+                {!isParent && (
+                  <td className="px-2 py-4 whitespace-nowrap">
+                    <div className="flex gap-2 justify-end items-center">
+                      {(booking.status === "scheduled" || booking.status === "in_progress") ? (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => router.push(`/classroom/${booking.id}`)}
+                            className="bg-brand-50 border-brand-100 text-brand-700 hover:bg-brand-100 hover:text-brand-800 h-9 whitespace-nowrap"
+                          >
+                            دخول الفصل <Video className="w-3.5 h-3.5 mr-2" />
+                          </Button>
+                          
+                          <BookingDropdown
+                            booking={booking}
+                            isTeacher={isTeacher}
+                            onCancelClick={onCancelClick}
+                            onCompleteClick={onCompleteClick}
+                          />
+                        </>
+                      ) : (
                         <span className="text-text-muted text-lg font-bold block">-</span>
-                      </>
-                    )}
-                  </div>
-                </td>
+                      )}
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
