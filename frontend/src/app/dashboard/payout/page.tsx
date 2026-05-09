@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { CircleDollarSign, SendHorizonal, Send, AlertTriangle, TrendingUp, Inbox, Landmark, Calendar, Building, Loader2 } from "lucide-react";
-import RedirectCountdown from "@/components/ui/RedirectCountdown";
 import EmptyState from "@/components/ui/EmptyState";
 import { Select } from "@/components/ui/Select";
 import { formatDate } from "@/lib/formatters";
@@ -45,7 +44,6 @@ export default function PayoutPage() {
     const [amount, setAmount] = useState<number | ''>('');
     const [bankName, setBankName] = useState('');
     const [iban, setIban] = useState('SA');
-    const [successRedirect, setSuccessRedirect] = useState(false);
 
     const walletBalance = walletInfo ? Number(walletInfo.balance) : 0;
 
@@ -60,7 +58,6 @@ export default function PayoutPage() {
             setIban('SA');
             queryClient.invalidateQueries({ queryKey: ['wallet', user?.id] });
             queryClient.invalidateQueries({ queryKey: ['payouts', user?.id] });
-            setSuccessRedirect(true);
         },
         onError: (error: unknown) => {
             showApiError(error, 'تأكد من صحة البيانات وألا يقل المبلغ عن 50 ر.س.');
@@ -139,14 +136,6 @@ export default function PayoutPage() {
                             
 
 
-                            {successRedirect ? (
-                                <RedirectCountdown 
-                                    href="/dashboard"
-                                    message="تم إرسال طلب السحب بنجاح! جاري تحويلك..."
-                                    seconds={3}
-                                    onCancel={() => setSuccessRedirect(false)}
-                                />
-                            ) : (
                             <form onSubmit={handlePayoutSubmit} className="space-y-6" noValidate>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2 mr-1">المبلغ المراد سحبه (ر.س):</label>
@@ -219,7 +208,6 @@ export default function PayoutPage() {
                                     </div>
                                 )}
                             </form>
-                            )}
                         </Card>
                     </div>
 
