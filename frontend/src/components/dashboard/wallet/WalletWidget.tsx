@@ -62,12 +62,20 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
 
       {/* 📊 Transaction History */}
       <Card variant="glass" className="animate-fade-in-up-delay-2 p-6">
-        <h3 className="font-bold text-text-primary mb-4 flex items-center gap-2">
-          <span className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
-            <BarChart2 className="w-4 h-4" />
-          </span>
-          آخر العمليات المالية
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-text-primary flex items-center gap-2">
+            <span className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+              <BarChart2 className="w-4 h-4" />
+            </span>
+            آخر العمليات المالية
+          </h3>
+          <Link 
+            href="/dashboard/financial-record" 
+            className="text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:underline"
+          >
+            عرض الكل
+          </Link>
+        </div>
         {wallet?.transactions?.data?.length === 0 ? (
           <EmptyState icon={Landmark} title="لا توجد عمليات سابقة" className="py-8" />
         ) : (

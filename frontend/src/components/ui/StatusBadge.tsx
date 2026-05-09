@@ -92,12 +92,30 @@ const statusMap: Record<string, BadgeConfig> = {
     dot: "bg-green-500",
     icon: <Check className="w-3 h-3" />,
   },
-  closed: {
-    label: "مغلقة",
-    bg: "bg-green-100",
-    text: "text-green-800",
-    dot: "bg-green-500",
-    icon: <Check className="w-3 h-3" />,
+  // حالات المحفظة والعمليات المالية (Transactions)
+  wallet_topup: {
+    label: "شحن رصيد",
+    bg: "bg-emerald-100",
+    text: "text-emerald-700",
+    dot: "bg-emerald-500",
+  },
+  class_earnings: {
+    label: "أرباح حصة",
+    bg: "bg-indigo-100",
+    text: "text-indigo-700",
+    dot: "bg-indigo-500",
+  },
+  withdrawal: {
+    label: "سحب / خصم",
+    bg: "bg-slate-100",
+    text: "text-slate-700",
+    dot: "bg-slate-500",
+  },
+  refund: {
+    label: "استرداد مالي",
+    bg: "bg-purple-100",
+    text: "text-purple-700",
+    dot: "bg-purple-500",
   },
 };
 

@@ -22,7 +22,7 @@ export default function PageHeader({
   badge,
   variant = "default",
   backHref = "/dashboard",
-  backLabel = "العودة للوحة",
+  backLabel = "العودة للوحة التحكم",
   showBack = true,
   actions,
 }: PageHeaderProps) {

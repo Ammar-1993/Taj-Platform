@@ -180,15 +180,20 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
 
         {/* 📊 Recent Transactions */}
         <Card variant="glass" className="animate-fade-up-2 p-5 border-border bg-white/80 backdrop-blur-sm">
-          <div className="flex items-center mb-4">
+          <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-text-primary text-sm flex items-center gap-2">
               <span className="w-8 h-8 bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center">
                 <BarChart2 className="w-4 h-4" />
               </span>
               آخر العمليات المالية
             </h3>
+            <Link 
+              href="/dashboard/financial-record" 
+              className="text-xs font-bold text-brand-600 hover:text-brand-700 hover:underline"
+            >
+              عرض الكل
+            </Link>
           </div>
-
           {transactions.length === 0 ? (
             <EmptyState icon={Landmark} title="لا توجد عمليات سابقة" className="py-6" />
           ) : (

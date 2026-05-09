@@ -5,7 +5,8 @@ import {
   User, 
   LifeBuoy, 
   Users,
-  Settings
+  Settings,
+  History
 } from "lucide-react";
 import { useUserRole } from "./useUserRole";
 
@@ -14,6 +15,7 @@ export function useNavLinks() {
 
   const navLinks = [
     { name: "لوحة التحكم", href: "/dashboard", icon: LayoutDashboard, show: true },
+    { name: "السجل المالي", href: "/dashboard/financial-record", icon: History, show: true },
 
     { name: "الجدول والمواعيد", href: "/dashboard/schedule", icon: CalendarDays, show: isTeacher },
     { name: "سحب الأرباح", href: "/dashboard/payout", icon: CreditCard, show: isTeacher },

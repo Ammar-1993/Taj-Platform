@@ -40,21 +40,20 @@ export interface StudentProfile {
 }
 
 export interface Wallet {
-  id: number;
-  user_id: number;
+  id?: number;
+  user_id?: number;
   balance: string;
-  transactions?: {
-    data: WalletTransaction[];
-  };
+  transactions?: PaginatedResponse<WalletTransaction>;
 }
 
 export interface WalletTransaction {
   id: number;
   wallet_id: number;
   amount: string;
-  type: "deposit" | "withdrawal";
+  type: string; // withdrawal, class_earnings, wallet_topup, refund, etc.
   description: string;
   created_at: string;
+  booking?: Booking;
 }
 
 export interface ApiResponse<T> {

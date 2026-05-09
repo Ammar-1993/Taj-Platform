@@ -5,8 +5,10 @@ export const walletService = {
   /**
    * Get wallet balance and transactions
    */
-  getWallet: async () => {
-    const res = await api.get<ApiResponse<Wallet>>("/wallet");
+  getWallet: async (page = 1, type?: string) => {
+    const res = await api.get<ApiResponse<Wallet>>("/wallet", {
+      params: { page, type },
+    });
     return res.data;
   },
 
