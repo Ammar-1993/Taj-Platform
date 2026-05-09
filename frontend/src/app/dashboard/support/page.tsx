@@ -26,7 +26,6 @@ import {
   Headphones,
   Loader2,
 } from "lucide-react";
-import RedirectCountdown from "@/components/ui/RedirectCountdown";
 import EmptyState from "@/components/ui/EmptyState";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
@@ -41,7 +40,6 @@ export default function SupportPage() {
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [bookingId, setBookingId] = useState("");
-  const [successRedirect, setSuccessRedirect] = useState(false);
   const [ticketPage, setTicketPage] = useState(1);
 
   // Fetch tickets
@@ -73,7 +71,6 @@ export default function SupportPage() {
       setDescription("");
       setBookingId("");
       queryClient.invalidateQueries({ queryKey: ['support-tickets', user?.id] });
-      setSuccessRedirect(true);
     },
     onError: (error: unknown) => {
       showApiError(error, "حدث خطأ أثناء إرسال التذكرة.");
@@ -125,14 +122,6 @@ export default function SupportPage() {
                 فتح تذكرة جديدة
               </h3>
 
-              {successRedirect ? (
-                <RedirectCountdown
-                  href="/dashboard"
-                  message="تم إرسال التذكرة بنجاح! جاري تحويلك..."
-                  seconds={3}
-                  onCancel={() => setSuccessRedirect(false)}
-                />
-              ) : (
                 <form onSubmit={handleSubmitTicket} className="space-y-5">
                   <Input
                     label="موضوع المشكلة:"
@@ -188,7 +177,6 @@ export default function SupportPage() {
                     )}
                   </Button>
                 </form>
-              )}
             </Card>
           </div>
 
