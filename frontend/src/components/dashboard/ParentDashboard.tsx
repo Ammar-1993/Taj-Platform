@@ -105,70 +105,73 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
     <div className="flex flex-col lg:flex-row gap-6 items-start">
       {/* Sidebar: Wallet, Transactions, and Help Center */}
       <div className="w-full lg:w-80 lg:shrink-0 space-y-6 lg:sticky lg:top-24">
-        {/* 💰 Parent Wallet Card */}
-        <div className="animate-fade-up-1 relative overflow-hidden bg-gradient-to-br from-brand-600 via-purple-600 to-violet-700 p-6 rounded-taj-xl shadow-xl text-white">
-          <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white blur-2xl"></div>
-            <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-violet-300 blur-2xl"></div>
-          </div>
+        {/* 💰 Parent Wallet Card — Premium Glassmorphism */}
+        <div className="animate-fade-up-1 group relative overflow-hidden rounded-taj-xl shadow-glass transition-all duration-300">
+          {/* Background Blobs for Glass Effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 to-indigo-100/30 -z-10"></div>
+          <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-brand-400 opacity-20 blur-3xl group-hover:opacity-30 transition-opacity"></div>
+          <div className="absolute bottom-0 -left-10 w-32 h-32 rounded-full bg-purple-400 opacity-20 blur-2xl"></div>
 
-          <div className="relative z-10">
+          <div className="relative z-10 bg-white/40 backdrop-blur-xl border border-white/60 p-6">
             <div className="flex items-center gap-2 mb-1">
-              <WalletCards className="w-6 h-6 text-purple-200" />
-              <h3 className="text-purple-200 text-sm font-bold">
+              <div className="w-8 h-8 rounded-lg bg-white/60 flex items-center justify-center shadow-sm">
+                <WalletCards className="w-5 h-5 text-indigo-600" />
+              </div>
+              <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-wider">
                 رصيد المحفظة الأساسية
               </h3>
             </div>
+            
             <CurrencyDisplay 
               amount={parentData.parent_balance} 
               size="xl" 
-              className="mt-3 !justify-end text-white"
+              className="mt-4 !justify-start text-slate-900 font-black tracking-tight"
             />
 
-            <Button asChild variant="secondary" className="mt-5 w-full bg-white/20 hover:bg-white/30 text-white border border-white/10 rounded-taj-md">
+            <Button asChild className="mt-6 w-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200 rounded-xl py-6 font-bold">
               <Link href="/dashboard/top-up">
                 شحن المحفظة <Zap className="w-4 h-4 mr-2" />
               </Link>
             </Button>
 
             {/* إجمالي الإنفاق */}
-            <div className="mt-6 pt-4 border-t border-white/20">
-              <h3 className="text-purple-200 text-xs font-bold mb-1">
-                إجمالي الاستثمار في التعليم
+            <div className="mt-6 pt-4 border-t border-white/40">
+              <h3 className="text-slate-400 text-[10px] font-black uppercase tracking-wider mb-1">
+                إجمالي الاستثمار التعليمي
               </h3>
               <CurrencyDisplay 
                 amount={parentData.total_spent} 
                 size="lg" 
-                className="!justify-start text-white"
+                className="!justify-start text-indigo-600 font-bold"
               />
             </div>
 
             {/* محافظ الأبناء */}
-            <div className="mt-5 pt-3 border-t border-white/20">
-              <h4 className="text-[10px] font-black mb-2 text-purple-200">
+            <div className="mt-5 pt-3 border-t border-white/40">
+              <h4 className="text-[10px] font-black mb-3 text-slate-400 uppercase tracking-wider">
                 أرصدة محافظ الأبناء:
               </h4>
               {parentData.wallets?.length === 0 ? (
-                <p className="text-xs text-purple-300">
+                <p className="text-xs text-slate-400 font-medium">
                   لا يوجد أبناء مضافين بعد.
                 </p>
               ) : (
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   {parentData.wallets?.map((w) => (
                     <div
                       key={w.id}
-                      className="flex justify-between items-center text-sm bg-white/10 backdrop-blur-sm p-2 rounded-taj-md border border-white/5"
+                      className="flex justify-between items-center text-sm bg-white/50 backdrop-blur-sm p-2.5 rounded-xl border border-white/60 shadow-sm hover:bg-white transition-colors"
                     >
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-white/20 rounded-taj-sm flex items-center justify-center text-[10px] font-bold">
+                        <div className="w-7 h-7 bg-brand-50 rounded-lg flex items-center justify-center text-[10px] font-bold text-brand-600 shadow-inner">
                           {w.user.name.charAt(0)}
                         </div>
-                        <span className="font-bold text-xs">{w.user.name}</span>
+                        <span className="font-bold text-xs text-slate-700">{w.user.name}</span>
                       </div>
                       <CurrencyDisplay 
                         amount={w.balance} 
                         size="sm" 
-                        className="text-white"
+                        className="text-slate-900 font-bold"
                       />
                     </div>
                   ))}
@@ -179,39 +182,40 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
         </div>
 
         {/* 📊 Recent Transactions */}
-        <Card variant="glass" className="animate-fade-up-2 p-5 border-border bg-white/80 backdrop-blur-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-text-primary text-sm flex items-center gap-2">
-              <span className="w-8 h-8 bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center">
+        <Card className="animate-fade-up-2 p-5 bg-white/60 backdrop-blur-lg border-white/60 shadow-sm rounded-taj-xl">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="font-bold text-slate-800 text-xs flex items-center gap-2">
+              <span className="w-8 h-8 bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center shadow-sm">
                 <BarChart2 className="w-4 h-4" />
               </span>
               آخر العمليات المالية
             </h3>
             <Link 
               href="/dashboard/financial-record" 
-              className="text-xs font-bold text-brand-600 hover:text-brand-700 hover:underline"
+              className="text-[10px] font-black text-brand-600 hover:text-brand-700 bg-brand-50 px-3 py-1.5 rounded-full transition-colors"
             >
               عرض الكل
             </Link>
           </div>
+
           {transactions.length === 0 ? (
-            <EmptyState icon={Landmark} title="لا توجد عمليات سابقة" className="py-6" />
+            <EmptyState icon={Landmark} title="لا توجد عمليات سابقة" className="py-6 bg-slate-50/50 rounded-2xl border-dashed" />
           ) : (
             <ul className="space-y-3">
               {transactions.slice(0, 2).map((tx) => (
                 <li
                   key={tx.id}
-                  className="flex justify-between items-center text-sm p-3 rounded-xl bg-surface-subtle hover:bg-surface-muted transition-all duration-200 group border border-transparent hover:border-border"
+                  className="flex justify-between items-center text-sm p-3 rounded-2xl bg-white/50 hover:bg-white transition-all duration-300 group border border-transparent hover:border-brand-100 hover:shadow-sm"
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-1 h-8 rounded-full ${tx.type === "withdrawal" || parseFloat(String(tx.amount)) < 0 ? "bg-red-500" : "bg-green-500"}`}
+                      className={`w-1 h-8 rounded-full ${tx.type === "withdrawal" || parseFloat(String(tx.amount)) < 0 ? "bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.3)]" : "bg-green-400 shadow-[0_0_8px_rgba(52,211,153,0.3)]"}`}
                     ></div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-text-primary text-xs leading-tight truncate">
+                      <p className="font-bold text-slate-800 text-[10px] leading-tight truncate">
                         {getFriendlyDescription(tx.description)}
                       </p>
-                      <p className="text-[10px] text-text-muted mt-1 font-medium">
+                      <p className="text-[9px] text-slate-400 mt-1 font-bold">
                         {formatDate(tx.created_at, "medium")}
                       </p>
                     </div>
@@ -221,6 +225,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                     showSign 
                     colorStatus 
                     size="md"
+                    className="font-bold"
                   />
                 </li>
               ))}
@@ -228,19 +233,28 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
           )}
         </Card>
 
-        {/* 🛟 Help Center Card - Compact Banner */}
-        <Card variant="glass" className="animate-fade-up-3 p-4 border-border bg-white/80 backdrop-blur-sm">
-          <h3 className="font-bold text-text-primary text-sm mb-3 flex items-center gap-2">
-            <span className="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
-              <LifeBuoy className="w-4 h-4" />
-            </span>
-            مركز المساعدة
-          </h3>
-          <Button asChild variant="outline" className="w-full border-blue-100 text-blue-700 hover:bg-blue-50 hover:text-blue-800 rounded-taj-md text-xs font-bold h-9">
-            <Link href="/dashboard/support">
-              فتح تذكرة دعم فني
-            </Link>
-          </Button>
+        {/* 🛟 Help Center Card — Unified Format */}
+        <Card className="animate-fade-up-3 p-6 bg-gradient-to-br from-blue-50 to-white border-blue-100 shadow-sm rounded-taj-xl relative overflow-hidden group">
+          <div className="absolute -right-4 -bottom-4 text-blue-100 opacity-40 group-hover:scale-110 transition-transform duration-500">
+            <LifeBuoy size={100} strokeWidth={1} />
+          </div>
+
+          <div className="relative z-10">
+            <h3 className="font-bold text-slate-800 mb-2.5 flex items-center gap-2">
+              <span className="w-9 h-9 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shadow-sm">
+                <LifeBuoy className="w-5 h-5" />
+              </span>
+              مركز المساعدة
+            </h3>
+            <p className="text-xs text-slate-500 mb-5 leading-relaxed font-medium">
+              هل تواجه مشكلة؟ فريق الدعم متاح لمساعدتك في أي وقت.
+            </p>
+            <Button asChild className="w-full bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 shadow-sm rounded-xl font-bold py-5 transition-all active:scale-[0.98]">
+              <Link href="/dashboard/support">
+                فتح تذكرة دعم فني
+              </Link>
+            </Button>
+          </div>
         </Card>
       </div>
 
