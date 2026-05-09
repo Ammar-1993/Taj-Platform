@@ -13,7 +13,6 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { CheckCircle2, Clock, Info, User, FileText, GraduationCap, Rocket, Loader2, Edit3, ShieldCheck, UploadCloud } from "lucide-react";
-import RedirectCountdown from "@/components/ui/RedirectCountdown";
 
 export default function TeacherProfilePage() {
     const { user } = useAuth();
@@ -42,7 +41,6 @@ export default function TeacherProfilePage() {
     const [bio, setBio] = useState('');
     const [nationalIdFile, setNationalIdFile] = useState<File | null>(null);
     const [degreeFile, setDegreeFile] = useState<File | null>(null);
-    const [successRedirect, setSuccessRedirect] = useState(false);
 
     // Sync form with profile data
     useEffect(() => {
@@ -58,7 +56,6 @@ export default function TeacherProfilePage() {
         onSuccess: (data) => {
             toast.success(data.message || 'تم حفظ الملف الشخصي بنجاح.');
             queryClient.invalidateQueries({ queryKey: ['teacher-profile', user?.id] });
-            setSuccessRedirect(true);
         },
         onError: (error: unknown) => {
             showApiError(error, 'حدث خطأ أثناء الرفع');
@@ -133,16 +130,6 @@ export default function TeacherProfilePage() {
                     )}
                 </div>
 
-                {successRedirect ? (
-                    <Card className="bg-white/90 backdrop-blur-md rounded-[2.5rem] border-white/50 p-12 text-center animate-fade-in-up">
-                        <RedirectCountdown 
-                            href="/dashboard"
-                            message="تم حفظ الملف الشخصي بنجاح! جاري تحويلك..."
-                            seconds={3}
-                            onCancel={() => setSuccessRedirect(false)}
-                        />
-                    </Card>
-                ) : (
                     <form onSubmit={handleSubmit} className="space-y-8">
                         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
                             
@@ -295,7 +282,6 @@ export default function TeacherProfilePage() {
                             </Button>
                         </div>
                     </form>
-                )}
             </div>
         </div>
     );
