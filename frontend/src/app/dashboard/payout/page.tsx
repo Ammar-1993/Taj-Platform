@@ -248,7 +248,7 @@ export default function PayoutPage() {
                         ) : (
                             <div className="space-y-6">
                                 {payouts.map((payout) => (
-                                    <div key={payout.id} className="group relative overflow-hidden bg-white/50 hover:bg-white transition-all duration-300 border border-white shadow-sm rounded-3xl p-7 hover:shadow-xl hover:-translate-y-1">
+                                    <div key={payout.id} className="group relative overflow-hidden bg-white/50 hover:bg-white transition-all duration-500 border border-white shadow-sm rounded-3xl p-7 hover:shadow-xl hover:-translate-y-1">
                                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                                             <div className="flex items-center gap-6">
                                                 <div className="w-16 h-16 bg-gradient-to-br from-indigo-50 to-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 shadow-inner group-hover:scale-110 transition-transform duration-300">
