@@ -45,16 +45,25 @@ export default function TeacherProfilePage() {
     // Sync form with profile data
     useEffect(() => {
         if (profile) {
-            setSubjectId(profile.subject_id.toString());
+            setSubjectId(profile.subject_id?.toString() || '');
             setBio(profile.bio || '');
         }
     }, [profile]);
+
+    const isDirty = profile ? (
+        subjectId !== (profile.subject_id?.toString() || '') ||
+        bio !== (profile.bio || '') ||
+        nationalIdFile !== null ||
+        degreeFile !== null
+    ) : true;
 
     // Mutation for updating profile
     const updateProfileMutation = useMutation({
         mutationFn: (formData: FormData) => teacherService.updateProfile(formData),
         onSuccess: (data) => {
             toast.success(data.message || 'تم حفظ الملف الشخصي بنجاح.');
+            setNationalIdFile(null);
+            setDegreeFile(null);
             queryClient.invalidateQueries({ queryKey: ['teacher-profile', user?.id] });
         },
         onError: (error: unknown) => {
@@ -262,21 +271,27 @@ export default function TeacherProfilePage() {
                             </Card>
                         </div>
 
-                        <div className="flex justify-end pt-4">
+                        <div className="flex flex-col items-end pt-4 gap-3">
+                            {profile?.is_verified && isDirty && (
+                                <div className="bg-amber-50/80 backdrop-blur-sm text-amber-700 px-5 py-3 rounded-2xl text-sm font-bold flex items-center gap-2 border border-amber-200 animate-fade-in-up">
+                                    <Info className="w-5 h-5" />
+                                    تنبيه: حفظ التعديلات سيؤدي إلى إعادة حسابك لحالة "قيد المراجعة".
+                                </div>
+                            )}
                             <Button 
                                 type="submit" 
-                                disabled={updateProfileMutation.isPending} 
-                                className="h-16 px-12 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] text-xl rounded-[2rem] shadow-xl hover:scale-[1.02] transition-all duration-300"
+                                disabled={updateProfileMutation.isPending || !isDirty} 
+                                className="h-16 px-12 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 hover:shadow-[0_12px_40px_rgba(79,70,229,0.3)] text-xl rounded-[2rem] shadow-xl hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
                             >
                                 {updateProfileMutation.isPending ? (
                                     <>
                                         <Loader2 className="w-6 h-6 animate-spin ml-3" />
-                                        جاري معالجة الطلب...
+                                        جاري الحفظ...
                                     </>
                                 ) : (
                                     <>
-                                        <span>إرسال طلب الانضمام والتوثيق</span>
-                                        <Rocket className="w-6 h-6 mr-4 animate-bounce" />
+                                        <span>{profile ? (profile.is_verified ? "حفظ التعديلات" : "تحديث الطلب") : "إرسال طلب الانضمام والتوثيق"}</span>
+                                        {(!profile || !profile.is_verified) && <Rocket className="w-6 h-6 mr-4 animate-bounce" />}
                                     </>
                                 )}
                             </Button>
