@@ -6,7 +6,7 @@ import { Wallet } from "@/types";
 import { formatDate } from "@/lib/formatters";
 import { 
   WalletCards, Banknote, Zap, BarChart2,
-  Landmark, LifeBuoy
+  Landmark, LifeBuoy, ArrowUpLeft, ArrowDownRight
 } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
@@ -87,36 +87,43 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
         {wallet?.transactions?.data?.length === 0 ? (
           <EmptyState icon={Landmark} title="لا توجد عمليات سابقة" className="py-8 bg-slate-50/30 rounded-3xl border-dashed border-slate-100" />
         ) : (
-          <ul className="space-y-3.5">
+          <ul className="space-y-1">
             {wallet?.transactions?.data?.slice(0, 3).map((tx) => {
               const isNegative = tx.type === "withdrawal" || parseFloat(String(tx.amount)) < 0;
+              const absAmount = Math.abs(parseFloat(tx.amount)).toFixed(2);
+              
               return (
-                <li
-                  key={tx.id}
-                  className="flex justify-between items-center p-4 rounded-3xl bg-white/40 hover:bg-white transition-all duration-500 group border border-white/40 hover:border-indigo-100 hover:shadow-[0_10px_20px_rgba(79,70,229,0.05)]"
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`w-2 h-10 rounded-full ${isNegative ? "bg-red-400 shadow-[0_0_12px_rgba(248,113,113,0.4)]" : "bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.4)]"}`}
-                    ></div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-black text-slate-800 text-xs truncate">
+                <Link key={tx.id} href="/dashboard/financial-record" className="block">
+                  <li className="flex items-center gap-3 p-2.5 -mx-2 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors group/item">
+                    {/* Status Icon Container */}
+                    <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-transform group-hover/item:scale-110 ${
+                      isNegative ? "bg-rose-100/50 text-rose-600" : "bg-emerald-100/50 text-emerald-600"
+                    }`}>
+                      {isNegative ? (
+                        <ArrowDownRight className="w-5 h-5" />
+                      ) : (
+                        <ArrowUpLeft className="w-5 h-5" />
+                      )}
+                    </div>
+
+                    {/* Text Section */}
+                    <div className="flex-1 min-w-0 flex flex-col">
+                      <p className="text-sm font-semibold text-slate-800 truncate">
                         {isNegative ? "خصم حجز / سحب" : "إيداع / أرباح"}
                       </p>
-                      <p className="text-[10px] text-slate-400 font-bold mt-1.5 flex items-center gap-1">
-                        <span className="w-1 h-1 rounded-full bg-slate-200"></span>
+                      <p className="text-xs font-medium text-slate-400 mt-0.5">
                         {formatDate(tx.created_at, "medium")}
                       </p>
                     </div>
-                  </div>
-                  <CurrencyDisplay 
-                    amount={isNegative ? -Math.abs(parseFloat(tx.amount)) : Math.abs(parseFloat(tx.amount))} 
-                    showSign 
-                    colorStatus 
-                    size="md"
-                    className="font-black text-base"
-                  />
-                </li>
+
+                    {/* Amount Section (LTR Trick) */}
+                    <div className={`shrink-0 flex items-center justify-end font-bold text-sm ${
+                      isNegative ? "text-rose-600" : "text-emerald-600"
+                    }`} dir="ltr">
+                      {isNegative ? `- ${absAmount}` : `+ ${absAmount}`} ر.س
+                    </div>
+                  </li>
+                </Link>
               );
             })}
           </ul>
