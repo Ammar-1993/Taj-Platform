@@ -3,8 +3,10 @@ services:
   # 1. Laravel Backend Service (PHP 8.3)
   laravel.test:
     build:
-      context: ./backend/docker/8.3
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: docker/8.3/Dockerfile
+      args:
+        WWWUSER: '${WWWUSER:-1000}'
     image: taj-laravel-8.3
     extra_hosts:
       - 'host.docker.internal:host-gateway'

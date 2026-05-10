@@ -46,7 +46,9 @@ return new class extends Migration
             $table->index(['teacher_id', 'status', 'booking_date']);
             $table->index(['student_id', 'status']);
         });
-        DB::statement('ALTER TABLE bookings ADD CONSTRAINT chk_prices CHECK (session_price >= 0 AND discount_amount >= 0 AND net_paid >= 0)');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE bookings ADD CONSTRAINT chk_prices CHECK (session_price >= 0 AND discount_amount >= 0 AND net_paid >= 0)');
+        }
     }
 
     /**

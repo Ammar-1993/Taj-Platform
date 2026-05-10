@@ -13,8 +13,10 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        curl ca-certificates zip unzip git supervisor sqlite3 \
        libzip-dev libicu-dev libonig-dev libxml2-dev zlib1g-dev \
+       libpng-dev libfreetype6-dev libjpeg62-turbo-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-configure zip \
-    && docker-php-ext-install pdo_mysql mbstring xml zip intl \
+    && docker-php-ext-install pdo_mysql mbstring xml zip intl bcmath gd \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

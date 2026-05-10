@@ -21,6 +21,11 @@ class RegistrationTest extends TestCase
         Role::firstOrCreate(['name' => 'student']);
         Role::firstOrCreate(['name' => 'teacher']);
         Role::firstOrCreate(['name' => 'parent']);
+
+        // Mock RecaptchaService
+        $this->mock(\App\Services\RecaptchaService::class, function ($mock) {
+            $mock->shouldReceive('verify')->andReturn(true);
+        });
     }
 
     #[Test] // 🟢 التعديل الثاني: استخدام Attribute بدلاً من التعليق
@@ -31,7 +36,8 @@ class RegistrationTest extends TestCase
             'email' => 'test_student_999@test.com', // استخدام إيميل مميز
             'phone' => '0500000999',
             'password' => 'password123',
-            'role' => 'student'
+            'role' => 'student',
+            'recaptcha_token' => 'fake-token'
         ];
 
         $response = $this->postJson('/api/v1/auth/register', $payload);
@@ -71,7 +77,8 @@ class RegistrationTest extends TestCase
             'email' => 'existing_999@test.com', // إيميل مكرر!
             'phone' => '0500000888',
             'password' => 'password123',
-            'role' => 'teacher'
+            'role' => 'teacher',
+            'recaptcha_token' => 'fake-token'
         ];
 
         // 2. التنفيذ
@@ -80,5 +87,28 @@ class RegistrationTest extends TestCase
         // 3. التحقق: يجب أن يفشل (422)
         $response->assertStatus(422)
                  ->assertJsonValidationErrors(['email']);
+    }
+
+    #[Test]
+    public function registration_fails_if_recaptcha_is_invalid()
+    {
+        // Mock RecaptchaService to return false
+        $this->mock(\App\Services\RecaptchaService::class, function ($mock) {
+            $mock->shouldReceive('verify')->andReturn(false);
+        });
+
+        $payload = [
+            'name' => 'طالب فاشل',
+            'email' => 'failed_recaptcha@test.com',
+            'phone' => '0500000777',
+            'password' => 'password123',
+            'role' => 'student',
+            'recaptcha_token' => 'invalid-token'
+        ];
+
+        $response = $this->postJson('/api/v1/auth/register', $payload);
+
+        $response->assertStatus(422)
+                 ->assertJsonValidationErrors(['recaptcha_token']);
     }
 }

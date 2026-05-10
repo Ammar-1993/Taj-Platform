@@ -1,0 +1,14 @@
+.git
+vendor
+node_modules
+storage/*.key
+.env
+.phpunit.result.cache
+Docker
+docker-compose.yml
+Dockerfile
+.dockerignore
+.vscode
+.idea
+tests/_output
+tests/_support/_generated

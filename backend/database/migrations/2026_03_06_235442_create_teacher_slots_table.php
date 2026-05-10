@@ -22,7 +22,9 @@ return new class extends Migration
             $table->index(['teacher_id', 'slot_date', 'status']);
         });
 
-        DB::statement('ALTER TABLE teacher_slots ADD CONSTRAINT chk_time_logic CHECK (end_time > start_time)');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE teacher_slots ADD CONSTRAINT chk_time_logic CHECK (end_time > start_time)');
+        }
     }
 
     public function down(): void

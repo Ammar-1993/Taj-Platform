@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Script from "next/script";
 import { useAuth } from "@/context/AuthContext";
 import DecorativeBackground from "@/components/layout/DecorativeBackground";
 import { showApiError } from "@/hooks/useApiError";
@@ -14,7 +15,28 @@ import {
   Loader2,
   CheckCircle,
   ArrowLeft,
+  LogIn,
 } from "lucide-react";
+
+interface GreCAPTCHA {
+  ready: (callback: () => void) => void;
+  execute: (siteKey: string, options: { action: string }) => Promise<string>;
+}
+
+declare global {
+  interface Window {
+    grecaptcha: GreCAPTCHA;
+  }
+}
+
+interface ApiValidationError {
+  response?: {
+    status: number;
+    data: {
+      errors: Record<string, string[]>;
+    };
+  };
+}
 import ErrorBanner from "@/components/ui/ErrorBanner";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -88,12 +110,40 @@ export default function ParentRegisterPage() {
     setError("");
 
     try {
+      // Get reCAPTCHA token
+      let recaptchaToken = "";
+      const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+
+      if (window.grecaptcha && siteKey) {
+        try {
+          recaptchaToken = await new Promise<string>((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error("reCAPTCHA timeout")), 8000);
+            
+            window.grecaptcha.ready(() => {
+              window.grecaptcha
+                .execute(siteKey, { action: "register" })
+                .then((token: string) => {
+                  clearTimeout(timeout);
+                  resolve(token);
+                })
+                .catch((err: unknown) => {
+                  clearTimeout(timeout);
+                  reject(err);
+                });
+            });
+          });
+        } catch (reError) {
+          console.error("reCAPTCHA Error:", reError);
+        }
+      }
+
       const res = await authService.register({
         name,
         email,
         phone,
         password,
         role: "parent",
+        recaptcha_token: recaptchaToken,
       });
 
       setSuccessMsg("تم إنشاء حسابك بنجاح!");
@@ -103,20 +153,66 @@ export default function ParentRegisterPage() {
       setTimeout(() => {
         router.push("/dashboard");
       }, 2000);
-    } catch (error: unknown) {
-      showApiError(
-        error,
-        "تأكد من صحة البيانات. قد يكون الإيميل أو الجوال مسجلاً مسبقاً.",
-      );
-      setError("تأكد من صحة البيانات أو أن الحساب غير مسجل مسبقاً.");
+    } catch (err: unknown) {
+      setLoading(false); // Immediate reset to prevent hang
+      console.error("Registration Error Details:", err);
+      const apiError = err as ApiValidationError;
+      
+      // Handle field-specific validation errors from backend
+      if (apiError.response?.status === 422 && apiError.response.data?.errors) {
+        const validationErrors = apiError.response.data.errors;
+        let hasCustomError = false;
+
+        // Patterns for "already taken" in both English and Arabic
+        const takenPatterns = ["taken", "مسجل", "مستخدم", "موجود", "مكرر", "unique"];
+        const isTaken = (messages: string[] | undefined) => 
+          Array.isArray(messages) && messages.some(msg => 
+            typeof msg === "string" && takenPatterns.some(pattern => msg.toLowerCase().includes(pattern))
+          );
+
+        if (validationErrors.email && isTaken(validationErrors.email)) {
+          setEmailError("email_taken");
+          hasCustomError = true;
+        } else if (validationErrors.email && Array.isArray(validationErrors.email)) {
+          setEmailError(validationErrors.email[0]);
+        }
+
+        if (validationErrors.phone && isTaken(validationErrors.phone)) {
+          setPhoneError("phone_taken");
+          hasCustomError = true;
+        } else if (validationErrors.phone && Array.isArray(validationErrors.phone)) {
+          setPhoneError(validationErrors.phone[0]);
+        }
+
+        if (validationErrors.name && Array.isArray(validationErrors.name)) setNameError(validationErrors.name[0]);
+        if (validationErrors.password && Array.isArray(validationErrors.password)) setPasswordError(validationErrors.password[0]);
+        
+        if (validationErrors.recaptcha_token) {
+          setError("فشل التحقق من الأمان (reCAPTCHA). يرجى المحاولة مرة أخرى.");
+          hasCustomError = true;
+        }
+
+        // If we have custom "taken" errors or recaptcha error, don't show the global toast
+        if (!hasCustomError) {
+          showApiError(err, "تأكد من صحة البيانات المدخلة.");
+        }
+      } else {
+        showApiError(err, "حدث خطأ أثناء التسجيل. يرجى المحاولة لاحقاً.");
+      }
     } finally {
       setLoading(false);
+      console.log("Registration attempt finished.");
     }
   };
 
   return (
     <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 flex justify-center items-center relative overflow-hidden bg-slate-50">
       <DecorativeBackground />
+      {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
+        <Script
+          src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`}
+        />
+      )}
 
       <div className="w-full max-w-2xl animate-fade-in-up relative z-10">
         <Card variant="glass" className="overflow-hidden">
@@ -173,39 +269,73 @@ export default function ParentRegisterPage() {
                   </div>
 
                   {/* حقل البريد الإلكتروني (يأخذ نصف العرض) */}
-                  <Input
-                    label="البريد الإلكتروني *"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      if (emailError) setEmailError("");
-                    }}
-                    onBlur={validateEmail}
-                    error={emailError}
-                    placeholder="parent@taj.com"
-                    dir="ltr"
-                    icon={<Mail className="w-4 h-4" />}
-                  />
+                  <div className="flex flex-col gap-1">
+                    <Input
+                      label="البريد الإلكتروني *"
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (emailError) setEmailError("");
+                      }}
+                      onBlur={validateEmail}
+                      error={emailError === "email_taken" ? "" : emailError}
+                      className={emailError === "email_taken" ? "border-rose-500 ring-rose-500/20" : ""}
+                      placeholder="parent@taj.com"
+                      dir="ltr"
+                      icon={<Mail className="w-4 h-4" />}
+                    />
+                    {emailError === "email_taken" && (
+                      <div className="flex flex-col gap-1 px-1">
+                        <p className="text-xs font-bold text-rose-600">
+                          هذا البريد الإلكتروني مسجل مسبقاً. هل تود تسجيل الدخول؟
+                        </p>
+                        <Link 
+                          href="/login" 
+                          className="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 w-fit"
+                        >
+                          <LogIn className="w-3 h-3" />
+                          انقر هنا لتسجيل الدخول
+                        </Link>
+                      </div>
+                    )}
+                  </div>
 
                   {/* حقل رقم الجوال (يأخذ نصف العرض) */}
-                  <Input
-                    label="رقم الجوال *"
-                    type="tel"
-                    required
-                    value={phone}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "").slice(0, 10);
-                      setPhone(val);
-                      if (phoneError) setPhoneError("");
-                    }}
-                    onBlur={validatePhone}
-                    error={phoneError}
-                    placeholder="05XXXXXXXX"
-                    dir="ltr"
-                    icon={<Phone className="w-4 h-4" />}
-                  />
+                  <div className="flex flex-col gap-1">
+                    <Input
+                      label="رقم الجوال *"
+                      type="tel"
+                      required
+                      value={phone}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setPhone(val);
+                        if (phoneError) setPhoneError("");
+                      }}
+                      onBlur={validatePhone}
+                      error={phoneError === "phone_taken" ? "" : phoneError}
+                      className={phoneError === "phone_taken" ? "border-rose-500 ring-rose-500/20" : ""}
+                      placeholder="05XXXXXXXX"
+                      dir="ltr"
+                      icon={<Phone className="w-4 h-4" />}
+                    />
+                    {phoneError === "phone_taken" && (
+                      <div className="flex flex-col gap-1 px-1">
+                        <p className="text-xs font-bold text-rose-600">
+                          رقم الجوال هذا مسجل مسبقاً. هل تود تسجيل الدخول؟
+                        </p>
+                        <Link 
+                          href="/login" 
+                          className="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 w-fit"
+                        >
+                          <LogIn className="w-3 h-3" />
+                          انقر هنا لتسجيل الدخول
+                        </Link>
+                      </div>
+                    )}
+                  </div>
 
                   {/* حقل كلمة المرور (يأخذ العرض كاملاً) */}
                   <div className="sm:col-span-2">
