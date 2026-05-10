@@ -14,7 +14,21 @@ class DiscoveryController extends Controller
     // 1. جلب المواد الدراسية الفعالة
     public function subjects(): JsonResponse
     {
-        $subjects = Subject::where('is_active', true)->get();
+        $query = Subject::where('is_active', true);
+
+        // فلترة المواد بناءً على المرحلة الدراسية للطالب المسجل الدخول
+        if (auth('sanctum')->check()) {
+            /** @var \App\Models\User $user */
+            $user = auth('sanctum')->user();
+            if ($user->hasRole('student')) {
+                $user->load('studentProfile');
+                if ($user->studentProfile && $user->studentProfile->grade_level_id) {
+                    $query->where('grade_level_id', $user->studentProfile->grade_level_id);
+                }
+            }
+        }
+
+        $subjects = $query->get();
         return response()->json(['status' => 'success', 'data' => $subjects]);
     }
 
@@ -40,6 +54,21 @@ class DiscoveryController extends Controller
             ->whereHas('teacherProfile', function ($q) {
                 $q->where('is_verified', true); // نجلب المعلمين الموثقين فقط
             });
+
+        // فلترة المعلمين بناءً على المرحلة الدراسية للطالب المسجل الدخول
+        if (auth('sanctum')->check()) {
+            /** @var \App\Models\User $user */
+            $user = auth('sanctum')->user();
+            if ($user->hasRole('student')) {
+                $user->load('studentProfile');
+                if ($user->studentProfile && $user->studentProfile->grade_level_id) {
+                    $gradeLevelId = $user->studentProfile->grade_level_id;
+                    $query->whereHas('teacherProfile.subject', function ($q) use ($gradeLevelId) {
+                        $q->where('grade_level_id', $gradeLevelId);
+                    });
+                }
+            }
+        }
 
         // فلتر حسب المادة
         if ($request->has('subject_id') && $request->subject_id != '') {
@@ -70,7 +99,7 @@ class DiscoveryController extends Controller
     }
 
     // 4. جلب الأوقات المتاحة لمعلم محدد
-    public function teacherSlots($teacherId): JsonResponse
+    public function teacherSlots(int $teacherId): JsonResponse
     {
         $teacher = User::role('teacher')
             ->with(['teacherProfile.subject'])
@@ -94,7 +123,7 @@ class DiscoveryController extends Controller
     }
 
     // 5. جلب تقييمات المعلم
-    public function teacherReviews($teacherId): JsonResponse
+    public function teacherReviews(int $teacherId): JsonResponse
     {
         $teacher = User::role('teacher')->findOrFail($teacherId);
         

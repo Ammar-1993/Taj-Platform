@@ -72,4 +72,48 @@ class DiscoveryTest extends TestCase
         $response->assertStatus(200)
                  ->assertJsonStructure(['data']);
     }
+
+    public function test_student_only_sees_teachers_from_their_grade_level()
+    {
+        Role::firstOrCreate(['name' => 'student']);
+        
+        $otherGrade = GradeLevel::create(['name' => 'Secondary', 'session_price' => 100]);
+        $otherSubject = Subject::create([
+            'grade_level_id' => $otherGrade->id,
+            'name' => 'Physics', 
+            'is_active' => true
+        ]);
+
+        $otherTeacher = User::factory()->create();
+        $otherTeacher->assignRole('teacher');
+        $otherTeacher->teacherProfile()->create([
+            'subject_id' => $otherSubject->id,
+            'bio' => 'Physics info',
+            'is_verified' => true
+        ]);
+
+        /** @var \App\Models\User $student */
+        $student = User::factory()->create();
+        $student->assignRole('student');
+        $student->studentProfile()->create([
+            'grade_level_id' => GradeLevel::where('name', 'Primary 1')->first()->id,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($student, 'sanctum')->getJson('/api/v1/discovery/teachers');
+        
+        // Should only see the Primary 1 teacher, not the Secondary teacher
+        $response->assertStatus(200)
+                 ->assertJsonCount(1, 'data.data');
+
+        $this->assertEquals(
+            Subject::where('name', 'Math')->first()->id,
+            $response->json('data.data.0.teacher_profile.subject_id')
+        );
+        
+        // Guest should see both teachers
+        $guestResponse = $this->getJson('/api/v1/discovery/teachers');
+        $guestResponse->assertStatus(200)
+                 ->assertJsonCount(2, 'data.data');
+    }
 }
