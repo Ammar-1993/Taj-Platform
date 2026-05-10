@@ -117,6 +117,24 @@ const statusMap: Record<string, BadgeConfig> = {
     text: "text-purple-700",
     dot: "bg-purple-500",
   },
+  deposit: {
+    label: "إيداع / شحن",
+    bg: "bg-emerald-100",
+    text: "text-emerald-700",
+    dot: "bg-emerald-500",
+  },
+  payout: {
+    label: "سحب أرباح",
+    bg: "bg-slate-100",
+    text: "text-slate-700",
+    dot: "bg-slate-500",
+  },
+  earnings: {
+    label: "أرباح حصص",
+    bg: "bg-indigo-100",
+    text: "text-indigo-700",
+    dot: "bg-indigo-500",
+  },
 };
 
 interface StatusBadgeProps {
