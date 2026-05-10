@@ -245,16 +245,18 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                           </p>
                         </div>
 
-                        {/* Amount Section (LTR Trick) */}
-                        <div className={`shrink-0 flex items-center justify-end font-bold text-sm ${
-                          isNegative ? "text-rose-600" : "text-emerald-600"
-                        }`} dir="ltr">
-                          {isNegative ? `- ${absAmount}` : `+ ${absAmount}`} ر.س
+                        {/* Amount Section (LTR Bidi Fix) */}
+                        <div className="shrink-0 flex items-center justify-end gap-1 font-bold text-sm" dir="ltr">
+                          <span className={`text-xs opacity-80 ${isNegative ? "text-rose-600" : "text-emerald-600"}`}>ر.س</span>
+                          <span className={isNegative ? "text-rose-600" : "text-emerald-600"}>
+                            {isNegative ? `-${absAmount}` : `+${absAmount}`}
+                          </span>
                         </div>
-                      </li>
-                    </Link>
-                  );
-                })}
+                        </li>
+                        </Link>
+                        );
+                        })}
+
               </ul>
             )}
 

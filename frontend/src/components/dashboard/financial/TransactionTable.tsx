@@ -2,7 +2,6 @@
 
 import { WalletTransaction, PaginatedResponse } from "@/types";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
-import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { formatDate } from "@/lib/formatters";
 import { PaginationControls } from "@/components/ui/PaginationControls";
@@ -118,13 +117,12 @@ export function TransactionTable({
                         </div>
                       </td>
                       <td className="px-6 py-4 align-middle">
-                        <CurrencyDisplay 
-                          amount={isNegative ? -Math.abs(parseFloat(tx.amount)) : Math.abs(parseFloat(tx.amount))} 
-                          showSign 
-                          colorStatus 
-                          size="md"
-                          className="font-bold"
-                        />
+                        <div className="flex items-center justify-end gap-1 font-bold text-sm" dir="ltr">
+                          <span className={`text-xs opacity-80 ${isNegative ? "text-rose-600" : "text-emerald-600"}`}>ر.س</span>
+                          <span className={isNegative ? "text-rose-600" : "text-emerald-600"}>
+                            {isNegative ? `-${Math.abs(parseFloat(tx.amount)).toFixed(2)}` : `+${Math.abs(parseFloat(tx.amount)).toFixed(2)}`}
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   );
