@@ -267,9 +267,11 @@ export default function PayoutPage() {
                                             </div>
                                             <div className="flex flex-row md:flex-col items-center md:items-end gap-6 md:gap-3 w-full md:w-auto pt-4 md:pt-0 border-t md:border-0 border-slate-100 mt-2 md:mt-0">
                                                 <CurrencyDisplay 
-                                                    amount={payout.amount} 
+                                                    amount={-Math.abs(parseFloat(payout.amount))} 
+                                                    showSign
+                                                    colorStatus
                                                     size="lg" 
-                                                    className="text-slate-900 font-black"
+                                                    className="font-black"
                                                 />
                                                 <div>{renderStatusBadge(payout.status)}</div>
                                             </div>

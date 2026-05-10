@@ -60,21 +60,19 @@ export const TeacherNotifications: React.FC<TeacherNotificationsProps> = ({
   if (visibleNotifications.length === 0) return null;
 
   return (
-    <div className="bg-gradient-to-l from-amber-50 to-yellow-50 border border-amber-200/60 p-5 rounded-2xl mb-6">
-      <h3 className="font-bold text-amber-800 mb-3 flex items-center gap-2">
-        <span className="w-7 h-7 bg-amber-200 rounded-lg flex items-center justify-center">
-          <Bell className="w-4 h-4 text-amber-700" />
-        </span>
+    <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-4 mb-6 shadow-sm">
+      <h3 className="font-bold mb-3 flex items-center gap-2">
+        <Bell className="w-4 h-4 text-amber-600" />
         إشعارات جديدة ({visibleNotifications.length})
       </h3>
-      <div className="space-y-2">
+      <div className="space-y-3">
         {visibleNotifications.map((notif) => (
           <div
             key={notif.id}
-            className="bg-white/90 p-3 rounded-xl shadow-sm border border-amber-100 flex justify-between items-center hover:shadow-md transition-all duration-200"
+            className="flex justify-between items-center gap-4 bg-white/40 p-3 rounded-md border border-amber-100/50"
           >
-            <p className="text-sm text-gray-800 font-bold">
-              {notif.data.message} <span className="text-indigo-600">
+            <p className="text-sm font-medium">
+              {notif.data.message} <span className="text-indigo-600 font-bold opacity-80">
                 {getNotificationTimestamp(notif)}
               </span>
             </p>
@@ -83,9 +81,10 @@ export const TeacherNotifications: React.FC<TeacherNotificationsProps> = ({
                 setHiddenIds(prev => new Set(prev).add(notif.id));
                 markNotificationAsRead(notif.id);
               }}
-              className="text-xs bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg text-amber-700 flex items-center gap-1 transition-all duration-200 font-bold"
+              className="text-sm font-medium text-amber-700 hover:text-amber-900 hover:bg-amber-100/50 px-3 py-1.5 rounded-md transition-all whitespace-nowrap flex items-center gap-1.5"
             >
-              تحديد كمقروء <Check className="w-3.5 h-3.5" />
+              <span>تحديد كمقروء</span>
+              <Check className="w-3.5 h-3.5 opacity-70" />
             </button>
           </div>
         ))}

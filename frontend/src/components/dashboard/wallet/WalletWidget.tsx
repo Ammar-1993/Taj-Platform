@@ -78,7 +78,7 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
           </h3>
           <Link 
             href="/dashboard/financial-record" 
-            className="text-[10px] font-black text-indigo-600 hover:text-white hover:bg-indigo-600 bg-indigo-50/50 px-3 py-1.5 rounded-full transition-all duration-300 whitespace-nowrap"
+            className="text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:underline bg-transparent p-0 transition-all duration-300 whitespace-nowrap"
           >
             عرض الكل
           </Link>
@@ -88,36 +88,37 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
           <EmptyState icon={Landmark} title="لا توجد عمليات سابقة" className="py-8 bg-slate-50/30 rounded-3xl border-dashed border-slate-100" />
         ) : (
           <ul className="space-y-3.5">
-            {wallet?.transactions?.data?.slice(0, 3).map((tx) => (
-              <li
-                key={tx.id}
-                className="flex justify-between items-center p-4 rounded-3xl bg-white/40 hover:bg-white transition-all duration-500 group border border-white/40 hover:border-indigo-100 hover:shadow-[0_10px_20px_rgba(79,70,229,0.05)]"
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`w-2 h-10 rounded-full ${tx.type === "withdrawal" || parseFloat(String(tx.amount)) < 0 ? "bg-red-400 shadow-[0_0_12px_rgba(248,113,113,0.4)]" : "bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.4)]"}`}
-                  ></div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-slate-800 text-xs truncate">
-                      {tx.type === "withdrawal" || parseFloat(String(tx.amount)) < 0
-                        ? "خصم حجز / سحب"
-                        : "إيداع / أرباح"}
-                    </p>
-                    <p className="text-[10px] text-slate-400 font-bold mt-1.5 flex items-center gap-1">
-                      <span className="w-1 h-1 rounded-full bg-slate-200"></span>
-                      {formatDate(tx.created_at, "medium")}
-                    </p>
+            {wallet?.transactions?.data?.slice(0, 3).map((tx) => {
+              const isNegative = tx.type === "withdrawal" || parseFloat(String(tx.amount)) < 0;
+              return (
+                <li
+                  key={tx.id}
+                  className="flex justify-between items-center p-4 rounded-3xl bg-white/40 hover:bg-white transition-all duration-500 group border border-white/40 hover:border-indigo-100 hover:shadow-[0_10px_20px_rgba(79,70,229,0.05)]"
+                >
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-2 h-10 rounded-full ${isNegative ? "bg-red-400 shadow-[0_0_12px_rgba(248,113,113,0.4)]" : "bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.4)]"}`}
+                    ></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-slate-800 text-xs truncate">
+                        {isNegative ? "خصم حجز / سحب" : "إيداع / أرباح"}
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-bold mt-1.5 flex items-center gap-1">
+                        <span className="w-1 h-1 rounded-full bg-slate-200"></span>
+                        {formatDate(tx.created_at, "medium")}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <CurrencyDisplay 
-                  amount={tx.amount} 
-                  showSign 
-                  colorStatus 
-                  size="md"
-                  className="font-black text-base"
-                />
-              </li>
-            ))}
+                  <CurrencyDisplay 
+                    amount={isNegative ? -Math.abs(parseFloat(tx.amount)) : Math.abs(parseFloat(tx.amount))} 
+                    showSign 
+                    colorStatus 
+                    size="md"
+                    className="font-black text-base"
+                  />
+                </li>
+              );
+            })}
           </ul>
         )}
       </Card>

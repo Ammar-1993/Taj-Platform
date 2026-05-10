@@ -243,7 +243,7 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 </th>
               )}
               <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right">التاريخ والوقت</th>
-              <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right whitespace-nowrap">المبلغ</th>
+              <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right whitespace-nowrap">التكلفة</th>
               <th className={`px-2 py-4 text-xs font-bold text-text-secondary text-right ${isParent ? 'rounded-tl-taj-lg' : ''}`}>الحالة</th>
               {!isParent && <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right rounded-tl-taj-lg">الإجراء</th>}
             </tr>
@@ -255,14 +255,14 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 className="hover:bg-brand-50/50 transition-all duration-200 group"
               >
                 {/* Booking ID */}
-                <td className="px-2 py-4 font-bold text-brand-600 whitespace-nowrap">
-                  #{booking.id}
+                <td className="px-2 py-4 font-bold text-brand-600 whitespace-nowrap align-middle">
+                  <div className="flex items-center h-full">#{booking.id}</div>
                 </td>
 
                 {/* Person(s) */}
                 {isParent ? (
                   <>
-                    <td className="px-2 py-4 whitespace-nowrap">
+                    <td className="px-2 py-4 whitespace-nowrap align-middle">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-sm flex items-center justify-center text-brand-600 font-bold text-[10px] shrink-0">
                           {booking.student?.name?.charAt(0) || "?"}
@@ -270,12 +270,12 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                         <span className="font-bold text-brand-700">{booking.student?.name}</span>
                       </div>
                     </td>
-                    <td className="px-2 py-4 font-bold text-text-primary whitespace-nowrap">
-                      {booking.teacher?.name}
+                    <td className="px-2 py-4 font-bold text-text-primary whitespace-nowrap align-middle">
+                      <div className="flex items-center h-full">{booking.teacher?.name}</div>
                     </td>
                   </>
                 ) : (
-                  <td className="px-2 py-4 whitespace-nowrap">
+                  <td className="px-2 py-4 whitespace-nowrap align-middle">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-md flex items-center justify-center text-brand-600 font-bold text-xs shrink-0">
                         {(isTeacher ? booking.student?.name : booking.teacher?.name)?.charAt(0) || "?"}
@@ -288,32 +288,38 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 )}
 
                 {/* Date + Time */}
-                <td className="px-2 py-4 whitespace-nowrap">
-                  <div className="font-bold text-text-primary">
-                    {formatDate(booking.booking_date, "medium")}
-                  </div>
-                  <div className="text-xs text-text-muted mt-0.5">
-                    {formatTime(booking.teacher_slot?.start_time)}
+                <td className="px-2 py-4 whitespace-nowrap align-middle">
+                  <div className="flex flex-col justify-center">
+                    <div className="font-bold text-text-primary">
+                      {formatDate(booking.booking_date, "medium")}
+                    </div>
+                    <div className="text-xs text-text-muted mt-0.5">
+                      {formatTime(booking.teacher_slot?.start_time)}
+                    </div>
                   </div>
                 </td>
 
                 {/* Amount */}
-                <td className="px-2 py-4 whitespace-nowrap">
-                  <CurrencyDisplay 
-                    amount={booking.net_paid} 
-                    size="md" 
-                    className="text-text-primary font-bold"
-                  />
+                <td className="px-2 py-4 whitespace-nowrap align-middle">
+                  <div className="flex items-center h-full">
+                    <CurrencyDisplay 
+                      amount={booking.net_paid} 
+                      size="md" 
+                      className="text-text-primary font-bold"
+                    />
+                  </div>
                 </td>
 
                 {/* Status */}
-                <td className="px-2 py-4 whitespace-nowrap">
-                  <StatusBadge status={booking.status} />
+                <td className="px-2 py-4 whitespace-nowrap align-middle">
+                  <div className="flex items-center h-full">
+                    <StatusBadge status={booking.status} />
+                  </div>
                 </td>
 
                 {/* Actions (Hidden for Parent) */}
                 {!isParent && (
-                  <td className="px-2 py-4 whitespace-nowrap">
+                  <td className="px-2 py-4 whitespace-nowrap align-middle">
                     <div className="flex gap-2 justify-end items-center">
                       {(booking.status === "scheduled" || booking.status === "in_progress") ? (
                         <>

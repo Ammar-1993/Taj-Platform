@@ -63,20 +63,32 @@ export function TransactionTable({
                 ))
               ) : (
                 transactions.data.map((tx) => {
-                  const isNegative = tx.type === 'withdrawal' || tx.type === 'payout';
+                  const isNegative = tx.type === 'withdrawal' || tx.type === 'payout' || parseFloat(String(tx.amount)) < 0;
                   return (
                     <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="px-6 py-4 text-sm text-slate-600">
-                        {formatDate(tx.created_at)}
+                      <td className="px-6 py-4 text-sm text-slate-600 align-middle">
+                        <div className="flex items-center h-full">
+                          {formatDate(tx.created_at)}
+                        </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <StatusBadge status={tx.type} />
+                      <td className="px-6 py-4 align-middle">
+                        <div className="flex items-center h-full">
+                          <StatusBadge status={tx.type} />
+                        </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-700 font-medium">
-                        {tx.description}
+                      <td className="px-6 py-4 text-sm text-slate-700 font-medium align-middle">
+                        <div className="flex items-center h-full">
+                          {tx.description}
+                        </div>
                       </td>
-                      <td className={`px-6 py-4 text-sm font-bold ${isNegative ? 'text-red-600' : 'text-emerald-600'}`}>
-                        {isNegative ? '-' : '+'} <CurrencyDisplay amount={tx.amount} />
+                      <td className="px-6 py-4 align-middle">
+                        <CurrencyDisplay 
+                          amount={isNegative ? -Math.abs(parseFloat(tx.amount)) : Math.abs(parseFloat(tx.amount))} 
+                          showSign 
+                          colorStatus 
+                          size="md"
+                          className="font-bold"
+                        />
                       </td>
                     </tr>
                   );
