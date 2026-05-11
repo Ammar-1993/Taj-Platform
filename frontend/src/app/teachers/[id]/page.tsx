@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { discoveryService, bookingService, parentService } from "@/services/api";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TeacherSlot, SlotsByDate } from "@/types";
 import { formatDate, formatTime, roundToSlot } from "@/lib/formatters";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
@@ -33,6 +33,7 @@ import {
 
 export default function TeacherProfile({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const isParent = user?.roles?.some((r) => r.name === "parent");
 

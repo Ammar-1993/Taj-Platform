@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { parentService, walletService, bookingService, notificationService } from "@/services/api";
 import { User, Booking, AppNotification } from "@/types";
@@ -56,14 +56,14 @@ export const useDashboardData = (user: User | null, isParent: boolean, isTeacher
     refetchOnWindowFocus: true,
   });
 
-  const refreshAll = async () => {
+  const refreshAll = useCallback(async () => {
     await Promise.all([
       fetchDashboardData(),
       queryClient.invalidateQueries({ queryKey: ['wallet'] }),
       queryClient.invalidateQueries({ queryKey: ['parentDashboard'] }),
       queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
     ]);
-  };
+  }, [fetchDashboardData, queryClient]);
 
   // Handle pending review seeding
   useEffect(() => {

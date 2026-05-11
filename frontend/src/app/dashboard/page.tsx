@@ -70,7 +70,7 @@ export default function DashboardPage() {
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
     }
-  }, [searchParams, fetchDashboardData]);
+  }, [searchParams, refreshAll]);
 
   useEffect(() => {
     // حماية المسار: إذا انتهى التحميل ولم نجد مستخدماً، نوجهه لتسجيل الدخول
