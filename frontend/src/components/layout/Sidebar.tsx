@@ -20,7 +20,7 @@ export default function Sidebar() {
 
   return (
     <aside className={cn(
-      "hidden md:flex flex-col bg-white border-l border-slate-100 h-screen sticky top-0 transition-all duration-300 ease-in-out",
+      "hidden md:flex flex-col bg-white border-l border-slate-100 h-screen sticky top-0 z-50 transition-all duration-300 ease-in-out",
       isCollapsed ? "w-20" : "w-64"
     )}>
       <div className={cn(
@@ -47,7 +47,7 @@ export default function Sidebar() {
       </div>
       
       <nav className={cn(
-        "flex-1 overflow-y-auto space-y-1.5 py-4 scrollbar-hide",
+        "flex-1 space-y-1.5 py-4",
         isCollapsed ? "px-2" : "px-4"
       )}>
         {navLinks.map((link) => {
