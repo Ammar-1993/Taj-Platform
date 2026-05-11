@@ -57,6 +57,7 @@ export default function SettingsPage() {
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
   } = useForm<ProfileFormData>({
     defaultValues: {
       name: user?.name || "",
@@ -80,7 +81,7 @@ export default function SettingsPage() {
   }, [user?.avatar_url, avatarPreview]);
 
   // Fetch grade levels for student role
-  const { data: gradesData } = useQuery({
+  const { data: gradesData, isLoading: isLoadingGrades } = useQuery({
     queryKey: ['grade-levels'],
     queryFn: () => discoveryService.getGradeLevels(),
     enabled: !!user?.roles?.some(role => role.name === 'student'),
@@ -453,12 +454,16 @@ export default function SettingsPage() {
                     <Select 
                       label="المرحلة الدراسية الحالية *"
                       {...register("grade_level_id", { required: isStudent })}
+                      value={watch("grade_level_id") || ""}
                       error={errors.grade_level_id?.message}
                       className="bg-gray-50/50 rounded-xl"
+                      disabled={isLoadingGrades}
                     >
-                      <option value="" disabled>-- اختر مرحلتك الدراسية --</option>
+                      <option value="" disabled>
+                        {isLoadingGrades ? "جاري تحميل المراحل الدراسية..." : "-- اختر مرحلتك الدراسية --"}
+                      </option>
                       {gradeLevels.map((grade: GradeLevel) => (
-                        <option key={grade.id} value={grade.id}>
+                        <option key={grade.id} value={grade.id.toString()}>
                           {grade.name} (سعر الحصة: {grade.session_price} ر.س)
                         </option>
                       ))}
