@@ -4,21 +4,28 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
+use Filament\Actions\StaticAction;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\TextEntry\TextEntrySize;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-users';
+
     protected static ?string $modelLabel = 'مستخدم';
+
     protected static ?string $pluralModelLabel = 'إدارة المستخدمين';
+
     protected static ?string $navigationGroup = 'الإدارة والمستخدمين';
 
     public static function form(Form $form): Form
@@ -141,21 +148,21 @@ class UserResource extends Resource
                         ->label('المحفظة')
                         ->icon('heroicon-o-wallet')
                         ->color('info')
-                        ->modalHeading(fn (User $record) => 'محفظة ' . $record->name)
+                        ->modalHeading(fn (User $record) => 'محفظة '.$record->name)
                         ->infolist([
-                            \Filament\Infolists\Components\TextEntry::make('wallet.balance')
+                            TextEntry::make('wallet.balance')
                                 ->label('الرصيد المتاح')
-                                ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' SAR')
-                                ->size(\Filament\Infolists\Components\TextEntry\TextEntrySize::Large)
+                                ->formatStateUsing(fn ($state) => number_format((float) $state, 2).' SAR')
+                                ->size(TextEntrySize::Large)
                                 ->weight('bold')
                                 ->color('success'),
-                            \Filament\Infolists\Components\TextEntry::make('wallet.pending_balance')
+                            TextEntry::make('wallet.pending_balance')
                                 ->label('الرصيد المعلق')
-                                ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' SAR')
+                                ->formatStateUsing(fn ($state) => number_format((float) $state, 2).' SAR')
                                 ->color('warning'),
                         ])
                         ->modalSubmitAction(false)
-                        ->modalCancelAction(fn (\Filament\Actions\StaticAction $action) => $action->label('إغلاق')),
+                        ->modalCancelAction(fn (StaticAction $action) => $action->label('إغلاق')),
                     Tables\Actions\EditAction::make(),
                     Tables\Actions\DeleteAction::make(),
                     Tables\Actions\RestoreAction::make(),
@@ -169,10 +176,11 @@ class UserResource extends Resource
             ]);
     }
 
-    public static function getRelations(): array { 
+    public static function getRelations(): array
+    {
         return [
             UserResource\RelationManagers\StudentBookingsRelationManager::class,
-        ]; 
+        ];
     }
 
     public static function getPages(): array

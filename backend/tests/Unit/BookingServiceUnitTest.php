@@ -2,14 +2,15 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\User;
 use App\Models\Booking;
 use App\Models\TeacherSlot;
+use App\Models\User;
+use App\Models\WalletTransaction;
 use App\Services\BookingService;
 use App\Services\WalletService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
+use Tests\TestCase;
 
 class BookingServiceUnitTest extends TestCase
 {
@@ -48,10 +49,10 @@ class BookingServiceUnitTest extends TestCase
                 return $user->is($teacher)
                     && abs($amount - 80.0) < 0.001
                     && $type === 'class_earnings'
-                    && $description === 'أرباح حصة منتهية رقم #' . $booking->id
+                    && $description === 'أرباح حصة منتهية رقم #'.$booking->id
                     && $bookingId === $booking->id;
             })
-            ->andReturn(new \App\Models\WalletTransaction());
+            ->andReturn(new WalletTransaction);
 
         $service = new BookingService($walletServiceMock);
 
@@ -94,10 +95,10 @@ class BookingServiceUnitTest extends TestCase
                 return $user->is($student)
                     && abs($amount - 100.0) < 0.001
                     && $type === 'refund'
-                    && str_contains($description, 'استرجاع مالي لإلغاء الحصة رقم #' . $booking->id)
+                    && str_contains($description, 'استرجاع مالي لإلغاء الحصة رقم #'.$booking->id)
                     && $bookingId === $booking->id;
             })
-            ->andReturn(new \App\Models\WalletTransaction());
+            ->andReturn(new WalletTransaction);
 
         $service = new BookingService($walletServiceMock);
 

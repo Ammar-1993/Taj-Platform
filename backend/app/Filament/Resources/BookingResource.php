@@ -4,13 +4,20 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BookingResource\Pages;
 use App\Models\Booking;
+use App\Services\BookingService;
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Model; // 🟢 استدعاء كلاس الأكشن
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+
+ // 🟢 استدعاء كلاس الأكشن
 
 class BookingResource extends Resource
 {
@@ -49,7 +56,7 @@ class BookingResource extends Resource
                 Tables\Columns\TextColumn::make('student.name')->label('الطالب')->searchable()->weight('bold'),
                 Tables\Columns\TextColumn::make('teacher.name')->label('المعلم')->searchable()->color('primary')->weight('bold'),
                 Tables\Columns\TextColumn::make('booking_date')->label('تاريخ الحصة')->dateTime('Y-m-d h:i A')->sortable(),
-                Tables\Columns\TextColumn::make('net_paid')->label('الصافي المدفوع')->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' SAR')->sortable()->badge()->color('success'),
+                Tables\Columns\TextColumn::make('net_paid')->label('الصافي المدفوع')->formatStateUsing(fn ($state) => number_format((float) $state, 2).' SAR')->sortable()->badge()->color('success'),
                 Tables\Columns\TextColumn::make('status')
                     ->label('الحالة')
                     ->badge()
@@ -86,32 +93,33 @@ class BookingResource extends Resource
                         Forms\Components\DatePicker::make('booked_until')
                             ->label('تاريخ الحصة إلى'),
                     ])
-                    ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
+                    ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
                                 $data['booked_from'],
-                                fn (\Illuminate\Database\Eloquent\Builder $query, $date): \Illuminate\Database\Eloquent\Builder => $query->whereDate('booking_date', '>=', $date),
+                                fn (Builder $query, $date): Builder => $query->whereDate('booking_date', '>=', $date),
                             )
                             ->when(
                                 $data['booked_until'],
-                                fn (\Illuminate\Database\Eloquent\Builder $query, $date): \Illuminate\Database\Eloquent\Builder => $query->whereDate('booking_date', '<=', $date),
+                                fn (Builder $query, $date): Builder => $query->whereDate('booking_date', '<=', $date),
                             );
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
                         if ($data['booked_from'] ?? null) {
-                            $indicators['booked_from'] = 'من: ' . \Carbon\Carbon::parse($data['booked_from'])->toFormattedDateString();
+                            $indicators['booked_from'] = 'من: '.Carbon::parse($data['booked_from'])->toFormattedDateString();
                         }
                         if ($data['booked_until'] ?? null) {
-                            $indicators['booked_until'] = 'إلى: ' . \Carbon\Carbon::parse($data['booked_until'])->toFormattedDateString();
+                            $indicators['booked_until'] = 'إلى: '.Carbon::parse($data['booked_until'])->toFormattedDateString();
                         }
+
                         return $indicators;
                     }),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\ViewAction::make()->label('تفاصيل'),
-                    
+
                     // 🔴 زر التدخل الإداري القوي (Admin Override)
                     Action::make('force_cancel_refund')
                         ->label('إلغاء واسترداد مالي (Refund)')
@@ -129,17 +137,17 @@ class BookingResource extends Resource
                         ->visible(fn (Booking $record): bool => in_array($record->status, ['scheduled', 'in_progress']))
                         ->action(function (Booking $record, array $data) {
                             try {
-                                $bookingService = app(\App\Services\BookingService::class);
-                                $bookingService->cancelBooking($record, \Illuminate\Support\Facades\Auth::user());
+                                $bookingService = app(BookingService::class);
+                                $bookingService->cancelBooking($record, Auth::user());
 
-                                \Filament\Notifications\Notification::make()
+                                Notification::make()
                                     ->title('تم الإلغاء والاسترداد بنجاح ✅')
                                     ->body('تم إرجاع المبلغ لمحفظة الطالب وتفريغ الموعد.')
                                     ->success()
                                     ->send();
 
                             } catch (\Exception $e) {
-                                \Filament\Notifications\Notification::make()
+                                Notification::make()
                                     ->title('فشل الإلغاء ❌')
                                     ->body($e->getMessage())
                                     ->danger()

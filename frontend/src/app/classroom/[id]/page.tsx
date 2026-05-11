@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { bookingService } from '@/services/api';
+import { useQueryClient } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
@@ -40,6 +41,7 @@ const AgoraCall = dynamic(() => import('@/components/classroom/AgoraCall'), {
 export default function ClassroomPage({ params }: { params: { id: string } }) {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
+    const queryClient = useQueryClient();
     
     const [channelName, setChannelName] = useState('');
     const [agoraToken, setAgoraToken] = useState<string | null>(null);
@@ -119,6 +121,11 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         setIsEnding(true);
         try {
             await bookingService.complete(Number(params.id));
+            
+            // Invalidate queries to refresh dashboard and wallet data
+            queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+            queryClient.invalidateQueries({ queryKey: ['wallet'] });
+
             toast.success(
                 <div className="flex items-center gap-2">
                     تم إنهاء الحصة بنجاح! وتم إيداع الأرباح. <Coins className="w-4 h-4" />

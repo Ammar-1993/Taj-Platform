@@ -9,10 +9,6 @@ class RecaptchaService
 {
     /**
      * Verify the reCAPTCHA token with Google.
-     *
-     * @param string|null $token
-     * @param string|null $ip
-     * @return bool
      */
     public function verify(?string $token, ?string $ip = null): bool
     {
@@ -25,9 +21,10 @@ class RecaptchaService
 
         if (empty($secret)) {
             Log::warning('reCAPTCHA secret key is not configured.');
+
             // If not configured, we might want to allow in dev, but for this task we assume it should be there.
             // Return true for local development if needed, but let's be strict.
-            return app()->environment('local'); 
+            return app()->environment('local');
         }
 
         try {
@@ -41,7 +38,8 @@ class RecaptchaService
 
             return isset($result['success']) && $result['success'] === true && isset($result['score']) && $result['score'] >= 0.5;
         } catch (\Exception $e) {
-            Log::error('reCAPTCHA verification failed: ' . $e->getMessage());
+            Log::error('reCAPTCHA verification failed: '.$e->getMessage());
+
             return false;
         }
     }

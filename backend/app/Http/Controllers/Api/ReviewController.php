@@ -3,15 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Booking;
-use App\Models\Review;
-use App\Models\TeacherProfile;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
-
+use App\Models\User;
 use App\Services\ReviewService;
 use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ReviewController extends Controller
 {
@@ -21,6 +17,7 @@ class ReviewController extends Controller
     {
         $this->reviewService = $reviewService;
     }
+
     public function store(Request $request): JsonResponse
     {
         $request->validate([
@@ -29,7 +26,7 @@ class ReviewController extends Controller
             'comment' => 'nullable|string|max:1000',
         ]);
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         try {
@@ -43,13 +40,13 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'تم حفظ التقييم بنجاح، شكراً لك!',
-                'data' => $review
+                'data' => $review,
             ]);
 
         } catch (Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 400); // 400 Bad Request if logic fails
         }
     }

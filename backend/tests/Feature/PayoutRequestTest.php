@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\PayoutRequest;
+use App\Models\User;
 use App\Services\WalletService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -38,15 +38,15 @@ class PayoutRequestTest extends TestCase
         ];
 
         $response = $this->actingAs($this->teacher)
-                         ->postJson('/api/v1/wallet/payouts', $payload);
+            ->postJson('/api/v1/wallet/payouts', $payload);
 
         $response->assertStatus(201)
-                 ->assertJson(['status' => 'success']);
+            ->assertJson(['status' => 'success']);
 
         $this->assertDatabaseHas('payout_requests', [
             'user_id' => $this->teacher->id,
             'amount' => 50,
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
 
         // Balance should be frozen (deducted)
@@ -62,10 +62,10 @@ class PayoutRequestTest extends TestCase
         ];
 
         $response = $this->actingAs($this->teacher)
-                         ->postJson('/api/v1/wallet/payouts', $payload);
+            ->postJson('/api/v1/wallet/payouts', $payload);
 
         $response->assertStatus(400)
-                 ->assertJsonStructure(['message']);
+            ->assertJsonStructure(['message']);
     }
 
     public function test_teacher_can_list_their_payout_requests()
@@ -75,13 +75,13 @@ class PayoutRequestTest extends TestCase
             'amount' => 50,
             'bank_name' => 'Bank',
             'iban' => 'SA123',
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
 
         $response = $this->actingAs($this->teacher)
-                         ->getJson('/api/v1/wallet/payouts');
+            ->getJson('/api/v1/wallet/payouts');
 
         $response->assertStatus(200)
-                 ->assertJsonCount(1, 'data');
+            ->assertJsonCount(1, 'data');
     }
 }

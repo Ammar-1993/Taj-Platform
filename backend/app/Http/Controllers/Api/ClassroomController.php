@@ -4,18 +4,19 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Peterujah\Agora\Agora;
-use Peterujah\Agora\User as AgoraUser;
-use Peterujah\Agora\Roles as AgoraRoles;
 use Peterujah\Agora\Builders\RtcToken;
+use Peterujah\Agora\Roles as AgoraRoles;
+use Peterujah\Agora\User as AgoraUser;
 
 class ClassroomController extends Controller
 {
     public function getAccessDetails(Request $request, $bookingId): JsonResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
         $booking = Booking::findOrFail($bookingId);
 
@@ -25,9 +26,9 @@ class ClassroomController extends Controller
         }
 
         // تحديث حالة الحضور
-        if ($user->hasRole('teacher') && !$booking->teacher_joined_at) {
+        if ($user->hasRole('teacher') && ! $booking->teacher_joined_at) {
             $booking->update(['teacher_joined_at' => now(), 'status' => 'in_progress']);
-        } elseif ($user->hasRole('student') && !$booking->student_joined_at) {
+        } elseif ($user->hasRole('student') && ! $booking->student_joined_at) {
             $booking->update(['student_joined_at' => now()]);
         }
 
@@ -37,7 +38,7 @@ class ClassroomController extends Controller
         // توليد التوكن باستخدام مكتبة Peterujah/Agora
         $appId = config('services.agora.app_id');
         $appCertificate = config('services.agora.app_certificate');
-        
+
         $token = null;
         $screenToken = null;
         if ($appId && $appCertificate) {
@@ -69,7 +70,7 @@ class ClassroomController extends Controller
                 'role' => $role,
                 'token' => $token,
                 'screen_token' => $screenToken,
-            ]
+            ],
         ]);
     }
 }

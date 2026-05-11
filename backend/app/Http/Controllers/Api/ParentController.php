@@ -5,19 +5,21 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Parent\StoreChildRequest;
 use App\Http\Requests\Parent\UpdateChildRequest;
+use App\Models\Booking;
 use App\Models\User;
+use App\Models\Wallet;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class ParentController extends Controller
 {
     // 1. جلب قائمة الأبناء
     public function getChildren(): JsonResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
         $children = User::where('parent_id', $user->id)
@@ -60,11 +62,12 @@ class ParentController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'تم إضافة حساب الابن بنجاح',
-                'data' => $child->load('studentProfile.gradeLevel')
+                'data' => $child->load('studentProfile.gradeLevel'),
             ], 201);
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json(['status' => 'error', 'message' => 'حدث خطأ أثناء الإضافة'], 500);
         }
     }
@@ -78,22 +81,22 @@ class ParentController extends Controller
         $child = User::where('parent_id', $user->id)->findOrFail($id);
 
         $child->update(['name' => $request->name]);
-        
+
         $child->studentProfile()->update([
-            'grade_level_id' => $request->grade_level_id
+            'grade_level_id' => $request->grade_level_id,
         ]);
 
         return response()->json([
             'status' => 'success',
             'message' => 'تم تحديث بيانات الابن بنجاح',
-            'data' => $child->load('studentProfile.gradeLevel')
+            'data' => $child->load('studentProfile.gradeLevel'),
         ]);
     }
 
     // 4. تفعيل/تعطيل صلاحية الحجز والدفع للابن
     public function toggleBookingPermission(int $id): JsonResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
         // التأكد من أن الابن يتبع لهذا الأب (Security Check)
@@ -103,45 +106,45 @@ class ParentController extends Controller
         if ($profile) {
             // عكس الحالة الحالية (إذا كان مفعل يعطله، والعكس)
             $profile->update([
-                'can_book_independently' => !$profile->can_book_independently
+                'can_book_independently' => ! $profile->can_book_independently,
             ]);
         }
 
         return response()->json([
             'status' => 'success',
             'message' => 'تم تحديث صلاحية الحجز للابن بنجاح',
-            'data' => $child->load('studentProfile.gradeLevel')
+            'data' => $child->load('studentProfile.gradeLevel'),
         ]);
     }
 
     // 5. جلب لوحة المراقبة الشاملة (الحجوزات والسجل المالي للأبناء)
     public function getDashboardData(Request $request): JsonResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
         // 1. جلب معرّفات (IDs) جميع أبناء هذا الولي
         $childrenIds = User::where('parent_id', $user->id)->pluck('id');
 
         // 2. حساب إجمالي الإنفاق (مجموع المبالغ المدفوعة للحجوزات المكتملة والمجدولة)
-        $totalSpent = \App\Models\Booking::whereIn('student_id', $childrenIds)
+        $totalSpent = Booking::whereIn('student_id', $childrenIds)
             ->whereIn('status', ['completed', 'scheduled', 'in_progress'])
             ->sum('net_paid');
 
         // 3. جلب حجوزات الأبناء (مع بيانات الابن والمعلم) مع التصفح
-        $bookings = \App\Models\Booking::whereIn('student_id', $childrenIds)
+        $bookings = Booking::whereIn('student_id', $childrenIds)
             ->with(['student:id,name', 'teacher:id,name', 'teacherSlot', 'review'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
         // 4. جلب محافظ الأبناء مع آخر العمليات المالية (الفواتير)
-        $wallets = \App\Models\Wallet::whereIn('user_id', $childrenIds)
-            ->with(['transactions' => function($query) {
+        $wallets = Wallet::whereIn('user_id', $childrenIds)
+            ->with(['transactions' => function ($query) {
                 $query->orderBy('created_at', 'desc')->limit(10); // آخر 10 عمليات
             }, 'user:id,name'])
             ->get();
 
-     // التأكد من وجود محفظة للأب وجلب رصيدها
+        // التأكد من وجود محفظة للأب وجلب رصيدها
         $parentWallet = $user->wallet()->firstOrCreate(['user_id' => $user->id], ['balance' => 0.00]);
 
         return response()->json([
@@ -151,7 +154,7 @@ class ParentController extends Controller
                 'total_spent' => $totalSpent,
                 'bookings' => $bookings,
                 'wallets' => $wallets,
-            ]
+            ],
         ]);
     }
 }

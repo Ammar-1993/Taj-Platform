@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
+use App\Events\BookingCreated;
 use App\Models\Booking;
 use App\Models\PromoCode;
 use App\Models\TeacherSlot;
 use App\Models\User;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Exception;
 use App\Notifications\NewBookingNotification;
+use Exception;
+use Illuminate\Support\Facades\DB;
 
 class BookingService
 {
@@ -23,17 +23,17 @@ class BookingService
     /**
      * إنشاء حجز جديد (عملية معقدة ومحمية ضد الحجز المزدوج)
      */
-public function createBooking(\App\Models\User $user, int $slotId, ?string $promoCode = null, ?int $childId = null)
+    public function createBooking(User $user, int $slotId, ?string $promoCode = null, ?int $childId = null)
     {
         // 1. تحديد من هو الطالب (الذي سيحضر) ومن هو الممول (الذي سيدفع)
         $student = $user;
         $payer = $user;
 
         if ($user->hasRole('parent')) {
-            if (!$childId) {
-                throw new \Exception('يجب تحديد الابن لحجز الحصة.');
+            if (! $childId) {
+                throw new Exception('يجب تحديد الابن لحجز الحصة.');
             }
-            $student = \App\Models\User::findOrFail($childId); // الطالب هو الابن
+            $student = User::findOrFail($childId); // الطالب هو الابن
             $payer = $user; // الممول هو الأب
         }
 
@@ -41,14 +41,14 @@ public function createBooking(\App\Models\User $user, int $slotId, ?string $prom
             // قفل الموعد لمنع الحجز المزدوج
             $slot = TeacherSlot::where('id', $slotId)->lockForUpdate()->first();
 
-            if (!$slot || $slot->status !== 'available') {
-                throw new \Exception('عفواً، هذا الموعد لم يعد متاحاً.');
+            if (! $slot || $slot->status !== 'available') {
+                throw new Exception('عفواً، هذا الموعد لم يعد متاحاً.');
             }
 
             // التأكد من أن الطالب لديه مرحلة دراسية محددة لمعرفة السعر
             $gradeLevel = $student->studentProfile->gradeLevel ?? null;
-            if (!$gradeLevel) {
-                throw new \Exception('يجب تحديد المرحلة الدراسية للطالب أولاً لمعرفة سعر الحصة.');
+            if (! $gradeLevel) {
+                throw new Exception('يجب تحديد المرحلة الدراسية للطالب أولاً لمعرفة سعر الحصة.');
             }
 
             $sessionPrice = $gradeLevel->session_price;
@@ -66,7 +66,7 @@ public function createBooking(\App\Models\User $user, int $slotId, ?string $prom
 
             // 2. التحقق من رصيد محفظة الممول (الأب أو الطالب نفسه)
             if ($payer->wallet->balance < $netPrice) {
-                throw new \Exception('رصيد المحفظة غير كافٍ لإتمام الحجز. يرجى الشحن أولاً.');
+                throw new Exception('رصيد المحفظة غير كافٍ لإتمام الحجز. يرجى الشحن أولاً.');
             }
 
             // 3. خصم المبلغ من الممول 💰
@@ -89,7 +89,7 @@ public function createBooking(\App\Models\User $user, int $slotId, ?string $prom
                 'net_paid' => $netPrice,
                 'status' => 'scheduled',
                 // إنشاء رابط غرفة افتراضي فريد
-                'agora_channel' => 'taj_' . uniqid() 
+                'agora_channel' => 'taj_'.uniqid(),
             ]);
 
             // 5. تحديث حالة الموعد
@@ -97,6 +97,9 @@ public function createBooking(\App\Models\User $user, int $slotId, ?string $prom
 
             // 6. إرسال إشعار للمعلم
             $booking->teacher->notify(new NewBookingNotification($booking));
+
+            // 7. بث حدث الحجز الجديد للوحة تحكم المعلم (Real-time update)
+            event(new BookingCreated($booking));
 
             return $booking;
         });
@@ -116,7 +119,7 @@ public function createBooking(\App\Models\User $user, int $slotId, ?string $prom
 
             $booking->update([
                 'status' => 'completed',
-                'completed_at' => now()
+                'completed_at' => now(),
             ]);
 
             // توزيع الأرباح: 80% تذهب لمحفظة المعلم، و20% تظل في حساب المنصة (لا تضاف لمحفظة أحد)
@@ -127,7 +130,7 @@ public function createBooking(\App\Models\User $user, int $slotId, ?string $prom
                     $booking->teacher,
                     $teacherShare,
                     'class_earnings', // إيداع أرباح
-                    'أرباح حصة منتهية رقم #' . $booking->id,
+                    'أرباح حصة منتهية رقم #'.$booking->id,
                     $booking->id
                 );
             }
@@ -139,12 +142,12 @@ public function createBooking(\App\Models\User $user, int $slotId, ?string $prom
     /**
      * إلغاء الحجز واسترجاع الأموال (Refund)
      */
-    public function cancelBooking(Booking $booking, \App\Models\User $canceller): Booking
+    public function cancelBooking(Booking $booking, User $canceller): Booking
     {
-        return DB::transaction(function () use ($booking, $canceller) {
+        return DB::transaction(function () use ($booking) {
             $booking = Booking::where('id', $booking->id)->lockForUpdate()->firstOrFail();
 
-            if (!in_array($booking->status, ['scheduled', 'in_progress'])) {
+            if (! in_array($booking->status, ['scheduled', 'in_progress'])) {
                 throw new Exception('لا يمكن إلغاء هذه الحصة في حالتها الحالية.');
             }
 
@@ -155,7 +158,7 @@ public function createBooking(\App\Models\User $user, int $slotId, ?string $prom
             $booking->teacherSlot->update(['status' => 'available']);
 
             // 3. استرجاع المبلغ لممول الحصة (الطالب أو ولي الأمر) 💰
-            $payer = \App\Models\User::find($booking->booked_by_id);
+            $payer = User::find($booking->booked_by_id);
             if ($payer) {
                 $this->walletService->processTransaction(
                     $payer,

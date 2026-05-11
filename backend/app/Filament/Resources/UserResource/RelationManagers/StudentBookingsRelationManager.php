@@ -2,20 +2,21 @@
 
 namespace App\Filament\Resources\UserResource\RelationManagers;
 
+use App\Filament\Resources\BookingResource;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class StudentBookingsRelationManager extends RelationManager
 {
     protected static string $relationship = 'studentBookings';
 
     protected static ?string $title = 'سجل الحجوزات (كطالب)';
+
     protected static ?string $modelLabel = 'حجز';
+
     protected static ?string $pluralModelLabel = 'حجوزات';
 
     public function form(Form $form): Form
@@ -37,7 +38,7 @@ class StudentBookingsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('id')->label('رقم الحجز')->sortable(),
                 Tables\Columns\TextColumn::make('teacher.name')->label('المعلم')->searchable()->color('primary')->weight('bold'),
                 Tables\Columns\TextColumn::make('booking_date')->label('تاريخ الحصة')->dateTime('Y-m-d h:i A')->sortable(),
-                Tables\Columns\TextColumn::make('net_paid')->label('المبلغ')->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' SAR')->sortable()->badge()->color('success'),
+                Tables\Columns\TextColumn::make('net_paid')->label('المبلغ')->formatStateUsing(fn ($state) => number_format((float) $state, 2).' SAR')->sortable()->badge()->color('success'),
                 Tables\Columns\TextColumn::make('status')
                     ->label('الحالة')
                     ->badge()
@@ -62,7 +63,7 @@ class StudentBookingsRelationManager extends RelationManager
             ])
             ->headerActions([])
             ->actions([
-                Tables\Actions\ViewAction::make()->url(fn ($record) => \App\Filament\Resources\BookingResource::getUrl('index') . '?tableFilters[id][value]=' . $record->id),
+                Tables\Actions\ViewAction::make()->url(fn ($record) => BookingResource::getUrl('index').'?tableFilters[id][value]='.$record->id),
             ])
             ->bulkActions([]);
     }

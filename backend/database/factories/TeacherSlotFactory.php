@@ -2,11 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\TeacherSlot;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\TeacherSlot>
+ * @extends Factory<TeacherSlot>
  */
 class TeacherSlotFactory extends Factory
 {

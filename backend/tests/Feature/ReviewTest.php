@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\Booking;
-use App\Models\TeacherProfile;
-use App\Models\Subject;
 use App\Models\GradeLevel;
+use App\Models\Subject;
+use App\Models\TeacherProfile;
 use App\Models\TeacherSlot;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -17,7 +17,9 @@ class ReviewTest extends TestCase
     use RefreshDatabase;
 
     protected User $student;
+
     protected User $teacher;
+
     protected Booking $booking;
 
     protected function setUp(): void
@@ -31,19 +33,19 @@ class ReviewTest extends TestCase
 
         $this->teacher = User::factory()->create();
         $this->teacher->assignRole('teacher');
-        
+
         $grade = GradeLevel::create(['name' => 'Secondary', 'session_price' => 100.00]);
         $subject = Subject::create([
             'grade_level_id' => $grade->id,
-            'name' => 'Math', 
-            'is_active' => true
+            'name' => 'Math',
+            'is_active' => true,
         ]);
-        
+
         $this->teacher->teacherProfile()->create([
             'subject_id' => $subject->id,
             'bio' => 'Test Bio',
             'average_rating' => 0,
-            'reviews_count' => 0
+            'reviews_count' => 0,
         ]);
 
         $slot = TeacherSlot::create([
@@ -51,7 +53,7 @@ class ReviewTest extends TestCase
             'slot_date' => now()->addDay()->toDateString(),
             'start_time' => '10:00:00',
             'end_time' => '11:00:00',
-            'status' => 'booked'
+            'status' => 'booked',
         ]);
 
         $this->booking = Booking::create([
@@ -64,7 +66,7 @@ class ReviewTest extends TestCase
             'discount_amount' => 0,
             'net_paid' => 100.00,
             'status' => 'completed',
-            'agora_channel' => 'channel_' . uniqid()
+            'agora_channel' => 'channel_'.uniqid(),
         ]);
     }
 
@@ -73,18 +75,18 @@ class ReviewTest extends TestCase
         $payload = [
             'booking_id' => $this->booking->id,
             'rating' => 5,
-            'comment' => 'Great session!'
+            'comment' => 'Great session!',
         ];
 
         $response = $this->actingAs($this->student)
-                         ->postJson('/api/v1/reviews', $payload);
+            ->postJson('/api/v1/reviews', $payload);
 
         $response->assertStatus(200)
-                 ->assertJson(['status' => 'success']);
+            ->assertJson(['status' => 'success']);
 
         $this->assertDatabaseHas('reviews', [
             'booking_id' => $this->booking->id,
-            'rating' => 5
+            'rating' => 5,
         ]);
 
         $profile = TeacherProfile::where('user_id', $this->teacher->id)->first();
@@ -102,7 +104,7 @@ class ReviewTest extends TestCase
         ];
 
         $response = $this->actingAs($this->student)
-                         ->postJson('/api/v1/reviews', $payload);
+            ->postJson('/api/v1/reviews', $payload);
 
         $response->assertStatus(400);
     }
@@ -112,7 +114,7 @@ class ReviewTest extends TestCase
         $this->booking->review()->create([
             'student_id' => $this->student->id,
             'teacher_id' => $this->teacher->id,
-            'rating' => 4
+            'rating' => 4,
         ]);
 
         $payload = [
@@ -121,7 +123,7 @@ class ReviewTest extends TestCase
         ];
 
         $response = $this->actingAs($this->student)
-                         ->postJson('/api/v1/reviews', $payload);
+            ->postJson('/api/v1/reviews', $payload);
 
         $response->assertStatus(400);
     }

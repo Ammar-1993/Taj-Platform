@@ -45,6 +45,7 @@ export default function DashboardPage() {
     pendingReview,
     dataLoading,
     fetchDashboardData,
+    refreshAll,
     dismissPendingReview,
     markNotificationAsRead,
   } = useDashboardData(user, isParent, isTeacher);
@@ -61,7 +62,7 @@ export default function DashboardPage() {
       
       // إعطاء فرصة بسيطة للقاعدة للتحديث ثم الجلب
       setTimeout(async () => {
-        await fetchDashboardData();
+        await refreshAll();
         toast.success('تم تحديث البيانات', { id: tid });
       }, 500);
 
@@ -146,7 +147,7 @@ export default function DashboardPage() {
             setBookingPage={setBookingPage}
             notifications={notifications}
             markNotificationAsRead={markNotificationAsRead}
-            onRefresh={fetchDashboardData}
+            onRefresh={refreshAll}
             loading={dataLoading}
           />
         )}

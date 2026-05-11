@@ -29,7 +29,7 @@ class PayoutProcessedNotification extends Notification
             'payout_id' => $this->payout->id,
             'amount' => $this->payout->amount,
             'message' => "أخبار رائعة! تم تحويل مبلغ {$this->payout->amount} ريال إلى حسابك البنكي ({$this->payout->bank_name}). 💸",
-            'time' => now()->format('Y-m-d h:i A')
+            'time' => now()->format('Y-m-d h:i A'),
         ];
     }
 }

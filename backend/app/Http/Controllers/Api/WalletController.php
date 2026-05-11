@@ -3,14 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use App\Services\WalletService;
-use App\Models\PayoutRequest;
-use Illuminate\Support\Facades\DB;
-
+use App\Models\User;
 use App\Services\PayoutService;
 use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class WalletController extends Controller
 {
@@ -20,10 +17,11 @@ class WalletController extends Controller
     {
         $this->payoutService = $payoutService;
     }
+
     // جلب الرصيد وكشف الحساب
     public function index(Request $request): JsonResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         // جلب المحفظة، أو إنشاؤها إن لم تكن موجودة
@@ -50,7 +48,6 @@ class WalletController extends Controller
         ]);
     }
 
-
     // طلب سحب أرباح (للمعلمين)
     public function requestPayout(Request $request): JsonResponse
     {
@@ -60,10 +57,10 @@ class WalletController extends Controller
             'iban' => 'required|string|starts_with:SA', // يجب أن يبدأ بـ SA
         ], [
             'amount.min' => 'الحد الأدنى لسحب الأرباح هو 50 ريال.',
-            'iban.starts_with' => 'رقم الآيبان يجب أن يبدأ بـ SA.'
+            'iban.starts_with' => 'رقم الآيبان يجب أن يبدأ بـ SA.',
         ]);
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         try {
@@ -77,13 +74,13 @@ class WalletController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'تم إرسال طلب السحب للإدارة بنجاح!',
-                'data' => $payout
+                'data' => $payout,
             ]);
 
         } catch (Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 400);
         }
     }

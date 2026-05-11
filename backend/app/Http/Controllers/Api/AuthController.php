@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Notification;
 use App\Notifications\PasswordChanged;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -46,8 +47,8 @@ class AuthController extends Controller
             'message' => 'تم إنشاء الحساب بنجاح! مرحباً بك في منصة تاج.',
             'data' => [
                 'user' => $user->load('roles', 'wallet'),
-                'token' => $token
-            ]
+                'token' => $token,
+            ],
         ], 201);
     }
 
@@ -59,17 +60,17 @@ class AuthController extends Controller
         $data = $request->validated();
         $user = User::where('email', $data['email'])->first();
 
-        if (!$user || !Hash::check($data['password'], $user->password)) {
+        if (! $user || ! Hash::check($data['password'], $user->password)) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة.'
+                'message' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
             ], 401);
         }
 
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'تم إيقاف حسابك مؤقتاً. يرجى التواصل مع فريق الدعم.'
+                'message' => 'تم إيقاف حسابك مؤقتاً. يرجى التواصل مع فريق الدعم.',
             ], 403);
         }
 
@@ -86,8 +87,8 @@ class AuthController extends Controller
             'message' => 'تم تسجيل الدخول بنجاح.',
             'data' => [
                 'user' => $user->load(['roles', 'studentProfile', 'teacherProfile', 'wallet']),
-                'token' => $token
-            ]
+                'token' => $token,
+            ],
         ]);
     }
 
@@ -105,7 +106,7 @@ class AuthController extends Controller
         return $status === Password::RESET_LINK_SENT
             ? response()->json([
                 'status' => 'success',
-                'message' => 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.'
+                'message' => 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.',
             ])
             : response()->json([
                 'status' => 'error',
@@ -137,7 +138,7 @@ class AuthController extends Controller
         return $status === Password::PASSWORD_RESET
             ? response()->json([
                 'status' => 'success',
-                'message' => 'تم إعادة تعيين كلمة المرور بنجاح.'
+                'message' => 'تم إعادة تعيين كلمة المرور بنجاح.',
             ])
             : response()->json([
                 'status' => 'error',
@@ -150,12 +151,12 @@ class AuthController extends Controller
      */
     public function me(Request $request): JsonResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         return response()->json([
             'status' => 'success',
-            'data' => $user->load(['roles', 'studentProfile', 'teacherProfile', 'wallet'])
+            'data' => $user->load(['roles', 'studentProfile', 'teacherProfile', 'wallet']),
         ]);
     }
 
@@ -164,9 +165,9 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        /** @var \Laravel\Sanctum\PersonalAccessToken $token */
+        /** @var PersonalAccessToken $token */
         $token = $request->user()->currentAccessToken();
-        
+
         if ($token) {
             $token->delete();
         }
@@ -179,7 +180,7 @@ class AuthController extends Controller
      */
     public function updateUser(Request $request): JsonResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         $request->validate([
@@ -197,17 +198,17 @@ class AuthController extends Controller
 
         // تحديث كلمة المرور إذا تم تقديمها
         if ($request->has('password')) {
-            if (!Hash::check($request->current_password, $user->password)) {
+            if (! Hash::check($request->current_password, $user->password)) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'كلمة المرور الحالية غير صحيحة.'
+                    'message' => 'كلمة المرور الحالية غير صحيحة.',
                 ], 400);
             }
 
             $user->password = Hash::make($request->password);
 
             // إرسال إشعار بتغيير كلمة المرور
-            Notification::send($user, new PasswordChanged());
+            Notification::send($user, new PasswordChanged);
         }
 
         // تحديث السيرة الذاتية إذا كان المستخدم معلماً
@@ -218,7 +219,7 @@ class AuthController extends Controller
         // حفظ الصورة الشخصية إذا تم رفعها
         if ($request->hasFile('avatar')) {
             $path = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar_url = '/storage/' . $path;
+            $user->avatar_url = '/storage/'.$path;
         }
 
         $user->save();
@@ -226,7 +227,7 @@ class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'تم تحديث البيانات بنجاح.',
-            'data' => $user->load(['roles', 'studentProfile', 'teacherProfile', 'wallet'])
+            'data' => $user->load(['roles', 'studentProfile', 'teacherProfile', 'wallet']),
         ]);
     }
 }

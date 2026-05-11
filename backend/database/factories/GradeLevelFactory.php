@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\GradeLevel;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\GradeLevel>
+ * @extends Factory<GradeLevel>
  */
 class GradeLevelFactory extends Factory
 {
@@ -17,7 +18,7 @@ class GradeLevelFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->unique()->word() . ' Stage',
+            'name' => $this->faker->unique()->word().' Stage',
             'session_price' => 100.00,
             'is_active' => true,
         ];

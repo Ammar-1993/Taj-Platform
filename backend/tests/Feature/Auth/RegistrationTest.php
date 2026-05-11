@@ -3,27 +3,28 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase; // 🟢 التعديل الأول
-use PHPUnit\Framework\Attributes\Test; // 🟢 التعديل الثاني
+use App\Services\RecaptchaService; // 🟢 التعديل الأول
+use Illuminate\Foundation\Testing\RefreshDatabase; // 🟢 التعديل الثاني
+use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
 {
     // 🟢 التعديل الأول: استخدام هذه السمة لكي لا تُحذف قاعدة بياناتك الحقيقية
-    use RefreshDatabase; 
+    use RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // 🟢 استخدام firstOrCreate لكي لا يحدث خطأ إذا كانت الصلاحية موجودة مسبقاً
         Role::firstOrCreate(['name' => 'student']);
         Role::firstOrCreate(['name' => 'teacher']);
         Role::firstOrCreate(['name' => 'parent']);
 
         // Mock RecaptchaService
-        $this->mock(\App\Services\RecaptchaService::class, function ($mock) {
+        $this->mock(RecaptchaService::class, function ($mock) {
             $mock->shouldReceive('verify')->andReturn(true);
         });
     }
@@ -37,20 +38,20 @@ class RegistrationTest extends TestCase
             'phone' => '0500000999',
             'password' => 'password123',
             'role' => 'student',
-            'recaptcha_token' => 'fake-token'
+            'recaptcha_token' => 'fake-token',
         ];
 
         $response = $this->postJson('/api/v1/auth/register', $payload);
 
         $response->assertStatus(201)
-                 ->assertJsonStructure([
-                     'status',
-                     'message',
-                     'data' => [
-                         'user' => ['id', 'name', 'email', 'roles', 'wallet'],
-                         'token'
-                     ]
-                 ]);
+            ->assertJsonStructure([
+                'status',
+                'message',
+                'data' => [
+                    'user' => ['id', 'name', 'email', 'roles', 'wallet'],
+                    'token',
+                ],
+            ]);
 
         $this->assertDatabaseHas('users', [
             'email' => 'test_student_999@test.com',
@@ -62,7 +63,7 @@ class RegistrationTest extends TestCase
         // هل تم إنشاء المحفظة؟
         $this->assertDatabaseHas('wallets', [
             'user_id' => $user->id,
-            'balance' => 0.00
+            'balance' => 0.00,
         ]);
     }
 
@@ -78,7 +79,7 @@ class RegistrationTest extends TestCase
             'phone' => '0500000888',
             'password' => 'password123',
             'role' => 'teacher',
-            'recaptcha_token' => 'fake-token'
+            'recaptcha_token' => 'fake-token',
         ];
 
         // 2. التنفيذ
@@ -86,14 +87,14 @@ class RegistrationTest extends TestCase
 
         // 3. التحقق: يجب أن يفشل (422)
         $response->assertStatus(422)
-                 ->assertJsonValidationErrors(['email']);
+            ->assertJsonValidationErrors(['email']);
     }
 
     #[Test]
     public function registration_fails_if_recaptcha_is_invalid()
     {
         // Mock RecaptchaService to return false
-        $this->mock(\App\Services\RecaptchaService::class, function ($mock) {
+        $this->mock(RecaptchaService::class, function ($mock) {
             $mock->shouldReceive('verify')->andReturn(false);
         });
 
@@ -103,12 +104,12 @@ class RegistrationTest extends TestCase
             'phone' => '0500000777',
             'password' => 'password123',
             'role' => 'student',
-            'recaptcha_token' => 'invalid-token'
+            'recaptcha_token' => 'invalid-token',
         ];
 
         $response = $this->postJson('/api/v1/auth/register', $payload);
 
         $response->assertStatus(422)
-                 ->assertJsonValidationErrors(['recaptcha_token']);
+            ->assertJsonValidationErrors(['recaptcha_token']);
     }
 }

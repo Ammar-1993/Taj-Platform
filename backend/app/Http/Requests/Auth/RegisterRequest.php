@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Services\RecaptchaService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RegisterRequest extends FormRequest
@@ -19,11 +20,11 @@ class RegisterRequest extends FormRequest
             'phone' => ['bail', 'required', 'string', 'max:20', 'unique:users'],
             'password' => ['required', 'string', 'min:8'],
             // نقبل فقط هذه الأدوار عند التسجيل العام
-            'role' => ['required', 'in:student,parent,teacher'], 
+            'role' => ['required', 'in:student,parent,teacher'],
         ];
 
         // في البيئة المحلية، نجعل التوكن اختيارياً لتسهيل التطوير بدون مفاتيح حقيقية
-        if (!app()->environment('local')) {
+        if (! app()->environment('local')) {
             $rules['recaptcha_token'] = ['required', 'string'];
         }
 
@@ -42,8 +43,8 @@ class RegisterRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             if ($this->has('recaptcha_token')) {
-                $recaptcha = app(\App\Services\RecaptchaService::class);
-                if (!$recaptcha->verify($this->recaptcha_token, $this->ip())) {
+                $recaptcha = app(RecaptchaService::class);
+                if (! $recaptcha->verify($this->recaptcha_token, $this->ip())) {
                     $validator->errors()->add('recaptcha_token', 'فشل التحقق من reCAPTCHA. يرجى المحاولة مرة أخرى.');
                 }
             }

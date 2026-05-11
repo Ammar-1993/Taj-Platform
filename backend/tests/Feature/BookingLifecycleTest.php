@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\Booking;
-use App\Models\TeacherSlot;
 use App\Models\GradeLevel;
+use App\Models\TeacherSlot;
+use App\Models\User;
 use App\Services\WalletService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -16,8 +16,11 @@ class BookingLifecycleTest extends TestCase
     use RefreshDatabase;
 
     protected User $student;
+
     protected User $teacher;
+
     protected TeacherSlot $slot;
+
     protected Booking $booking;
 
     protected function setUp(): void
@@ -41,7 +44,7 @@ class BookingLifecycleTest extends TestCase
             'slot_date' => now()->addDay()->toDateString(),
             'start_time' => '10:00',
             'end_time' => '11:00',
-            'status' => 'booked'
+            'status' => 'booked',
         ]);
 
         $this->booking = Booking::create([
@@ -54,7 +57,7 @@ class BookingLifecycleTest extends TestCase
             'discount_amount' => 0,
             'net_paid' => 100.00,
             'status' => 'scheduled',
-            'agora_channel' => 'test_channel'
+            'agora_channel' => 'test_channel',
         ]);
 
         // خصم المبلغ يدوياً من المحفظة لمحاكاة وضع الحجز الحقيقي
@@ -64,13 +67,13 @@ class BookingLifecycleTest extends TestCase
     public function test_teacher_can_complete_booking_and_earn_money()
     {
         $response = $this->actingAs($this->teacher)
-                         ->patchJson("/api/v1/bookings/{$this->booking->id}/complete");
+            ->patchJson("/api/v1/bookings/{$this->booking->id}/complete");
 
         $response->assertStatus(200)
-                 ->assertJson(['status' => 'success']);
+            ->assertJson(['status' => 'success']);
 
         $this->assertEquals('completed', $this->booking->refresh()->status);
-        
+
         // Teacher earns 80% of 100 = 80
         $this->assertEquals(80.00, $this->teacher->wallet->refresh()->balance);
     }
@@ -78,16 +81,16 @@ class BookingLifecycleTest extends TestCase
     public function test_teacher_can_cancel_booking_and_student_gets_refund()
     {
         $initialBalance = $this->student->wallet->balance; // Should be 100 after booking (200 - 100)
-        
+
         $response = $this->actingAs($this->teacher)
-                         ->patchJson("/api/v1/bookings/{$this->booking->id}/cancel");
+            ->patchJson("/api/v1/bookings/{$this->booking->id}/cancel");
 
         $response->assertStatus(200)
-                 ->assertJson(['status' => 'success']);
+            ->assertJson(['status' => 'success']);
 
         $this->assertEquals('cancelled', $this->booking->refresh()->status);
         $this->assertEquals('available', $this->slot->refresh()->status);
-        
+
         // Student gets 100 back. Initial 200 - 100 (for booking) + 100 (refund) = 200
         $this->assertEquals(200.00, $this->student->wallet->refresh()->balance);
     }
@@ -99,7 +102,7 @@ class BookingLifecycleTest extends TestCase
         $otherTeacher->assignRole('teacher');
 
         $response = $this->actingAs($otherTeacher)
-                         ->patchJson("/api/v1/bookings/{$this->booking->id}/complete");
+            ->patchJson("/api/v1/bookings/{$this->booking->id}/complete");
 
         $response->assertStatus(403);
     }
@@ -107,9 +110,9 @@ class BookingLifecycleTest extends TestCase
     public function test_student_can_list_their_bookings()
     {
         $response = $this->actingAs($this->student)
-                         ->getJson('/api/v1/bookings');
+            ->getJson('/api/v1/bookings');
 
         $response->assertStatus(200)
-                 ->assertJsonStructure(['status', 'data']);
+            ->assertJsonStructure(['status', 'data']);
     }
 }

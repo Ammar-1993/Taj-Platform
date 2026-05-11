@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use App\Models\User;
 use App\Services\WalletService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class WalletServiceTest extends TestCase
 {
@@ -36,7 +36,7 @@ class WalletServiceTest extends TestCase
         $this->assertEquals(500.00, $user->wallet->balance);
         $this->assertDatabaseHas('wallet_transactions', [
             'type' => 'deposit',
-            'amount' => 500.00
+            'amount' => 500.00,
         ]);
     }
 

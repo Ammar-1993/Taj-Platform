@@ -11,9 +11,9 @@ use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\TeacherSlotController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\PayoutRequestController;
+use App\Models\Subject;
 use App\Models\SupportTicket;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -50,7 +50,7 @@ Route::prefix('v1')->group(function () {
     // 3. مسارات عامة أخرى
     Route::get('/public/subjects', function () {
         return response()->json([
-            'data' => \App\Models\Subject::where('is_active', true)->get(),
+            'data' => Subject::where('is_active', true)->get(),
         ]);
     });
     Route::post('/webhooks/payment', [PaymentController::class, 'webhook']);
@@ -142,5 +142,3 @@ Route::prefix('v1')->group(function () {
     }); // نهاية مجموعة auth:sanctum
 
 }); // نهاية مجموعة v1
-
-

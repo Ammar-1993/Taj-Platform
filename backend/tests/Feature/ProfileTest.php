@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use App\Models\Subject;
 use App\Models\GradeLevel;
+use App\Models\Subject;
 use App\Models\TeacherProfile;
-use App\Models\StudentProfile;
+use App\Models\User;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -37,18 +37,18 @@ class ProfileTest extends TestCase
         ];
 
         $response = $this->actingAs($user)
-                         ->postJson('/api/v1/profile/student', $payload);
+            ->postJson('/api/v1/profile/student', $payload);
 
         $response->assertStatus(200)
-                 ->assertJson([
-                     'status' => 'success',
-                     'message' => 'تم استكمال ملف الطالب بنجاح'
-                 ]);
+            ->assertJson([
+                'status' => 'success',
+                'message' => 'تم استكمال ملف الطالب بنجاح',
+            ]);
 
         $this->assertDatabaseHas('student_profiles', [
             'user_id' => $user->id,
             'grade_level_id' => $grade->id,
-            'can_book_independently' => true
+            'can_book_independently' => true,
         ]);
     }
 
@@ -63,8 +63,8 @@ class ProfileTest extends TestCase
         $grade = GradeLevel::create(['name' => 'Secondary', 'session_price' => 100.00]);
         $subject = Subject::create([
             'grade_level_id' => $grade->id,
-            'name' => 'Mathematics', 
-            'is_active' => true
+            'name' => 'Mathematics',
+            'is_active' => true,
         ]);
 
         $payload = [
@@ -75,25 +75,25 @@ class ProfileTest extends TestCase
         ];
 
         $response = $this->actingAs($user)
-                         ->postJson('/api/v1/profile/teacher', $payload);
+            ->postJson('/api/v1/profile/teacher', $payload);
 
         $response->assertStatus(200)
-                 ->assertJson([
-                     'status' => 'success',
-                     'message' => 'تم استكمال ملف المعلم ورفع المستندات بنجاح. حسابك الآن قيد المراجعة الإدارية ⏳'
-                 ]);
+            ->assertJson([
+                'status' => 'success',
+                'message' => 'تم استكمال ملف المعلم ورفع المستندات بنجاح. حسابك الآن قيد المراجعة الإدارية ⏳',
+            ]);
 
         $this->assertDatabaseHas('teacher_profiles', [
             'user_id' => $user->id,
             'subject_id' => $subject->id,
-            'is_verified' => false
+            'is_verified' => false,
         ]);
 
         $profile = TeacherProfile::where('user_id', $user->id)->first();
         $this->assertNotNull($profile->national_id_path);
         $this->assertNotNull($profile->degree_path);
 
-        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+        /** @var FilesystemAdapter $disk */
         $disk = Storage::disk('public');
         $disk->assertExists($profile->national_id_path);
         $disk->assertExists($profile->degree_path);
@@ -106,7 +106,7 @@ class ProfileTest extends TestCase
         $user->assignRole('student');
 
         $response = $this->actingAs($user)
-                         ->postJson('/api/v1/profile/teacher', []);
+            ->postJson('/api/v1/profile/teacher', []);
 
         $response->assertStatus(403);
     }

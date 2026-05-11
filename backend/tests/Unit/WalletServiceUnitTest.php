@@ -2,10 +2,10 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\User;
 use App\Services\WalletService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class WalletServiceUnitTest extends TestCase
 {
@@ -21,7 +21,7 @@ class WalletServiceUnitTest extends TestCase
 
     public function test_process_transaction_deposit_and_withdrawal_success()
     {
-        $user = User::create([ 'name' => 'Test User', 'email' => 'unit@taj.com', 'phone' => '0500000000', 'password' => bcrypt('password') ]);
+        $user = User::create(['name' => 'Test User', 'email' => 'unit@taj.com', 'phone' => '0500000000', 'password' => bcrypt('password')]);
 
         $this->walletService->processTransaction($user, 100.00, 'deposit', 'Unit deposit');
         $this->assertEquals(100.00, $user->wallet->refresh()->balance);
@@ -32,7 +32,7 @@ class WalletServiceUnitTest extends TestCase
 
     public function test_process_transaction_raises_on_insufficient_balance()
     {
-        $user = User::create([ 'name' => 'Poor User', 'email' => 'unitpoor@taj.com', 'phone' => '0500000001', 'password' => bcrypt('password') ]);
+        $user = User::create(['name' => 'Poor User', 'email' => 'unitpoor@taj.com', 'phone' => '0500000001', 'password' => bcrypt('password')]);
 
         $this->walletService->processTransaction($user, 20.00, 'deposit', 'Small startup');
 

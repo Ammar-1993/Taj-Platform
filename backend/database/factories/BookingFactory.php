@@ -2,12 +2,13 @@
 
 namespace Database\Factories;
 
+use App\Models\Booking;
 use App\Models\TeacherSlot;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Booking>
+ * @extends Factory<Booking>
  */
 class BookingFactory extends Factory
 {
@@ -19,7 +20,7 @@ class BookingFactory extends Factory
     public function definition(): array
     {
         $slot = TeacherSlot::factory()->create(['status' => 'booked']);
-        
+
         return [
             'student_id' => User::factory(),
             'teacher_id' => $slot->teacher_id,

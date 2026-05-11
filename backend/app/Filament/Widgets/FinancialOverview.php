@@ -18,10 +18,10 @@ class FinancialOverview extends BaseWidget
     {
         // 1. إجمالي المبيعات (الحصص المكتملة فقط)
         $totalSales = Booking::where('status', 'completed')->sum('net_paid');
-        
+
         // 2. إجمالي الالتزامات (أموال المعلمين والطلاب الموجودة في المحافظ حالياً)
         $totalWalletsBalance = Wallet::sum('balance');
-        
+
         // 3. إجمالي طلبات السحب المعلقة التي تحتاج موافقة
         $pendingPayouts = PayoutRequest::where('status', 'pending')->sum('amount');
 
@@ -33,18 +33,18 @@ class FinancialOverview extends BaseWidget
         })->toArray();
 
         return [
-            Stat::make('إجمالي المبيعات (الحصص المكتملة)', number_format($totalSales, 2) . ' SAR')
+            Stat::make('إجمالي المبيعات (الحصص المكتملة)', number_format($totalSales, 2).' SAR')
                 ->description('إجمالي المقبوضات للحصص المنجزة')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('success')
                 ->chart($salesSparkline), // بيانت ديناميكية 100%
 
-            Stat::make('إجمالي أرصدة المحافظ (التزامات)', number_format($totalWalletsBalance, 2) . ' SAR')
+            Stat::make('إجمالي أرصدة المحافظ (التزامات)', number_format($totalWalletsBalance, 2).' SAR')
                 ->description('مجموع الأموال المتاحة حالياً في محافظ المستخدمين')
                 ->descriptionIcon('heroicon-m-wallet')
                 ->color('info'),
 
-            Stat::make('طلبات السحب المعلقة', number_format($pendingPayouts, 2) . ' SAR')
+            Stat::make('طلبات السحب المعلقة', number_format($pendingPayouts, 2).' SAR')
                 ->description('مبالغ تنتظر المراجعة والتحويل البنكي')
                 ->descriptionIcon('heroicon-m-clock')
                 ->color('warning')

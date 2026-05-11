@@ -6,6 +6,7 @@ use App\Filament\Resources\SupportTicketResource\Pages;
 use App\Models\SupportTicket;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
@@ -28,7 +29,7 @@ class SupportTicketResource extends Resource
     public static function canCreate(): bool
     {
         return false;
-    } 
+    }
 
     public static function form(Form $form): Form
     {
@@ -147,10 +148,10 @@ class SupportTicketResource extends Resource
                         ->action(function (SupportTicket $record, array $data) {
                             $record->update([
                                 'admin_reply' => $data['admin_reply'],
-                                'status' => 'resolved', 
+                                'status' => 'resolved',
                             ]);
 
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('تم إرسال الرد بنجاح ✅')
                                 ->success()
                                 ->send();
@@ -164,7 +165,7 @@ class SupportTicketResource extends Resource
                         ->visible(fn (SupportTicket $record): bool => in_array($record->status, ['open', 'in_progress']) && empty($record->admin_reply))
                         ->action(function (SupportTicket $record) {
                             $record->update(['status' => 'resolved']);
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('تم إغلاق التذكرة ✅')
                                 ->success()
                                 ->send();

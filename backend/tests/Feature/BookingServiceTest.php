@@ -2,21 +2,21 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Subject;
 use App\Models\GradeLevel;
-use App\Models\TeacherSlot;
 use App\Models\PromoCode;
+use App\Models\TeacherSlot;
+use App\Models\User;
 use App\Services\BookingService;
 use App\Services\WalletService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class BookingServiceTest extends TestCase
 {
     use RefreshDatabase;
 
     protected BookingService $bookingService;
+
     protected WalletService $walletService;
 
     protected function setUp(): void
@@ -30,10 +30,10 @@ class BookingServiceTest extends TestCase
     {
         // 1. زرع البيانات الأساسية (Data Setup)
         $grade = GradeLevel::create(['name' => 'ثانوي', 'session_price' => 100.00, 'is_active' => true]);
-        
+
         $student = User::create(['name' => 'طالب', 'email' => 's@taj.com', 'phone' => '1', 'password' => '123']);
         $student->studentProfile()->create(['grade_level_id' => $grade->id]);
-        
+
         // شحن محفظة الطالب بـ 200 ريال
         $this->walletService->processTransaction($student, 200.00, 'deposit', 'شحن');
 
@@ -43,14 +43,14 @@ class BookingServiceTest extends TestCase
             'slot_date' => now()->addDay(),
             'start_time' => '10:00:00',
             'end_time' => '11:00:00',
-            'status' => 'available'
+            'status' => 'available',
         ]);
 
         $promo = PromoCode::create([
             'code' => 'TEST50',
             'discount_percentage' => 50.00, // خصم 50%
             'max_uses' => 10,
-            'used_count' => 0
+            'used_count' => 0,
         ]);
 
         // 2. تنفيذ عملية الحجز
@@ -59,18 +59,18 @@ class BookingServiceTest extends TestCase
         // 3. التحقق (Assertions)
         // أ. الموعد أصبح محجوزاً
         $this->assertEquals('booked', $slot->refresh()->status);
-        
+
         // ب. السعر كان 100، الخصم 50%، الصافي يجب أن يكون 50
         $this->assertEquals(50.00, $booking->net_paid);
-        
+
         // ج. رصيد الطالب كان 200، انخصم 50، المتبقي يجب أن يكون 150
         $this->assertEquals(150.00, $student->wallet->refresh()->balance);
-        
+
         // د. عدد استخدامات كود الخصم زاد بمقدار 1
         $this->assertEquals(1, $promo->refresh()->used_count);
     }
 
-   public function test_it_prevents_double_booking()
+    public function test_it_prevents_double_booking()
     {
         // تجهيز بيانات الطالب
         $grade = GradeLevel::create(['name' => 'ابتدائي', 'session_price' => 50.00, 'is_active' => true]);
@@ -86,7 +86,7 @@ class BookingServiceTest extends TestCase
             'slot_date' => now()->addDay(),
             'start_time' => '10:00:00',
             'end_time' => '11:00:00',
-            'status' => 'booked' // الموعد محجوز مسبقاً!
+            'status' => 'booked', // الموعد محجوز مسبقاً!
         ]);
 
         // نتوقع أن يرمي خطأ

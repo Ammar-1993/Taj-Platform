@@ -8,8 +8,8 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Table;
 
 class TeacherProfileResource extends Resource
 {
@@ -17,9 +17,13 @@ class TeacherProfileResource extends Resource
 
     // أيقونة مناسبة لطلبات التوثيق
     protected static ?string $navigationIcon = 'heroicon-o-identification';
+
     protected static ?string $modelLabel = 'طلب انضمام معلم';
+
     protected static ?string $pluralModelLabel = 'طلبات توثيق المعلمين';
+
     protected static ?string $navigationGroup = 'الإدارة والمستخدمين';
+
     protected static ?int $navigationSort = 2; // ليكون تحت إدارة المستخدمين مباشرة
 
     // 🔒 منع الإضافة اليدوية من الإدارة (لأن المعلم هو من يسجل ويقدم الطلب)
@@ -118,7 +122,7 @@ class TeacherProfileResource extends Resource
                         ->requiresConfirmation()
                         ->modalHeading('توثيق حساب المعلم')
                         ->modalDescription('بمجرد توثيق الحساب، سيظهر المعلم فوراً للطلاب في نتائج البحث وسيتمكن من استقبال الحجوزات. هل أنت متأكد؟')
-                        ->visible(fn (TeacherProfile $record): bool => !$record->is_verified)
+                        ->visible(fn (TeacherProfile $record): bool => ! $record->is_verified)
                         ->action(fn (TeacherProfile $record) => $record->update(['is_verified' => true])),
                     Action::make('suspend')
                         ->label('تجميد الحساب')

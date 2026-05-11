@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\SupportTicketResource\Pages;
 
 use App\Filament\Resources\SupportTicketResource;
-use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
 class ListSupportTickets extends ListRecords

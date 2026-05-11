@@ -15,9 +15,13 @@ class GradeLevelResource extends Resource
     protected static ?string $model = GradeLevel::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
+
     protected static ?string $modelLabel = 'مرحلة دراسية';
+
     protected static ?string $pluralModelLabel = 'المراحل الدراسية';
+
     protected static ?string $navigationGroup = 'المحتوى الأكاديمي';
+
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
@@ -47,7 +51,7 @@ class GradeLevelResource extends Resource
                             ->label('مفعلة؟')
                             ->default(true)
                             ->helperText('المرحلة المعطلة لن تظهر للطلاب عند التسجيل.'),
-                    ])->columns(2)
+                    ])->columns(2),
             ]);
     }
 
@@ -63,7 +67,7 @@ class GradeLevelResource extends Resource
 
                 Tables\Columns\TextColumn::make('session_price')
                     ->label('سعر الحصة (ثابت)')
-                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' SAR')
+                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2).' SAR')
                     ->sortable()
                     ->badge() // جعل السعر يظهر بشكل بارز كـ Badge
                     ->color('success'),

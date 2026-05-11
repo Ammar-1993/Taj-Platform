@@ -13,12 +13,16 @@ use Filament\Tables\Table;
 class SubjectResource extends Resource
 {
     protected static ?string $model = Subject::class;
-    
+
     // أيقونات وأسماء معربة ومرتبة
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
+
     protected static ?string $modelLabel = 'مادة دراسية';
+
     protected static ?string $pluralModelLabel = 'المواد الدراسية';
+
     protected static ?string $navigationGroup = 'المحتوى الأكاديمي';
+
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
@@ -35,19 +39,19 @@ class SubjectResource extends Resource
                             ->maxLength(255)
                             ->unique(ignoreRecord: true) // منع التكرار
                             ->placeholder('مثال: لغتي الجميلة'),
-                            
+
                         Forms\Components\FileUpload::make('icon_path')
                             ->label('أيقونة المادة (اختياري)')
                             ->image()
                             ->directory('subjects-icons')
                             ->imageEditor() // يتيح للمدير قص وتعديل الصورة قبل الرفع!
                             ->columnSpanFull(),
-                            
+
                         Forms\Components\Toggle::make('is_active')
                             ->label('مفعلة وتظهر في المنصة؟')
                             ->default(true)
                             ->helperText('إذا قمت بتعطيلها، لن يتمكن الطلاب الجدد من الحجز فيها.'),
-                    ])->columns(2) // تقسيم الحقول بشكل متناسق
+                    ])->columns(2), // تقسيم الحقول بشكل متناسق
             ]);
     }
 

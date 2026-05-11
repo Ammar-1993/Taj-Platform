@@ -4,10 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\GradeLevel;
+use App\Models\Review;
 use App\Models\Subject;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class DiscoveryController extends Controller
 {
@@ -18,7 +19,7 @@ class DiscoveryController extends Controller
 
         // فلترة المواد بناءً على المرحلة الدراسية للطالب المسجل الدخول
         if (auth('sanctum')->check()) {
-            /** @var \App\Models\User $user */
+            /** @var User $user */
             $user = auth('sanctum')->user();
             if ($user->hasRole('student')) {
                 $user->load('studentProfile');
@@ -29,6 +30,7 @@ class DiscoveryController extends Controller
         }
 
         $subjects = $query->get();
+
         return response()->json(['status' => 'success', 'data' => $subjects]);
     }
 
@@ -36,6 +38,7 @@ class DiscoveryController extends Controller
     public function gradeLevels(): JsonResponse
     {
         $grades = GradeLevel::where('is_active', true)->get();
+
         return response()->json(['status' => 'success', 'data' => $grades]);
     }
 
@@ -49,7 +52,7 @@ class DiscoveryController extends Controller
             ->with(['teacherProfile.subject']) // Eager Loading لتسريع الاستعلام
             ->withCount(['teacherSlots as active_slots_count' => function ($q) {
                 $q->where('status', 'available')
-                  ->where('slot_date', '>=', now()->toDateString());
+                    ->where('slot_date', '>=', now()->toDateString());
             }])
             ->whereHas('teacherProfile', function ($q) {
                 $q->where('is_verified', true); // نجلب المعلمين الموثقين فقط
@@ -57,7 +60,7 @@ class DiscoveryController extends Controller
 
         // فلترة المعلمين بناءً على المرحلة الدراسية للطالب المسجل الدخول
         if (auth('sanctum')->check()) {
-            /** @var \App\Models\User $user */
+            /** @var User $user */
             $user = auth('sanctum')->user();
             if ($user->hasRole('student')) {
                 $user->load('studentProfile');
@@ -79,14 +82,14 @@ class DiscoveryController extends Controller
 
         // فلتر البحث بالاسم
         if ($request->has('search') && $request->search != '') {
-            $query->where('users.name', 'like', '%' . $request->search . '%');
+            $query->where('users.name', 'like', '%'.$request->search.'%');
         }
 
         // 🟢 التحديث الجديد: الفلترة والترتيب حسب التقييم
         if ($request->has('sort_by') && $request->sort_by === 'rating_desc') {
             // نربط جدول الملف الشخصي لكي نتمكن من الترتيب بناءً على عمود average_rating
             $query->join('teacher_profiles', 'users.id', '=', 'teacher_profiles.user_id')
-                  ->orderBy('teacher_profiles.average_rating', 'desc');
+                ->orderBy('teacher_profiles.average_rating', 'desc');
         } else {
             // الترتيب الافتراضي (الأحدث تسجيلاً أولاً)
             $query->latest('users.created_at');
@@ -112,13 +115,13 @@ class DiscoveryController extends Controller
             ->orderBy('start_time')
             ->get()
             // تجميع الأوقات حسب اليوم لسهولة عرضها في الواجهة الأمامية
-            ->groupBy('slot_date'); 
+            ->groupBy('slot_date');
 
         return response()->json([
-            'status' => 'success', 
+            'status' => 'success',
             'teacher_name' => $teacher->name,
             'teacher' => $teacher,
-            'data' => $slots
+            'data' => $slots,
         ]);
     }
 
@@ -126,15 +129,15 @@ class DiscoveryController extends Controller
     public function teacherReviews(int $teacherId): JsonResponse
     {
         $teacher = User::role('teacher')->findOrFail($teacherId);
-        
-        $reviews = \App\Models\Review::where('teacher_id', $teacherId)
+
+        $reviews = Review::where('teacher_id', $teacherId)
             ->with('student:id,name')
             ->latest()
             ->paginate(10);
-            
+
         return response()->json([
             'status' => 'success',
-            'data' => $reviews
+            'data' => $reviews,
         ]);
     }
 }

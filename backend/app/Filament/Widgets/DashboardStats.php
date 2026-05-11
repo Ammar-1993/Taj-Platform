@@ -2,9 +2,9 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\User;
 use App\Models\Booking;
 use App\Models\PayoutRequest;
+use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Carbon;
@@ -38,11 +38,11 @@ class DashboardStats extends BaseWidget
                 ->descriptionIcon('heroicon-m-academic-cap')
                 ->color('primary'),
 
-            Stat::make('أرباح المنصة الصافية', number_format($totalPlatformRevenue, 2) . ' SAR')
+            Stat::make('أرباح المنصة الصافية', number_format($totalPlatformRevenue, 2).' SAR')
                 ->description('نمو أرباح المنصة الكلية (20%)')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('success')
-                ->chart($platformSparkline), 
+                ->chart($platformSparkline),
 
             Stat::make('طلبات سحب معلقة', PayoutRequest::where('status', 'pending')->count())
                 ->description('تتطلب مراجعة الإدارة')

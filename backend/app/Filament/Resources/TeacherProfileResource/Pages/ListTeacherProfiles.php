@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\TeacherProfileResource\Pages;
 
 use App\Filament\Resources\TeacherProfileResource;
-use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
 class ListTeacherProfiles extends ListRecords

@@ -88,6 +88,10 @@ export default function TeacherProfile({ params }: { params: { id: string } }) {
         bookingService.create(data),
     onSuccess: () => {
         refetchSlots();
+        // Invalidate queries to refresh dashboard and wallet data
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        queryClient.invalidateQueries({ queryKey: ['wallet'] });
+        queryClient.invalidateQueries({ queryKey: ['parentDashboard'] });
     },
     onError: (err: unknown) => {
         showApiError(err, "حدث خطأ أثناء الحجز.");

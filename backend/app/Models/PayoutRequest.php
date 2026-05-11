@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -13,10 +14,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $iban
  * @property string $status
  * @property string|null $admin_notes
- * @property \Carbon\Carbon|null $processed_at
+ * @property Carbon|null $processed_at
  * @property string|null $notes
- * @property \Carbon\Carbon $created_at
- * @property \Carbon\Carbon $updated_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  */
 class PayoutRequest extends Model
 {
@@ -39,7 +40,7 @@ class PayoutRequest extends Model
             'amount' => 'decimal:2',
             'iban' => 'encrypted', // تشفير وفك تشفير تلقائي عبر Laravel
         ];
-    }   
+    }
 
     public function user(): BelongsTo
     {

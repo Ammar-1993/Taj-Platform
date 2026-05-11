@@ -2,13 +2,15 @@
 
 namespace App\Http\Requests\Booking;
 
+use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreBookingRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $this->user();
 
         // 1. إذا كان المستخدم ولي أمر، مسموح له يحجز لأبنائه
@@ -33,10 +35,10 @@ class StoreBookingRequest extends FormRequest
     // رسالة مخصصة تظهر إذا حاول الابن الحجز والصلاحية معطلة
     protected function failedAuthorization()
     {
-        throw new \Illuminate\Auth\Access\AuthorizationException('عفواً، حسابك غير مصرح له بالحجز والدفع المباشر. يرجى الطلب من ولي الأمر تفعيل الصلاحية.');
+        throw new AuthorizationException('عفواً، حسابك غير مصرح له بالحجز والدفع المباشر. يرجى الطلب من ولي الأمر تفعيل الصلاحية.');
     }
 
-   public function rules(): array
+    public function rules(): array
     {
         return [
             'teacher_slot_id' => ['required', 'exists:teacher_slots,id'],
@@ -50,14 +52,14 @@ class StoreBookingRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             if ($this->user()->hasRole('parent')) {
-                if (!$this->child_id) {
+                if (! $this->child_id) {
                     $validator->errors()->add('child_id', 'يجب اختيار الابن المراد الحجز له.');
                 } else {
-                    $child = \App\Models\User::where('id', $this->child_id)
+                    $child = User::where('id', $this->child_id)
                         ->where('parent_id', $this->user()->id)
                         ->first();
-                        
-                    if (!$child) {
+
+                    if (! $child) {
                         $validator->errors()->add('child_id', 'الابن المختار غير صالح أو لا يتبع لك.');
                     }
                 }

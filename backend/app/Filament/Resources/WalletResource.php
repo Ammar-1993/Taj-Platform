@@ -8,21 +8,35 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class WalletResource extends Resource
 {
     protected static ?string $model = Wallet::class;
-    
+
     protected static ?string $navigationIcon = 'heroicon-o-wallet';
+
     protected static ?string $modelLabel = 'محفظة مالية';
+
     protected static ?string $pluralModelLabel = 'السجل المالي للمحافظ';
+
     protected static ?string $navigationGroup = 'العمليات والمالية';
+
     protected static ?int $navigationSort = 3;
 
-    public static function canCreate(): bool { return false; }
-    public static function canEdit($record): bool { return false; }
-    public static function canDelete($record): bool { return false; }
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return false;
+    }
 
     public static function form(Form $form): Form
     {
@@ -59,7 +73,7 @@ class WalletResource extends Resource
 
                 Tables\Columns\TextColumn::make('balance')
                     ->label('الرصيد المتاح')
-                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' SAR')
+                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2).' SAR')
                     ->sortable()
                     ->badge()
                     ->color(fn ($state) => $state > 0 ? 'success' : 'gray'),
@@ -80,13 +94,16 @@ class WalletResource extends Resource
                         'student' => 'طالب',
                         'parent' => 'ولي أمر',
                         default => $record->name,
-                    })
+                    }),
             ])
             ->actions([])
             ->bulkActions([]);
     }
 
-    public static function getRelations(): array { return []; }
+    public static function getRelations(): array
+    {
+        return [];
+    }
 
     public static function getPages(): array
     {

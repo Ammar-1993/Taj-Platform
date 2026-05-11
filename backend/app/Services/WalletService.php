@@ -4,8 +4,8 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\WalletTransaction;
-use Illuminate\Support\Facades\DB;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class WalletService
 {

@@ -51,7 +51,19 @@ export const useDashboardData = (user: User | null, isParent: boolean, isTeacher
       };
     },
     enabled: !!user,
+    // Smart Polling: 30s for teachers (high priority), 60s for others
+    refetchInterval: !!user ? (isTeacher ? 30000 : 60000) : false,
+    refetchOnWindowFocus: true,
   });
+
+  const refreshAll = async () => {
+    await Promise.all([
+      fetchDashboardData(),
+      queryClient.invalidateQueries({ queryKey: ['wallet'] }),
+      queryClient.invalidateQueries({ queryKey: ['parentDashboard'] }),
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+    ]);
+  };
 
   // Handle pending review seeding
   useEffect(() => {
@@ -104,6 +116,7 @@ export const useDashboardData = (user: User | null, isParent: boolean, isTeacher
     pendingReview,
     dataLoading: !!user && (parentLoading || dashboardLoading),
     fetchDashboardData,
+    refreshAll,
     setPendingReview,
     dismissPendingReview,
     markNotificationAsRead: (id: string) => markNotificationAsReadMutation.mutate(id),

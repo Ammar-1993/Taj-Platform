@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,21 +18,21 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $teacher_slot_id
  * @property int|null $promo_code_id
  * @property bool $is_free_trial
- * @property \Carbon\Carbon $booking_date
+ * @property Carbon $booking_date
  * @property float $session_price
  * @property float $discount_amount
  * @property float $net_paid
  * @property string|null $agora_channel
- * @property \Carbon\Carbon|null $teacher_joined_at
- * @property \Carbon\Carbon|null $student_joined_at
- * @property \Carbon\Carbon|null $completed_at
+ * @property Carbon|null $teacher_joined_at
+ * @property Carbon|null $student_joined_at
+ * @property Carbon|null $completed_at
  * @property string $status
- * @property \Carbon\Carbon $created_at
- * @property \Carbon\Carbon $updated_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  */
 class Booking extends Model
 {
-    use SoftDeletes, HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $guarded = ['id'];
 

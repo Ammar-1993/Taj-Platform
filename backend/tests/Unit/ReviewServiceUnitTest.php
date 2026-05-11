@@ -2,15 +2,14 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\User;
 use App\Models\Booking;
-use App\Models\Subject;
-use App\Models\TeacherProfile;
-use App\Models\TeacherSlot;
 use App\Models\Review;
+use App\Models\Subject;
+use App\Models\TeacherSlot;
+use App\Models\User;
 use App\Services\ReviewService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class ReviewServiceUnitTest extends TestCase
 {
@@ -24,15 +23,15 @@ class ReviewServiceUnitTest extends TestCase
         $student = User::factory()->create();
 
         $teacher->teacherProfile()->create([
-            'subject_id' => $subject->id, 
-            'average_rating' => 4.0, 
-            'reviews_count' => 1, 
-            'is_verified' => true
+            'subject_id' => $subject->id,
+            'average_rating' => 4.0,
+            'reviews_count' => 1,
+            'is_verified' => true,
         ]);
 
         $slot = TeacherSlot::factory()->create([
-            'teacher_id' => $teacher->id, 
-            'status' => 'available'
+            'teacher_id' => $teacher->id,
+            'status' => 'available',
         ]);
 
         $booking = Booking::factory()->create([
@@ -43,7 +42,7 @@ class ReviewServiceUnitTest extends TestCase
             'status' => 'completed',
         ]);
 
-        $service = new ReviewService();
+        $service = new ReviewService;
         $review = $service->submitReview($student, $booking->id, 5, 'Excellent');
 
         $this->assertInstanceOf(Review::class, $review);
@@ -60,13 +59,13 @@ class ReviewServiceUnitTest extends TestCase
         $student = User::factory()->create();
 
         $teacher->teacherProfile()->create([
-            'subject_id' => $subject->id, 
-            'is_verified' => true
+            'subject_id' => $subject->id,
+            'is_verified' => true,
         ]);
-        
+
         $slot = TeacherSlot::factory()->create([
-            'teacher_id' => $teacher->id, 
-            'status' => 'available'
+            'teacher_id' => $teacher->id,
+            'status' => 'available',
         ]);
 
         $booking = Booking::factory()->create([
@@ -80,7 +79,7 @@ class ReviewServiceUnitTest extends TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('لا يمكن تقييم حصة لم تكتمل بعد.');
 
-        $service = new ReviewService();
+        $service = new ReviewService;
         $service->submitReview($student, $booking->id, 4, 'Okay');
     }
 
@@ -93,13 +92,13 @@ class ReviewServiceUnitTest extends TestCase
         $otherUser = User::factory()->create();
 
         $teacher->teacherProfile()->create([
-            'subject_id' => $subject->id, 
-            'is_verified' => true
+            'subject_id' => $subject->id,
+            'is_verified' => true,
         ]);
-        
+
         $slot = TeacherSlot::factory()->create([
-            'teacher_id' => $teacher->id, 
-            'status' => 'available'
+            'teacher_id' => $teacher->id,
+            'status' => 'available',
         ]);
 
         $booking = Booking::factory()->create([
@@ -113,7 +112,7 @@ class ReviewServiceUnitTest extends TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('عفواً، سِجل الحجز هذا غير موجود أو لا تملك صلاحية تقييمه.');
 
-        $service = new ReviewService();
+        $service = new ReviewService;
         $service->submitReview($otherUser, $booking->id, 3, 'Not allowed');
     }
 
@@ -125,13 +124,13 @@ class ReviewServiceUnitTest extends TestCase
         $student = User::factory()->create();
 
         $teacher->teacherProfile()->create([
-            'subject_id' => $subject->id, 
-            'is_verified' => true
+            'subject_id' => $subject->id,
+            'is_verified' => true,
         ]);
-        
+
         $slot = TeacherSlot::factory()->create([
-            'teacher_id' => $teacher->id, 
-            'status' => 'available'
+            'teacher_id' => $teacher->id,
+            'status' => 'available',
         ]);
 
         $booking = Booking::factory()->create([
@@ -143,17 +142,17 @@ class ReviewServiceUnitTest extends TestCase
         ]);
 
         $booking->review()->create([
-            'student_id' => $student->id, 
-            'teacher_id' => $teacher->id, 
-            'rating' => 5, 
-            'comment' => 'Nice', 
-            'is_published' => true
+            'student_id' => $student->id,
+            'teacher_id' => $teacher->id,
+            'rating' => 5,
+            'comment' => 'Nice',
+            'is_published' => true,
         ]);
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('لقد قمت بتقييم هذه الحصة مسبقاً.');
 
-        $service = new ReviewService();
+        $service = new ReviewService;
         $service->submitReview($student, $booking->id, 4, 'Again');
     }
 }

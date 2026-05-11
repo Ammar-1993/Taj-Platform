@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\Subject;
 use App\Models\GradeLevel;
 use App\Models\PromoCode;
+use App\Models\Subject;
+use Illuminate\Database\Seeder;
 
 class MasterDataSeeder extends Seeder
 {
@@ -32,7 +32,7 @@ class MasterDataSeeder extends Seeder
                 Subject::create([
                     'grade_level_id' => $grades[$gradeKey]->id,
                     'name' => $subjectName,
-                    'is_active' => true
+                    'is_active' => true,
                 ]);
             }
         }
@@ -43,7 +43,7 @@ class MasterDataSeeder extends Seeder
             'discount_percentage' => 20.00, // خصم 20%
             'max_uses' => 100,
             'used_count' => 0,
-            'expires_at' => now()->addMonths(3)
+            'expires_at' => now()->addMonths(3),
         ]);
     }
 }

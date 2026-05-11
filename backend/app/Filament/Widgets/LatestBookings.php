@@ -10,7 +10,8 @@ use Filament\Widgets\TableWidget as BaseWidget;
 class LatestBookings extends BaseWidget
 {
     protected static ?int $sort = 4; // الصف الأخير في لوحة التحكم
-    protected int | string | array $columnSpan = 'full'; // يأخذ عرض الشاشة بالكامل
+
+    protected int|string|array $columnSpan = 'full'; // يأخذ عرض الشاشة بالكامل
 
     public function table(Table $table): Table
     {
@@ -29,7 +30,7 @@ class LatestBookings extends BaseWidget
                     ->label('المعلم'),
                 Tables\Columns\TextColumn::make('net_paid')
                     ->label('المبلغ')
-                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' SAR')
+                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2).' SAR')
                     ->weight('bold'),
                 Tables\Columns\TextColumn::make('status')
                     ->label('الحالة')

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\TeacherProfile;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -15,15 +16,15 @@ class ProfileController extends Controller
     // ==========================================
     public function getTeacherProfile(Request $request): JsonResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         // جلب الملف مع علاقة المادة لتعبئة نموذج التعديل في الواجهة الأمامية
         $profile = TeacherProfile::with('subject')->where('user_id', $user->id)->first();
-        
+
         return response()->json([
             'status' => 'success',
-            'data' => $profile
+            'data' => $profile,
         ]);
     }
 
@@ -32,7 +33,7 @@ class ProfileController extends Controller
     // ==========================================
     public function completeTeacherProfile(Request $request): JsonResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         if (! $user->hasRole('teacher')) {
@@ -52,7 +53,7 @@ class ProfileController extends Controller
         $profile->subject_id = $request->subject_id;
         $profile->bio = $request->bio;
         // نجعله false بمجرد التعديل/الرفع حتى توافق عليه الإدارة مجدداً
-        $profile->is_verified = false; 
+        $profile->is_verified = false;
 
         // معالجة رفع الهوية الوطنية بأمان
         if ($request->hasFile('national_id')) {
@@ -90,7 +91,7 @@ class ProfileController extends Controller
             'grade_level_id' => 'required|exists:grade_levels,id',
         ]);
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         if (! $user->hasRole('student')) {

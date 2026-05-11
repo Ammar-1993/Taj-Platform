@@ -4,15 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\TeacherSlot;
-use Illuminate\Http\Request;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class TeacherSlotController extends Controller
 {
     // 1. جلب جميع مواعيد المعلم (المستقبلية)
     public function index(Request $request): JsonResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         $slots = TeacherSlot::where('teacher_id', $user->id)
@@ -24,14 +25,14 @@ class TeacherSlotController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data' => $slots
+            'data' => $slots,
         ]);
     }
 
     // 2. إضافة موعد متاح جديد
     public function store(Request $request): JsonResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         $request->validate([
@@ -40,7 +41,7 @@ class TeacherSlotController extends Controller
             'end_time' => 'required|date_format:H:i|after:start_time',
         ], [
             'end_time.after' => 'يجب أن يكون وقت النهاية بعد وقت البداية.',
-            'slot_date.after_or_equal' => 'لا يمكنك إضافة مواعيد في الماضي.'
+            'slot_date.after_or_equal' => 'لا يمكنك إضافة مواعيد في الماضي.',
         ]);
 
         // 🛡️ التحقق من التضارب الزمني (Time Overlap Security Check)
@@ -49,14 +50,14 @@ class TeacherSlotController extends Controller
             ->where(function ($query) use ($request) {
                 // خوارزمية التداخل: إذا بدأ موعد جديد قبل نهاية الموعد القديم، وانتهى بعد بداية الموعد القديم
                 $query->where('start_time', '<', $request->end_time)
-                      ->where('end_time', '>', $request->start_time);
+                    ->where('end_time', '>', $request->start_time);
             })
             ->first();
 
         if ($overlappingSlot) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'يوجد تضارب زمني! لديك موعد آخر في هذا الوقت يبدأ الساعة ' . substr($overlappingSlot->start_time, 0, 5)
+                'message' => 'يوجد تضارب زمني! لديك موعد آخر في هذا الوقت يبدأ الساعة '.substr($overlappingSlot->start_time, 0, 5),
             ], 422);
         }
 
@@ -72,14 +73,14 @@ class TeacherSlotController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'تم إضافة الموعد بنجاح!',
-            'data' => $slot
+            'data' => $slot,
         ], 201);
     }
 
     // 3. حذف موعد (فقط إذا لم يتم حجزه بعد)
     public function destroy(Request $request, $id): JsonResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         $slot = TeacherSlot::where('teacher_id', $user->id)->findOrFail($id);
@@ -88,7 +89,7 @@ class TeacherSlotController extends Controller
         if ($slot->status !== 'available') {
             return response()->json([
                 'status' => 'error',
-                'message' => 'لا يمكن حذف هذا الموعد لأنه ' . ($slot->status === 'booked' ? 'محجوز من قبل طالب' : 'غير متاح') . '.'
+                'message' => 'لا يمكن حذف هذا الموعد لأنه '.($slot->status === 'booked' ? 'محجوز من قبل طالب' : 'غير متاح').'.',
             ], 403);
         }
 
@@ -96,7 +97,7 @@ class TeacherSlotController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'تم حذف الموعد بنجاح.'
+            'message' => 'تم حذف الموعد بنجاح.',
         ]);
     }
 }
