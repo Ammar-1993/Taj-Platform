@@ -102,7 +102,7 @@ export default function TeacherProfilePage() {
             <div className="relative z-10 max-w-7xl mx-auto space-y-8 tracking-tight" dir="rtl">
                 
                 <PageHeader
-                    title="الملف الشخصي والتوثيق"
+                    title="ملف توثيق الحساب"
                     subtitle="أكمل بياناتك وارفع مستنداتك للبدء في استقبال الطلاب والتدريس."
                     backHref="/dashboard"
                     backLabel="العودة للوحة التحكم"
