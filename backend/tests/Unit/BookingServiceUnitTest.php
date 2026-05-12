@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\WalletTransaction;
 use App\Services\BookingService;
 use App\Services\WalletService;
+use App\Services\WhiteboardService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
 use Tests\TestCase;
@@ -43,6 +44,7 @@ class BookingServiceUnitTest extends TestCase
         ]);
 
         $walletServiceMock = Mockery::mock(WalletService::class);
+        $whiteboardServiceMock = Mockery::mock(WhiteboardService::class);
         $walletServiceMock->shouldReceive('processTransaction')
             ->once()
             ->withArgs(function ($user, $amount, $type, $description, $bookingId) use ($teacher, $booking) {
@@ -54,7 +56,7 @@ class BookingServiceUnitTest extends TestCase
             })
             ->andReturn(new WalletTransaction);
 
-        $service = new BookingService($walletServiceMock);
+        $service = new BookingService($walletServiceMock, $whiteboardServiceMock);
 
         $result = $service->completeBooking($booking);
 
@@ -89,6 +91,7 @@ class BookingServiceUnitTest extends TestCase
         ]);
 
         $walletServiceMock = Mockery::mock(WalletService::class);
+        $whiteboardServiceMock = Mockery::mock(WhiteboardService::class);
         $walletServiceMock->shouldReceive('processTransaction')
             ->once()
             ->withArgs(function ($user, $amount, $type, $description, $bookingId) use ($student, $booking) {
@@ -100,7 +103,7 @@ class BookingServiceUnitTest extends TestCase
             })
             ->andReturn(new WalletTransaction);
 
-        $service = new BookingService($walletServiceMock);
+        $service = new BookingService($walletServiceMock, $whiteboardServiceMock);
 
         $result = $service->cancelBooking($booking, $student);
 

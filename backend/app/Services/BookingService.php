@@ -8,16 +8,19 @@ use App\Models\PromoCode;
 use App\Models\TeacherSlot;
 use App\Models\User;
 use App\Notifications\NewBookingNotification;
+use App\Services\WhiteboardService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
 class BookingService
 {
     protected WalletService $walletService;
+    protected WhiteboardService $whiteboardService;
 
-    public function __construct(WalletService $walletService)
+    public function __construct(WalletService $walletService, WhiteboardService $whiteboardService)
     {
         $this->walletService = $walletService;
+        $this->whiteboardService = $whiteboardService;
     }
 
     /**
@@ -25,7 +28,7 @@ class BookingService
      */
     public function createBooking(User $user, int $slotId, ?string $promoCode = null, ?int $childId = null)
     {
-        // 1. تحديد من هو الطالب (الذي سيحضر) ومن هو الممول (الذي سيدفع)
+        // ... (previous logic)
         $student = $user;
         $payer = $user;
 
@@ -38,6 +41,7 @@ class BookingService
         }
 
         return DB::transaction(function () use ($student, $payer, $slotId, $promoCode) {
+            // ... (previous logic)
             // قفل الموعد لمنع الحجز المزدوج
             $slot = TeacherSlot::where('id', $slotId)->lockForUpdate()->first();
 
@@ -77,6 +81,15 @@ class BookingService
                 "خصم لحجز موعد رقم #{$slot->id} للطالب: {$student->name}"
             );
 
+            // 🟢 إنشاء غرفة سبورة تفاعلية لهذا الحجز
+            $whiteboardUuid = null;
+            try {
+                $whiteboardUuid = $this->whiteboardService->createRoom("حصة: {$student->name} مع {$slot->teacher->name}");
+            } catch (Exception $e) {
+                // نسجل الخطأ ولكن لا نوقف الحجز إذا فشلت السبورة (يمكن محاولة إنشائها لاحقاً)
+                \Log::error("Whiteboard creation failed for booking: " . $e->getMessage());
+            }
+
             // 4. إنشاء الحجز باسم الطالب 🎓
             $booking = Booking::create([
                 'student_id' => $student->id,
@@ -88,8 +101,8 @@ class BookingService
                 'discount_amount' => $discountAmount,
                 'net_paid' => $netPrice,
                 'status' => 'scheduled',
-                // إنشاء رابط غرفة افتراضي فريد
                 'agora_channel' => 'taj_'.uniqid(),
+                'whiteboard_room_uuid' => $whiteboardUuid,
             ]);
 
             // 5. تحديث حالة الموعد

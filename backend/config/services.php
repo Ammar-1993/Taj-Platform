@@ -52,4 +52,8 @@ return [
         'secret' => env('RECAPTCHA_SECRET_KEY'),
     ],
 
+    'whiteboard' => [
+        'sdk_token' => env('WHITEBOARD_SDK_TOKEN'),
+    ],
+
 ];

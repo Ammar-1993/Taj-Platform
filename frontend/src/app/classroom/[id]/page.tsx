@@ -22,10 +22,13 @@ import {
     PowerOff, 
     MonitorUp, 
     Loader2, 
-    Coins 
+    Coins,
+    Presentation,
+    LayoutGrid
 } from 'lucide-react';
 
 const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID || '';
+const WHITEBOARD_APP_ID = process.env.NEXT_PUBLIC_WHITEBOARD_APP_IDENTIFIER || '';
 
 // استدعاء مكون الكاميرا الآمن من SSR
 const AgoraCall = dynamic(() => import('@/components/classroom/AgoraCall'), { 
@@ -38,6 +41,17 @@ const AgoraCall = dynamic(() => import('@/components/classroom/AgoraCall'), {
     )
 });
 
+// استدعاء السبورة التفاعلية من SSR
+const Whiteboard = dynamic(() => import('@/components/classroom/Whiteboard'), { 
+    ssr: false,
+    loading: () => (
+        <div className="flex flex-col items-center justify-center h-full space-y-4 bg-white/5 backdrop-blur-md rounded-xl">
+            <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
+            <p className="text-blue-100 font-medium">جاري إعداد السبورة التفاعلية...</p>
+        </div>
+    )
+});
+
 export default function ClassroomPage({ params }: { params: { id: string } }) {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
@@ -46,6 +60,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     const [channelName, setChannelName] = useState('');
     const [agoraToken, setAgoraToken] = useState<string | null>(null);
     const [screenToken, setScreenToken] = useState<string | null>(null);
+    const [whiteboardData, setWhiteboardData] = useState<{ room_uuid: string; room_token: string } | null>(null);
     const [uid, setUid] = useState<number>(0);
     const [userRole, setUserRole] = useState<'host' | 'audience'>('audience');
     
@@ -53,7 +68,9 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     const [error, setError] = useState('');
     const [inCall, setInCall] = useState(false);
     const [isEnding, setIsEnding] = useState(false);
+    const [showWhiteboard, setShowWhiteboard] = useState(false);
 
+    // ... (rest of states)
     // 🔐 حالات صلاحيات الميديا
     const [showPermissionModal, setShowPermissionModal] = useState(false);
     const [cameraStatus, setCameraStatus] = useState<'pending' | 'granted' | 'denied'>('pending');
@@ -91,6 +108,10 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 if (data.screen_token) {
                     setScreenToken(data.screen_token);
                 }
+
+                if (data.whiteboard) {
+                    setWhiteboardData(data.whiteboard);
+                }
                 
                 setLoading(false);
             } catch {
@@ -102,6 +123,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         if (user) fetchAccess();
     }, [params.id, user]);
 
+    // ... (leave and complete class logic)
     // 🚪 دالة المغادرة المؤقتة / العادية
     const handleLeave = async () => {
         // إغلاق الشاشة إذا كانت تعمل قبل الخروج
@@ -138,6 +160,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         }
     };
 
+    // ... (permission logic)
     // 🔐 طلب الصلاحيات
     const handleJoinRequest = () => {
         setShowPermissionModal(true);
@@ -177,6 +200,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         }
     };
 
+    // ... (UI click handlers and screen share)
     // 🛠 التعامل مع النقر على الأزرار المحظورة
     const handleDeniedClick = (type: 'camera' | 'mic') => {
         toast((t) => (
@@ -273,7 +297,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     return (
         <div className="h-[100dvh] w-full bg-slate-950 text-white flex flex-col overflow-hidden relative" dir="rtl">
             
-            {/* 1. Floating Header (Room Info) - Responsive Padding */}
+            {/* 1. Floating Header (Room Info) */}
             <div className="absolute top-0 left-0 w-full p-4 md:p-6 lg:p-8 bg-gradient-to-b from-black/90 via-black/40 to-transparent z-50 flex justify-between items-center pointer-events-none">
                 <div className="flex items-center gap-4 pointer-events-auto bg-black/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/5">
                     <div className={`w-2.5 h-2.5 rounded-full ${inCall ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></div>
@@ -285,30 +309,48 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                     </div>
                 </div>
 
-                {/* زر الخروج للمراقبين (أولياء الأمور) */}
-                {!isTeacher && userRole === 'audience' && (
-                    <button 
-                        onClick={handleLeave}
-                        className="pointer-events-auto bg-red-600/20 hover:bg-red-600/40 text-red-500 border border-red-500/30 px-4 py-2 rounded-xl flex items-center gap-2 transition-all backdrop-blur-md"
-                    >
-                        <LogOut className="w-4 h-4" />
-                        <span className="font-bold text-sm">مغادرة الغرفة</span>
-                    </button>
-                )}
+                <div className="flex items-center gap-3 pointer-events-auto">
+                    {/* زر التبديل بين الفيديو والسبورة */}
+                    {inCall && whiteboardData && (
+                        <button 
+                            onClick={() => setShowWhiteboard(!showWhiteboard)}
+                            className={`p-3 md:p-4 rounded-2xl transition-all duration-300 border shadow-2xl hover:scale-105 active:scale-95 group flex items-center gap-2 ${
+                                showWhiteboard 
+                                    ? 'bg-blue-600 border-blue-500 text-white' 
+                                    : 'bg-slate-900/80 backdrop-blur-xl border-white/10 text-slate-200 hover:bg-slate-800'
+                            }`}
+                        >
+                            {showWhiteboard ? <LayoutGrid className="w-5 h-5" /> : <Presentation className="w-5 h-5" />}
+                            <span className="hidden md:inline font-bold text-sm">
+                                {showWhiteboard ? 'عرض المشتركين' : 'السبورة التفاعلية'}
+                            </span>
+                        </button>
+                    )}
 
-                {isTeacher && inCall && (
-                    <button 
-                        onClick={toggleScreenShare} 
-                        className={`pointer-events-auto p-3 md:p-4 rounded-2xl transition-all duration-300 border shadow-2xl hover:scale-105 active:scale-95 group flex items-center gap-2 ${
-                            isSharing 
-                                ? 'bg-emerald-600 border-emerald-500 text-white' 
-                                : 'bg-slate-900/80 backdrop-blur-xl border-white/10 text-slate-200 hover:bg-slate-800'
-                        }`}
-                    >
-                        <MonitorUp className="w-5 h-5 md:w-6 md:h-6 transition-transform group-hover:rotate-3" />
-                        <span className="hidden md:inline font-bold text-sm">{isSharing ? 'إيقاف المشاركة' : 'مشاركة الشاشة'}</span>
-                    </button>
-                )}
+                    {isTeacher && inCall && (
+                        <button 
+                            onClick={toggleScreenShare} 
+                            className={`p-3 md:p-4 rounded-2xl transition-all duration-300 border shadow-2xl hover:scale-105 active:scale-95 group flex items-center gap-2 ${
+                                isSharing 
+                                    ? 'bg-emerald-600 border-emerald-500 text-white' 
+                                    : 'bg-slate-900/80 backdrop-blur-xl border-white/10 text-slate-200 hover:bg-slate-800'
+                            }`}
+                        >
+                            <MonitorUp className="w-5 h-5" />
+                            <span className="hidden md:inline font-bold text-sm">{isSharing ? 'إيقاف المشاركة' : 'مشاركة الشاشة'}</span>
+                        </button>
+                    )}
+
+                    {!isTeacher && userRole === 'audience' && (
+                        <button 
+                            onClick={handleLeave}
+                            className="bg-red-600/20 hover:bg-red-600/40 text-red-500 border border-red-500/30 px-4 py-2 rounded-xl flex items-center gap-2 transition-all backdrop-blur-md"
+                        >
+                            <LogOut className="w-4 h-4" />
+                            <span className="font-bold text-sm">مغادرة الغرفة</span>
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* 2. Main Content Area */}
@@ -335,13 +377,27 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                         </button>
                     </div>
                 ) : (
-                    <AgoraCall 
-                        rtcProps={rtcProps} 
-                        isCameraEnabled={isCameraEnabled}
-                        isMicEnabled={isMicEnabled}
-                        isSharing={isSharing}
-                        localScreenTrack={screenTrack}
-                    />
+                    <div className="w-full h-full flex gap-4">
+                        {/* Area 1: Primary View (Agora or Whiteboard) */}
+                        <div className="flex-1 relative rounded-3xl overflow-hidden border border-white/5 shadow-2xl bg-black">
+                            {showWhiteboard && whiteboardData ? (
+                                <Whiteboard 
+                                    appIdentifier={WHITEBOARD_APP_ID}
+                                    roomUuid={whiteboardData.room_uuid}
+                                    roomToken={whiteboardData.room_token}
+                                    isTeacher={!!isTeacher}
+                                />
+                            ) : (
+                                <AgoraCall 
+                                    rtcProps={rtcProps} 
+                                    isCameraEnabled={isCameraEnabled}
+                                    isMicEnabled={isMicEnabled}
+                                    isSharing={isSharing}
+                                    localScreenTrack={screenTrack}
+                                />
+                            )}
+                        </div>
+                    </div>
                 )}
             </div>
 

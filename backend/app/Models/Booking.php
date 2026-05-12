@@ -52,6 +52,7 @@ class Booking extends Model
         'student_joined_at',
         'completed_at',
         'status',
+        'whiteboard_room_uuid',
     ];
 
     protected function casts(): array

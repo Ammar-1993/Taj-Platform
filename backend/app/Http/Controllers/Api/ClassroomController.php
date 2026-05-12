@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\User;
+use App\Services\WhiteboardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Peterujah\Agora\Agora;
@@ -14,6 +15,13 @@ use Peterujah\Agora\User as AgoraUser;
 
 class ClassroomController extends Controller
 {
+    protected WhiteboardService $whiteboardService;
+
+    public function __construct(WhiteboardService $whiteboardService)
+    {
+        $this->whiteboardService = $whiteboardService;
+    }
+
     public function getAccessDetails(Request $request, $bookingId): JsonResponse
     {
         /** @var User $user */
@@ -62,6 +70,18 @@ class ClassroomController extends Controller
             }
         }
 
+        // 🟢 تجهيز بيانات السبورة التفاعلية
+        $whiteboardRoomUuid = $booking->whiteboard_room_uuid;
+        $whiteboardToken = null;
+
+        if ($whiteboardRoomUuid) {
+            try {
+                $whiteboardToken = $this->whiteboardService->getRoomToken($whiteboardRoomUuid);
+            } catch (\Exception $e) {
+                \Log::error("Failed to generate whiteboard token: " . $e->getMessage());
+            }
+        }
+
         return response()->json([
             'status' => 'success',
             'data' => [
@@ -70,6 +90,10 @@ class ClassroomController extends Controller
                 'role' => $role,
                 'token' => $token,
                 'screen_token' => $screenToken,
+                'whiteboard' => [
+                    'room_uuid' => $whiteboardRoomUuid,
+                    'room_token' => $whiteboardToken,
+                ],
             ],
         ]);
     }
