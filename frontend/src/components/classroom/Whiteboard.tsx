@@ -5,13 +5,21 @@ import React, { useEffect, useRef, useState } from 'react';
 import { WhiteWebSdk, Room, DeviceType, ViewMode } from "white-web-sdk";
 import { WindowManager } from "@netless/window-manager";
 import "@netless/window-manager/dist/style.css";
-import { Loader2, Pencil, Eraser, Square, Circle, Type, MousePointer2, Trash2, Undo2, Redo2 } from 'lucide-react';
+import { Loader2, Pencil, Eraser, Square, Circle, Type, MousePointer2, Trash2 } from 'lucide-react';
 
 interface WhiteboardProps {
     appIdentifier: string;
     roomUuid: string;
     roomToken: string;
     isTeacher: boolean;
+}
+
+interface ToolButtonProps {
+    icon: React.ReactNode;
+    active?: boolean;
+    onClick: () => void;
+    label: string;
+    variant?: 'primary' | 'danger';
 }
 
 const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomToken, isTeacher }) => {
@@ -28,18 +36,23 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
             deviceType: DeviceType.Surface,
         });
 
+        let roomInstance: Room | null = null;
+
         const joinRoom = async () => {
             try {
-                const roomInstance = await sdk.joinRoom({
+                roomInstance = await sdk.joinRoom({
                     uuid: roomUuid,
                     roomToken: roomToken,
                     isWritable: isTeacher, // Only teachers can draw by default
-                    invisiblePlugins: [WindowManager],
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    invisiblePlugins: [WindowManager as any],
                     useMultiViews: true,
                 });
 
                 setRoom(roomInstance);
-                roomInstance.bindHtmlElement(whiteboardRef.current);
+                if (whiteboardRef.current) {
+                    roomInstance.bindHtmlElement(whiteboardRef.current);
+                }
                 
                 if (isTeacher) {
                     roomInstance.setMemberState({ currentApplianceName: "pencil" });
@@ -57,8 +70,8 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
         joinRoom();
 
         return () => {
-            if (room) {
-                room.disconnect();
+            if (roomInstance) {
+                roomInstance.disconnect();
             }
         };
     }, [appIdentifier, roomUuid, roomToken, isTeacher]);
@@ -158,7 +171,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
     );
 };
 
-const ToolButton = ({ icon, active, onClick, label, variant = 'primary' }: any) => (
+const ToolButton: React.FC<ToolButtonProps> = ({ icon, active, onClick, label, variant = 'primary' }) => (
     <button
         onClick={onClick}
         title={label}
