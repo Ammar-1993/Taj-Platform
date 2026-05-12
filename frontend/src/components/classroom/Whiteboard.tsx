@@ -2,7 +2,7 @@
 
 import "regenerator-runtime/runtime";
 import React, { useEffect, useRef, useState } from 'react';
-import { WhiteWebSdk, Room, DeviceType, ViewMode } from "white-web-sdk";
+import { WhiteWebSdk, Room, DeviceType, ViewMode, ApplianceNames } from "white-web-sdk";
 import { WindowManager } from "@netless/window-manager";
 import "@netless/window-manager/dist/style.css";
 import { Loader2, Pencil, Eraser, Square, Circle, Type, MousePointer2, Trash2 } from 'lucide-react';
@@ -11,6 +11,7 @@ interface WhiteboardProps {
     appIdentifier: string;
     roomUuid: string;
     roomToken: string;
+    uid: string;
     isTeacher: boolean;
 }
 
@@ -22,7 +23,7 @@ interface ToolButtonProps {
     variant?: 'primary' | 'danger';
 }
 
-const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomToken, isTeacher }) => {
+const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomToken, uid, isTeacher }) => {
     const whiteboardRef = useRef<HTMLDivElement>(null);
     const [room, setRoom] = useState<Room | null>(null);
     const [loading, setLoading] = useState(true);
@@ -43,6 +44,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                 roomInstance = await sdk.joinRoom({
                     uuid: roomUuid,
                     roomToken: roomToken,
+                    uid: uid,
                     isWritable: isTeacher, // Only teachers can draw by default
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     invisiblePlugins: [WindowManager as any],
@@ -55,7 +57,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                 }
                 
                 if (isTeacher) {
-                    roomInstance.setMemberState({ currentApplianceName: "pencil" });
+                    roomInstance.setMemberState({ currentApplianceName: ApplianceNames.pencil });
                 } else {
                     roomInstance.setViewMode(ViewMode.Follower);
                 }
@@ -74,7 +76,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                 roomInstance.disconnect();
             }
         };
-    }, [appIdentifier, roomUuid, roomToken, isTeacher]);
+    }, [appIdentifier, roomUuid, roomToken, uid, isTeacher]);
 
     const setTool = (tool: string) => {
         if (!room || !isTeacher) return;
@@ -82,22 +84,22 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
         
         switch (tool) {
             case 'selector':
-                room.setMemberState({ currentApplianceName: "selector" });
+                room.setMemberState({ currentApplianceName: ApplianceNames.selector });
                 break;
             case 'pencil':
-                room.setMemberState({ currentApplianceName: "pencil" });
+                room.setMemberState({ currentApplianceName: ApplianceNames.pencil });
                 break;
             case 'rectangle':
-                room.setMemberState({ currentApplianceName: "rectangle" });
+                room.setMemberState({ currentApplianceName: ApplianceNames.rectangle });
                 break;
             case 'ellipse':
-                room.setMemberState({ currentApplianceName: "ellipse" });
+                room.setMemberState({ currentApplianceName: ApplianceNames.ellipse });
                 break;
             case 'eraser':
-                room.setMemberState({ currentApplianceName: "eraser" });
+                room.setMemberState({ currentApplianceName: ApplianceNames.eraser });
                 break;
             case 'text':
-                room.setMemberState({ currentApplianceName: "text" });
+                room.setMemberState({ currentApplianceName: ApplianceNames.text });
                 break;
         }
     };
