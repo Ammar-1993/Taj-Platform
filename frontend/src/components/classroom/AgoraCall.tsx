@@ -85,7 +85,17 @@ export default function AgoraCall({
                 try {
                     // فقط إذا كان الدور host، نقوم بفتح الكاميرا والمايكروفون
                     if (propsRef.current.role === 'host') {
-                        const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
+                        const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
+                            { 
+                                encoderConfig: "speech_standard", 
+                                AEC: true, 
+                                ANS: true, 
+                                AGC: true 
+                            },
+                            { 
+                                encoderConfig: "720p_1" 
+                            }
+                        );
                         
                         if (isMounted) {
                             vTrack = videoTrack;
