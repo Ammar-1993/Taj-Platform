@@ -74,6 +74,16 @@ class ClassroomController extends Controller
         $whiteboardRoomUuid = $booking->whiteboard_room_uuid;
         $whiteboardToken = null;
 
+        // Lazy creation if missing
+        if (!$whiteboardRoomUuid) {
+            try {
+                $whiteboardRoomUuid = $this->whiteboardService->createRoom("حصة: " . ($booking->student->name ?? 'طالب') . " مع " . ($booking->teacher->name ?? 'معلم'));
+                $booking->update(['whiteboard_room_uuid' => $whiteboardRoomUuid]);
+            } catch (\Exception $e) {
+                \Log::error("Failed to lazy create whiteboard room: " . $e->getMessage());
+            }
+        }
+
         if ($whiteboardRoomUuid) {
             try {
                 $whiteboardToken = $this->whiteboardService->getRoomToken($whiteboardRoomUuid);

@@ -8,16 +8,13 @@ use Exception;
 class WhiteboardService
 {
     protected string $sdkToken;
-    protected string $baseUrl = 'https://api.netless.link/v1';
+    protected string $region;
+    protected string $baseUrl = 'https://api.netless.link/v5';
 
     public function __construct()
     {
-        $this->sdkToken = config('services.whiteboard.sdk_token');
-        
-        if (empty($this->sdkToken)) {
-            // Fallback for development if config not set yet
-            $this->sdkToken = env('WHITEBOARD_SDK_TOKEN');
-        }
+        $this->sdkToken = config('services.whiteboard.sdk_token') ?? env('WHITEBOARD_SDK_TOKEN');
+        $this->region = config('services.whiteboard.region') ?? env('WHITEBOARD_REGION', 'eu');
     }
 
     /**
@@ -29,13 +26,15 @@ class WhiteboardService
      */
     public function createRoom(string $name = 'Classroom')
     {
+        // Note: The 'name' parameter is intentionally omitted as it causes 
+        // "disable input name" errors in certain v5 API regions.
         $response = Http::withHeaders([
             'token' => $this->sdkToken,
             'Content-Type' => 'application/json',
-            'region' => 'us-sv', // Default region, can be adjusted
+            'region' => $this->region,
         ])->post("{$this->baseUrl}/rooms", [
-            'name' => $name,
-            'limit' => 0, // No limit on users
+            'isRecord' => false,
+            'limit' => 0,
         ]);
 
         if ($response->successful()) {
@@ -58,14 +57,18 @@ class WhiteboardService
         $response = Http::withHeaders([
             'token' => $this->sdkToken,
             'Content-Type' => 'application/json',
-            'region' => 'us-sv',
+            'region' => $this->region,
         ])->post("{$this->baseUrl}/tokens/rooms/{$roomUuid}", [
             'lifespan' => 3600000, // 1 hour in ms
             'role' => 'admin',     // Allows full control
         ]);
 
         if ($response->successful()) {
-            return $response->json(); // The token string
+            // The Netless API returns the room token as a JSON-encoded string (e.g. "NETLESSROOM_xxx").
+            // json_decode on the raw body is the safest way to strip surrounding quotes.
+            $body = $response->body();
+            $decoded = json_decode($body, true);
+            return is_string($decoded) ? $decoded : $body;
         }
 
         throw new Exception('فشل توليد توكن السبورة: ' . $response->body());

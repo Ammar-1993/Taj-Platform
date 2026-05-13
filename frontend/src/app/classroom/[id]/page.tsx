@@ -30,8 +30,9 @@ import {
     Settings
 } from 'lucide-react';
 
-const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID || '';
-const WHITEBOARD_APP_ID = process.env.NEXT_PUBLIC_WHITEBOARD_APP_IDENTIFIER || '';
+const AGORA_APP_ID = (process.env.NEXT_PUBLIC_AGORA_APP_ID || '').trim();
+const WHITEBOARD_APP_ID = (process.env.NEXT_PUBLIC_WHITEBOARD_APP_IDENTIFIER || '').trim();
+const WHITEBOARD_REGION = (process.env.NEXT_PUBLIC_WHITEBOARD_REGION || 'eu').trim();
 
 // استدعاء مكون الكاميرا الآمن من SSR
 const AgoraCall = dynamic(() => import('@/components/classroom/AgoraCall'), { 
@@ -475,6 +476,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                                     roomToken={whiteboardData.room_token}
                                     uid={uid.toString()}
                                     isTeacher={!!isTeacher}
+                                    region={WHITEBOARD_REGION}
                                 />
                             ) : (
                                 <AgoraCall 

@@ -3,8 +3,6 @@
 import "regenerator-runtime/runtime";
 import React, { useEffect, useRef, useState } from 'react';
 import { WhiteWebSdk, Room, DeviceType, ViewMode, ApplianceNames } from "white-web-sdk";
-import { WindowManager } from "@netless/window-manager";
-import "@netless/window-manager/dist/style.css";
 import { Loader2, Pencil, Eraser, Square, Circle, Type, MousePointer2, Trash2 } from 'lucide-react';
 
 interface WhiteboardProps {
@@ -13,6 +11,7 @@ interface WhiteboardProps {
     roomToken: string;
     uid: string;
     isTeacher: boolean;
+    region?: string;
 }
 
 interface ToolButtonProps {
@@ -23,32 +22,71 @@ interface ToolButtonProps {
     variant?: 'primary' | 'danger';
 }
 
-const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomToken, uid, isTeacher }) => {
+const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomToken, uid, isTeacher, region = 'eu' }) => {
     const whiteboardRef = useRef<HTMLDivElement>(null);
     const [room, setRoom] = useState<Room | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [activeTool, setActiveTool] = useState('pencil');
 
     useEffect(() => {
         if (!whiteboardRef.current) return;
 
-        const sdk = new WhiteWebSdk({
-            appIdentifier: appIdentifier,
-            deviceType: DeviceType.Surface,
-        });
+        // Advanced Sanitization: remove trailing comments (#) and whitespace
+        const cleanAppId = appIdentifier.split('#')[0].trim();
+        const cleanRoomUuid = roomUuid.split('#')[0].trim();
+        const cleanRoomToken = roomToken.split('#')[0].trim();
+        
+        // Validate Region: fallback to 'eu' (Middle East) if invalid
+        const supportedRegions = ['eu', 'us-sv', 'sg', 'cn-hz', 'in-mum'];
+        const finalRegion = supportedRegions.includes(region.toLowerCase()) ? region.toLowerCase() : 'eu';
+
+        // Validation to prevent SDK crash
+        if (!cleanAppId || cleanAppId === "") {
+            console.error("Whiteboard Error: Missing or invalid appIdentifier");
+            setError("معرف التطبيق (App Identifier) مفقود أو غير صالح.");
+            setLoading(false);
+            return;
+        }
+
+        if (!cleanRoomUuid || !cleanRoomToken) {
+            console.error("Whiteboard Error: Missing roomUuid or roomToken");
+            setError("بيانات الغرفة غير مكتملة.");
+            setLoading(false);
+            return;
+        }
 
         let roomInstance: Room | null = null;
+        let sdk: WhiteWebSdk | null = null;
+
+        try {
+            // Logging for debug (masked)
+            console.log(`Initializing Whiteboard with AppID: ${cleanAppId.substring(0, 8)}... and Region: ${finalRegion}`);
+            
+            sdk = new WhiteWebSdk({
+                appIdentifier: cleanAppId,
+                deviceType: DeviceType.Surface,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                region: finalRegion as any,
+            });
+        } catch (e: unknown) {
+            console.error("WhiteWebSdk Init Error:", e);
+            const message = e instanceof Error ? e.message : 'Unknown initialization error';
+            setError(`فشل تهيئة SDK السبورة: ${message}. يرجى التحقق من معرف التطبيق والمنطقة.`);
+            setLoading(false);
+            return;
+        }
 
         const joinRoom = async () => {
             try {
+                if (!sdk) return;
+
                 roomInstance = await sdk.joinRoom({
-                    uuid: roomUuid,
-                    roomToken: roomToken,
+                    uuid: cleanRoomUuid,
+                    roomToken: cleanRoomToken,
                     uid: uid,
-                    isWritable: isTeacher, // Only teachers can draw by default
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    invisiblePlugins: [WindowManager as any],
-                    useMultiViews: true,
+                    isWritable: !!isTeacher,
+                    useMultiViews: false,
                 });
 
                 setRoom(roomInstance);
@@ -63,8 +101,11 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                 }
 
                 setLoading(false);
-            } catch (error) {
-                console.error("Whiteboard join error:", error);
+                setError(null);
+            } catch (joinError: unknown) {
+                console.error("Whiteboard join error:", joinError);
+                const message = joinError instanceof Error ? joinError.message : 'خطأ غير معروف';
+                setError(`فشل الانضمام للغرفة: ${message}`);
                 setLoading(false);
             }
         };
@@ -76,7 +117,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                 roomInstance.disconnect();
             }
         };
-    }, [appIdentifier, roomUuid, roomToken, uid, isTeacher]);
+    }, [appIdentifier, roomUuid, roomToken, uid, isTeacher, region]);
 
     const setTool = (tool: string) => {
         if (!room || !isTeacher) return;
@@ -115,6 +156,22 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                 <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
                     <Loader2 className="w-10 h-10 animate-spin text-blue-600 mb-2" />
                     <p className="text-slate-600 font-bold">جاري تحميل السبورة...</p>
+                </div>
+            )}
+
+            {error && (
+                <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-red-50 p-6 text-center">
+                    <div className="bg-red-100 p-3 rounded-full mb-4">
+                        <Trash2 className="w-8 h-8 text-red-600" />
+                    </div>
+                    <h3 className="text-red-800 font-bold text-lg mb-2">حدث خطأ في السبورة</h3>
+                    <p className="text-red-600 mb-4 max-w-xs">{error}</p>
+                    <button 
+                        onClick={() => window.location.reload()}
+                        className="bg-red-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-red-700 transition"
+                    >
+                        إعادة تحميل الصفحة
+                    </button>
                 </div>
             )}
 
@@ -167,8 +224,12 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                 </div>
             )}
 
-            {/* The Drawing Canvas */}
-            <div ref={whiteboardRef} className="flex-1 w-full h-full touch-none" style={{ minHeight: '400px' }} />
+            {/* The Drawing Canvas - elevated with z-index and pointer-events-auto */}
+            <div 
+                ref={whiteboardRef} 
+                className="flex-1 w-full h-full touch-none relative z-10 pointer-events-auto" 
+                style={{ minHeight: '400px' }} 
+            />
         </div>
     );
 };
