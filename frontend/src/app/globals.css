@@ -148,6 +148,16 @@
   50%       { transform: translateY(-5px); }
 }
 
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-6px); }
+  30%       { transform: translateX(6px); }
+  45%       { transform: translateX(-4px); }
+  60%       { transform: translateX(4px); }
+  75%       { transform: translateX(-2px); }
+  90%       { transform: translateX(2px); }
+}
+
 /* ─── Custom Scrollbars ───────────────────────────────────────────
  * Applied via .scrollbar-thin class on any overflow container.
  * Uses WebKit (Chrome/Edge/Safari) custom scrollbar API.

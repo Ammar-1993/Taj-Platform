@@ -27,7 +27,8 @@ import {
     Presentation,
     LayoutGrid,
     CheckCircle2,
-    Settings
+    Settings,
+    X
 } from 'lucide-react';
 
 const AGORA_APP_ID = (process.env.NEXT_PUBLIC_AGORA_APP_ID || '').trim();
@@ -74,6 +75,8 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     const [inCall, setInCall] = useState(false);
     const [isEnding, setIsEnding] = useState(false);
     const [showWhiteboard, setShowWhiteboard] = useState(false);
+    const [permBannerDismissed, setPermBannerDismissed] = useState(false);
+    const [bannerShake, setBannerShake] = useState(false);
 
     // 🔐 حالات صلاحيات الميديا
     const [showPermissionModal, setShowPermissionModal] = useState(false);
@@ -212,9 +215,9 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 setIsCameraEnabled(false);
                 setIsMicEnabled(false);
                 
-                // Allow entering even if denied
-                setInCall(true); 
-                toast.error("تم رفض الوصول للكاميرا والميكروفون.");
+                // Allow entering even if denied. Banner will surface automatically — no toast needed.
+                setPermBannerDismissed(false);
+                setInCall(true);
             } else {
                 toast.error("حدث خطأ أثناء محاولة الوصول للكاميرا والميكروفون.");
             }
@@ -224,16 +227,12 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     // ... (UI click handlers and screen share)
     // 🛠 التعامل مع النقر على الأزرار المحظورة
     const handleDeniedClick = (type: 'camera' | 'mic') => {
-        const deviceLabel = type === 'camera' ? 'الكاميرا' : 'الميكروفون';
-        toast.error(
-            <div className="text-right space-y-1" dir="rtl">
-                <p className="font-bold text-sm">يجب منح صلاحية {deviceLabel}</p>
-                <p className="text-xs text-gray-500 leading-relaxed">
-                    انقر على أيقونة القفل 🔒 في شريط العنوان، اختر <strong>«سماح»</strong> ثم أعد تحميل الصفحة.
-                </p>
-            </div>,
-            { duration: 7000, id: `denied-${type}` }
-        );
+        // Suppress all toasts — the banner is the sole notification surface for permission errors.
+        // If it was dismissed, bring it back; always shake it as tactile feedback.
+        void type; // consumed only for future extensibility
+        setPermBannerDismissed(false);
+        setBannerShake(true);
+        setTimeout(() => setBannerShake(false), 600);
     };
 
     // 💻 🟢 دالة مشاركة الشاشة السحرية (العميل المزدوج)
@@ -329,6 +328,37 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                     </div>
                 </div>
             </div>
+
+            {/* ⚠️ Permission Denied Banner — floats below header when mic/cam are blocked */}
+            {inCall && (cameraStatus === 'denied' || micStatus === 'denied') && !permBannerDismissed && (
+                <div className="absolute top-14 md:top-[68px] left-0 right-0 flex justify-center px-4 z-[45] pointer-events-none">
+                    <div
+                        className={`pointer-events-auto flex items-start gap-3 w-full max-w-lg bg-amber-950/90 backdrop-blur-xl border border-amber-500/20 rounded-2xl px-4 py-3 shadow-2xl shadow-black/40 transition-transform ${
+                            bannerShake ? 'animate-[shake_0.5s_ease-in-out]' : ''
+                        }`}
+                        dir="rtl"
+                        role="alert"
+                    >
+                        <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                            <p className="text-amber-200 font-bold text-sm leading-snug">
+                                متصفحك يمنع الوصول للكاميرا والمايكروفون
+                            </p>
+                            <p className="text-amber-300/75 text-xs mt-1 leading-relaxed">
+                                انقر على الأيقونة الموجودة بجوار رابط الموقع في شريط العنوان أعلاه،
+                                وقم بتفعيل خيار <strong className="text-amber-200 font-bold">«سماح»</strong>، ثم أعد تحميل الصفحة.
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => setPermBannerDismissed(true)}
+                            aria-label="إغلاق التنبيه"
+                            className="flex-shrink-0 p-1 rounded-lg text-amber-500/50 hover:text-amber-200 hover:bg-amber-500/10 transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* 2. Main Content Area */}
             <div className="flex-1 relative overflow-hidden p-2 md:p-4">
