@@ -224,18 +224,16 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     // ... (UI click handlers and screen share)
     // 🛠 التعامل مع النقر على الأزرار المحظورة
     const handleDeniedClick = (type: 'camera' | 'mic') => {
-        toast((t) => (
-            <div className="text-right" dir="rtl">
-                <p className="font-bold mb-1">عذراً، لقد تم حظر الوصول {type === 'camera' ? 'للكاميرا' : 'للميكروفون'}.</p>
-                <p className="text-sm">يرجى النقر على أيقونة القفل 🔒 في شريط عنوان المتصفح (URL) لاختيار &apos;سماح&apos; (Allow) ثم تحديث الصفحة.</p>
-                <button 
-                    onClick={() => toast.dismiss(t.id)}
-                    className="mt-2 text-xs bg-blue-600 text-white px-3 py-1 rounded"
-                >
-                    حسناً
-                </button>
-            </div>
-        ), { duration: 6000, icon: '🔒' });
+        const deviceLabel = type === 'camera' ? 'الكاميرا' : 'الميكروفون';
+        toast.error(
+            <div className="text-right space-y-1" dir="rtl">
+                <p className="font-bold text-sm">يجب منح صلاحية {deviceLabel}</p>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                    انقر على أيقونة القفل 🔒 في شريط العنوان، اختر <strong>«سماح»</strong> ثم أعد تحميل الصفحة.
+                </p>
+            </div>,
+            { duration: 7000, id: `denied-${type}` }
+        );
     };
 
     // 💻 🟢 دالة مشاركة الشاشة السحرية (العميل المزدوج)
@@ -319,65 +317,16 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     return (
         <div className="h-[100dvh] w-full bg-slate-950 text-white flex flex-col overflow-hidden relative" dir="rtl">
             
-            {/* 1. Floating Header (Room Info) */}
-            <div className="absolute top-0 left-0 w-full p-4 md:p-6 lg:p-8 bg-gradient-to-b from-black/90 via-black/40 to-transparent z-50 flex justify-between items-center pointer-events-none">
-                <div className="flex items-center gap-4 pointer-events-auto bg-black/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/5">
-                    <div className={`w-2.5 h-2.5 rounded-full ${inCall ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></div>
+            {/* 1. Floating Header — Room Info Badge Only */}
+            <div className="absolute top-0 left-0 w-full p-4 md:p-5 z-40 pointer-events-none">
+                <div className="inline-flex items-center gap-3 pointer-events-auto bg-black/30 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/5 shadow-lg">
+                    <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${inCall ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
                     <div className="text-right">
-                        <h1 className="font-bold text-sm md:text-base lg:text-lg leading-tight drop-shadow-lg">
+                        <h1 className="font-bold text-sm md:text-base leading-tight drop-shadow-lg">
                             {isTeacher ? 'لوحة تحكم المعلم' : 'الفصل الافتراضي'}
                         </h1>
-                        <p className="text-[10px] md:text-xs text-slate-300 font-medium opacity-90 mt-0.5 drop-shadow-md">حصة رقم #{params.id}</p>
+                        <p className="text-[10px] md:text-xs text-slate-300 font-medium opacity-80 mt-0.5">حصة رقم #{params.id}</p>
                     </div>
-                </div>
-
-                <div className="flex items-center gap-3 pointer-events-auto">
-                    {inCall && whiteboardData && (
-                        <button 
-                            onClick={() => setShowWhiteboard(!showWhiteboard)}
-                            className={`p-3 md:p-4 rounded-2xl transition-all duration-300 border shadow-2xl hover:scale-105 active:scale-95 group flex items-center gap-2 relative ${
-                                showWhiteboard 
-                                    ? 'bg-blue-600 border-blue-500 text-white' 
-                                    : 'bg-slate-900/80 backdrop-blur-xl border-white/10 text-slate-200 hover:bg-slate-800'
-                            }`}
-                        >
-                            {showWhiteboard ? <LayoutGrid className="w-5 h-5" /> : <Presentation className="w-5 h-5" />}
-                            <span className="hidden md:inline font-bold text-sm">
-                                {showWhiteboard ? 'عرض المشتركين' : 'السبورة التفاعلية'}
-                            </span>
-                            {/* ✅ Warm-up ready indicator — shows once whiteboard SDK has connected */}
-                            {!showWhiteboard && (
-                                <span className="absolute -top-1 -left-1 flex h-3 w-3">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
-                                </span>
-                            )}
-                        </button>
-                    )}
-
-                    {isTeacher && inCall && (
-                        <button 
-                            onClick={toggleScreenShare} 
-                            className={`p-3 md:p-4 rounded-2xl transition-all duration-300 border shadow-2xl hover:scale-105 active:scale-95 group flex items-center gap-2 ${
-                                isSharing 
-                                    ? 'bg-emerald-600 border-emerald-500 text-white' 
-                                    : 'bg-slate-900/80 backdrop-blur-xl border-white/10 text-slate-200 hover:bg-slate-800'
-                            }`}
-                        >
-                            <MonitorUp className="w-5 h-5" />
-                            <span className="hidden md:inline font-bold text-sm">{isSharing ? 'إيقاف المشاركة' : 'مشاركة الشاشة'}</span>
-                        </button>
-                    )}
-
-                    {!isTeacher && userRole === 'audience' && (
-                        <button 
-                            onClick={handleLeave}
-                            className="bg-red-600/20 hover:bg-red-600/40 text-red-500 border border-red-500/30 px-4 py-2 rounded-xl flex items-center gap-2 transition-all backdrop-blur-md"
-                        >
-                            <LogOut className="w-4 h-4" />
-                            <span className="font-bold text-sm">مغادرة الغرفة</span>
-                        </button>
-                    )}
                 </div>
             </div>
 
@@ -516,44 +465,145 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 )}
             </div>
 
-            {/* 3. Fixed Bottom Control Dock */}
-            {inCall && userRole === 'host' && (
-                <div className="h-20 shrink-0 bg-slate-900 border-t border-slate-800 flex items-center justify-center z-50 gap-6 w-full">
-                    {/* Mic Toggle */}
-                    <button
-                        onClick={micStatus === 'denied' ? () => handleDeniedClick('mic') : () => setIsMicEnabled(!isMicEnabled)}
-                        className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 ${
-                            micStatus === 'denied' 
-                                ? 'bg-red-900/40 text-red-500 border border-red-500/20' 
-                                : !isMicEnabled 
-                                    ? 'bg-slate-700 text-red-400 border border-slate-600' 
-                                    : 'bg-slate-800 text-white hover:bg-slate-700 border border-slate-600'
-                        }`}
-                    >
-                        {micStatus === 'denied' || !isMicEnabled ? <MicOff className="w-5 h-5 sm:w-6 sm:h-6" /> : <Mic className="w-5 h-5 sm:w-6 sm:h-6" />}
-                    </button>
+            {/* 3. Unified Floating Bottom Control Dock — all roles, all controls */}
+            {inCall && (
+                <div className="shrink-0 flex items-center justify-center px-4 pb-5 pt-2 z-50" dir="ltr">
+                    <div className="flex items-center gap-2 md:gap-2.5 px-4 md:px-5 py-3 bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl shadow-black/60 ring-1 ring-white/5">
 
-                    {/* End Call Button */}
-                    <button 
-                        onClick={isTeacher ? () => setShowEndConfirm(true) : handleLeave} 
-                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20 transition-all transform hover:scale-105 active:scale-95"
-                    >
-                        {isTeacher ? <PowerOff className="w-5 h-5 sm:w-6 sm:h-6" /> : <LogOut className="w-5 h-5 sm:w-6 sm:h-6" />}
-                    </button>
+                        {/* ── Mic Toggle (host only) ── */}
+                        {userRole === 'host' && (
+                            <button
+                                id="dock-btn-mic"
+                                onClick={micStatus === 'denied' ? () => handleDeniedClick('mic') : () => setIsMicEnabled(!isMicEnabled)}
+                                className={`relative group w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 ${
+                                    micStatus === 'denied'
+                                        ? 'bg-red-900/50 text-red-400 border border-red-500/30'
+                                        : !isMicEnabled
+                                            ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                            : 'bg-white/8 text-white hover:bg-white/15 border border-white/10'
+                                }`}
+                            >
+                                {micStatus === 'denied' || !isMicEnabled ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 flex flex-col items-center z-[70]">
+                                    <span className="bg-slate-800/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl px-3 py-2 text-center whitespace-nowrap" dir="rtl">
+                                        <span className="block text-[11px] font-bold text-white">الميكروفون</span>
+                                        <span className="block text-[10px] text-slate-400 mt-0.5">
+                                            {micStatus === 'denied' ? '⚠️ يجب منح الإذن أولاً' : !isMicEnabled ? 'اضغط لتشغيل الصوت' : 'اضغط لكتم الصوت'}
+                                        </span>
+                                    </span>
+                                    <span className="border-4 border-transparent border-t-slate-800/95" />
+                                </span>
+                            </button>
+                        )}
 
-                    {/* Camera Toggle */}
-                    <button
-                        onClick={cameraStatus === 'denied' ? () => handleDeniedClick('camera') : () => setIsCameraEnabled(!isCameraEnabled)}
-                        className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 ${
-                            cameraStatus === 'denied' 
-                                ? 'bg-red-900/40 text-red-500 border border-red-500/20' 
-                                : !isCameraEnabled 
-                                    ? 'bg-slate-700 text-red-400 border border-slate-600' 
-                                    : 'bg-slate-800 text-white hover:bg-slate-700 border border-slate-600'
-                        }`}
-                    >
-                        {cameraStatus === 'denied' || !isCameraEnabled ? <VideoOff className="w-5 h-5 sm:w-6 sm:h-6" /> : <Video className="w-5 h-5 sm:w-6 sm:h-6" />}
-                    </button>
+                        {/* ── Camera Toggle (host only) ── */}
+                        {userRole === 'host' && (
+                            <button
+                                id="dock-btn-camera"
+                                onClick={cameraStatus === 'denied' ? () => handleDeniedClick('camera') : () => setIsCameraEnabled(!isCameraEnabled)}
+                                className={`relative group w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 ${
+                                    cameraStatus === 'denied'
+                                        ? 'bg-red-900/50 text-red-400 border border-red-500/30'
+                                        : !isCameraEnabled
+                                            ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                            : 'bg-white/8 text-white hover:bg-white/15 border border-white/10'
+                                }`}
+                            >
+                                {cameraStatus === 'denied' || !isCameraEnabled ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
+                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 flex flex-col items-center z-[70]">
+                                    <span className="bg-slate-800/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl px-3 py-2 text-center whitespace-nowrap" dir="rtl">
+                                        <span className="block text-[11px] font-bold text-white">الكاميرا</span>
+                                        <span className="block text-[10px] text-slate-400 mt-0.5">
+                                            {cameraStatus === 'denied' ? '⚠️ يجب منح الإذن أولاً' : !isCameraEnabled ? 'اضغط لتشغيل الكاميرا' : 'اضغط لإيقاف الكاميرا'}
+                                        </span>
+                                    </span>
+                                    <span className="border-4 border-transparent border-t-slate-800/95" />
+                                </span>
+                            </button>
+                        )}
+
+                        {/* ── Divider: comms / content ── */}
+                        {userRole === 'host' && <div className="w-px h-8 bg-white/10 mx-0.5" />}
+
+                        {/* ── Whiteboard Toggle (anyone, when data exists) ── */}
+                        {whiteboardData && (
+                            <button
+                                id="dock-btn-whiteboard"
+                                onClick={() => setShowWhiteboard(!showWhiteboard)}
+                                className={`relative group w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 ${
+                                    showWhiteboard
+                                        ? 'bg-blue-600 text-white border border-blue-500 shadow-lg shadow-blue-600/30'
+                                        : 'bg-white/8 text-white hover:bg-white/15 border border-white/10'
+                                }`}
+                            >
+                                {showWhiteboard ? <LayoutGrid className="w-5 h-5" /> : <Presentation className="w-5 h-5" />}
+                                {/* ✅ Warm-up ready pulse indicator */}
+                                {!showWhiteboard && (
+                                    <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5 pointer-events-none">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                                    </span>
+                                )}
+                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 flex flex-col items-center z-[70]">
+                                    <span className="bg-slate-800/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl px-3 py-2 text-center whitespace-nowrap" dir="rtl">
+                                        <span className="block text-[11px] font-bold text-white">السبورة التفاعلية</span>
+                                        <span className="block text-[10px] text-slate-400 mt-0.5">
+                                            {showWhiteboard ? 'اضغط للعودة لعرض الفيديو' : 'اضغط لعرض السبورة'}
+                                        </span>
+                                    </span>
+                                    <span className="border-4 border-transparent border-t-slate-800/95" />
+                                </span>
+                            </button>
+                        )}
+
+                        {/* ── Screen Share (teacher only) ── */}
+                        {isTeacher && (
+                            <button
+                                id="dock-btn-screenshare"
+                                onClick={toggleScreenShare}
+                                className={`relative group w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 ${
+                                    isSharing
+                                        ? 'bg-emerald-600 text-white border border-emerald-500 shadow-lg shadow-emerald-600/30'
+                                        : 'bg-white/8 text-white hover:bg-white/15 border border-white/10'
+                                }`}
+                            >
+                                <MonitorUp className="w-5 h-5" />
+                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 flex flex-col items-center z-[70]">
+                                    <span className="bg-slate-800/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl px-3 py-2 text-center whitespace-nowrap" dir="rtl">
+                                        <span className="block text-[11px] font-bold text-white">مشاركة الشاشة</span>
+                                        <span className="block text-[10px] text-slate-400 mt-0.5">
+                                            {isSharing ? 'اضغط لإيقاف المشاركة' : 'اضغط لبدء مشاركة الشاشة'}
+                                        </span>
+                                    </span>
+                                    <span className="border-4 border-transparent border-t-slate-800/95" />
+                                </span>
+                            </button>
+                        )}
+
+                        {/* ── Divider: content / danger ── */}
+                        <div className="w-px h-8 bg-white/10 mx-0.5" />
+
+                        {/* ── End Call / Leave (all roles) ── */}
+                        <button
+                            id="dock-btn-end"
+                            onClick={isTeacher ? () => setShowEndConfirm(true) : handleLeave}
+                            className="relative group w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/25 transition-all duration-200 hover:scale-105 active:scale-95"
+                        >
+                            {isTeacher ? <PowerOff className="w-5 h-5" /> : <LogOut className="w-5 h-5" />}
+                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 flex flex-col items-center z-[70]">
+                                <span className="bg-slate-800/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl px-3 py-2 text-center whitespace-nowrap" dir="rtl">
+                                    <span className="block text-[11px] font-bold text-white">
+                                        {isTeacher ? 'إنهاء الحصة' : 'مغادرة الغرفة'}
+                                    </span>
+                                    <span className="block text-[10px] text-slate-400 mt-0.5">
+                                        {isTeacher ? 'سيتم إيداع الأرباح فور الإنهاء' : 'اضغط للخروج من الحصة'}
+                                    </span>
+                                </span>
+                                <span className="border-4 border-transparent border-t-slate-800/95" />
+                            </span>
+                        </button>
+
+                    </div>
                 </div>
             )}
 
