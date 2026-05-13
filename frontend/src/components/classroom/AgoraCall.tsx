@@ -9,7 +9,6 @@ import AgoraRTC, {
     ILocalVideoTrack
 } from 'agora-rtc-sdk-ng';
 import { Loader2, User, MicOff, WifiOff } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 type AgoraCallProps = {
   rtcProps: {
@@ -194,6 +193,8 @@ export default function AgoraCall({
     // الكشف عن مشاركة الشاشة (الـ UID الضخم)
     const remoteScreenUser = remoteUsers.find(u => Number(u.uid) >= 1000000000);
     const isScreenSharingActive = isSharing || !!remoteScreenUser;
+    // المستخدمون البعيدون الحقيقيون (بدون شاشة المعلم)
+    const visibleRemoteUsers = remoteUsers.filter(u => Number(u.uid) < 1000000000);
 
     return (
         <div className="w-full h-full relative bg-slate-950 overflow-hidden">
@@ -243,49 +244,84 @@ export default function AgoraCall({
                     </div>
                 </div>
             ) : (
-                /* 👥 Responsive Grid Layout (Vertical on Mobile, Horizontal on Desktop) */
-                <div className={cn(
-                    "w-full h-full grid gap-4",
-                    (rtcProps.role === 'host' ? 1 : 0) + remoteUsers.filter(u => Number(u.uid) < 1000000000).length > 1
-                        ? "grid-cols-1 md:grid-cols-2"
-                        : "grid-cols-1 max-w-4xl mx-auto"
-                )}>
-                    {/* Local Participant (Only for Host) */}
-                    {rtcProps.role === 'host' && (
-                        <div className="relative bg-slate-900 rounded-xl overflow-hidden border border-white/5 shadow-inner flex items-center justify-center">
-                            <div ref={localVideoRef} className="w-full h-full [&>video]:object-cover" />
-                            {!isCameraEnabled && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 bg-slate-900">
-                                    <User className="w-20 h-20 mb-4 opacity-5" />
-                                    <span className="text-sm font-medium tracking-wide">الكاميرا متوقفة</span>
-                                </div>
-                            )}
-                            <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-lg px-4 py-2 rounded-lg text-xs md:text-sm font-bold border border-white/10 flex items-center gap-2 shadow-xl">
-                                أنت
-                                {!isMicEnabled && <MicOff className="w-4 h-4 text-red-400" />}
+                /* 🎯 Smart PiP Layout
+                 * The local video div is ALWAYS mounted so the Agora track never
+                 * needs to re-attach. CSS transition moves it from full-screen
+                 * (solo) to a bottom-right PiP window (speaker mode).
+                 */
+                <div className="relative w-full h-full">
+
+                    {/* ── Remote user: fills the main view when present ── */}
+                    {visibleRemoteUsers.length > 0 && (
+                        <>
+                            <div className="absolute inset-0">
+                                <RemotePlayer user={visibleRemoteUsers[0]} />
                             </div>
+                            <div className="absolute bottom-4 left-4 z-10 bg-black/50 backdrop-blur-lg px-3 py-1.5 rounded-xl text-xs font-bold border border-white/10 flex items-center gap-1.5 shadow-xl text-white">
+                                مشارك
+                                {!visibleRemoteUsers[0].hasAudio && <MicOff className="w-3 h-3 text-red-400" />}
+                            </div>
+                        </>
+                    )}
+
+                    {/* ── Audience waiting state (no local track, no remote yet) ── */}
+                    {visibleRemoteUsers.length === 0 && rtcProps.role !== 'host' && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-600">
+                            <div className="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center mb-5">
+                                <Loader2 className="w-10 h-10 animate-spin opacity-20" />
+                            </div>
+                            <p className="text-sm md:text-base font-medium tracking-wide">بانتظار انضمام المعلم...</p>
                         </div>
                     )}
 
-                    {/* Remote Participant */}
-                    {remoteUsers.length > 0 ? (
-                        remoteUsers.filter(u => Number(u.uid) < 1000000000).map(user => (
-                            <div key={user.uid} className="relative bg-slate-900 rounded-xl overflow-hidden border border-white/5 shadow-inner">
-                                <RemotePlayer user={user} />
-                                <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-lg px-4 py-2 rounded-lg text-xs md:text-sm font-bold border border-white/10 flex items-center gap-2 shadow-xl">
-                                    مشارك
-                                    {!user.hasAudio && <MicOff className="w-4 h-4 text-red-400" />}
+                    {/* ── Local camera: always mounted, CSS-only position change ──
+                     *  Solo  → absolute inset-0 (fills screen)
+                     *  Speaker → absolute bottom-4 right-4 (PiP window)
+                     */}
+                    {rtcProps.role === 'host' && (
+                        <div className={`absolute overflow-hidden transition-all duration-500 ease-in-out ${
+                            visibleRemoteUsers.length > 0
+                                // 📱 PiP mode
+                                ? 'bottom-4 right-4 w-36 h-48 md:w-44 md:h-60 rounded-2xl border-2 border-slate-700 shadow-2xl shadow-black/70 z-20 ring-1 ring-white/10'
+                                // 🖥️ Solo mode
+                                : 'inset-0 z-0'
+                        }`}>
+                            {/* Video track container — track is played into this ref */}
+                            <div ref={localVideoRef} className="w-full h-full [&>video]:object-cover" />
+
+                            {/* Camera-off overlay */}
+                            {!isCameraEnabled && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-slate-500">
+                                    <User className={`${visibleRemoteUsers.length > 0 ? 'w-10 h-10' : 'w-20 h-20'} opacity-10`} />
+                                    {visibleRemoteUsers.length === 0 && (
+                                        <span className="text-sm font-medium mt-2 tracking-wide">الكاميرا متوقفة</span>
+                                    )}
                                 </div>
-                            </div>
-                        ))
-                    ) : (
-                        <div className="relative bg-slate-900/40 rounded-xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center text-slate-600">
-                            <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
-                                <Loader2 className="w-8 h-8 animate-spin opacity-20" />
-                            </div>
-                            <p className="text-sm md:text-base font-medium tracking-wide">بانتظار انضمام الطرف الآخر...</p>
+                            )}
+
+                            {/* “أنت” label: compact in PiP, full-size in solo */}
+                            {visibleRemoteUsers.length > 0 ? (
+                                <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] font-bold text-white flex items-center gap-1">
+                                    أنت
+                                    {!isMicEnabled && <MicOff className="w-2.5 h-2.5 text-red-400" />}
+                                </div>
+                            ) : (
+                                <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-lg px-4 py-2 rounded-xl text-sm font-bold border border-white/10 flex items-center gap-2 shadow-xl text-white">
+                                    أنت
+                                    {!isMicEnabled && <MicOff className="w-4 h-4 text-red-400" />}
+                                </div>
+                            )}
+
+                            {/* Waiting pulse (solo mode only) */}
+                            {visibleRemoteUsers.length === 0 && (
+                                <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/30 backdrop-blur-md px-3 py-1.5 rounded-full text-xs text-slate-300 border border-white/5">
+                                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+                                    بانتظار انضمام الطرف الآخر...
+                                </div>
+                            )}
                         </div>
                     )}
+
                 </div>
             )}
         </div>
