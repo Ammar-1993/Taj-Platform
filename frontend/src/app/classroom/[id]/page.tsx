@@ -256,7 +256,8 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         // حالة بدء المشاركة
         try {
             // 1. إنشاء عميل (مستخدم) جديد مخصص للشاشة فقط
-            const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+            // VP9: ضغط أفضل بـ 30% من VP8 بنفس الجودة البصرية
+            const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp9" });
             
             // نعطي شاشة المعلم ID مختلف (رقم ضخم جداً) لكي لا يتعارض أبداً مع كاميرته أو أي طالب
             const screenUid = uid + 1000000000; 
@@ -467,26 +468,34 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                     </div>
                 ) : (
                     <div className="w-full h-full flex gap-4">
-                        {/* Area 1: Primary View (Agora or Whiteboard) */}
+                        {/* Area 1: Primary View — كلا المكوّنَين موجودان دائماً لمنع إعادة الاتصال */}
                         <div className="flex-1 relative rounded-3xl overflow-hidden border border-white/5 shadow-2xl bg-black">
-                            {showWhiteboard && whiteboardData ? (
-                                <Whiteboard 
-                                    appIdentifier={WHITEBOARD_APP_ID}
-                                    roomUuid={whiteboardData.room_uuid}
-                                    roomToken={whiteboardData.room_token}
-                                    uid={uid.toString()}
-                                    isTeacher={!!isTeacher}
-                                    region={WHITEBOARD_REGION}
-                                />
-                            ) : (
-                                <AgoraCall 
-                                    rtcProps={rtcProps} 
+
+                            {/* ✅ AgoraCall — موجود دائماً، يُخفى فقط عند عرض السبورة */}
+                            <div className={showWhiteboard ? 'hidden' : 'block w-full h-full'}>
+                                <AgoraCall
+                                    rtcProps={rtcProps}
                                     isCameraEnabled={isCameraEnabled}
                                     isMicEnabled={isMicEnabled}
                                     isSharing={isSharing}
                                     localScreenTrack={screenTrack}
                                 />
-                            )}
+                            </div>
+
+                            {/* ✅ Whiteboard — يُعرض فقط إذا كانت البيانات متاحة وزر السبورة مفعّل */}
+                            <div className={showWhiteboard && whiteboardData ? 'block w-full h-full' : 'hidden'}>
+                                {whiteboardData && (
+                                    <Whiteboard
+                                        appIdentifier={WHITEBOARD_APP_ID}
+                                        roomUuid={whiteboardData.room_uuid}
+                                        roomToken={whiteboardData.room_token}
+                                        uid={uid.toString()}
+                                        isTeacher={!!isTeacher}
+                                        region={WHITEBOARD_REGION}
+                                    />
+                                )}
+                            </div>
+
                         </div>
                     </div>
                 )}

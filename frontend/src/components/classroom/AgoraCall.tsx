@@ -81,6 +81,16 @@ export default function AgoraCall({
 
                 const { appId, channel, token, uid } = propsRef.current;
                 await client.join(appId, channel, token, uid);
+
+                // ✅ الاشتراك في مستخدمين موجودين مسبقاً في الغرفة
+                // (يحل مشكلة: المعلم لا يرى الطالب الذي انضم قبله)
+                for (const remoteUser of client.remoteUsers) {
+                    if (remoteUser.hasVideo) await client.subscribe(remoteUser, 'video');
+                    if (remoteUser.hasAudio) await client.subscribe(remoteUser, 'audio');
+                    if (isMounted) {
+                        setRemoteUsers(prev => [...prev.filter(u => u.uid !== remoteUser.uid), remoteUser]);
+                    }
+                }
                 
                 try {
                     // فقط إذا كان الدور host، نقوم بفتح الكاميرا والمايكروفون
