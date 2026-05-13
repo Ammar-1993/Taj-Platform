@@ -107,6 +107,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                 deviceType: DeviceType.Desktop,
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 region: finalRegion as any,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any);
         } catch (e: unknown) {
             console.error("[Whiteboard] SDK Init Error:", e);
