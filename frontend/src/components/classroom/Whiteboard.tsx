@@ -48,7 +48,17 @@ function hexToRgb(hex: string): [number, number, number] {
 
 const STROKE_WIDTHS = [2, 4, 8, 14];
 
-const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomToken, uid, isTeacher, region = 'eu' }) => {
+// Keyboard shortcut map for teacher tools
+const TOOL_HOTKEYS: Record<string, string> = {
+    p: 'pencil',
+    e: 'eraser',
+    s: 'selector',
+    r: 'rectangle',
+    c: 'ellipse',
+    t: 'text',
+};
+
+const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomToken, uid, isTeacher, region = 'in-mum' }) => {
     const whiteboardRef = useRef<HTMLDivElement>(null);
     const roomRef = useRef<Room | null>(null);
 
@@ -61,16 +71,8 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
     const [strokeColor, setStrokeColor] = useState('#000000');
     const [strokeWidth, setStrokeWidth] = useState(4);
 
-    // حالة الصفحات
-    const [currentPage, setCurrentPage] = useState(0);
-    const [totalPages, setTotalPages] = useState(1);
-
-    // تحديث حالة الصفحات عند التغيير
-    const syncPageState = useCallback((room: Room) => {
-        const state = room.state.sceneState;
-        setCurrentPage(state.index);
-        setTotalPages(state.scenes.length);
-    }, []);
+    // ✅ Single atomic page state object → single re-render per SDK callback
+    const [pageState, setPageState] = useState({ current: 0, total: 1 });
 
     useEffect(() => {
         if (!whiteboardRef.current) return;
@@ -82,7 +84,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
         const cleanRoomToken = rToken.split('#')[0].trim();
 
         const supportedRegions = ['eu', 'us-sv', 'sg', 'cn-hz', 'in-mum'];
-        const finalRegion = supportedRegions.includes(rRegion.toLowerCase()) ? rRegion.toLowerCase() : 'eu';
+        const finalRegion = supportedRegions.includes(rRegion.toLowerCase()) ? rRegion.toLowerCase() : 'in-mum';
 
         if (!cleanAppId) {
             setError("معرف التطبيق (App Identifier) مفقود أو غير صالح.");
@@ -105,6 +107,8 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                 appIdentifier: cleanAppId,
                 // ✅ Desktop: لا يُضيف تأخير "تخمين اللمس" المصمم للأجهزة اللوحية
                 deviceType: DeviceType.Desktop,
+                // ✅ Students don't need input processing overhead
+                disableDeviceInputs: !rIsTeacher,
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 region: finalRegion as any,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -128,7 +132,14 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                     // الطالب: قراءة فقط — المعلم فقط يملك صلاحية الكتابة
                     isWritable: rIsTeacher,
                     useMultiViews: false,
-                });
+                    // ✅ Reduce undo-state memory pressure
+                    disableEraseImage: true,
+                    // ✅ Disable floating toolbar (we have our own)
+                    floatBar: false,
+                    // ✅ Students: disable all hotkeys to reduce event overhead
+                    hotKeys: rIsTeacher ? undefined : {},
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                } as any);
 
                 roomRef.current = roomInstance;
                 roomInstance.bindHtmlElement(whiteboardRef.current);
@@ -145,16 +156,21 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                     roomInstance.setViewMode(ViewMode.Follower);
                 }
 
-                // الاستماع لتغيير الصفحة
+                // ✅ Single atomic state update = single re-render per event (was 2 separate setStates)
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 roomInstance.callbacks.on('onRoomStateChanged', (state: any) => {
                     if (state.sceneState) {
-                        setCurrentPage(state.sceneState.index);
-                        setTotalPages(state.sceneState.scenes.length);
+                        setPageState({
+                            current: state.sceneState.index,
+                            total: state.sceneState.scenes.length,
+                        });
                     }
                 });
 
-                syncPageState(roomInstance);
+                // Sync initial page state
+                const sceneState = roomInstance.state.sceneState;
+                setPageState({ current: sceneState.index, total: sceneState.scenes.length });
+
                 setLoading(false);
                 setError(null);
 
@@ -177,6 +193,72 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
     // ✅ تبعيات فارغة: الاتصال يحدث مرة واحدة فقط عند mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // ─── Keyboard Shortcuts (Teacher Only) ───────────────────────
+    useEffect(() => {
+        if (!isTeacher) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Ignore if focus is inside an input/textarea
+            if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+
+            const key = e.key.toLowerCase();
+
+            // Tool hotkeys (P, E, S, R, C, T)
+            if (!e.ctrlKey && !e.metaKey && TOOL_HOTKEYS[key]) {
+                e.preventDefault();
+                setTool(TOOL_HOTKEYS[key]);
+                return;
+            }
+
+            // Ctrl+Z → Undo
+            if ((e.ctrlKey || e.metaKey) && key === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                roomRef.current?.undo();
+                return;
+            }
+
+            // Ctrl+Shift+Z / Ctrl+Y → Redo
+            if ((e.ctrlKey || e.metaKey) && (key === 'y' || (key === 'z' && e.shiftKey))) {
+                e.preventDefault();
+                roomRef.current?.redo();
+                return;
+            }
+
+            // Delete → Clear canvas
+            if (key === 'delete' && e.ctrlKey) {
+                e.preventDefault();
+                roomRef.current?.cleanCurrentScene();
+                return;
+            }
+
+            // Arrow Right → Next page
+            if (key === 'arrowright' && !e.ctrlKey) {
+                e.preventDefault();
+                const room = roomRef.current;
+                if (room) {
+                    const idx = room.state.sceneState.index;
+                    const total = room.state.sceneState.scenes.length;
+                    if (idx < total - 1) room.setScenePath(`/${idx + 1}`);
+                }
+                return;
+            }
+
+            // Arrow Left → Previous page
+            if (key === 'arrowleft' && !e.ctrlKey) {
+                e.preventDefault();
+                const room = roomRef.current;
+                if (room) {
+                    const idx = room.state.sceneState.index;
+                    if (idx > 0) room.setScenePath(`/${idx - 1}`);
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isTeacher]);
 
     // ─── أدوات المعلم ─────────────────────────────────────────
 
@@ -224,50 +306,51 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
         }
     }, [isTeacher, strokeColor, strokeWidth]);
 
-    const setTool = (tool: string) => {
+    // ✅ All tool-change handlers are memoized to prevent toolbar re-renders
+    const setTool = useCallback((tool: string) => {
         setActiveTool(tool);
         applyTool(tool);
-    };
+    }, [applyTool]);
 
-    const setColor = (color: string) => {
+    const setColor = useCallback((color: string) => {
         setStrokeColor(color);
-        // تطبيق اللون الجديد على الأداة الحالية مباشرة
+        // Apply the new colour to the current tool immediately
         if (activeTool !== 'selector' && activeTool !== 'eraser') {
             applyTool(activeTool, color, strokeWidth);
         }
-    };
+    }, [activeTool, strokeWidth, applyTool]);
 
-    const setWidth = (width: number) => {
+    const setWidth = useCallback((width: number) => {
         setStrokeWidth(width);
         if (activeTool !== 'selector' && activeTool !== 'eraser') {
             applyTool(activeTool, strokeColor, width);
         }
-    };
+    }, [activeTool, strokeColor, applyTool]);
 
-    const clearCanvas = () => {
+    const clearCanvas = useCallback(() => {
         if (!roomRef.current || !isTeacher) return;
         roomRef.current.cleanCurrentScene();
-    };
+    }, [isTeacher]);
 
-    const undo = () => roomRef.current?.undo();
-    const redo = () => roomRef.current?.redo();
+    const undo = useCallback(() => roomRef.current?.undo(), []);
+    const redo = useCallback(() => roomRef.current?.redo(), []);
 
     // ─── إدارة الصفحات ─────────────────────────────────────────
 
-    const addPage = () => {
+    const addPage = useCallback(() => {
         const room = roomRef.current;
         if (!room || !isTeacher) return;
-        const newIndex = totalPages;
+        const newIndex = pageState.total;
         room.putScenes('/', [{}], newIndex);
         room.setScenePath(`/${newIndex}`);
-    };
+    }, [isTeacher, pageState.total]);
 
-    const goToPage = (index: number) => {
+    const goToPage = useCallback((index: number) => {
         const room = roomRef.current;
         if (!room || !isTeacher) return;
-        if (index < 0 || index >= totalPages) return;
+        if (index < 0 || index >= pageState.total) return;
         room.setScenePath(`/${index}`);
-    };
+    }, [isTeacher, pageState.total]);
 
     // ─── الرسم ─────────────────────────────────────────────────
 
@@ -303,19 +386,19 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
             {isTeacher && !loading && !error && (
                 <div className="absolute top-4 right-4 z-40 flex flex-col gap-1.5 bg-slate-900/95 backdrop-blur-md p-2 rounded-2xl shadow-2xl border border-white/10">
 
-                    {/* أدوات الرسم */}
-                    <ToolButton icon={<MousePointer2 size={18} />} active={activeTool === 'selector'} onClick={() => setTool('selector')} label="تحديد" />
-                    <ToolButton icon={<Pencil size={18} />} active={activeTool === 'pencil'} onClick={() => setTool('pencil')} label="قلم" />
-                    <ToolButton icon={<Square size={18} />} active={activeTool === 'rectangle'} onClick={() => setTool('rectangle')} label="مستطيل" />
-                    <ToolButton icon={<Circle size={18} />} active={activeTool === 'ellipse'} onClick={() => setTool('ellipse')} label="دائرة" />
-                    <ToolButton icon={<Type size={18} />} active={activeTool === 'text'} onClick={() => setTool('text')} label="نص" />
-                    <ToolButton icon={<Eraser size={18} />} active={activeTool === 'eraser'} onClick={() => setTool('eraser')} label="ممحاة" />
+                    {/* أدوات الرسم — with keyboard hint badges */}
+                    <ToolButton icon={<MousePointer2 size={18} />} active={activeTool === 'selector'}  onClick={() => setTool('selector')}   label="تحديد (S)" />
+                    <ToolButton icon={<Pencil size={18} />}        active={activeTool === 'pencil'}    onClick={() => setTool('pencil')}     label="قلم (P)" />
+                    <ToolButton icon={<Square size={18} />}        active={activeTool === 'rectangle'} onClick={() => setTool('rectangle')}  label="مستطيل (R)" />
+                    <ToolButton icon={<Circle size={18} />}        active={activeTool === 'ellipse'}   onClick={() => setTool('ellipse')}    label="دائرة (C)" />
+                    <ToolButton icon={<Type size={18} />}          active={activeTool === 'text'}      onClick={() => setTool('text')}       label="نص (T)" />
+                    <ToolButton icon={<Eraser size={18} />}        active={activeTool === 'eraser'}    onClick={() => setTool('eraser')}     label="ممحاة (E)" />
 
                     <div className="w-full h-px bg-white/10 my-1" />
 
                     {/* Undo / Redo */}
-                    <ToolButton icon={<Undo2 size={18} />} onClick={undo} label="تراجع" />
-                    <ToolButton icon={<Redo2 size={18} />} onClick={redo} label="إعادة" />
+                    <ToolButton icon={<Undo2 size={18} />} onClick={undo} label="تراجع (Ctrl+Z)" />
+                    <ToolButton icon={<Redo2 size={18} />} onClick={redo} label="إعادة (Ctrl+Y)" />
 
                     <div className="w-full h-px bg-white/10 my-1" />
 
@@ -339,7 +422,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                     <div className="w-full h-px bg-white/10 my-1" />
 
                     {/* مسح الكل */}
-                    <ToolButton icon={<Trash2 size={18} />} onClick={clearCanvas} label="مسح الكل" variant="danger" />
+                    <ToolButton icon={<Trash2 size={18} />} onClick={clearCanvas} label="مسح الكل (Ctrl+Del)" variant="danger" />
                 </div>
             )}
 
@@ -367,21 +450,21 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                 <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-xl border border-white/10">
                     {isTeacher && (
                         <button
-                            onClick={() => goToPage(currentPage - 1)}
-                            disabled={currentPage === 0}
+                            onClick={() => goToPage(pageState.current - 1)}
+                            disabled={pageState.current === 0}
                             className="p-1 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
                         >
                             <ChevronRight size={16} />
                         </button>
                     )}
                     <span className="text-white text-xs font-bold min-w-[60px] text-center">
-                        {currentPage + 1} / {totalPages}
+                        {pageState.current + 1} / {pageState.total}
                     </span>
                     {isTeacher && (
                         <>
                             <button
-                                onClick={() => goToPage(currentPage + 1)}
-                                disabled={currentPage >= totalPages - 1}
+                                onClick={() => goToPage(pageState.current + 1)}
+                                disabled={pageState.current >= pageState.total - 1}
                                 className="p-1 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
                             >
                                 <ChevronLeft size={16} />
@@ -409,7 +492,8 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
     );
 };
 
-const ToolButton: React.FC<ToolButtonProps> = ({ icon, active, onClick, label, variant = 'primary', disabled }) => (
+// ✅ React.memo prevents re-renders of toolbar buttons when unrelated state changes
+const ToolButton: React.FC<ToolButtonProps> = React.memo(({ icon, active, onClick, label, variant = 'primary', disabled }) => (
     <button
         onClick={onClick}
         title={label}
@@ -427,6 +511,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ icon, active, onClick, label, v
             {label}
         </span>
     </button>
-);
+));
+ToolButton.displayName = 'ToolButton';
 
 export default Whiteboard;

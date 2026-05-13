@@ -32,7 +32,8 @@ export default function AgoraCall({
     isSharing,
     localScreenTrack
 }: AgoraCallProps) {
-    const [client] = useState<IAgoraRTCClient>(() => AgoraRTC.createClient({ mode: "rtc", codec: "vp8" }));
+    // ✅ VP9: ~20% better compression than VP8 at the same quality — frees bandwidth for whiteboard WS traffic
+    const [client] = useState<IAgoraRTCClient>(() => AgoraRTC.createClient({ mode: "rtc", codec: "vp9" }));
     const [localVideoTrack, setLocalVideoTrack] = useState<ICameraVideoTrack | null>(null);
     const [localAudioTrack, setLocalAudioTrack] = useState<IMicrophoneAudioTrack | null>(null);
     const [remoteUsers, setRemoteUsers] = useState<IAgoraRTCRemoteUser[]>([]);
@@ -81,6 +82,21 @@ export default function AgoraCall({
 
                 const { appId, channel, token, uid } = propsRef.current;
                 await client.join(appId, channel, token, uid);
+
+                // ✅ Dual-stream: students on weak connections automatically receive a low-res feed,
+                // reducing overall bandwidth consumption without disconnecting the session.
+                try {
+                    await client.enableDualStream();
+                    client.setLowStreamParameter({
+                        width: 320,
+                        height: 240,
+                        framerate: 15,
+                        bitrate: 200,
+                    });
+                } catch (dualStreamErr) {
+                    // Non-fatal — dual-stream is a quality-of-service enhancement only
+                    console.warn('[AgoraCall] Dual-stream setup skipped:', dualStreamErr);
+                }
 
                 // ✅ الاشتراك في مستخدمين موجودين مسبقاً في الغرفة
                 // (يحل مشكلة: المعلم لا يرى الطالب الذي انضم قبله)

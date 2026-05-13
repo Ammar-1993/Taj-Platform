@@ -332,11 +332,10 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 </div>
 
                 <div className="flex items-center gap-3 pointer-events-auto">
-                    {/* زر التبديل بين الفيديو والسبورة */}
                     {inCall && whiteboardData && (
                         <button 
                             onClick={() => setShowWhiteboard(!showWhiteboard)}
-                            className={`p-3 md:p-4 rounded-2xl transition-all duration-300 border shadow-2xl hover:scale-105 active:scale-95 group flex items-center gap-2 ${
+                            className={`p-3 md:p-4 rounded-2xl transition-all duration-300 border shadow-2xl hover:scale-105 active:scale-95 group flex items-center gap-2 relative ${
                                 showWhiteboard 
                                     ? 'bg-blue-600 border-blue-500 text-white' 
                                     : 'bg-slate-900/80 backdrop-blur-xl border-white/10 text-slate-200 hover:bg-slate-800'
@@ -346,6 +345,13 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                             <span className="hidden md:inline font-bold text-sm">
                                 {showWhiteboard ? 'عرض المشتركين' : 'السبورة التفاعلية'}
                             </span>
+                            {/* ✅ Warm-up ready indicator — shows once whiteboard SDK has connected */}
+                            {!showWhiteboard && (
+                                <span className="absolute -top-1 -left-1 flex h-3 w-3">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+                                </span>
+                            )}
                         </button>
                     )}
 
@@ -482,19 +488,28 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                                 />
                             </div>
 
-                            {/* ✅ Whiteboard — يُعرض فقط إذا كانت البيانات متاحة وزر السبورة مفعّل */}
-                            <div className={showWhiteboard && whiteboardData ? 'block w-full h-full' : 'hidden'}>
-                                {whiteboardData && (
-                                    <Whiteboard
-                                        appIdentifier={WHITEBOARD_APP_ID}
-                                        roomUuid={whiteboardData.room_uuid}
-                                        roomToken={whiteboardData.room_token}
-                                        uid={uid.toString()}
-                                        isTeacher={!!isTeacher}
-                                        region={WHITEBOARD_REGION}
-                                    />
-                                )}
-                            </div>
+                        {/* ✅ Whiteboard — Always mounted for background warm-up once inCall.
+                               Using opacity + pointer-events instead of display:none preserves
+                               the DOM dimensions the SDK needs for its canvas layout engine. */}
+                        <div
+                            className={`w-full h-full absolute inset-0 transition-opacity duration-300 ${
+                                showWhiteboard && whiteboardData
+                                    ? 'opacity-100 pointer-events-auto z-10'
+                                    : 'opacity-0 pointer-events-none -z-10'
+                            }`}
+                            aria-hidden={!showWhiteboard}
+                        >
+                            {whiteboardData && (
+                                <Whiteboard
+                                    appIdentifier={WHITEBOARD_APP_ID}
+                                    roomUuid={whiteboardData.room_uuid}
+                                    roomToken={whiteboardData.room_token}
+                                    uid={uid.toString()}
+                                    isTeacher={!!isTeacher}
+                                    region={WHITEBOARD_REGION}
+                                />
+                            )}
+                        </div>
 
                         </div>
                     </div>

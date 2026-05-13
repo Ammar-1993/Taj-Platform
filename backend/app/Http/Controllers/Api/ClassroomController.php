@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\WhiteboardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Peterujah\Agora\Agora;
 use Peterujah\Agora\Builders\RtcToken;
 use Peterujah\Agora\Roles as AgoraRoles;
@@ -22,7 +23,7 @@ class ClassroomController extends Controller
         $this->whiteboardService = $whiteboardService;
     }
 
-    public function getAccessDetails(Request $request, $bookingId): JsonResponse
+    public function getAccessDetails(Request $request, int|string $bookingId): JsonResponse
     {
         /** @var User $user */
         $user = $request->user();
@@ -80,15 +81,23 @@ class ClassroomController extends Controller
                 $whiteboardRoomUuid = $this->whiteboardService->createRoom("حصة: " . ($booking->student->name ?? 'طالب') . " مع " . ($booking->teacher->name ?? 'معلم'));
                 $booking->update(['whiteboard_room_uuid' => $whiteboardRoomUuid]);
             } catch (\Exception $e) {
-                \Log::error("Failed to lazy create whiteboard room: " . $e->getMessage());
+                Log::error("Failed to lazy create whiteboard room: " . $e->getMessage());
             }
         }
 
         if ($whiteboardRoomUuid) {
             try {
-                $whiteboardToken = $this->whiteboardService->getRoomToken($whiteboardRoomUuid);
+                // Teacher gets full admin token; everyone else gets a lightweight read-only token.
+                $tokenRole = ($user->id === $booking->teacher_id) ? 'admin' : 'reader';
+
+                // Align token lifespan with the actual booking duration (+30 min buffer).
+                $durationMs = isset($booking->duration_minutes)
+                    ? ($booking->duration_minutes + 30) * 60 * 1000
+                    : 3600000; // fallback: 1 hour
+
+                $whiteboardToken = $this->whiteboardService->getRoomToken($whiteboardRoomUuid, $tokenRole, $durationMs);
             } catch (\Exception $e) {
-                \Log::error("Failed to generate whiteboard token: " . $e->getMessage());
+                Log::error("Failed to generate whiteboard token: " . $e->getMessage());
             }
         }
 
