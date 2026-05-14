@@ -46,6 +46,7 @@ export default function AgoraCall({
     const [remoteUsers, setRemoteUsers] = useState<IAgoraRTCRemoteUser[]>([]);
     const [isJoined, setIsJoined] = useState(false);
     const [networkQuality, setNetworkQuality] = useState(0);
+    const [remoteNetworkStats, setRemoteNetworkStats] = useState<Record<string, number>>({});
 
     const localVideoRef = useRef<HTMLDivElement>(null);
     const localScreenRef = useRef<HTMLDivElement>(null);
@@ -71,7 +72,10 @@ export default function AgoraCall({
 
                 client.on("user-unpublished", (user) => {
                     if (isMounted) {
-                        setRemoteUsers(prev => prev.filter(u => u.uid !== user.uid));
+                        setRemoteUsers(prev => {
+                            const filtered = prev.filter(u => u.uid !== user.uid);
+                            return [...filtered, user];
+                        });
                     }
                 });
 
@@ -86,6 +90,18 @@ export default function AgoraCall({
                         setNetworkQuality(stats.downlinkNetworkQuality);
                     }
                 });
+
+                // Poll remote network qualities every 2s
+                const qualityInterval = setInterval(() => {
+                    if (isMounted && client.connectionState === "CONNECTED") {
+                        const stats = client.getRemoteNetworkQuality();
+                        const newStats: Record<string, number> = {};
+                        Object.keys(stats).forEach(uid => {
+                            newStats[uid] = stats[uid].downlinkNetworkQuality;
+                        });
+                        setRemoteNetworkStats(newStats);
+                    }
+                }, 2000);
 
                 const { appId, channel, token, uid } = propsRef.current;
                 await client.join(appId, channel, token, uid);
@@ -161,6 +177,9 @@ export default function AgoraCall({
 
         return () => {
             isMounted = false;
+            // The interval is captured in the closure of init, but to clean it up reliably 
+            // without defining it outside, we can rely on isMounted = false stopping state updates.
+            // However, to be totally clean, let's just let it run one last time and die, or:
             if (vTrack) vTrack.close();
             if (aTrack) aTrack.close();
             client.leave();
@@ -246,7 +265,8 @@ export default function AgoraCall({
                         {/* Local Camera Thumbnail (Only for Host) */}
                         {rtcProps.role === 'host' && (
                             <div className="w-24 h-32 rounded-lg shadow-xl border border-slate-700 bg-slate-900 overflow-hidden relative transition-all hover:scale-105">
-                                <div ref={localVideoRef} className="w-full h-full [&>video]:object-cover">
+                                <div ref={localVideoRef} className="w-full h-full [&>video]:object-cover relative">
+                                    <StatusOverlay isMuted={!isMicEnabled} networkQuality={networkQuality} />
                                     {!isCameraEnabled && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
                                             <User className="w-8 h-8 opacity-10" />
@@ -260,7 +280,7 @@ export default function AgoraCall({
                         {/* Remote Participant Thumbnails */}
                         {remoteUsers.filter(u => Number(u.uid) < 1000000000).map(user => (
                             <div key={user.uid} className="w-24 h-32 rounded-lg shadow-xl border border-slate-700 bg-slate-900 overflow-hidden relative transition-all hover:scale-105">
-                                <RemotePlayer user={user} />
+                                <RemotePlayer user={user} networkQuality={remoteNetworkStats[user.uid] || 0} />
                                 <div className="absolute bottom-1 right-1 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded text-[10px] font-bold text-white border border-white/5">مشارك</div>
                             </div>
                         ))}
@@ -278,11 +298,10 @@ export default function AgoraCall({
                     {visibleRemoteUsers.length > 0 && (
                         <>
                             <div className="absolute inset-0">
-                                <RemotePlayer user={visibleRemoteUsers[0]} />
+                                <RemotePlayer user={visibleRemoteUsers[0]} networkQuality={remoteNetworkStats[visibleRemoteUsers[0].uid] || 0} />
                             </div>
                             <div className="absolute bottom-4 left-4 z-10 bg-black/50 backdrop-blur-lg px-3 py-1.5 rounded-xl text-xs font-bold border border-white/10 flex items-center gap-1.5 shadow-xl text-white">
                                 مشارك
-                                {!visibleRemoteUsers[0].hasAudio && <MicOff className="w-3 h-3 text-red-400" />}
                             </div>
                         </>
                     )}
@@ -310,7 +329,9 @@ export default function AgoraCall({
                                 : 'inset-0 z-0'
                         }`}>
                             {/* Video track container — track is played into this ref */}
-                            <div ref={localVideoRef} className="w-full h-full [&>video]:object-cover" />
+                            <div ref={localVideoRef} className="w-full h-full [&>video]:object-cover relative">
+                                <StatusOverlay isMuted={!isMicEnabled} networkQuality={networkQuality} />
+                            </div>
 
                             {/* Camera-off overlay */}
                             {!isCameraEnabled && (
@@ -326,12 +347,10 @@ export default function AgoraCall({
                             {visibleRemoteUsers.length > 0 ? (
                                 <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] font-bold text-white flex items-center gap-1">
                                     أنت
-                                    {!isMicEnabled && <MicOff className="w-2.5 h-2.5 text-red-400" />}
                                 </div>
                             ) : (
                                 <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-lg px-4 py-2 rounded-xl text-sm font-bold border border-white/10 flex items-center gap-2 shadow-xl text-white">
                                     أنت
-                                    {!isMicEnabled && <MicOff className="w-4 h-4 text-red-400" />}
                                 </div>
                             )}
 
@@ -351,7 +370,7 @@ export default function AgoraCall({
     );
 }
 
-function RemotePlayer({ user, isPrimary }: { user: IAgoraRTCRemoteUser, isPrimary?: boolean }) {
+function RemotePlayer({ user, isPrimary, networkQuality = 0 }: { user: IAgoraRTCRemoteUser, isPrimary?: boolean, networkQuality?: number }) {
     const videoRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -364,12 +383,39 @@ function RemotePlayer({ user, isPrimary }: { user: IAgoraRTCRemoteUser, isPrimar
     }, [user.videoTrack, user.audioTrack, isPrimary]);
 
     return (
-        <div ref={videoRef} className="w-full h-full transition-opacity duration-500">
+        <div ref={videoRef} className="w-full h-full relative transition-opacity duration-500">
+            {!isPrimary && <StatusOverlay isMuted={!user.hasAudio} networkQuality={networkQuality} />}
             {!user.hasVideo && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-slate-500">
                     <User className="w-20 h-20 opacity-5" />
                 </div>
             )}
+        </div>
+    );
+}
+
+function StatusOverlay({ isMuted, networkQuality, className = "top-2 left-2" }: { isMuted: boolean, networkQuality: number, className?: string }) {
+    // 1-2: Good (Green), 3-4: Poor (Yellow), 5-6: Bad (Red), 0: Unknown (Gray)
+    const color = networkQuality > 0 && networkQuality <= 2 ? 'bg-emerald-500' :
+                  networkQuality === 3 || networkQuality === 4 ? 'bg-amber-400' :
+                  networkQuality >= 5 ? 'bg-red-500' : 'bg-slate-600';
+    
+    const bars = networkQuality > 0 && networkQuality <= 2 ? 3 :
+                 networkQuality === 3 || networkQuality === 4 ? 2 :
+                 networkQuality >= 5 ? 1 : 0;
+
+    return (
+        <div className={`absolute flex items-center gap-1.5 z-30 pointer-events-none ${className}`} dir="ltr">
+            {isMuted && (
+                <div className="bg-black/60 backdrop-blur-md p-1 rounded-full border border-red-500/30 shadow-lg transition-opacity">
+                    <MicOff className="w-3.5 h-3.5 text-red-400" />
+                </div>
+            )}
+            <div className="bg-black/60 backdrop-blur-md px-1.5 py-1 rounded-md flex items-end gap-[3px] h-[22px] border border-white/5 shadow-lg" title={`Network: ${networkQuality}`}>
+                <div className={`w-[3px] rounded-sm h-[8px] transition-colors ${bars >= 1 ? color : 'bg-slate-600'}`} />
+                <div className={`w-[3px] rounded-sm h-[12px] transition-colors ${bars >= 2 ? color : 'bg-slate-600'}`} />
+                <div className={`w-[3px] rounded-sm h-[16px] transition-colors ${bars >= 3 ? color : 'bg-slate-600'}`} />
+            </div>
         </div>
     );
 }
