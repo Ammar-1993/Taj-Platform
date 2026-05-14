@@ -90,6 +90,10 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
   const [permBannerDismissed, setPermBannerDismissed] = useState(false);
   const [bannerShake, setBannerShake] = useState(false);
 
+  // 🧭 Auto-hide UI states
+  const [isIdle, setIsIdle] = useState(false);
+  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // 🔐 حالات صلاحيات الميديا
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [cameraStatus, setCameraStatus] = useState<
@@ -217,6 +221,34 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     }
     setShowPermissionModal(true);
   };
+
+  // ── Auto-hide UI Logic (Task 4) ──
+  useEffect(() => {
+    if (!inCall) return;
+
+    const resetIdleTimer = () => {
+      setIsIdle(false);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      // Auto-hide after 3 seconds of inactivity
+      idleTimerRef.current = setTimeout(() => setIsIdle(true), 3000);
+    };
+
+    // Initial timer start
+    resetIdleTimer();
+
+    window.addEventListener("mousemove", resetIdleTimer);
+    window.addEventListener("mousedown", resetIdleTimer);
+    window.addEventListener("touchstart", resetIdleTimer, { passive: true });
+    window.addEventListener("keydown", resetIdleTimer);
+
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      window.removeEventListener("mousemove", resetIdleTimer);
+      window.removeEventListener("mousedown", resetIdleTimer);
+      window.removeEventListener("touchstart", resetIdleTimer);
+      window.removeEventListener("keydown", resetIdleTimer);
+    };
+  }, [inCall]);
 
   const requestMediaPermissions = async () => {
     setShowPermissionModal(false);
@@ -366,7 +398,11 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
       dir="rtl"
     >
       {/* 1. Floating Header — Room Info Badge Only */}
-      <div className="absolute top-0 left-0 w-full p-4 md:p-5 z-40 pointer-events-none">
+      <div 
+        className={`absolute top-0 left-0 w-full p-4 md:p-5 z-40 pointer-events-none transition-all duration-300 ease-in-out ${
+          isIdle && inCall ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"
+        }`}
+      >
         <div className="inline-flex items-center gap-3 pointer-events-auto bg-black/30 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/5 shadow-lg">
           <div
             className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${inCall ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`}
@@ -575,7 +611,9 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
       {/* 3. Unified Floating Bottom Control Dock — all roles, all controls */}
       {inCall && (
         <div
-          className="shrink-0 flex items-center justify-center px-4 pb-5 pt-2 z-50"
+          className={`absolute bottom-0 left-0 w-full flex items-center justify-center px-4 pb-5 pt-2 z-50 transition-all duration-300 ease-in-out ${
+            isIdle ? "translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
+          }`}
           dir="ltr"
         >
           <div className="flex items-center gap-2 md:gap-2.5 px-4 md:px-5 py-3 bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl shadow-black/60 ring-1 ring-white/5">
