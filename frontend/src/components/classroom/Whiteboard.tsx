@@ -116,7 +116,16 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
         } catch (e: unknown) {
             console.error("[Whiteboard] SDK Init Error:", e);
             const message = e instanceof Error ? e.message : 'خطأ غير معروف';
-            setError(`فشل تهيئة SDK السبورة: ${message}`);
+
+            // Detect misconfigured env var: SDK rejects non-appIdentifier values (e.g. room token passed by mistake)
+            if (message.includes('invalid appIdentifier')) {
+                setError(
+                    'قيمة NEXT_PUBLIC_WHITEBOARD_APP_IDENTIFIER في ملف .env.local غير صحيحة. ' +
+                    'تأكد من نسخ "App Identifier" (وليس التوكن) من لوحة تحكم Agora Console ← Interactive Whiteboard.'
+                );
+            } else {
+                setError(`فشل تهيئة SDK السبورة: ${message}`);
+            }
             setLoading(false);
             return;
         }
