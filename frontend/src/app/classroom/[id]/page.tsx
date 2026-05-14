@@ -474,6 +474,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                   roomToken={whiteboardData.room_token}
                   uid={uid.toString()}
                   isTeacher={!!isTeacher}
+                  bookingId={params.id}
                   region={WHITEBOARD_REGION}
                 />
               )}
