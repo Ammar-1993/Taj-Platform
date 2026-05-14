@@ -31,8 +31,8 @@ export default function FloatingVideoWidget({ focusMode, children }: FloatingVid
     useEffect(() => {
         if (focusMode && !initialized.current) {
             setPos({
-                x: window.innerWidth - WIDGET_W - PAD,
-                y: HEADER_H + PAD,
+                x: PAD,                                                         // left edge
+                y: window.innerHeight - WIDGET_H - DOCK_H - PAD,              // above dock
             });
             initialized.current = true;
         }

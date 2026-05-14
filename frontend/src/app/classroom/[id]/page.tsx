@@ -104,10 +104,14 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
 
   // 🟢 حالات مشاركة الشاشة (العميل المزدوج)
   const [isSharing, setIsSharing] = useState(false);
+  const [isRemoteSharing, setIsRemoteSharing] = useState(false); // remote screen share detected by AgoraCall
   const [screenClient, setScreenClient] = useState<IAgoraRTCClient | null>(
     null,
   );
   const [screenTrack, setScreenTrack] = useState<ILocalVideoTrack | null>(null);
+
+  // Ref for the full-screen screen-share background div (used by AgoraCall via externalScreenRef)
+  const screenBgRef = useRef<HTMLDivElement>(null);
 
   const isTeacher = user?.roles?.some((r) => r.name === "teacher");
 
@@ -517,12 +521,8 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
             </div>
           </div>
         ) : (
-          // 🎯 Focus Mode Layout
-          // AgoraCall lives inside FloatingVideoWidget and is NEVER unmounted.
-          // focusMode=false → widget fills the area (normal view)
-          // focusMode=true  → widget shrinks to a draggable floating window
           <div className="w-full h-full relative">
-            {/* Whiteboard — always mounted, fills 100% in focus mode */}
+            {/* ── Background 1: Interactive Whiteboard ── */}
             <div
               className={`absolute inset-0 transition-opacity duration-300 ${
                 showWhiteboard && whiteboardData
@@ -543,10 +543,23 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
               )}
             </div>
 
-            {/* AgoraCall inside FloatingVideoWidget:
-                             • Normal mode (focusMode=false): fills entire content area
-                             • Focus mode (focusMode=true):   draggable floating widget */}
-            <FloatingVideoWidget focusMode={showWhiteboard}>
+            {/* ── Background 2: Screen Share (local or remote) ──
+             *  Always mounted so AgoraCall can portal content into it.
+             *  Visible only when screen sharing is active and whiteboard is hidden. */}
+            <div
+              ref={screenBgRef}
+              className={`absolute inset-0 bg-black transition-opacity duration-300 ${
+                (isSharing || isRemoteSharing) && !showWhiteboard
+                  ? 'opacity-100 pointer-events-auto z-0'
+                  : 'opacity-0 pointer-events-none -z-10'
+              }`}
+            />
+
+            {/* ── AgoraCall inside FloatingVideoWidget ──
+             *  isFocusMode = whiteboard OR screen share active
+             *  • false → fills entire content area (normal call view)
+             *  • true  → draggable floating widget (camera feeds only) */}
+            <FloatingVideoWidget focusMode={showWhiteboard || isSharing || isRemoteSharing}>
               <AgoraCall
                 rtcProps={rtcProps}
                 isCameraEnabled={isCameraEnabled}

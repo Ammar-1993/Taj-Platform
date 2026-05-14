@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import AgoraRTC, { 
     IAgoraRTCClient, 
     ICameraVideoTrack, 
@@ -22,6 +23,11 @@ type AgoraCallProps = {
   isMicEnabled: boolean;
   isSharing?: boolean;
   localScreenTrack?: ILocalVideoTrack | null;
+  /** When provided, screen content is rendered into this external div instead of
+   *  AgoraCall's internal screen-share layout, enabling Focus Mode in page.tsx. */
+  externalScreenRef?: React.RefObject<HTMLDivElement>;
+  /** Fires true when a remote screen-share starts, false when it stops. */
+  onScreenShareActive?: (active: boolean) => void;
 };
 
 export default function AgoraCall({ 
@@ -29,7 +35,9 @@ export default function AgoraCall({
     isCameraEnabled, 
     isMicEnabled,
     isSharing,
-    localScreenTrack
+    localScreenTrack,
+    externalScreenRef,
+    onScreenShareActive,
 }: AgoraCallProps) {
     // ✅ VP9: ~20% better compression than VP8 at the same quality — frees bandwidth for whiteboard WS traffic
     const [client] = useState<IAgoraRTCClient>(() => AgoraRTC.createClient({ mode: "rtc", codec: "vp9" }));
@@ -176,10 +184,17 @@ export default function AgoraCall({
     }, [localVideoTrack]);
 
     useEffect(() => {
-        if (localScreenTrack && localScreenRef.current) {
-            localScreenTrack.play(localScreenRef.current, { fit: 'contain' });
-        }
-    }, [localScreenTrack]);
+        if (!localScreenTrack) return;
+        // When externalScreenRef is supplied, play screen into external container
+        const target = externalScreenRef?.current ?? localScreenRef.current;
+        if (target) localScreenTrack.play(target, { fit: 'contain' });
+    }, [localScreenTrack, externalScreenRef]);
+
+    // Notify parent when a remote screen-share starts or stops
+    useEffect(() => {
+        const hasRemoteScreen = remoteUsers.some(u => Number(u.uid) >= 1000000000);
+        onScreenShareActive?.(hasRemoteScreen);
+    }, [remoteUsers, onScreenShareActive]);
 
     if (!isJoined) {
         return (
@@ -206,8 +221,16 @@ export default function AgoraCall({
                 </div>
             )}
 
-            {isScreenSharingActive ? (
-                /* 🖥️ Responsive Screen Share Layout */
+            {/* Portal: render remote screen share into external container (Focus Mode) */}
+            {externalScreenRef?.current && remoteScreenUser && (
+                createPortal(
+                    <RemotePlayer user={remoteScreenUser} isPrimary />,
+                    externalScreenRef.current
+                )
+            )}
+
+            {isScreenSharingActive && !externalScreenRef ? (
+                /* 🖥️ Internal Screen Share Layout (no externalScreenRef) */
                 <div className="w-full h-full flex flex-col relative">
                     {/* Primary Content (Screen) */}
                     <div className="flex-1 bg-black relative">
