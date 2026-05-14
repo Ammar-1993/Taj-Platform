@@ -602,6 +602,8 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 isMicEnabled={isMicEnabled}
                 isSharing={isSharing}
                 localScreenTrack={screenTrack}
+                externalScreenRef={screenBgRef}
+                onScreenShareActive={setIsRemoteSharing}
               />
             </FloatingVideoWidget>
           </div>

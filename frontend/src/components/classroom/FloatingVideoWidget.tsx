@@ -12,7 +12,6 @@ const WIDGET_W  = 272;
 const WIDGET_H  = 200;
 const TITLE_H   = 36;   // height when collapsed — just the drag handle bar
 const DOCK_H    = 90;
-const HEADER_H  = 72;
 const PAD       = 16;
 
 /**

@@ -57,6 +57,7 @@ export default function AgoraCall({
         let isMounted = true;
         let vTrack: ICameraVideoTrack | null = null;
         let aTrack: IMicrophoneAudioTrack | null = null;
+        let qualityInterval: NodeJS.Timeout;
 
         const init = async () => {
             try {
@@ -92,7 +93,7 @@ export default function AgoraCall({
                 });
 
                 // Poll remote network qualities every 2s
-                const qualityInterval = setInterval(() => {
+                qualityInterval = setInterval(() => {
                     if (isMounted && client.connectionState === "CONNECTED") {
                         const stats = client.getRemoteNetworkQuality();
                         const newStats: Record<string, number> = {};
@@ -180,6 +181,7 @@ export default function AgoraCall({
             // The interval is captured in the closure of init, but to clean it up reliably 
             // without defining it outside, we can rely on isMounted = false stopping state updates.
             // However, to be totally clean, let's just let it run one last time and die, or:
+            clearInterval(qualityInterval);
             if (vTrack) vTrack.close();
             if (aTrack) aTrack.close();
             client.leave();
