@@ -143,7 +143,7 @@ export default function AgoraCall({
                                 AGC: true 
                             },
                             { 
-                                encoderConfig: "720p_2"  // 720p @ 30fps (vs 720p_1 @ 15fps)
+                                encoderConfig: "480p_1"  // 480p @ 15fps (~500 Kbps) — Highly optimized for tutoring
                             }
                         );
                         
@@ -235,7 +235,7 @@ export default function AgoraCall({
     return (
         <div className="w-full h-full relative bg-slate-950 overflow-hidden">
             {/* مؤشر جودة الشبكة */}
-            {networkQuality > 2 && (
+            {networkQuality > 3 && (
                 <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[60] bg-red-600/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 text-white text-xs font-bold animate-bounce shadow-xl border border-red-500/20">
                     <WifiOff className="w-4 h-4" />
                     اتصال الإنترنت لديك ضعيف حالياً
