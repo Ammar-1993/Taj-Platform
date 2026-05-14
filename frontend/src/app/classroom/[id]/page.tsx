@@ -26,8 +26,6 @@ import {
   Coins,
   Presentation,
   LayoutGrid,
-  CheckCircle2,
-  Settings,
   X,
 } from "lucide-react";
 
