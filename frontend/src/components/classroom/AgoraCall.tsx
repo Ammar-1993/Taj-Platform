@@ -88,7 +88,19 @@ export default function AgoraCall({
 
                 client.on("network-quality", (stats) => {
                     if (isMounted) {
-                        setNetworkQuality(stats.downlinkNetworkQuality);
+                        const down = stats.downlinkNetworkQuality;
+                        setNetworkQuality(down);
+
+                        // ✅ Manual Dual-Stream Fallback (Task 2): Switch to low-quality stream if downlink is poor
+                        client.remoteUsers.forEach(user => {
+                            if (user.hasVideo) {
+                                if (down >= 3) {
+                                    client.setRemoteVideoStreamType(user.uid, 1); // 1: Low stream
+                                } else {
+                                    client.setRemoteVideoStreamType(user.uid, 0); // 0: High stream
+                                }
+                            }
+                        });
                     }
                 });
 
@@ -107,25 +119,29 @@ export default function AgoraCall({
                 const { appId, channel, token, uid } = propsRef.current;
                 await client.join(appId, channel, token, uid);
 
-                // ✅ Dual-stream: students on weak connections automatically receive a low-res feed,
-                // reducing overall bandwidth consumption without disconnecting the session.
+                // ✅ Dual-stream & Performance: Drastically reduce bandwidth and handle poor connections.
                 try {
+                    // Enable dual-stream mode (simulcast)
                     await client.enableDualStream();
                     client.setLowStreamParameter({
                         width: 320,
                         height: 240,
                         framerate: 15,
-                        bitrate: 200,
+                        bitrate: 150, // Highly optimized for weak student connections
                     });
                 } catch (dualStreamErr) {
                     // Non-fatal — dual-stream is a quality-of-service enhancement only
-                    console.warn('[AgoraCall] Dual-stream setup skipped:', dualStreamErr);
+                    console.warn('[AgoraCall] Performance optimizations skipped:', dualStreamErr);
                 }
 
                 // ✅ الاشتراك في مستخدمين موجودين مسبقاً في الغرفة
                 // (يحل مشكلة: المعلم لا يرى الطالب الذي انضم قبله)
                 for (const remoteUser of client.remoteUsers) {
-                    if (remoteUser.hasVideo) await client.subscribe(remoteUser, 'video');
+                    if (remoteUser.hasVideo) {
+                        await client.subscribe(remoteUser, 'video');
+                        // Apply initial fallback check
+                        if (networkQuality >= 3) client.setRemoteVideoStreamType(remoteUser.uid, 1);
+                    }
                     if (remoteUser.hasAudio) await client.subscribe(remoteUser, 'audio');
                     if (isMounted) {
                         setRemoteUsers(prev => [...prev.filter(u => u.uid !== remoteUser.uid), remoteUser]);
@@ -143,7 +159,10 @@ export default function AgoraCall({
                                 AGC: true 
                             },
                             { 
-                                encoderConfig: "480p_1"  // 480p @ 15fps (~500 Kbps) — Highly optimized for tutoring
+                                // ✅ Drastically reduce bandwidth: 360p @ 15fps (~400 Kbps) 
+                                // plus 'motion' optimization to prioritize stability over resolution.
+                                encoderConfig: "360p_1", 
+                                optimizationMode: "motion"
                             }
                         );
                         
