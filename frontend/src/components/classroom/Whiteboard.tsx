@@ -74,6 +74,10 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
     // ✅ Single atomic page state object → single re-render per SDK callback
     const [pageState, setPageState] = useState({ current: 0, total: 1 });
 
+    // 🔭 Toolbar auto-hide
+    const [toolbarVisible, setToolbarVisible] = useState(true);
+    const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
     useEffect(() => {
         if (!whiteboardRef.current) return;
 
@@ -269,6 +273,15 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isTeacher]);
 
+    // ─── Auto-hide toolbar after 3s idle ──────────────────────────────
+    useEffect(() => {
+        if (isTeacher && !loading && !error) {
+            if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+            hideTimerRef.current = setTimeout(() => setToolbarVisible(false), 3000);
+        }
+        return () => { if (hideTimerRef.current) clearTimeout(hideTimerRef.current); };
+    }, [loading, error, isTeacher]);
+
     // ─── أدوات المعلم ─────────────────────────────────────────
 
     const applyTool = useCallback((tool: string, color?: string, width?: number) => {
@@ -344,6 +357,13 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
     const undo = useCallback(() => roomRef.current?.undo(), []);
     const redo = useCallback(() => roomRef.current?.redo(), []);
 
+    // Show toolbar and reset the 3s hide timer
+    const showToolbar = useCallback(() => {
+        setToolbarVisible(true);
+        if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+        hideTimerRef.current = setTimeout(() => setToolbarVisible(false), 3000);
+    }, []);
+
     // ─── إدارة الصفحات ─────────────────────────────────────────
 
     const addPage = useCallback(() => {
@@ -391,66 +411,91 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                 </div>
             )}
 
-            {/* ─── شريط أدوات المعلم (يمين السبورة) ─── */}
+            {/* ─── Invisible hover-trigger strip at the very top ─── */}
             {isTeacher && !loading && !error && (
-                <div className="absolute top-4 right-4 z-40 flex flex-col gap-1.5 bg-slate-900/95 backdrop-blur-md p-2 rounded-2xl shadow-2xl border border-white/10">
-
-                    {/* أدوات الرسم — with keyboard hint badges */}
-                    <ToolButton icon={<MousePointer2 size={18} />} active={activeTool === 'selector'}  onClick={() => setTool('selector')}   label="تحديد (S)" />
-                    <ToolButton icon={<Pencil size={18} />}        active={activeTool === 'pencil'}    onClick={() => setTool('pencil')}     label="قلم (P)" />
-                    <ToolButton icon={<Square size={18} />}        active={activeTool === 'rectangle'} onClick={() => setTool('rectangle')}  label="مستطيل (R)" />
-                    <ToolButton icon={<Circle size={18} />}        active={activeTool === 'ellipse'}   onClick={() => setTool('ellipse')}    label="دائرة (C)" />
-                    <ToolButton icon={<Type size={18} />}          active={activeTool === 'text'}      onClick={() => setTool('text')}       label="نص (T)" />
-                    <ToolButton icon={<Eraser size={18} />}        active={activeTool === 'eraser'}    onClick={() => setTool('eraser')}     label="ممحاة (E)" />
-
-                    <div className="w-full h-px bg-white/10 my-1" />
-
-                    {/* Undo / Redo */}
-                    <ToolButton icon={<Undo2 size={18} />} onClick={undo} label="تراجع (Ctrl+Z)" />
-                    <ToolButton icon={<Redo2 size={18} />} onClick={redo} label="إعادة (Ctrl+Y)" />
-
-                    <div className="w-full h-px bg-white/10 my-1" />
-
-                    {/* سُمك الخط */}
-                    <div className="flex flex-col gap-1 items-center px-1">
-                        {STROKE_WIDTHS.map((w) => (
-                            <button
-                                key={w}
-                                onClick={() => setWidth(w)}
-                                title={`سُمك ${w}`}
-                                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${strokeWidth === w ? 'bg-blue-600/30 ring-1 ring-blue-500' : 'hover:bg-white/5'}`}
-                            >
-                                <div
-                                    className="rounded-full bg-white"
-                                    style={{ width: Math.min(w * 2, 26), height: Math.min(w * 2, 26) }}
-                                />
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="w-full h-px bg-white/10 my-1" />
-
-                    {/* مسح الكل */}
-                    <ToolButton icon={<Trash2 size={18} />} onClick={clearCanvas} label="مسح الكل (Ctrl+Del)" variant="danger" />
-                </div>
+                <div
+                    className="absolute top-0 left-0 right-0 h-4 z-50"
+                    onMouseEnter={showToolbar}
+                />
             )}
 
-            {/* ─── لوحة الألوان (أسفل السبورة لليمين) ─── */}
+            {/* ─── Horizontal Auto-hide Toolbar (Figma / Excalidraw style) ─── */}
             {isTeacher && !loading && !error && (
-                <div className="absolute bottom-16 right-4 z-40 flex flex-col gap-1.5 bg-slate-900/95 backdrop-blur-md p-2 rounded-2xl shadow-2xl border border-white/10">
-                    {STROKE_COLORS.map(({ hex, label }) => (
-                        <button
-                            key={hex}
-                            title={label}
-                            onClick={() => setColor(hex)}
-                            className={`w-7 h-7 rounded-full border-2 transition-all hover:scale-110 active:scale-95 ${
-                                strokeColor === hex
-                                    ? 'border-blue-400 scale-110 ring-2 ring-blue-400/40'
-                                    : 'border-white/20'
-                            }`}
-                            style={{ backgroundColor: hex }}
-                        />
-                    ))}
+                <div
+                    className={`absolute top-3 left-1/2 -translate-x-1/2 z-40 w-max transition-all duration-300 ease-in-out ${
+                        toolbarVisible
+                            ? 'opacity-100 translate-y-0'
+                            : 'opacity-0 -translate-y-full pointer-events-none'
+                    }`}
+                    onMouseEnter={showToolbar}
+                    onMouseLeave={() => {
+                        if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+                        hideTimerRef.current = setTimeout(() => setToolbarVisible(false), 3000);
+                    }}
+                >
+                    <div className="flex items-center gap-0.5 px-4 py-2 bg-slate-900/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10">
+
+                        {/* ── Drawing tools ── */}
+                        <ToolButton icon={<MousePointer2 size={16} />} active={activeTool === 'selector'}  onClick={() => { setTool('selector');   showToolbar(); }} label="تحديد (S)" />
+                        <ToolButton icon={<Pencil size={16} />}        active={activeTool === 'pencil'}    onClick={() => { setTool('pencil');     showToolbar(); }} label="قلم (P)" />
+                        <ToolButton icon={<Square size={16} />}        active={activeTool === 'rectangle'} onClick={() => { setTool('rectangle');  showToolbar(); }} label="مستطيل (R)" />
+                        <ToolButton icon={<Circle size={16} />}        active={activeTool === 'ellipse'}   onClick={() => { setTool('ellipse');    showToolbar(); }} label="دائرة (C)" />
+                        <ToolButton icon={<Type size={16} />}          active={activeTool === 'text'}      onClick={() => { setTool('text');       showToolbar(); }} label="نص (T)" />
+                        <ToolButton icon={<Eraser size={16} />}        active={activeTool === 'eraser'}    onClick={() => { setTool('eraser');     showToolbar(); }} label="ممحاة (E)" />
+
+                        <div className="w-px h-6 bg-white/10 mx-1.5 shrink-0" />
+
+                        {/* ── Color palette ── */}
+                        <div className="flex items-center gap-1 shrink-0">
+                            {STROKE_COLORS.map(({ hex, label: colorLabel }) => (
+                                <button
+                                    key={hex}
+                                    title={colorLabel}
+                                    onClick={() => { setColor(hex); showToolbar(); }}
+                                    className={`w-5 h-5 rounded-full border-2 transition-all hover:scale-110 active:scale-95 shrink-0 ${
+                                        strokeColor === hex
+                                            ? 'border-blue-400 scale-110 ring-2 ring-blue-400/40'
+                                            : 'border-white/20'
+                                    }`}
+                                    style={{ backgroundColor: hex }}
+                                />
+                            ))}
+                        </div>
+
+                        <div className="w-px h-6 bg-white/10 mx-1.5 shrink-0" />
+
+                        {/* ── Stroke widths (shown as horizontal lines) ── */}
+                        <div className="flex items-center gap-0.5 shrink-0">
+                            {STROKE_WIDTHS.map((w) => (
+                                <button
+                                    key={w}
+                                    onClick={() => { setWidth(w); showToolbar(); }}
+                                    title={`سُمك ${w}`}
+                                    className={`w-9 h-8 rounded-lg flex items-center justify-center transition-all ${
+                                        strokeWidth === w
+                                            ? 'bg-blue-600/20 ring-1 ring-blue-500'
+                                            : 'hover:bg-white/5'
+                                    }`}
+                                >
+                                    <div
+                                        className="rounded-full bg-white/80"
+                                        style={{ width: 22, height: Math.max(1, Math.round(w * 0.55)) }}
+                                    />
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="w-px h-6 bg-white/10 mx-1.5 shrink-0" />
+
+                        {/* ── Undo / Redo / Clear ── */}
+                        <ToolButton icon={<Undo2 size={16} />} onClick={() => { undo(); showToolbar(); }} label="تراجع (Ctrl+Z)" />
+                        <ToolButton icon={<Redo2 size={16} />} onClick={() => { redo(); showToolbar(); }} label="إعادة (Ctrl+Y)" />
+
+                        <div className="w-px h-6 bg-white/10 mx-1.5 shrink-0" />
+
+                        {/* ── Clear canvas ── */}
+                        <ToolButton icon={<Trash2 size={16} />} onClick={() => { clearCanvas(); showToolbar(); }} label="مسح الكل (Ctrl+Del)" variant="danger" />
+                    </div>
                 </div>
             )}
 
@@ -516,7 +561,7 @@ const ToolButton: React.FC<ToolButtonProps> = React.memo(({ icon, active, onClic
         }`}
     >
         {icon}
-        <span className="absolute right-full mr-3 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-lg">
+        <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-lg border border-white/10">
             {label}
         </span>
     </button>
