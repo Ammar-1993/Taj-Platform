@@ -3,6 +3,7 @@
 import "regenerator-runtime/runtime";
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { WhiteWebSdk, Room, DeviceType, ViewMode, ApplianceNames } from "white-web-sdk";
+import throttle from 'lodash/throttle';
 import {
     Loader2, Pencil, Eraser, Square, Circle, Type,
     MousePointer2, Trash2, Undo2, Redo2, ChevronLeft, ChevronRight, Plus
@@ -60,7 +61,16 @@ const TOOL_HOTKEYS: Record<string, string> = {
 
 const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomToken, uid, isTeacher, region = 'in-mum' }) => {
     const whiteboardRef = useRef<HTMLDivElement>(null);
+    const canvasOverlayRef = useRef<HTMLCanvasElement>(null);
     const roomRef = useRef<Room | null>(null);
+
+    // ✅ Task 1: Use useRef for tracking coordinates and drawing state (bypasses React state lag)
+    const drawingState = useRef({
+        isDrawing: false,
+        lastX: 0,
+        lastY: 0,
+        buffer: [] as { x: number, y: number }[],
+    });
 
     // نُخزّن المعاملات الأولية في ref لمنع إعادة الاتصال
     const initProps = useRef({ appIdentifier, roomUuid, roomToken, uid, isTeacher, region });
@@ -71,12 +81,120 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
     const [strokeColor, setStrokeColor] = useState('#000000');
     const [strokeWidth, setStrokeWidth] = useState(4);
 
-    // ✅ Single atomic page state object → single re-render per SDK callback
     const [pageState, setPageState] = useState({ current: 0, total: 1 });
-
-    // 🔭 Toolbar auto-hide
     const [toolbarVisible, setToolbarVisible] = useState(true);
     const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // ─── Helpers ─────────────────────────────────────────
+
+    const drawBatchOnCanvas = useCallback((points: {x: number, y: number}[], color: string, width: number) => {
+        const canvas = canvasOverlayRef.current;
+        if (!canvas || points.length < 2) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+            ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.stroke();
+    }, []);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const clearCanvas = useCallback(() => {
+        if (!roomRef.current || !isTeacher) return;
+        roomRef.current.cleanCurrentScene();
+        // Clear overlay too
+        const canvas = canvasOverlayRef.current;
+        if (canvas) canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
+    }, [isTeacher]);
+
+    // ─── Task 2: Throttled Coordinate Batching ──────────────────────────
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const emitBatch = useCallback(
+        throttle(() => {
+            const room = roomRef.current;
+            const state = drawingState.current;
+            if (!room || state.buffer.length < 2) return;
+
+            room.dispatchMagixEvent("drawing-batch", {
+                points: [...state.buffer],
+                color: strokeColor,
+                width: strokeWidth
+            });
+            
+            state.buffer = [state.buffer[state.buffer.length - 1]];
+        }, 60),
+        [strokeColor, strokeWidth]
+    );
+
+    const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+        if (!isTeacher || activeTool !== 'pencil') return;
+        
+        const rect = whiteboardRef.current?.getBoundingClientRect();
+        if (!rect) return;
+
+        const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+        
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+
+        drawingState.current = {
+            isDrawing: true,
+            lastX: x,
+            lastY: y,
+            buffer: [{ x, y }]
+        };
+    };
+
+    const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
+        const state = drawingState.current;
+        if (!state.isDrawing || !isTeacher) return;
+
+        const rect = whiteboardRef.current?.getBoundingClientRect();
+        if (!rect) return;
+
+        const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+
+        // ✅ Immediate native drawing (No React State)
+        const ctx = canvasOverlayRef.current?.getContext('2d');
+        if (ctx) {
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = strokeWidth;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(state.lastX, state.lastY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+        }
+
+        state.lastX = x;
+        state.lastY = y;
+        state.buffer.push({ x, y });
+
+        emitBatch();
+    };
+
+    const handleMouseUp = () => {
+        if (!drawingState.current.isDrawing) return;
+        emitBatch();
+        drawingState.current.isDrawing = false;
+        drawingState.current.buffer = [];
+    };
+
+    // ─── SDK Init ─────────────────────────────────────────
 
     useEffect(() => {
         if (!whiteboardRef.current) return;
@@ -105,13 +223,9 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
         let sdk: WhiteWebSdk | null = null;
 
         try {
-            console.log(`[Whiteboard] Init — AppID: ${cleanAppId.substring(0, 8)}... Region: ${finalRegion}`);
-
             sdk = new WhiteWebSdk({
                 appIdentifier: cleanAppId,
-                // ✅ Desktop: لا يُضيف تأخير "تخمين اللمس" المصمم للأجهزة اللوحية
                 deviceType: DeviceType.Desktop,
-                // ✅ Students don't need input processing overhead
                 disableDeviceInputs: !rIsTeacher,
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 region: finalRegion as any,
@@ -119,17 +233,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
             } as any);
         } catch (e: unknown) {
             console.error("[Whiteboard] SDK Init Error:", e);
-            const message = e instanceof Error ? e.message : 'خطأ غير معروف';
-
-            // Detect misconfigured env var: SDK rejects non-appIdentifier values (e.g. room token passed by mistake)
-            if (message.includes('invalid appIdentifier')) {
-                setError(
-                    'قيمة NEXT_PUBLIC_WHITEBOARD_APP_IDENTIFIER في ملف .env.local غير صحيحة. ' +
-                    'تأكد من نسخ "App Identifier" (وليس التوكن) من لوحة تحكم Agora Console ← Interactive Whiteboard.'
-                );
-            } else {
-                setError(`فشل تهيئة SDK السبورة: ${message}`);
-            }
+            setError(`فشل تهيئة SDK السبورة: ${e instanceof Error ? e.message : 'خطأ غير معروف'}`);
             setLoading(false);
             return;
         }
@@ -142,35 +246,31 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                     uuid: cleanRoomUuid,
                     roomToken: cleanRoomToken,
                     uid: rUid,
-                    // الطالب: قراءة فقط — المعلم فقط يملك صلاحية الكتابة
                     isWritable: rIsTeacher,
                     useMultiViews: false,
-                    // ✅ Reduce undo-state memory pressure
                     disableEraseImage: true,
-                    // ✅ Disable floating toolbar (we have our own)
                     floatBar: false,
-                    // ✅ Students: disable all hotkeys to reduce event overhead
                     hotKeys: rIsTeacher ? undefined : {},
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any);
 
                 roomRef.current = roomInstance;
                 roomInstance.bindHtmlElement(whiteboardRef.current);
 
+                roomInstance.addMagixEventListener("drawing-batch", (event) => {
+                    const { points, color, width } = event.payload;
+                    drawBatchOnCanvas(points, color, width);
+                });
+
                 if (rIsTeacher) {
-                    // ضبط الأداة الأولى للمعلم
                     roomInstance.setMemberState({
                         currentApplianceName: ApplianceNames.pencil,
                         strokeColor: hexToRgb('#000000'),
                         strokeWidth: 4,
                     });
                 } else {
-                    // الطالب يتبع نظرة المعلم دائماً
                     roomInstance.setViewMode(ViewMode.Follower);
                 }
 
-                // ✅ Single atomic state update = single re-render per event (was 2 separate setStates)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 roomInstance.callbacks.on('onRoomStateChanged', (state: any) => {
                     if (state.sceneState) {
                         setPageState({
@@ -180,7 +280,6 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                     }
                 });
 
-                // Sync initial page state
                 const sceneState = roomInstance.state.sceneState;
                 setPageState({ current: sceneState.index, total: sceneState.scenes.length });
 
@@ -189,8 +288,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
 
             } catch (joinError: unknown) {
                 console.error("[Whiteboard] Join Error:", joinError);
-                const message = joinError instanceof Error ? joinError.message : 'خطأ غير معروف';
-                setError(`فشل الانضمام للغرفة: ${message}`);
+                setError(`فشل الانضمام للغرفة: ${joinError instanceof Error ? joinError.message : 'خطأ غير معروف'}`);
                 setLoading(false);
             }
         };
@@ -203,49 +301,41 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                 roomRef.current = null;
             }
         };
-    // ✅ تبعيات فارغة: الاتصال يحدث مرة واحدة فقط عند mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [drawBatchOnCanvas]);
 
-    // ─── Keyboard Shortcuts (Teacher Only) ───────────────────────
+    // ─── Keyboard & UI ─────────────────────────────────────────
+
     useEffect(() => {
         if (!isTeacher) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Ignore if focus is inside an input/textarea
             if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
-
             const key = e.key.toLowerCase();
 
-            // Tool hotkeys (P, E, S, R, C, T)
             if (!e.ctrlKey && !e.metaKey && TOOL_HOTKEYS[key]) {
                 e.preventDefault();
                 setTool(TOOL_HOTKEYS[key]);
                 return;
             }
 
-            // Ctrl+Z → Undo
             if ((e.ctrlKey || e.metaKey) && key === 'z' && !e.shiftKey) {
                 e.preventDefault();
                 roomRef.current?.undo();
                 return;
             }
 
-            // Ctrl+Shift+Z / Ctrl+Y → Redo
             if ((e.ctrlKey || e.metaKey) && (key === 'y' || (key === 'z' && e.shiftKey))) {
                 e.preventDefault();
                 roomRef.current?.redo();
                 return;
             }
 
-            // Delete → Clear canvas
             if (key === 'delete' && e.ctrlKey) {
                 e.preventDefault();
-                roomRef.current?.cleanCurrentScene();
+                clearCanvas();
                 return;
             }
 
-            // Arrow Right → Next page
             if (key === 'arrowright' && !e.ctrlKey) {
                 e.preventDefault();
                 const room = roomRef.current;
@@ -257,7 +347,6 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                 return;
             }
 
-            // Arrow Left → Previous page
             if (key === 'arrowleft' && !e.ctrlKey) {
                 e.preventDefault();
                 const room = roomRef.current;
@@ -270,10 +359,8 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isTeacher]);
+    }, [isTeacher, clearCanvas]);
 
-    // ─── Auto-hide toolbar after 3s idle ──────────────────────────────
     useEffect(() => {
         if (isTeacher && !loading && !error) {
             if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
@@ -281,8 +368,6 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
         }
         return () => { if (hideTimerRef.current) clearTimeout(hideTimerRef.current); };
     }, [loading, error, isTeacher]);
-
-    // ─── أدوات المعلم ─────────────────────────────────────────
 
     const applyTool = useCallback((tool: string, color?: string, width?: number) => {
         const room = roomRef.current;
@@ -328,7 +413,6 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
         }
     }, [isTeacher, strokeColor, strokeWidth]);
 
-    // ✅ All tool-change handlers are memoized to prevent toolbar re-renders
     const setTool = useCallback((tool: string) => {
         setActiveTool(tool);
         applyTool(tool);
@@ -336,7 +420,6 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
 
     const setColor = useCallback((color: string) => {
         setStrokeColor(color);
-        // Apply the new colour to the current tool immediately
         if (activeTool !== 'selector' && activeTool !== 'eraser') {
             applyTool(activeTool, color, strokeWidth);
         }
@@ -349,22 +432,14 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
         }
     }, [activeTool, strokeColor, applyTool]);
 
-    const clearCanvas = useCallback(() => {
-        if (!roomRef.current || !isTeacher) return;
-        roomRef.current.cleanCurrentScene();
-    }, [isTeacher]);
-
     const undo = useCallback(() => roomRef.current?.undo(), []);
     const redo = useCallback(() => roomRef.current?.redo(), []);
 
-    // Show toolbar and reset the 3s hide timer
     const showToolbar = useCallback(() => {
         setToolbarVisible(true);
         if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
         hideTimerRef.current = setTimeout(() => setToolbarVisible(false), 3000);
     }, []);
-
-    // ─── إدارة الصفحات ─────────────────────────────────────────
 
     const addPage = useCallback(() => {
         const room = roomRef.current;
@@ -381,12 +456,9 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
         room.setScenePath(`/${index}`);
     }, [isTeacher, pageState.total]);
 
-    // ─── الرسم ─────────────────────────────────────────────────
-
     return (
         <div className="w-full h-full flex flex-col bg-white rounded-xl overflow-hidden shadow-2xl relative">
 
-            {/* Loading Overlay */}
             {loading && (
                 <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm">
                     <Loader2 className="w-10 h-10 animate-spin text-blue-600 mb-3" />
@@ -394,7 +466,6 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                 </div>
             )}
 
-            {/* Error Overlay */}
             {error && (
                 <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-red-50 p-6 text-center">
                     <div className="bg-red-100 p-3 rounded-full mb-4">
@@ -411,21 +482,14 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                 </div>
             )}
 
-            {/* ─── Invisible hover-trigger strip at the very top ─── */}
             {isTeacher && !loading && !error && (
-                <div
-                    className="absolute top-0 left-0 right-0 h-4 z-50"
-                    onMouseEnter={showToolbar}
-                />
+                <div className="absolute top-0 left-0 right-0 h-4 z-50" onMouseEnter={showToolbar} />
             )}
 
-            {/* ─── Horizontal Auto-hide Toolbar (Figma / Excalidraw style) ─── */}
             {isTeacher && !loading && !error && (
                 <div
                     className={`absolute top-3 left-1/2 -translate-x-1/2 z-40 w-max transition-all duration-300 ease-in-out ${
-                        toolbarVisible
-                            ? 'opacity-100 translate-y-0'
-                            : 'opacity-0 -translate-y-full pointer-events-none'
+                        toolbarVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'
                     }`}
                     onMouseEnter={showToolbar}
                     onMouseLeave={() => {
@@ -434,8 +498,6 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                     }}
                 >
                     <div className="flex items-center gap-0.5 px-4 py-2 bg-slate-900/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10">
-
-                        {/* ── Drawing tools ── */}
                         <ToolButton icon={<MousePointer2 size={16} />} active={activeTool === 'selector'}  onClick={() => { setTool('selector');   showToolbar(); }} label="تحديد (S)" />
                         <ToolButton icon={<Pencil size={16} />}        active={activeTool === 'pencil'}    onClick={() => { setTool('pencil');     showToolbar(); }} label="قلم (P)" />
                         <ToolButton icon={<Square size={16} />}        active={activeTool === 'rectangle'} onClick={() => { setTool('rectangle');  showToolbar(); }} label="مستطيل (R)" />
@@ -445,17 +507,14 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
 
                         <div className="w-px h-6 bg-white/10 mx-1.5 shrink-0" />
 
-                        {/* ── Color palette ── */}
                         <div className="flex items-center gap-1 shrink-0">
-                            {STROKE_COLORS.map(({ hex, label: colorLabel }) => (
+                            {STROKE_COLORS.map(({ hex, label }) => (
                                 <button
                                     key={hex}
-                                    title={colorLabel}
+                                    title={label}
                                     onClick={() => { setColor(hex); showToolbar(); }}
                                     className={`w-5 h-5 rounded-full border-2 transition-all hover:scale-110 active:scale-95 shrink-0 ${
-                                        strokeColor === hex
-                                            ? 'border-blue-400 scale-110 ring-2 ring-blue-400/40'
-                                            : 'border-white/20'
+                                        strokeColor === hex ? 'border-blue-400 scale-110 ring-2 ring-blue-400/40' : 'border-white/20'
                                     }`}
                                     style={{ backgroundColor: hex }}
                                 />
@@ -464,7 +523,6 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
 
                         <div className="w-px h-6 bg-white/10 mx-1.5 shrink-0" />
 
-                        {/* ── Stroke widths (shown as horizontal lines) ── */}
                         <div className="flex items-center gap-0.5 shrink-0">
                             {STROKE_WIDTHS.map((w) => (
                                 <button
@@ -472,34 +530,26 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                                     onClick={() => { setWidth(w); showToolbar(); }}
                                     title={`سُمك ${w}`}
                                     className={`w-9 h-8 rounded-lg flex items-center justify-center transition-all ${
-                                        strokeWidth === w
-                                            ? 'bg-blue-600/20 ring-1 ring-blue-500'
-                                            : 'hover:bg-white/5'
+                                        strokeWidth === w ? 'bg-blue-600/20 ring-1 ring-blue-500' : 'hover:bg-white/5'
                                     }`}
                                 >
-                                    <div
-                                        className="rounded-full bg-white/80"
-                                        style={{ width: 22, height: Math.max(1, Math.round(w * 0.55)) }}
-                                    />
+                                    <div className="rounded-full bg-white/80" style={{ width: 22, height: Math.max(1, Math.round(w * 0.55)) }} />
                                 </button>
                             ))}
                         </div>
 
                         <div className="w-px h-6 bg-white/10 mx-1.5 shrink-0" />
 
-                        {/* ── Undo / Redo / Clear ── */}
                         <ToolButton icon={<Undo2 size={16} />} onClick={() => { undo(); showToolbar(); }} label="تراجع (Ctrl+Z)" />
                         <ToolButton icon={<Redo2 size={16} />} onClick={() => { redo(); showToolbar(); }} label="إعادة (Ctrl+Y)" />
 
                         <div className="w-px h-6 bg-white/10 mx-1.5 shrink-0" />
 
-                        {/* ── Clear canvas ── */}
                         <ToolButton icon={<Trash2 size={16} />} onClick={() => { clearCanvas(); showToolbar(); }} label="مسح الكل (Ctrl+Del)" variant="danger" />
                     </div>
                 </div>
             )}
 
-            {/* ─── شريط التنقل بين الصفحات (أسفل السبورة) ─── */}
             {!loading && !error && (
                 <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-xl border border-white/10">
                     {isTeacher && (
@@ -524,11 +574,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                                 <ChevronLeft size={16} />
                             </button>
                             <div className="w-px h-4 bg-white/10" />
-                            <button
-                                onClick={addPage}
-                                title="صفحة جديدة"
-                                className="p-1 text-slate-400 hover:text-emerald-400 transition"
-                            >
+                            <button onClick={addPage} title="صفحة جديدة" className="p-1 text-slate-400 hover:text-emerald-400 transition">
                                 <Plus size={16} />
                             </button>
                         </>
@@ -536,28 +582,36 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                 </div>
             )}
 
-            {/* ─── لوحة الرسم ─── */}
             <div
                 ref={whiteboardRef}
                 className="flex-1 w-full h-full touch-none relative z-10 pointer-events-auto"
                 style={{ minHeight: '400px' }}
-            />
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchStart={handleMouseDown}
+                onTouchMove={handleMouseMove}
+                onTouchEnd={handleMouseUp}
+            >
+                <canvas
+                    ref={canvasOverlayRef}
+                    className="absolute inset-0 pointer-events-none z-20"
+                    width={whiteboardRef.current?.clientWidth || 1920}
+                    height={whiteboardRef.current?.clientHeight || 1080}
+                />
+            </div>
         </div>
     );
 };
 
-// ✅ React.memo prevents re-renders of toolbar buttons when unrelated state changes
 const ToolButton: React.FC<ToolButtonProps> = React.memo(({ icon, active, onClick, label, variant = 'primary', disabled }) => (
     <button
         onClick={onClick}
         title={label}
         disabled={disabled}
         className={`p-2 rounded-xl transition-all duration-150 group relative disabled:opacity-30 disabled:cursor-not-allowed ${
-            active
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                : variant === 'danger'
-                    ? 'text-red-400 hover:bg-red-500/10'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
+            active ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : variant === 'danger' ? 'text-red-400 hover:bg-red-500/10' : 'text-slate-400 hover:bg-white/5 hover:text-white'
         }`}
     >
         {icon}
