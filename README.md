@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://taj-backend-t4ki.onrender.com/" target="_blank" title="Go to Taj Platform">
-    <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f451.svg" alt="Taj Platform Logo" width="160" height="160" />
+    <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f451.svg" alt="Taj Platform Logo" width="140" height="100" />
   </a>
 
   <br />
