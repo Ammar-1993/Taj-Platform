@@ -24,5 +24,6 @@ Homestead.yaml
 Thumbs.db
 
 # Gemini Files
-.GEMINI.md/
+GEMINI.md
+.GEMINI.md
 

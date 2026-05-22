@@ -7,4 +7,5 @@ frontend/.next/
 .vscode/
 
 # Gemini Files
-.GEMINI.md/
+GEMINI.md
+.GEMINI.md
