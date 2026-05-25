@@ -22,8 +22,38 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "منصة تاج التعليمية",
+  title: {
+    default: "منصة تاج التعليمية",
+    template: "%s | منصة تاج التعليمية",
+  },
   description: "منصتك الأولى للدروس الخصوصية",
+  metadataBase: new URL("https://taj-platform.vercel.app"),
+  openGraph: {
+    title: "منصة تاج التعليمية",
+    description: "منصتك الأولى للدروس الخصوصية",
+    url: "https://taj-platform.vercel.app",
+    siteName: "منصة تاج التعليمية",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "منصة تاج التعليمية",
+      },
+    ],
+    locale: "ar_SA",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "منصة تاج التعليمية",
+    description: "منصتك الأولى للدروس الخصوصية",
+    images: ["/opengraph-image.png"],
+  },
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-icon.png",
+  },
 };
 
 import { ViewTransitions } from "@/components/providers/ViewTransitions";
