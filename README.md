@@ -259,5 +259,5 @@ npm run test
 
 <div align="center">
   <br />
-  <p>Engineered with ❤️ by <b>Ammar Al-Najjar</b></p>
+  <p>Developed by ❤️ <b>Engineer Ammar Al-Najjar</b></p>
 </div>
