@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ProvisionVirtualClassroom;
 use App\Models\Booking;
 use App\Models\User;
 use App\Services\WhiteboardService;
@@ -75,14 +76,9 @@ class ClassroomController extends Controller
         $whiteboardRoomUuid = $booking->whiteboard_room_uuid;
         $whiteboardToken = null;
 
-        // Lazy creation if missing
+        // If missing, trigger async provisioning but don't block the RTC flow
         if (!$whiteboardRoomUuid) {
-            try {
-                $whiteboardRoomUuid = $this->whiteboardService->createRoom("حصة: " . ($booking->student->name ?? 'طالب') . " مع " . ($booking->teacher->name ?? 'معلم'));
-                $booking->update(['whiteboard_room_uuid' => $whiteboardRoomUuid]);
-            } catch (\Exception $e) {
-                Log::error("Failed to lazy create whiteboard room: " . $e->getMessage());
-            }
+            ProvisionVirtualClassroom::dispatch($booking);
         }
 
         if ($whiteboardRoomUuid) {

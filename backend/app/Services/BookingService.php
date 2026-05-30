@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Events\BookingCreated;
+use App\Jobs\ProvisionVirtualClassroom;
 use App\Models\Booking;
 use App\Models\PromoCode;
 use App\Models\TeacherSlot;
@@ -40,7 +41,7 @@ class BookingService
             $payer = $user; // الممول هو الأب
         }
 
-        return DB::transaction(function () use ($student, $payer, $slotId, $promoCode) {
+        $booking = DB::transaction(function () use ($student, $payer, $slotId, $promoCode) {
             // ... (previous logic)
             // قفل الموعد لمنع الحجز المزدوج
             $slot = TeacherSlot::where('id', $slotId)->lockForUpdate()->first();
@@ -81,15 +82,6 @@ class BookingService
                 "خصم لحجز موعد رقم #{$slot->id} للطالب: {$student->name}"
             );
 
-            // 🟢 إنشاء غرفة سبورة تفاعلية لهذا الحجز
-            $whiteboardUuid = null;
-            try {
-                $whiteboardUuid = $this->whiteboardService->createRoom("حصة: {$student->name} مع {$slot->teacher->name}");
-            } catch (Exception $e) {
-                // نسجل الخطأ ولكن لا نوقف الحجز إذا فشلت السبورة (يمكن محاولة إنشائها لاحقاً)
-                \Log::error("Whiteboard creation failed for booking: " . $e->getMessage());
-            }
-
             // 4. إنشاء الحجز باسم الطالب 🎓
             $booking = Booking::create([
                 'student_id' => $student->id,
@@ -102,7 +94,6 @@ class BookingService
                 'net_paid' => $netPrice,
                 'status' => 'scheduled',
                 'agora_channel' => 'taj_'.uniqid(),
-                'whiteboard_room_uuid' => $whiteboardUuid,
             ]);
 
             // 5. تحديث حالة الموعد
@@ -116,6 +107,11 @@ class BookingService
 
             return $booking;
         });
+
+        // 🟢 تفعيل التجهيز المسبق للغرفة الافتراضية في الخلفية
+        ProvisionVirtualClassroom::dispatch($booking);
+
+        return $booking;
     }
 
     /**
