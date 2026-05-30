@@ -53,6 +53,3 @@ docker-compose exec laravel.test php artisan test --filter BookingServiceUnitTes
 
 Frontend Test:
 docker-compose exec nextjs npm run test
-
-
-// Ammar Al-Najjar
