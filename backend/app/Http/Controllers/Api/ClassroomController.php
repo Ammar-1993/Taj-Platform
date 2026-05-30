@@ -116,32 +116,4 @@ class ClassroomController extends Controller
             ],
         ]);
     }
-
-    /**
-     * Receive a batch of drawing coordinates and broadcast them to other participants.
-     *
-     * @param Request $request
-     * @param int $bookingId
-     * @return JsonResponse
-     */
-    public function storeWhiteboardBatch(Request $request, int $bookingId): JsonResponse
-    {
-        $payload = $request->validate([
-            'points' => 'required|array',
-            'points.*.x' => 'required|numeric',
-            'points.*.y' => 'required|numeric',
-            'color' => 'required|string|size:7',
-            'width' => 'required|integer|min:1|max:50',
-        ]);
-
-        try {
-            $this->whiteboardService->broadcastDrawingBatch($bookingId, $payload);
-            return response()->json(['status' => 'success']);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 422);
-        }
-    }
 }

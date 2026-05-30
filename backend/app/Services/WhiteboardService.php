@@ -20,38 +20,6 @@ class WhiteboardService
     }
 
     /**
-     * Broadcast a batch of drawing points to all participants in a room.
-     *
-     * This method handles the newly optimized frontend payloads, ensuring that
-     * throttled coordinate batches are validated and relayed in real-time.
-     *
-     * @param int $bookingId
-     * @param array $payload {points: array, color: string, width: int}
-     * @return void
-     * @throws Exception
-     */
-    public function broadcastDrawingBatch(int $bookingId, array $payload): void
-    {
-        // 1. Structural Validation
-        if (!isset($payload['points']) || !is_array($payload['points']) || empty($payload['points'])) {
-            throw new Exception('بيانات الرسم غير صالحة: قائمة النقاط مفقودة أو فارغة.');
-        }
-
-        // 2. Performance Safeguard: Reject excessively large batches
-        // Throttling at 60ms should result in ~10-30 points max per batch.
-        if (count($payload['points']) > 250) {
-            throw new Exception('حزمة الرسم كبيرة جداً (أكثر من 250 نقطة). يرجى التأكد من عمل نظام الـ throttling في المتصفح.');
-        }
-
-        // 3. Efficiency: We don't perform heavy database lookups here to maintain 
-        // sub-10ms processing time, allowing for high-frequency drawing updates.
-        
-        // 4. Dispatch the broadcast event
-        // The DrawingBatchReceived event implements ShouldBroadcast, triggering Laravel's RTM layer.
-        broadcast(new DrawingBatchReceived($bookingId, $payload))->toOthers();
-    }
-
-    /**
      * Create a new whiteboard room.
      *
      * @return string Room UUID

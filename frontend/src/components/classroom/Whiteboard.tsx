@@ -3,8 +3,6 @@
 import "regenerator-runtime/runtime";
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { WhiteWebSdk, Room, DeviceType, ViewMode, ApplianceNames } from "white-web-sdk";
-import throttle from 'lodash/throttle';
-import axios from '@/lib/axios';
 import {
     Loader2, Pencil, Eraser, Square, Circle, Type,
     MousePointer2, Trash2, Undo2, Redo2, ChevronLeft, ChevronRight, Plus
@@ -71,17 +69,9 @@ const TOOL_HOTKEYS: Record<string, string> = {
     t: 'text',
 };
 
-const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomToken, uid, isTeacher, bookingId, region = 'in-mum' }) => {
+const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomToken, uid, isTeacher, region = 'in-mum' }) => {
     const whiteboardRef = useRef<HTMLDivElement>(null);
-    const canvasOverlayRef = useRef<HTMLCanvasElement>(null);
     const roomRef = useRef<Room | null>(null);
-
-    const drawingState = useRef({
-        isDrawing: false,
-        lastX: 0,
-        lastY: 0,
-        buffer: [] as { x: number, y: number }[],
-    });
 
     const initProps = useRef({ appIdentifier, roomUuid, roomToken, uid, isTeacher, region });
 
@@ -95,104 +85,10 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
     const [toolbarVisible, setToolbarVisible] = useState(true);
     const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const drawBatchOnCanvas = useCallback((points: {x: number, y: number}[], color: string, width: number) => {
-        const canvas = canvasOverlayRef.current;
-        if (!canvas || points.length < 2) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        ctx.strokeStyle = color;
-        ctx.lineWidth = width;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) {
-            ctx.lineTo(points[i].x, points[i].y);
-        }
-        ctx.stroke();
-    }, []);
-
     const clearCanvas = useCallback(() => {
         if (!roomRef.current || !isTeacher) return;
         roomRef.current.cleanCurrentScene();
-        const canvas = canvasOverlayRef.current;
-        if (canvas) canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
     }, [isTeacher]);
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    const emitBatch = useCallback(
-        throttle(async () => {
-            const state = drawingState.current;
-            if (state.buffer.length < 2) return;
-
-            try {
-                // ✅ Broadcast via optimized backend API
-                await axios.post(`/v1/bookings/${bookingId}/whiteboard/batch`, {
-                    points: [...state.buffer],
-                    color: strokeColor,
-                    width: strokeWidth
-                });
-            } catch (err) {
-                console.error("[Whiteboard] Failed to sync drawing batch:", err);
-            }
-            
-            state.buffer = [state.buffer[state.buffer.length - 1]];
-        }, 60),
-        [strokeColor, strokeWidth, bookingId]
-    );
-
-    const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
-        if (!isTeacher || activeTool !== 'pencil') return;
-        const rect = whiteboardRef.current?.getBoundingClientRect();
-        if (!rect) return;
-        const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
-        const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
-        const x = clientX - rect.left;
-        const y = clientY - rect.top;
-
-        drawingState.current = {
-            isDrawing: true,
-            lastX: x,
-            lastY: y,
-            buffer: [{ x, y }]
-        };
-    };
-
-    const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
-        const state = drawingState.current;
-        if (!state.isDrawing || !isTeacher) return;
-        const rect = whiteboardRef.current?.getBoundingClientRect();
-        if (!rect) return;
-        const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
-        const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
-        const x = clientX - rect.left;
-        const y = clientY - rect.top;
-
-        const ctx = canvasOverlayRef.current?.getContext('2d');
-        if (ctx) {
-            ctx.strokeStyle = strokeColor;
-            ctx.lineWidth = strokeWidth;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.beginPath();
-            ctx.moveTo(state.lastX, state.lastY);
-            ctx.lineTo(x, y);
-            ctx.stroke();
-        }
-
-        state.lastX = x;
-        state.lastY = y;
-        state.buffer.push({ x, y });
-        emitBatch();
-    };
-
-    const handleMouseUp = () => {
-        if (!drawingState.current.isDrawing) return;
-        emitBatch();
-        drawingState.current.isDrawing = false;
-        drawingState.current.buffer = [];
-    };
 
     useEffect(() => {
         if (!whiteboardRef.current) return;
@@ -239,8 +135,6 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                 // Set device inputs based on role - this is the correct way to disable inputs in Netless SDK
                 roomInstance.disableDeviceInputs = !rIsTeacher;
 
-                // For the optimized backend path, Echo listeners would be added here.
-
                 if (rIsTeacher) {
                     roomInstance.setMemberState({
                         currentApplianceName: ApplianceNames.pencil,
@@ -277,7 +171,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                 roomRef.current = null;
             }
         };
-    }, [drawBatchOnCanvas]);
+    }, []);
 
     const applyTool = useCallback((tool: string, color?: string, width?: number) => {
         const room = roomRef.current;
@@ -413,8 +307,8 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
                     {isTeacher && (<><button onClick={() => goToPage(pageState.current + 1)} disabled={pageState.current >= pageState.total - 1} className="p-1 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"><ChevronLeft size={16} /></button><div className="w-px h-4 bg-white/10" /><button onClick={addPage} title="صفحة جديدة" className="p-1 text-slate-400 hover:text-emerald-400 transition"><Plus size={16} /></button></>)}
                 </div>
             )}
-            <div ref={whiteboardRef} className="flex-1 w-full h-full touch-none relative z-10 pointer-events-auto" style={{ minHeight: '400px' }} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp} onTouchStart={handleMouseDown} onTouchMove={handleMouseMove} onTouchEnd={handleMouseUp}>
-                <canvas ref={canvasOverlayRef} className="absolute inset-0 pointer-events-none z-20" width={whiteboardRef.current?.clientWidth || 1920} height={whiteboardRef.current?.clientHeight || 1080} />
+            <div ref={whiteboardRef} className="flex-1 w-full h-full touch-none relative z-10 pointer-events-auto" style={{ minHeight: '400px' }}>
+                {/* Custom Canvas Overlay removed. Using native Netless sync. */}
             </div>
         </div>
     );
