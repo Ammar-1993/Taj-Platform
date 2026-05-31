@@ -126,7 +126,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({ appIdentifier, roomU
                     roomToken: cleanRoomToken,
                     uid: rUid,
                     isWritable: rIsTeacher,
-                    useMultiViews: true, // 🚀 Enable Modern Parallel Sync
+                    useMultiViews: false, // 🛠 Reverted to false to support Classic bindHtmlElement
                 });
 
                 roomRef.current = roomInstance;
