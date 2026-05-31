@@ -460,6 +460,8 @@ const AgoraCall = React.memo(({
     );
 });
 
+AgoraCall.displayName = 'AgoraCall';
+
 export default AgoraCall;
 
 function RemotePlayer({ user, isPrimary, networkQuality = 0, isForceDisabled = false }: { user: IAgoraRTCRemoteUser, isPrimary?: boolean, networkQuality?: number, isForceDisabled?: boolean }) {
