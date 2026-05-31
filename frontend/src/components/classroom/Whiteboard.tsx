@@ -93,9 +93,9 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({ appIdentifier, roomU
     useEffect(() => {
         if (!whiteboardRef.current) return;
         const { appIdentifier: appId, roomUuid: rUuid, roomToken: rToken, uid: rUid, isTeacher: rIsTeacher, region: rRegion } = initProps.current;
-        const cleanAppId = appId.split('#')[0].trim();
-        const cleanRoomUuid = rUuid.split('#')[0].trim();
-        const cleanRoomToken = rToken.split('#')[0].trim();
+        const cleanAppId = String(appId).split('#')[0].trim();
+        const cleanRoomUuid = String(rUuid).split('#')[0].trim();
+        const cleanRoomToken = String(rToken).split('#')[0].trim();
         const supportedRegions = ['eu', 'us-sv', 'sg', 'cn-hz', 'in-mum'];
         const finalRegion = supportedRegions.includes(rRegion.toLowerCase()) ? rRegion.toLowerCase() : 'in-mum';
 

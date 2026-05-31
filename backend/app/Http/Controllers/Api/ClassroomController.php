@@ -111,6 +111,14 @@ class ClassroomController extends Controller
             }
         }
 
+        $whiteboardPayload = null;
+        if ($whiteboardRoomUuid && $whiteboardToken) {
+            $whiteboardPayload = [
+                'room_uuid' => $whiteboardRoomUuid,
+                'room_token' => $whiteboardToken,
+            ];
+        }
+
         return response()->json([
             'status' => 'success',
             'data' => [
@@ -119,10 +127,7 @@ class ClassroomController extends Controller
                 'role' => $role,
                 'token' => $token,
                 'screen_token' => $screenToken,
-                'whiteboard' => [
-                    'room_uuid' => $whiteboardRoomUuid,
-                    'room_token' => $whiteboardToken,
-                ],
+                'whiteboard' => $whiteboardPayload,
             ],
         ]);
     }

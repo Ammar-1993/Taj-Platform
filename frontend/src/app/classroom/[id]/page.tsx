@@ -144,7 +144,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
           setScreenToken(data.screen_token);
         }
 
-        if (data.whiteboard) {
+        if (data.whiteboard?.room_uuid && data.whiteboard?.room_token) {
           setWhiteboardData(data.whiteboard);
         }
 
