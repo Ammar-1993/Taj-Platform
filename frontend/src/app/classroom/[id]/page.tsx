@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { bookingService } from "@/services/api";
 import { useQueryClient } from "@tanstack/react-query";
@@ -346,13 +346,14 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     }
   };
 
-  const rtcProps = {
+  // 🛡️ Memoize rtcProps to prevent AgoraCall from re-rendering on every parent state change (like isIdle)
+  const rtcProps = useMemo(() => ({
     appId: AGORA_APP_ID,
     channel: channelName,
     token: agoraToken,
     uid: uid,
     role: userRole,
-  };
+  }), [channelName, agoraToken, uid, userRole]);
 
   if (authLoading || loading)
     return (
