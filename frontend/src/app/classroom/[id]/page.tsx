@@ -75,6 +75,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     room_uuid: string;
     room_token: string;
   } | null>(null);
+  const [whiteboardPending, setWhiteboardPending] = useState(false);
   const [uid, setUid] = useState<number>(0);
   const [userRole, setUserRole] = useState<"host" | "audience">("audience");
 
@@ -146,6 +147,10 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
 
         if (data.whiteboard?.room_uuid && data.whiteboard?.room_token) {
           setWhiteboardData(data.whiteboard);
+          setWhiteboardPending(false);
+        } else {
+          setWhiteboardData(null);
+          setWhiteboardPending(true);
         }
 
         setLoading(false);
@@ -621,47 +626,52 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
               <div className="w-px h-8 bg-white/10 mx-0.5" />
             )}
 
-            {/* ── Whiteboard Toggle (anyone, when data exists) ── */}
-            {whiteboardData && (
-              <button
-                id="dock-btn-whiteboard"
-                onClick={() => setShowWhiteboard(!showWhiteboard)}
-                className={`relative group w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 ${
-                  showWhiteboard
+            {/* ── Whiteboard Toggle (anyone, when feature is expected) ── */}
+            <button
+              id="dock-btn-whiteboard"
+              onClick={() => {
+                if (!whiteboardData) return;
+                setShowWhiteboard(!showWhiteboard);
+              }}
+              disabled={!whiteboardData}
+              className={`relative group w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 ${
+                whiteboardData
+                  ? showWhiteboard
                     ? "bg-blue-600 text-white border border-blue-500 shadow-lg shadow-blue-600/30"
                     : "bg-white/8 text-white hover:bg-white/15 border border-white/10"
-                }`}
-              >
-                {showWhiteboard ? (
-                  <LayoutGrid className="w-5 h-5" />
-                ) : (
-                  <Presentation className="w-5 h-5" />
-                )}
-                {/* ✅ Warm-up ready pulse indicator */}
-                {!showWhiteboard && (
-                  <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5 pointer-events-none">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-                  </span>
-                )}
-                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 flex flex-col items-center z-[70]">
-                  <span
-                    className="bg-slate-800/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl px-3 py-2 text-center whitespace-nowrap"
-                    dir="rtl"
-                  >
-                    <span className="block text-[11px] font-bold text-white">
-                      السبورة التفاعلية
-                    </span>
-                    <span className="block text-[10px] text-slate-400 mt-0.5">
-                      {showWhiteboard
-                        ? "اضغط للعودة لعرض الفيديو"
-                        : "اضغط لعرض السبورة"}
-                    </span>
-                  </span>
-                  <span className="border-4 border-transparent border-t-slate-800/95" />
+                  : "bg-slate-800/40 text-slate-400 border border-slate-700 cursor-not-allowed"
+              }`}
+            >
+              {showWhiteboard ? (
+                <LayoutGrid className="w-5 h-5" />
+              ) : (
+                <Presentation className="w-5 h-5" />
+              )}
+              {whiteboardPending && !whiteboardData && (
+                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5 pointer-events-none">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500" />
                 </span>
-              </button>
-            )}
+              )}
+              <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 flex flex-col items-center z-[70]">
+                <span
+                  className="bg-slate-800/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl px-3 py-2 text-center whitespace-nowrap"
+                  dir="rtl"
+                >
+                  <span className="block text-[11px] font-bold text-white">
+                    السبورة التفاعلية
+                  </span>
+                  <span className="block text-[10px] text-slate-400 mt-0.5">
+                    {whiteboardData
+                      ? showWhiteboard
+                        ? "اضغط للعودة لعرض الفيديو"
+                        : "اضغط لعرض السبورة"
+                      : "جارٍ تهيئة السبورة..."}
+                  </span>
+                </span>
+                <span className="border-4 border-transparent border-t-slate-800/95" />
+              </span>
+            </button>
 
             {/* ── Screen Share (teacher only) ── */}
             {isTeacher && (
