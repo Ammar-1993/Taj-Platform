@@ -8,9 +8,11 @@ import AgoraRTC, {
     ILocalVideoTrack,
     ILocalAudioTrack
 } from 'agora-rtc-sdk-ng';
+import { bookingService } from '@/services/api/bookingService';
 import { Loader2, User, MicOff, WifiOff } from 'lucide-react';
 
 type AgoraCallProps = {
+  bookingId: number | string;
   rtcProps: {
     appId: string;
     channel: string;
@@ -32,6 +34,7 @@ type AgoraCallProps = {
 };
 
 const AgoraCall = React.memo(({ 
+    bookingId,
     rtcProps, 
     isCameraEnabled, 
     isMicEnabled,
@@ -67,6 +70,20 @@ const AgoraCall = React.memo(({
 
         const init = async () => {
             try {
+                // 🔄 1. Token Refresh Logic (Task 5)
+                client.on("token-privilege-will-expire", async () => {
+                    console.log("[Agora] Token is about to expire, refreshing...");
+                    try {
+                        const res = await bookingService.refreshClassroomToken(Number(bookingId));
+                        if (res.data.token) {
+                            await client.renewToken(res.data.token);
+                            console.log("[Agora] Token renewed successfully.");
+                        }
+                    } catch (err) {
+                        console.error("[Agora] Failed to refresh token:", err);
+                    }
+                });
+
                 client.on("user-published", async (user, mediaType) => {
                     await client.subscribe(user, mediaType);
                     if (isMounted) {

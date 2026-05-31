@@ -93,7 +93,7 @@ class BookingService
                 'discount_amount' => $discountAmount,
                 'net_paid' => $netPrice,
                 'status' => 'scheduled',
-                'agora_channel' => 'taj_'.uniqid(),
+                'agora_channel' => 'taj_'.bin2hex(random_bytes(16)),
             ]);
 
             // 5. تحديث حالة الموعد

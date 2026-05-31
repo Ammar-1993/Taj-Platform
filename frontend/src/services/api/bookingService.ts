@@ -41,4 +41,12 @@ export const bookingService = {
     const res = await api.get<ApiResponse<ClassroomAccess>>(`/bookings/${id}/classroom`);
     return res.data;
   },
+
+  /**
+   * Silently refresh classroom tokens
+   */
+  refreshClassroomToken: async (id: number) => {
+    const res = await api.get<ApiResponse<{ token: string; screen_token: string | null }>>(`/bookings/${id}/refresh-token`);
+    return res.data;
+  },
 };

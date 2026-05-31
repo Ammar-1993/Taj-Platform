@@ -81,6 +81,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/bookings', [BookingController::class, 'index']);
         Route::post('/bookings', [BookingController::class, 'store']);
         Route::get('/bookings/{id}/classroom', [ClassroomController::class, 'getAccessDetails']);
+        Route::get('/bookings/{id}/refresh-token', [ClassroomController::class, 'refreshToken']);
         Route::patch('/bookings/{id}/complete', [BookingController::class, 'complete']);
         Route::patch('/bookings/{id}/cancel', [BookingController::class, 'cancel']);
 

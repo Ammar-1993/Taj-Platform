@@ -26,7 +26,11 @@ class ClassroomController extends Controller
         $this->whiteboardService = $whiteboardService;
     }
 
-    public function getAccessDetails(Request $request, int|string $bookingId): JsonResponse
+    /**
+     * @param Request $request
+     * @param int|string $bookingId
+     */
+    public function getAccessDetails(Request $request, $bookingId): JsonResponse
     {
         /** @var User $user */
         $user = $request->user();
@@ -120,6 +124,63 @@ class ClassroomController extends Controller
                     'room_token' => $whiteboardToken,
                 ],
             ],
+        ]);
+    }
+
+    /**
+     * @param Request $request
+     * @param int|string $bookingId
+     */
+    public function refreshToken(Request $request, $bookingId): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $booking = Booking::findOrFail($bookingId);
+
+        // Security check: Same as getAccessDetails
+        if ($booking->student_id !== $user->id && $booking->teacher_id !== $user->id && $booking->booked_by_id !== $user->id) {
+            return response()->json(['message' => 'غير مصرح لك بتجديد التوكن'], 403);
+        }
+
+        $role = ($user->id === $booking->teacher_id || $user->id === $booking->student_id) ? 'host' : 'audience';
+
+        $appId = config('services.agora.app_id');
+        $appCertificate = config('services.agora.app_certificate');
+
+        if (!$appId || !$appCertificate) {
+            return response()->json(['message' => 'Agora configuration missing'], 500);
+        }
+
+        $client = new Agora($appId, $appCertificate);
+        $client->setExpiration(now()->addHours(2)->timestamp);
+
+        // 1. Primary Token
+        $agoraUser = new AgoraUser($user->id);
+        $agoraUser->setChannel($booking->agora_channel);
+        $agoraUser->setRole($role === 'host' ? AgoraRoles::RTC_PUBLISHER : AgoraRoles::RTC_SUBSCRIBER);
+        $agoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
+        $token = RtcToken::buildTokenWithUid($client, $agoraUser);
+
+        // Update Cache
+        Cache::put("agora_token_{$booking->id}_{$user->id}", $token, now()->addHours(2));
+
+        // 2. Screen Token (Only for Teacher)
+        $screenToken = null;
+        if ($user->id === $booking->teacher_id) {
+            $screenAgoraUser = new AgoraUser($user->id + 1000000000);
+            $screenAgoraUser->setChannel($booking->agora_channel);
+            $screenAgoraUser->setRole(AgoraRoles::RTC_PUBLISHER);
+            $screenAgoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
+            $screenToken = RtcToken::buildTokenWithUid($client, $screenAgoraUser);
+            Cache::put("agora_token_{$booking->id}_screen", $screenToken, now()->addHours(2));
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'token' => $token,
+                'screen_token' => $screenToken
+            ]
         ]);
     }
 }

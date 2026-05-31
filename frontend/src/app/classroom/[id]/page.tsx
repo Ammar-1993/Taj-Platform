@@ -506,6 +506,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
              *  • true  → draggable floating widget (camera feeds only) */}
             <FloatingVideoWidget focusMode={showWhiteboard || isSharing || isRemoteSharing}>
               <AgoraCall
+                bookingId={params.id}
                 rtcProps={rtcProps}
                 isCameraEnabled={isCameraEnabled}
                 isMicEnabled={isMicEnabled}
