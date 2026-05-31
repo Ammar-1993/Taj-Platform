@@ -49,6 +49,7 @@ const AgoraCall = React.memo(({
     const [isJoined, setIsJoined] = useState(false);
     const [networkQuality, setNetworkQuality] = useState(0);
     const [remoteNetworkStats, setRemoteNetworkStats] = useState<Record<string, number>>({});
+    const [forceDisabledVideos, setForceDisabledVideos] = useState<Set<number | string>>(new Set());
 
     const localVideoRef = useRef<HTMLDivElement>(null);
     const localScreenRef = useRef<HTMLDivElement>(null);
@@ -88,6 +89,11 @@ const AgoraCall = React.memo(({
                 client.on("user-left", (user) => {
                     if (isMounted) {
                         setRemoteUsers(prev => prev.filter(u => u.uid !== user.uid));
+                        setForceDisabledVideos(prev => {
+                            const next = new Set(prev);
+                            next.delete(user.uid);
+                            return next;
+                        });
                     }
                 });
 
@@ -96,15 +102,36 @@ const AgoraCall = React.memo(({
                         const down = stats.downlinkNetworkQuality;
                         setNetworkQuality(down);
 
-                        // ✅ Manual Dual-Stream Fallback (Task 2): Switch to low-quality stream if downlink is poor
-                        client.remoteUsers.forEach(user => {
-                            if (user.hasVideo) {
-                                if (down >= 3) {
-                                    client.setRemoteVideoStreamType(user.uid, 1); // 1: Low stream
-                                } else {
-                                    client.setRemoteVideoStreamType(user.uid, 0); // 0: High stream
+                        // 🚫 Strict Bandwidth Profiles (Task 4): If quality is 5 (Very Bad) or 6 (Down)
+                        // automatically stop receiving video to preserve audio.
+                        setForceDisabledVideos(prev => {
+                            const next = new Set(prev);
+                            let changed = false;
+
+                            client.remoteUsers.forEach(user => {
+                                if (user.hasVideo) {
+                                    if (down >= 5) {
+                                        if (!next.has(user.uid)) {
+                                            next.add(user.uid);
+                                            changed = true;
+                                        }
+                                    } else {
+                                        if (next.has(user.uid)) {
+                                            next.delete(user.uid);
+                                            changed = true;
+                                        }
+                                        
+                                        // Standard Dual-stream optimization
+                                        if (down >= 3) {
+                                            client.setRemoteVideoStreamType(user.uid, 1); // 1: Low stream
+                                        } else {
+                                            client.setRemoteVideoStreamType(user.uid, 0); // 0: High stream
+                                        }
+                                    }
                                 }
-                            }
+                            });
+
+                            return changed ? next : prev;
                         });
                     }
                 });
@@ -290,7 +317,11 @@ const AgoraCall = React.memo(({
                         {isSharing && localScreenTrack ? (
                             <div ref={localScreenRef} className="w-full h-full [&>video]:object-contain" />
                         ) : remoteScreenUser ? (
-                            <RemotePlayer user={remoteScreenUser} isPrimary />
+                            <RemotePlayer 
+                                user={remoteScreenUser} 
+                                isPrimary 
+                                isForceDisabled={forceDisabledVideos.has(remoteScreenUser.uid)}
+                            />
                         ) : null}
                     </div>
 
@@ -314,7 +345,11 @@ const AgoraCall = React.memo(({
                         {/* Remote Participant Thumbnails */}
                         {remoteUsers.filter(u => Number(u.uid) < 1000000000).map(user => (
                             <div key={user.uid} className="w-24 h-32 rounded-lg shadow-xl border border-slate-700 bg-slate-900 overflow-hidden relative transition-all hover:scale-105">
-                                <RemotePlayer user={user} networkQuality={remoteNetworkStats[user.uid] || 0} />
+                                <RemotePlayer 
+                                    user={user} 
+                                    networkQuality={remoteNetworkStats[user.uid] || 0} 
+                                    isForceDisabled={forceDisabledVideos.has(user.uid)}
+                                />
                                 <div className="absolute bottom-1 right-1 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded text-[10px] font-bold text-white border border-white/5">مشارك</div>
                             </div>
                         ))}
@@ -332,7 +367,11 @@ const AgoraCall = React.memo(({
                     {visibleRemoteUsers.length > 0 && (
                         <>
                             <div className="absolute inset-0">
-                                <RemotePlayer user={visibleRemoteUsers[0]} networkQuality={remoteNetworkStats[visibleRemoteUsers[0].uid] || 0} />
+                                <RemotePlayer 
+                                    user={visibleRemoteUsers[0]} 
+                                    networkQuality={remoteNetworkStats[visibleRemoteUsers[0].uid] || 0} 
+                                    isForceDisabled={forceDisabledVideos.has(visibleRemoteUsers[0].uid)}
+                                />
                             </div>
                             <div className="absolute bottom-4 left-4 z-10 bg-black/50 backdrop-blur-lg px-3 py-1.5 rounded-xl text-xs font-bold border border-white/10 flex items-center gap-1.5 shadow-xl text-white">
                                 مشارك
@@ -406,24 +445,32 @@ const AgoraCall = React.memo(({
 
 export default AgoraCall;
 
-function RemotePlayer({ user, isPrimary, networkQuality = 0 }: { user: IAgoraRTCRemoteUser, isPrimary?: boolean, networkQuality?: number }) {
+function RemotePlayer({ user, isPrimary, networkQuality = 0, isForceDisabled = false }: { user: IAgoraRTCRemoteUser, isPrimary?: boolean, networkQuality?: number, isForceDisabled?: boolean }) {
     const videoRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (user.videoTrack && videoRef.current) {
+        if (user.videoTrack && videoRef.current && !isForceDisabled) {
             // استخدام 'contain' لمشاركة الشاشة و 'cover' للكاميرا
             const fitMode = isPrimary ? 'contain' : 'cover';
             user.videoTrack.play(videoRef.current, { fit: fitMode });
+        } else if (isForceDisabled && user.videoTrack?.isPlaying) {
+            user.videoTrack.stop();
         }
         if (user.audioTrack) user.audioTrack.play();
-    }, [user.videoTrack, user.audioTrack, isPrimary]);
+    }, [user.videoTrack, user.audioTrack, isPrimary, isForceDisabled]);
 
     return (
         <div ref={videoRef} className="w-full h-full relative transition-opacity duration-500">
             {!isPrimary && <StatusOverlay isMuted={!user.hasAudio} networkQuality={networkQuality} />}
-            {!user.hasVideo && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-slate-500">
-                    <User className="w-20 h-20 opacity-5" />
+            {(!user.hasVideo || isForceDisabled) && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-slate-500 p-4 text-center">
+                    <User className="w-16 h-16 opacity-10 mb-4" />
+                    {isForceDisabled && (
+                        <div className="animate-pulse">
+                            <p className="text-xs font-bold text-amber-500">اتصال ضعيف جداً</p>
+                            <p className="text-[10px] text-slate-400 mt-1 max-w-[150px] mx-auto">تم إيقاف استقبال الفيديو مؤقتاً للحفاظ على استقرار الصوت</p>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

@@ -317,9 +317,18 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
       );
 
       // 2. طلب إذن مشاركة الشاشة من المتصفح
-      // نمرر "disable" للصوت لتجنب صدى الصوت، سنكتفي بمايكروفون الكاميرا
+      // 🚀 Network Resilience (Task 4): Use 5fps for screen sharing to save bandwidth while keeping text sharp.
       const track = await AgoraRTC.createScreenVideoTrack(
-        { encoderConfig: "1080p_1", optimizationMode: "detail" },
+        { 
+          encoderConfig: {
+            width: 1920,
+            height: 1080,
+            frameRate: 5,
+            bitrateMax: 1500,
+            bitrateMin: 600
+          }, 
+          optimizationMode: "detail" 
+        },
         "disable",
       );
 
