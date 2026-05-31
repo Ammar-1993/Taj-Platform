@@ -15,6 +15,8 @@ use Peterujah\Agora\Builders\RtcToken;
 use Peterujah\Agora\Roles as AgoraRoles;
 use Peterujah\Agora\User as AgoraUser;
 
+use Illuminate\Support\Facades\Cache;
+
 class ClassroomController extends Controller
 {
     protected WhiteboardService $whiteboardService;
@@ -45,30 +47,38 @@ class ClassroomController extends Controller
         // تحديد الدور: المعلم والطالب هم "host" (إرسال واستقبال)، المراقبين "audience" (استقبال فقط)
         $role = ($user->id === $booking->teacher_id || $user->id === $booking->student_id) ? 'host' : 'audience';
 
-        // توليد التوكن باستخدام مكتبة Peterujah/Agora
-        $appId = config('services.agora.app_id');
-        $appCertificate = config('services.agora.app_certificate');
+        // 🟢 1. محاولة جلب التوكن من الكاش أولاً (Instant Access)
+        $token = Cache::get("agora_token_{$booking->id}_{$user->id}");
+        $screenToken = ($user->id === $booking->teacher_id) ? Cache::get("agora_token_{$booking->id}_screen") : null;
 
-        $token = null;
-        $screenToken = null;
-        if ($appId && $appCertificate) {
-            $client = new Agora($appId, $appCertificate);
-            $client->setExpiration(now()->addHours(2)->timestamp);
+        // 2. إذا لم يكن موجوداً، نقوم بتوليده فوراً
+        if (!$token) {
+            $appId = config('services.agora.app_id');
+            $appCertificate = config('services.agora.app_certificate');
 
-            // 1. التوكن الأساسي (للكاميرا والمايكروفون)
-            $agoraUser = new AgoraUser($user->id);
-            $agoraUser->setChannel($booking->agora_channel);
-            $agoraUser->setRole($role === 'host' ? AgoraRoles::RTC_PUBLISHER : AgoraRoles::RTC_SUBSCRIBER);
-            $agoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
-            $token = RtcToken::buildTokenWithUid($client, $agoraUser);
+            if ($appId && $appCertificate) {
+                $client = new Agora($appId, $appCertificate);
+                $client->setExpiration(now()->addHours(2)->timestamp);
 
-            // 2. توكن مشاركة الشاشة (فقط للمعلم بـ UID مختلف)
-            if ($user->id === $booking->teacher_id) {
-                $screenAgoraUser = new AgoraUser($user->id + 1000000000);
-                $screenAgoraUser->setChannel($booking->agora_channel);
-                $screenAgoraUser->setRole(AgoraRoles::RTC_PUBLISHER);
-                $screenAgoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
-                $screenToken = RtcToken::buildTokenWithUid($client, $screenAgoraUser);
+                // التوكن الأساسي
+                $agoraUser = new AgoraUser($user->id);
+                $agoraUser->setChannel($booking->agora_channel);
+                $agoraUser->setRole($role === 'host' ? AgoraRoles::RTC_PUBLISHER : AgoraRoles::RTC_SUBSCRIBER);
+                $agoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
+                $token = RtcToken::buildTokenWithUid($client, $agoraUser);
+
+                // حفظه في الكاش للطلبات القادمة
+                Cache::put("agora_token_{$booking->id}_{$user->id}", $token, now()->addHours(2));
+
+                // توكن مشاركة الشاشة للمعلم
+                if ($user->id === $booking->teacher_id) {
+                    $screenAgoraUser = new AgoraUser($user->id + 1000000000);
+                    $screenAgoraUser->setChannel($booking->agora_channel);
+                    $screenAgoraUser->setRole(AgoraRoles::RTC_PUBLISHER);
+                    $screenAgoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
+                    $screenToken = RtcToken::buildTokenWithUid($client, $screenAgoraUser);
+                    Cache::put("agora_token_{$booking->id}_screen", $screenToken, now()->addHours(2));
+                }
             }
         }
 

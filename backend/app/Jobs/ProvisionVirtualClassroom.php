@@ -11,6 +11,12 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
+use Peterujah\Agora\Agora;
+use Peterujah\Agora\Builders\RtcToken;
+use Peterujah\Agora\Roles as AgoraRoles;
+use Peterujah\Agora\User as AgoraUser;
+use Illuminate\Support\Facades\Cache;
+
 class ProvisionVirtualClassroom implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -27,25 +33,64 @@ class ProvisionVirtualClassroom implements ShouldQueue
      */
     public function handle(WhiteboardService $whiteboardService): void
     {
-        // Skip if already provisioned
-        if ($this->booking->whiteboard_room_uuid) {
+        // 🛡️ 1. Use a cache lock to prevent multiple joins from creating multiple rooms
+        $lock = Cache::lock("provision_classroom_{$this->booking->id}", 60);
+
+        if (!$lock->get()) {
             return;
         }
 
         try {
-            $roomName = "حصة: " . ($this->booking->student->name ?? 'طالب') . " مع " . ($this->booking->teacher->name ?? 'معلم');
-            $uuid = $whiteboardService->createRoom($roomName);
-            
-            $this->booking->update([
-                'whiteboard_room_uuid' => $uuid
-            ]);
-            
-            Log::info("Virtual classroom provisioned for booking #{$this->booking->id}");
+            // 2. Provision Whiteboard if missing
+            if (!$this->booking->whiteboard_room_uuid) {
+                $roomName = "حصة: " . ($this->booking->student->name ?? 'طالب') . " مع " . ($this->booking->teacher->name ?? 'معلم');
+                $uuid = $whiteboardService->createRoom($roomName);
+                
+                $this->booking->update(['whiteboard_room_uuid' => $uuid]);
+                Log::info("Whiteboard room created for booking #{$this->booking->id}");
+            }
+
+            // 3. 🚀 Pre-generate tokens for both participants to make entry instant
+            $this->preGenerateTokens($this->booking);
+
+            Log::info("Virtual classroom fully provisioned for booking #{$this->booking->id}");
         } catch (\Exception $e) {
-            Log::error("Failed to provision virtual classroom for booking #{$this->booking->id}: " . $e->getMessage());
-            
-            // Fail the job so it can be retried
+            Log::error("Provisioning failed for booking #{$this->booking->id}: " . $e->getMessage());
             throw $e;
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * Pre-calculate Agora and Whiteboard tokens and store them in cache.
+     */
+    private function preGenerateTokens(Booking $booking): void
+    {
+        $appId = config('services.agora.app_id');
+        $appCertificate = config('services.agora.app_certificate');
+
+        if (!$appId || !$appCertificate) return;
+
+        $client = new Agora($appId, $appCertificate);
+        $client->setExpiration(now()->addHours(2)->timestamp);
+
+        // Generate for Teacher and Student
+        $participants = [
+            ['id' => $booking->teacher_id, 'role' => 'host'],
+            ['id' => $booking->student_id, 'role' => 'host'],
+        ];
+
+        foreach ($participants as $p) {
+            $agoraUser = new AgoraUser($p['id']);
+            $agoraUser->setChannel($booking->agora_channel);
+            $agoraUser->setRole(AgoraRoles::RTC_PUBLISHER);
+            $agoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
+            
+            $token = RtcToken::buildTokenWithUid($client, $agoraUser);
+            
+            // Cache the Agora Token for 2 hours
+            Cache::put("agora_token_{$booking->id}_{$p['id']}", $token, now()->addHours(2));
         }
     }
 }
