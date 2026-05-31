@@ -163,7 +163,31 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     if (user) fetchAccess();
   }, [params.id, user]);
 
-  // ... (leave and complete class logic)
+  // 🔄 Polling for Whiteboard Data if pending
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (whiteboardPending && !whiteboardData && !loading && !error) {
+      interval = setInterval(async () => {
+        try {
+          const res = await bookingService.getClassroomAccess(Number(params.id));
+          const data = res.data;
+          
+          if (data.whiteboard?.room_uuid && data.whiteboard?.room_token) {
+            setWhiteboardData(data.whiteboard);
+            setWhiteboardPending(false);
+          }
+        } catch (err) {
+          console.error("Failed to poll whiteboard data:", err);
+        }
+      }, 4000); // Poll every 4 seconds
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [whiteboardPending, whiteboardData, loading, error, params.id]);
+
   // 🚪 دالة المغادرة المؤقتة / العادية
   const handleLeave = async () => {
     if (mediaStream) {

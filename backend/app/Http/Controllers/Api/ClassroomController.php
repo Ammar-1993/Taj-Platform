@@ -90,9 +90,19 @@ class ClassroomController extends Controller
         $whiteboardRoomUuid = $booking->whiteboard_room_uuid;
         $whiteboardToken = null;
 
-        // If missing, trigger async provisioning but don't block the RTC flow
+        // 🚀 Optimization: Try to provision synchronously if missing to avoid "Pending" state on first load
         if (!$whiteboardRoomUuid) {
-            ProvisionVirtualClassroom::dispatch($booking);
+            try {
+                $roomName = "حصة: " . ($booking->student->name ?? 'طالب') . " مع " . ($booking->teacher->name ?? 'معلم');
+                $whiteboardRoomUuid = $this->whiteboardService->createRoom($roomName);
+                $booking->update(['whiteboard_room_uuid' => $whiteboardRoomUuid]);
+                
+                // Dispatch job anyway to handle token pre-generation in background
+                ProvisionVirtualClassroom::dispatch($booking);
+            } catch (\Exception $e) {
+                Log::warning("Sync whiteboard provisioning failed, falling back to async: " . $e->getMessage());
+                ProvisionVirtualClassroom::dispatch($booking);
+            }
         }
 
         if ($whiteboardRoomUuid) {
