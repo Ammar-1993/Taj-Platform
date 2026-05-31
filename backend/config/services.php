@@ -54,7 +54,7 @@ return [
 
     'whiteboard' => [
         'sdk_token' => env('WHITEBOARD_SDK_TOKEN'),
-        'region'    => env('WHITEBOARD_REGION', 'eu'),
+        'region'    => env('WHITEBOARD_REGION', 'in-mum'),
     ],
 
 ];
