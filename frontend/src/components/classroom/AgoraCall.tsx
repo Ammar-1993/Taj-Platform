@@ -30,7 +30,7 @@ type AgoraCallProps = {
   onScreenShareActive?: (active: boolean) => void;
 };
 
-export default function AgoraCall({ 
+const AgoraCall = React.memo(({ 
     rtcProps, 
     isCameraEnabled, 
     isMicEnabled,
@@ -38,7 +38,7 @@ export default function AgoraCall({
     localScreenTrack,
     externalScreenRef,
     onScreenShareActive,
-}: AgoraCallProps) {
+}: AgoraCallProps) => {
     // ✅ VP9: ~20% better compression than VP8 at the same quality — frees bandwidth for whiteboard WS traffic
     const [client] = useState<IAgoraRTCClient>(() => AgoraRTC.createClient({ mode: "rtc", codec: "vp9" }));
     const [localVideoTrack, setLocalVideoTrack] = useState<ICameraVideoTrack | null>(null);
@@ -389,7 +389,9 @@ export default function AgoraCall({
             )}
         </div>
     );
-}
+});
+
+export default AgoraCall;
 
 function RemotePlayer({ user, isPrimary, networkQuality = 0 }: { user: IAgoraRTCRemoteUser, isPrimary?: boolean, networkQuality?: number }) {
     const videoRef = useRef<HTMLDivElement>(null);

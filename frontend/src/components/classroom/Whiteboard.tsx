@@ -69,7 +69,7 @@ const TOOL_HOTKEYS: Record<string, string> = {
     t: 'text',
 };
 
-const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomToken, uid, isTeacher, region = 'in-mum' }) => {
+const Whiteboard: React.FC<WhiteboardProps> = React.memo(({ appIdentifier, roomUuid, roomToken, uid, isTeacher, region = 'in-mum' }) => {
     const whiteboardRef = useRef<HTMLDivElement>(null);
     const roomRef = useRef<Room | null>(null);
 
@@ -186,7 +186,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
             case 'eraser': room.setMemberState({ currentApplianceName: ApplianceNames.eraser }); break;
             case 'text': room.setMemberState({ currentApplianceName: ApplianceNames.text, strokeColor: hexToRgb(resolvedColor) }); break;
         }
-    }, [isTeacher, strokeColor, strokeWidth]);
+    }, [isTeacher, strokeColor, strokeWidth, activeTool]);
 
     const setTool = useCallback((tool: string) => { setActiveTool(tool); applyTool(tool); }, [applyTool]);
     const setColor = useCallback((color: string) => { setStrokeColor(color); if (activeTool !== 'selector' && activeTool !== 'eraser') applyTool(activeTool, color, strokeWidth); }, [activeTool, strokeWidth, applyTool]);
@@ -312,7 +312,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ appIdentifier, roomUuid, roomTo
             </div>
         </div>
     );
-};
+});
 
 const ToolButton: React.FC<ToolButtonProps> = React.memo(({ icon, active, onClick, label, variant = 'primary', disabled }) => (
     <button onClick={onClick} title={label} disabled={disabled} className={`p-2 rounded-xl transition-all duration-150 group relative disabled:opacity-30 disabled:cursor-not-allowed ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : variant === 'danger' ? 'text-red-400 hover:bg-red-500/10' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}>{icon}<span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-lg border border-white/10">{label}</span></button>
