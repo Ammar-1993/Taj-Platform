@@ -4,10 +4,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import AgoraRTC, { 
     IAgoraRTCClient, 
-    ICameraVideoTrack, 
-    IMicrophoneAudioTrack, 
     IAgoraRTCRemoteUser,
-    ILocalVideoTrack
+    ILocalVideoTrack,
+    ILocalAudioTrack
 } from 'agora-rtc-sdk-ng';
 import { Loader2, User, MicOff, WifiOff } from 'lucide-react';
 
@@ -23,6 +22,8 @@ type AgoraCallProps = {
   isMicEnabled: boolean;
   isSharing?: boolean;
   localScreenTrack?: ILocalVideoTrack | null;
+  /** Pass the stream already acquired in the lobby to avoid device-busy errors. */
+  lobbyMediaStream?: MediaStream | null;
   /** When provided, screen content is rendered into this external div instead of
    *  AgoraCall's internal screen-share layout, enabling Focus Mode in page.tsx. */
   externalScreenRef?: React.RefObject<HTMLDivElement>;
@@ -36,13 +37,14 @@ const AgoraCall = React.memo(({
     isMicEnabled,
     isSharing,
     localScreenTrack,
+    lobbyMediaStream,
     externalScreenRef,
     onScreenShareActive,
 }: AgoraCallProps) => {
     // ✅ VP9: ~20% better compression than VP8 at the same quality — frees bandwidth for whiteboard WS traffic
     const [client] = useState<IAgoraRTCClient>(() => AgoraRTC.createClient({ mode: "rtc", codec: "vp9" }));
-    const [localVideoTrack, setLocalVideoTrack] = useState<ICameraVideoTrack | null>(null);
-    const [localAudioTrack, setLocalAudioTrack] = useState<IMicrophoneAudioTrack | null>(null);
+    const [localVideoTrack, setLocalVideoTrack] = useState<ILocalVideoTrack | null>(null);
+    const [localAudioTrack, setLocalAudioTrack] = useState<ILocalAudioTrack | null>(null);
     const [remoteUsers, setRemoteUsers] = useState<IAgoraRTCRemoteUser[]>([]);
     const [isJoined, setIsJoined] = useState(false);
     const [networkQuality, setNetworkQuality] = useState(0);
@@ -53,10 +55,13 @@ const AgoraCall = React.memo(({
     const propsRef = useRef(rtcProps);
     propsRef.current = rtcProps;
 
+    const lobbyStreamRef = useRef(lobbyMediaStream);
+    lobbyStreamRef.current = lobbyMediaStream;
+
     useEffect(() => {
         let isMounted = true;
-        let vTrack: ICameraVideoTrack | null = null;
-        let aTrack: IMicrophoneAudioTrack | null = null;
+        let vTrack: ILocalVideoTrack | null = null;
+        let aTrack: ILocalAudioTrack | null = null;
         let qualityInterval: NodeJS.Timeout;
 
         const init = async () => {
@@ -151,34 +156,42 @@ const AgoraCall = React.memo(({
                 try {
                     // فقط إذا كان الدور host، نقوم بفتح الكاميرا والمايكروفون
                     if (propsRef.current.role === 'host') {
-                        const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
-                            { 
-                                encoderConfig: "music_standard",  // 48kbps stereo — clearer teaching voice
-                                AEC: true, 
-                                ANS: true, 
-                                AGC: true 
-                            },
-                            { 
-                                // ✅ Drastically reduce bandwidth: 360p @ 15fps (~400 Kbps) 
-                                // plus 'motion' optimization to prioritize stability over resolution.
-                                encoderConfig: "360p_1", 
-                                optimizationMode: "motion"
+                        const lobbyStream = lobbyStreamRef.current;
+
+                        if (lobbyStream) {
+                            // 🚀 Hardware Track Reusability (Task 4): Use tracks from lobby directly
+                            const videoTrackObj = lobbyStream.getVideoTracks()[0];
+                            const audioTrackObj = lobbyStream.getAudioTracks()[0];
+
+                            if (videoTrackObj) {
+                                vTrack = await AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: videoTrackObj });
                             }
-                        );
+                            if (audioTrackObj) {
+                                aTrack = await AgoraRTC.createCustomAudioTrack({ mediaStreamTrack: audioTrackObj });
+                            }
+                        }
+
+                        // Fallback if lobby stream was missing or partial
+                        if (!vTrack || !aTrack) {
+                            const [fallbackAudio, fallbackVideo] = await AgoraRTC.createMicrophoneAndCameraTracks(
+                                { encoderConfig: "music_standard", AEC: true, ANS: true, AGC: true },
+                                { encoderConfig: "360p_1", optimizationMode: "motion" }
+                            );
+                            if (!vTrack) vTrack = fallbackVideo; else fallbackVideo.close();
+                            if (!aTrack) aTrack = fallbackAudio; else fallbackAudio.close();
+                        }
                         
                         if (isMounted) {
-                            vTrack = videoTrack;
-                            aTrack = audioTrack;
-                            setLocalAudioTrack(audioTrack);
-                            setLocalVideoTrack(videoTrack);
+                            setLocalAudioTrack(aTrack);
+                            setLocalVideoTrack(vTrack);
                             
-                            await client.publish([audioTrack, videoTrack]);
-                            audioTrack.setEnabled(isMicEnabled);
-                            videoTrack.setEnabled(isCameraEnabled);
+                            await client.publish([aTrack, vTrack]);
+                            aTrack.setEnabled(isMicEnabled);
+                            vTrack.setEnabled(isCameraEnabled);
                             setIsJoined(true);
                         } else {
-                            audioTrack.close();
-                            videoTrack.close();
+                            if (aTrack) aTrack.close();
+                            if (vTrack) vTrack.close();
                         }
                     } else {
                         // إذا كان audience، نعتبره منضماً بمجرد نجاح join العميل

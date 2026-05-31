@@ -202,10 +202,8 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
   // 🔐 طلب الصلاحيات
   const handleJoinRequest = () => {
     if (cameraStatus === "granted" && micStatus === "granted") {
-      // Already have permissions, just enter
-      if (mediaStream) {
-        mediaStream.getTracks().forEach((track) => track.stop());
-      }
+      // 🚀 Hardware Track Reusability (Task 4): 
+      // We DON'T stop the tracks here anymore. We pass them to AgoraCall.
       setInCall(true);
       return;
     }
@@ -504,6 +502,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 isMicEnabled={isMicEnabled}
                 isSharing={isSharing}
                 localScreenTrack={screenTrack}
+                lobbyMediaStream={mediaStream}
                 externalScreenRef={screenBgRef}
                 onScreenShareActive={setIsRemoteSharing}
               />
