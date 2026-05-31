@@ -16,7 +16,7 @@ class WhiteboardService
     public function __construct()
     {
         $this->sdkToken = config('services.whiteboard.sdk_token') ?? env('WHITEBOARD_SDK_TOKEN');
-        $this->region   = config('services.whiteboard.region') ?? env('WHITEBOARD_REGION', 'in-mum');
+        $this->region   = config('services.whiteboard.region') ?? env('WHITEBOARD_REGION', 'eu');
     }
 
     /**

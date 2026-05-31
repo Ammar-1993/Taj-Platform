@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 
 // Define local types for better type safety where SDK exports are missing or ambiguous
-type WhiteboardRegion = "cn-hz" | "us-sv" | "sg" | "in-mum" | "gb-lon";
+type WhiteboardRegion = "cn-hz" | "us-sv" | "sg" | "in-mum" | "gb-lon" | "eu";
 
 interface SceneState {
     index: number;
@@ -69,7 +69,7 @@ const TOOL_HOTKEYS: Record<string, string> = {
     t: 'text',
 };
 
-const Whiteboard: React.FC<WhiteboardProps> = React.memo(({ appIdentifier, roomUuid, roomToken, uid, isTeacher, region = 'in-mum' }) => {
+const Whiteboard: React.FC<WhiteboardProps> = React.memo(({ appIdentifier, roomUuid, roomToken, uid, isTeacher, region = 'eu' }) => {
     const whiteboardRef = useRef<HTMLDivElement>(null);
     const roomRef = useRef<Room | null>(null);
 
@@ -97,7 +97,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({ appIdentifier, roomU
         const cleanRoomUuid = String(rUuid).split('#')[0].trim();
         const cleanRoomToken = String(rToken).split('#')[0].trim();
         const supportedRegions = ['eu', 'us-sv', 'sg', 'cn-hz', 'in-mum'];
-        const finalRegion = supportedRegions.includes(rRegion.toLowerCase()) ? rRegion.toLowerCase() : 'in-mum';
+        const finalRegion = supportedRegions.includes(rRegion.toLowerCase()) ? rRegion.toLowerCase() : 'eu';
 
         if (!cleanAppId || !cleanRoomUuid || !cleanRoomToken) {
             setError("بيانات الغرفة غير مكتملة.");
@@ -126,7 +126,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({ appIdentifier, roomU
                     roomToken: cleanRoomToken,
                     uid: rUid,
                     isWritable: rIsTeacher,
-                    useMultiViews: false,
+                    useMultiViews: true, // 🚀 Enable Modern Parallel Sync
                 });
 
                 roomRef.current = roomInstance;
