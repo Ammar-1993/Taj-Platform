@@ -37,7 +37,7 @@
  [🛠️ Technology Stack](#️-technology-stack) <br>
  [📊 Project Stats](#-project-stats) <br>
  [🚀 Getting Started](#-getting-started) <br>
- [🧪 Testing](#-testing)
+ [🧪 Testing](#-testing) <br>
  [👤 Author](#-author) 
 
 ---
