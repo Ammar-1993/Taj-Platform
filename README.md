@@ -30,15 +30,15 @@
 
 ## 📖 Table of Contents
 
-- [📸 Project Showcase](#-project-showcase)
-- [🏗️ System Architecture](#️-system-architecture)
-- [🌐 Live Beta Access](#-live-beta-access)
-- [✨ Functional Requirements](#-functional-requirements-fr)
-- [🛠️ Technology Stack](#️-technology-stack)
-- [📊 Project Stats](#-project-stats)
-- [🚀 Getting Started](#-getting-started)
-- [🧪 Testing](#-testing)
-- [👤 Author](#-author)
+ [📸 Project Showcase](#-project-showcase) <br>
+ [🏗️ System Architecture](#️-system-architecture) <br>
+ [🌐 Live Beta Access](#-live-beta-access) <br>
+ [✨ Functional Requirements](#-functional-requirements-fr) <br>
+ [🛠️ Technology Stack](#️-technology-stack) <br>
+ [📊 Project Stats](#-project-stats) <br>
+ [🚀 Getting Started](#-getting-started) <br>
+ [🧪 Testing](#-testing)
+ [👤 Author](#-author) 
 
 ---
 
