@@ -62,6 +62,56 @@ const AgoraCall = React.memo(({
     const lobbyStreamRef = useRef(lobbyMediaStream);
     lobbyStreamRef.current = lobbyMediaStream;
 
+    const createAndPublishVideoTrack = async () => {
+        if (!client || !isJoined || client.connectionState !== "CONNECTED") return null;
+
+        let vTrack: ILocalVideoTrack | null = null;
+        try {
+            const lobbyStream = lobbyStreamRef.current;
+            if (lobbyStream) {
+                const videoTrackObj = lobbyStream.getVideoTracks()[0];
+                if (videoTrackObj) {
+                    vTrack = await AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: videoTrackObj });
+                }
+            }
+
+            if (!vTrack) {
+                vTrack = await AgoraRTC.createCameraVideoTrack(
+                    { encoderConfig: "360p_1", optimizationMode: "motion" },
+                );
+            }
+
+            await client.publish([vTrack]);
+            vTrack.setEnabled(true);
+            setLocalVideoTrack(vTrack);
+            return vTrack;
+        } catch (err) {
+            console.error("[AgoraCall] Failed to create/publish video track:", err);
+            if (vTrack) vTrack.close();
+            return null;
+        }
+    };
+
+    const removeLocalVideoTrack = async (track: ILocalVideoTrack | null) => {
+        if (!track) return;
+
+        try {
+            await client.unpublish(track);
+        } catch (err) {
+            console.warn("[AgoraCall] Failed to unpublish video track:", err);
+        }
+
+        try {
+            track.close();
+        } catch (err) {
+            console.warn("[AgoraCall] Failed to close video track:", err);
+        }
+
+        if (localVideoTrack === track) {
+            setLocalVideoTrack(null);
+        }
+    };
+
     useEffect(() => {
         let isMounted = true;
         let vTrack: ILocalVideoTrack | null = null;
@@ -267,8 +317,24 @@ const AgoraCall = React.memo(({
     }, [client]);
 
     useEffect(() => {
-        if (localVideoTrack) localVideoTrack.setEnabled(isCameraEnabled);
-    }, [isCameraEnabled, localVideoTrack]);
+        if (!isJoined) return;
+
+        const syncCameraState = async () => {
+            if (isCameraEnabled) {
+                if (!localVideoTrack) {
+                    await createAndPublishVideoTrack();
+                } else {
+                    localVideoTrack.setEnabled(true);
+                }
+            } else {
+                if (localVideoTrack) {
+                    await removeLocalVideoTrack(localVideoTrack);
+                }
+            }
+        };
+
+        void syncCameraState();
+    }, [isCameraEnabled, localVideoTrack, isJoined]);
 
     useEffect(() => {
         if (localAudioTrack) localAudioTrack.setEnabled(isMicEnabled);

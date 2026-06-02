@@ -278,6 +278,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
       setCameraStatus("granted");
       setMicStatus("granted");
       setMediaStream(stream);
+      setIsCameraEnabled(true);
 
       // Note: We DON'T set inCall(true) yet. We let them see the preview first.
       toast.success("تم تفعيل الكاميرا والميكروفون بنجاح.");
@@ -301,6 +302,24 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         toast.error("حدث خطأ أثناء محاولة الوصول للكاميرا والميكروفون.");
       }
     }
+  };
+
+  const handleToggleCamera = async () => {
+    if (!inCall) {
+      if (isCameraEnabled) {
+        if (mediaStream) {
+          mediaStream.getVideoTracks().forEach((track) => track.stop());
+          setMediaStream(null);
+        }
+        setIsCameraEnabled(false);
+        return;
+      }
+
+      await requestMediaPermissions();
+      return;
+    }
+
+    setIsCameraEnabled((prev) => !prev);
   };
 
   // ... (UI click handlers and screen share)
@@ -488,7 +507,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
             isCameraEnabled={isCameraEnabled}
             isMicEnabled={isMicEnabled}
             mediaStream={mediaStream}
-            onToggleCamera={() => setIsCameraEnabled(!isCameraEnabled)}
+            onToggleCamera={handleToggleCamera}
             onToggleMic={() => setIsMicEnabled(!isMicEnabled)}
             onRequestPermissions={requestMediaPermissions}
             onJoinClass={handleJoinRequest}
@@ -609,7 +628,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 onClick={
                   cameraStatus === "denied"
                     ? () => handleDeniedClick("camera")
-                    : () => setIsCameraEnabled(!isCameraEnabled)
+                    : handleToggleCamera
                 }
                 className={`relative group w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 ${
                   cameraStatus === "denied"

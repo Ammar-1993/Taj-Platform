@@ -28,13 +28,12 @@ export default function LobbyPreview({
   const previewVideoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    if (
-      previewVideoRef.current &&
-      mediaStream &&
-      cameraStatus === "granted" &&
-      isCameraEnabled
-    ) {
+    if (!previewVideoRef.current) return;
+
+    if (mediaStream && cameraStatus === "granted" && isCameraEnabled) {
       previewVideoRef.current.srcObject = mediaStream;
+    } else {
+      previewVideoRef.current.srcObject = null;
     }
   }, [mediaStream, cameraStatus, isCameraEnabled]);
 
