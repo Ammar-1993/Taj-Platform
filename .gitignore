@@ -5,7 +5,17 @@ frontend/.env
 frontend/.next/
 .idea/
 .vscode/
+.env
+
+
+
 
 # Gemini Files
 GEMINI.md
 .GEMINI.md
+scratch-laravel.json
+scratch-mysql.json
+scratch.json
+
+
+
