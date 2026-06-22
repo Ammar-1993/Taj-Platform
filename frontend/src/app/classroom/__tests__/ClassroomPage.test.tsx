@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import ClassroomPage from '../[id]/page';
 import { useAuth } from '@/context/AuthContext';
 import { bookingService } from '@/services/api';
@@ -23,8 +23,16 @@ jest.mock('@/services/api', () => ({
 }));
 
 // Mock Agora Call & Whiteboard to avoid loading real SDKs in tests
-jest.mock('@/components/classroom/AgoraCall', () => () => <div data-testid="agora-call-mock" />);
-jest.mock('@/components/classroom/Whiteboard', () => () => <div data-testid="whiteboard-mock" />);
+jest.mock('@/components/classroom/AgoraCall', () => {
+  return function MockAgoraCall() {
+    return <div data-testid="agora-call-mock" />;
+  };
+});
+jest.mock('@/components/classroom/Whiteboard', () => {
+  return function MockWhiteboard() {
+    return <div data-testid="whiteboard-mock" />;
+  };
+});
 
 describe('ClassroomPage', () => {
   beforeEach(() => {
