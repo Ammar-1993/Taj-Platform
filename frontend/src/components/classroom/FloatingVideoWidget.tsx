@@ -100,6 +100,20 @@ export default function FloatingVideoWidget({ focusMode, children }: FloatingVid
         };
     }, [focusMode, collapsed]);
 
+    // ── 4.1: Window resize auto-clamp ────────────────────────────────────────
+    useEffect(() => {
+        if (!focusMode) return;
+        const clamp = () => {
+            const currentH = collapsed ? TITLE_H : WIDGET_H;
+            setPos(prev => ({
+                x: Math.max(PAD, Math.min(window.innerWidth  - WIDGET_W - PAD, prev.x)),
+                y: Math.max(PAD, Math.min(window.innerHeight - currentH  - DOCK_H - PAD, prev.y)),
+            }));
+        };
+        window.addEventListener('resize', clamp);
+        return () => window.removeEventListener('resize', clamp);
+    }, [focusMode, collapsed]);
+
     const toggleCollapse = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
         setCollapsed(prev => !prev);

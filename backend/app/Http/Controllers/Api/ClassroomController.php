@@ -41,11 +41,15 @@ class ClassroomController extends Controller
             return response()->json(['message' => 'غير مصرح لك بدخول هذه الغرفة'], 403);
         }
 
-        // تحديث حالة الحضور
+        // تحديث حالة الحضور بشكل ذري (Atomic) لتجنب Race Conditions
         if ($user->hasRole('teacher') && ! $booking->teacher_joined_at) {
-            $booking->update(['teacher_joined_at' => now(), 'status' => 'in_progress']);
+            Booking::where('id', $booking->id)
+                ->whereNull('teacher_joined_at')
+                ->update(['teacher_joined_at' => now(), 'status' => 'in_progress']);
         } elseif ($user->hasRole('student') && ! $booking->student_joined_at) {
-            $booking->update(['student_joined_at' => now()]);
+            Booking::where('id', $booking->id)
+                ->whereNull('student_joined_at')
+                ->update(['student_joined_at' => now()]);
         }
 
         // تحديد الدور: المعلم والطالب هم "host" (إرسال واستقبال)، المراقبين "audience" (استقبال فقط)

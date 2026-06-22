@@ -184,6 +184,19 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     };
   }, [whiteboardPending, whiteboardData, loading, error, params.id]);
 
+  // ── 4.5: Graceful Cleanup on Browser Close ────────────────────────────────
+  useEffect(() => {
+    const handleUnload = () => {
+      if (screenTrack) {
+        screenTrack.close();
+      }
+      // We don't await screenClient.leave() here because the browser is closing
+      // and won't wait for async operations, but closing the track stops the stream immediately.
+    };
+    window.addEventListener('beforeunload', handleUnload);
+    return () => window.removeEventListener('beforeunload', handleUnload);
+  }, [screenTrack]);
+
   // 🚪 دالة المغادرة المؤقتة / العادية
   const handleLeave = async () => {
     if (mediaStream) {

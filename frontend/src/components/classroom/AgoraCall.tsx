@@ -68,6 +68,7 @@ const AgoraCall = React.memo(({
     const [networkQuality, setNetworkQuality] = useState(0);
     const [remoteNetworkStats, setRemoteNetworkStats] = useState<Record<string, number>>({});
     const [forceDisabledVideos, setForceDisabledVideos] = useState<Set<number | string>>(new Set());
+    const [isReconnecting, setIsReconnecting] = useState(false);
 
     const localVideoRef = useRef<HTMLDivElement>(null);
     const localScreenRef = useRef<HTMLDivElement>(null);
@@ -227,6 +228,20 @@ const AgoraCall = React.memo(({
 
                             return changed ? next : prev;
                         });
+                    }
+                });
+
+                // ── 4.2: Handle network disconnects ────────────────────────────────────
+                client.on("connection-state-change", (curState, revState, reason) => {
+                    console.log(`[Agora] Connection state changed: ${revState} -> ${curState} (${reason})`);
+                    if (isMounted) {
+                        if (curState === "RECONNECTING" || curState === "DISCONNECTED") {
+                            // Only show reconnecting UI if we were previously joined.
+                            // DISCONNECTED can mean a permanent drop or just before reconnect.
+                            setIsReconnecting(true);
+                        } else if (curState === "CONNECTED") {
+                            setIsReconnecting(false);
+                        }
                     }
                 });
 
@@ -403,6 +418,15 @@ const AgoraCall = React.memo(({
 
     return (
         <div className="w-full h-full relative bg-slate-950 overflow-hidden">
+            {/* ── 4.2: Reconnecting Overlay ── */}
+            {isReconnecting && (
+                <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-md">
+                    <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
+                    <p className="text-white font-bold text-lg">انقطع الاتصال بالإنترنت</p>
+                    <p className="text-slate-300 text-sm mt-1">جاري محاولة إعادة الاتصال تلقائياً...</p>
+                </div>
+            )}
+
             {/* مؤشر جودة الشبكة */}
             {networkQuality > 3 && (
                 <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[60] bg-red-600/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 text-white text-xs font-bold animate-bounce shadow-xl border border-red-500/20">

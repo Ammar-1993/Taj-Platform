@@ -137,14 +137,13 @@ export default function LobbyPreview({
 
         <button
           onClick={
-            cameraStatus === "granted" ? onJoinClass : onRequestPermissions
+            cameraStatus === "granted" || cameraStatus === "denied" ? onJoinClass : onRequestPermissions
           }
-          disabled={cameraStatus === "denied"}
           className={`relative z-10 font-black py-4 md:py-5 px-10 md:px-16 rounded-[28px] transition-all transform hover:scale-105 active:scale-95 text-lg md:text-xl tracking-wide flex items-center gap-3 shadow-2xl ${
             cameraStatus === "granted"
               ? "bg-emerald-600 hover:bg-emerald-700 text-white ring-8 ring-emerald-600/20"
               : cameraStatus === "denied"
-                ? "bg-gray-700 text-gray-400 cursor-not-allowed opacity-50"
+                ? "bg-amber-600 hover:bg-amber-700 text-white ring-8 ring-amber-600/20"
                 : "bg-blue-600 hover:bg-blue-700 text-white ring-8 ring-blue-600/20"
           }`}
         >
@@ -152,6 +151,8 @@ export default function LobbyPreview({
             <>
               دخول الفصل الآن <CheckCircle2 className="w-6 h-6" />
             </>
+          ) : cameraStatus === "denied" ? (
+            "دخول الفصل (بدون كاميرا)"
           ) : (
             "تجهيز الكاميرا والبدء"
           )}
