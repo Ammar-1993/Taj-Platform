@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Events\DrawingBatchReceived;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Exception;

@@ -147,8 +147,19 @@ const AgoraCall = React.memo(({
                 client.on("user-unpublished", (user) => {
                     if (isMounted) {
                         setRemoteUsers(prev => {
-                            const filtered = prev.filter(u => u.uid !== user.uid);
-                            return [...filtered, user];
+                            const existing = prev.find(u => u.uid === user.uid);
+                            if (!existing) return prev;
+
+                            // If the participant still has at least one active track,
+                            // update the object reference so React re-renders their tile
+                            // with the correct track state (e.g., video gone, audio remains).
+                            if (user.hasVideo || user.hasAudio) {
+                                return [...prev.filter(u => u.uid !== user.uid), user];
+                            }
+
+                            // Both tracks are gone — remove the participant tile entirely
+                            // to avoid phantom/frozen tiles in the UI.
+                            return prev.filter(u => u.uid !== user.uid);
                         });
                     }
                 });

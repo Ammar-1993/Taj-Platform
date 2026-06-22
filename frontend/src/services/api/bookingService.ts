@@ -1,5 +1,5 @@
 import api from "@/lib/axios";
-import { Booking, ApiResponse, PaginatedApiResponse, ClassroomAccess } from "@/types";
+import { Booking, ApiResponse, PaginatedApiResponse, ClassroomAccess, WhiteboardStatusResponse } from "@/types";
 
 export const bookingService = {
   /**
@@ -39,6 +39,16 @@ export const bookingService = {
    */
   getClassroomAccess: async (id: number) => {
     const res = await api.get<ApiResponse<ClassroomAccess>>(`/bookings/${id}/classroom`);
+    return res.data;
+  },
+
+  /**
+   * Lightweight poll for whiteboard readiness.
+   * Unlike getClassroomAccess, this has zero side effects (no DB writes,
+   * no Agora token generation). Safe to call every 2–3 seconds.
+   */
+  getWhiteboardStatus: async (id: number) => {
+    const res = await api.get<WhiteboardStatusResponse>(`/bookings/${id}/classroom/whiteboard-status`);
     return res.data;
   },
 

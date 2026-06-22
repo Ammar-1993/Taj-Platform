@@ -198,4 +198,69 @@ class ClassroomController extends Controller
             ]
         ]);
     }
+    /**
+     * Lightweight endpoint for polling whiteboard readiness.
+     *
+     * Unlike getAccessDetails, this method has zero side effects:
+     * - Does NOT update attendance timestamps.
+     * - Does NOT generate or check Agora tokens.
+     * - Only reads whiteboard_room_uuid from the DB and generates a
+     *   cached room token if the room is ready.
+     *
+     * Safe to call every 2–3 seconds from the frontend without causing
+     * DB writes or external API calls on repeated invocations.
+     *
+     * @param Request $request
+     * @param int|string $bookingId
+     */
+    public function getWhiteboardStatus(Request $request, $bookingId): JsonResponse
+    {
+        /** @var User $user */
+        $user    = $request->user();
+        $booking = Booking::findOrFail($bookingId);
+
+        // Security: same access control as the main endpoint
+        if (
+            $booking->student_id  !== $user->id &&
+            $booking->teacher_id  !== $user->id &&
+            $booking->booked_by_id !== $user->id
+        ) {
+            return response()->json(['message' => 'غير مصرح لك'], 403);
+        }
+
+        $whiteboardRoomUuid = $booking->whiteboard_room_uuid;
+
+        // Room not provisioned yet — tell the frontend to keep polling
+        if (!$whiteboardRoomUuid) {
+            return response()->json([
+                'status' => 'pending',
+                'whiteboard' => null,
+            ]);
+        }
+
+        // Room exists — generate (or retrieve from cache) the room token
+        try {
+            $tokenRole   = ($user->id === $booking->teacher_id) ? 'admin' : 'reader';
+            $durationMs  = isset($booking->duration_minutes)
+                ? ($booking->duration_minutes + 30) * 60 * 1000
+                : 3600000;
+
+            $whiteboardToken = $this->whiteboardService->getRoomToken($whiteboardRoomUuid, $tokenRole, $durationMs);
+
+            return response()->json([
+                'status' => 'ready',
+                'whiteboard' => [
+                    'room_uuid'  => $whiteboardRoomUuid,
+                    'room_token' => $whiteboardToken,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::error("getWhiteboardStatus: Failed to generate token for booking #{$bookingId}: " . $e->getMessage());
+
+            return response()->json([
+                'status'     => 'error',
+                'whiteboard' => null,
+            ], 500);
+        }
+    }
 }

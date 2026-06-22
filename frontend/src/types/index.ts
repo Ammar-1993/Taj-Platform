@@ -225,3 +225,12 @@ export interface ClassroomAccess {
   };
 }
 
+/** Response shape from GET /bookings/{id}/classroom/whiteboard-status */
+export interface WhiteboardStatusResponse {
+  /** 'pending' = room not provisioned yet; 'ready' = room ready; 'error' = server error */
+  status: 'pending' | 'ready' | 'error';
+  whiteboard: {
+    room_uuid: string;
+    room_token: string;
+  } | null;
+}

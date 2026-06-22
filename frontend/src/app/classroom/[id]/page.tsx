@@ -122,12 +122,6 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
   }, [user, authLoading, router]);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace("/login");
-    }
-  }, [user, authLoading, router]);
-
-  useEffect(() => {
     const fetchAccess = async () => {
       try {
         const res = await bookingService.getClassroomAccess(Number(params.id));
@@ -164,23 +158,25 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
   }, [params.id, user]);
 
   // 🔄 Polling for Whiteboard Data if pending
+  // Uses the lightweight /whiteboard-status endpoint (no DB side effects,
+  // no Agora token generation) instead of the full getClassroomAccess call.
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
     if (whiteboardPending && !whiteboardData && !loading && !error) {
       interval = setInterval(async () => {
         try {
-          const res = await bookingService.getClassroomAccess(Number(params.id));
-          const data = res.data;
-          
-          if (data.whiteboard?.room_uuid && data.whiteboard?.room_token) {
-            setWhiteboardData(data.whiteboard);
+          const res = await bookingService.getWhiteboardStatus(Number(params.id));
+
+          if (res.status === 'ready' && res.whiteboard?.room_uuid && res.whiteboard?.room_token) {
+            setWhiteboardData(res.whiteboard);
             setWhiteboardPending(false);
           }
+          // 'pending' → keep polling; 'error' → also keep polling (transient server error)
         } catch (err) {
-          console.error("Failed to poll whiteboard data:", err);
+          console.error("Failed to poll whiteboard status:", err);
         }
-      }, 4000); // Poll every 4 seconds
+      }, 3000); // 3s — safe since the endpoint is now side-effect-free
     }
 
     return () => {
@@ -354,8 +350,16 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
       // VP9: ضغط أفضل بـ 30% من VP8 بنفس الجودة البصرية
       const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp9" });
 
-      // نعطي شاشة المعلم ID مختلف (رقم ضخم جداً) لكي لا يتعارض أبداً مع كاميرته أو أي طالب
-      const screenUid = uid + 1000000000;
+      // Screen UID = uid + 1_000_000_000 (must match the backend's screen token issuer).
+      // Agora UIDs are 32-bit unsigned integers (max 4,294,967,295).
+      // Guard: if uid is abnormally large and the sum would overflow Agora's valid range,
+      // fall back to a fixed reserved value (2,000,000,001) that is guaranteed to be
+      // outside any real user-ID space on this platform.
+      const AGORA_UID_MAX   = 4_294_967_295;
+      const SCREEN_UID_BASE = 1_000_000_000;
+      const screenUid       = (uid + SCREEN_UID_BASE) <= AGORA_UID_MAX
+        ? uid + SCREEN_UID_BASE
+        : 2_000_000_001;
 
       await client.join(
         AGORA_APP_ID,
