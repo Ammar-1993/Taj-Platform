@@ -178,6 +178,11 @@ class BookingService
                 );
             }
 
+            // 4. إزالة توكنز Agora من الكاش حتى لا يمكن الدخول للغرفة بعد الإلغاء
+            \Illuminate\Support\Facades\Cache::forget("agora_token_{$booking->id}_{$booking->teacher_id}");
+            \Illuminate\Support\Facades\Cache::forget("agora_token_{$booking->id}_{$booking->student_id}");
+            \Illuminate\Support\Facades\Cache::forget("agora_token_{$booking->id}_screen");
+
             return $booking;
         });
     }

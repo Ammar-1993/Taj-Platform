@@ -21,6 +21,10 @@ class ProvisionVirtualClassroom implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public int $tries = 5;
+    public int $timeout = 30;
+    public array $backoff = [10, 30, 60, 120, 300];
+
     /**
      * Create a new job instance.
      */
@@ -92,5 +96,25 @@ class ProvisionVirtualClassroom implements ShouldQueue
             // Cache the Agora Token for 2 hours
             Cache::put("agora_token_{$booking->id}_{$p['id']}", $token, now()->addHours(2));
         }
+
+        // Pre-generate Whiteboard tokens (admin for teacher, reader for student)
+        if ($booking->whiteboard_room_uuid) {
+            try {
+                $whiteboardService = app(WhiteboardService::class);
+                $whiteboardService->getRoomToken($booking->whiteboard_room_uuid, 'admin');
+                $whiteboardService->getRoomToken($booking->whiteboard_room_uuid, 'reader');
+            } catch (\Exception $e) {
+                Log::warning("Failed to pre-generate Whiteboard tokens for booking #{$booking->id}: " . $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Handle a job failure.
+     */
+    public function failed(\Throwable $exception): void
+    {
+        Log::emergency("Virtual Classroom Provisioning FAILED permanently for booking #{$this->booking->id}. Error: " . $exception->getMessage());
+        // TODO: Send Slack/Email alert to admins
     }
 }

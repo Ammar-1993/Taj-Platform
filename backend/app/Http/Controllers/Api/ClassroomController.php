@@ -109,28 +109,24 @@ class ClassroomController extends Controller
             }
         }
 
-        if ($whiteboardRoomUuid) {
-            try {
-                // Teacher gets full admin token; everyone else gets a lightweight read-only token.
-                $tokenRole = ($user->id === $booking->teacher_id) ? 'admin' : 'reader';
-
-                // Align token lifespan with the actual booking duration (+30 min buffer).
-                $durationMs = isset($booking->duration_minutes)
-                    ? ($booking->duration_minutes + 30) * 60 * 1000
-                    : 3600000; // fallback: 1 hour
-
-                $whiteboardToken = $this->whiteboardService->getRoomToken($whiteboardRoomUuid, $tokenRole, $durationMs);
-            } catch (\Exception $e) {
-                Log::error("Failed to generate whiteboard token: " . $e->getMessage());
-            }
-        }
-
         $whiteboardPayload = null;
-        if ($whiteboardRoomUuid && $whiteboardToken) {
-            $whiteboardPayload = [
-                'room_uuid' => $whiteboardRoomUuid,
-                'room_token' => $whiteboardToken,
-            ];
+        if ($whiteboardRoomUuid) {
+            $tokenRole = ($user->id === $booking->teacher_id) ? 'admin' : 'reader';
+            $cacheKey = "whiteboard_token_{$whiteboardRoomUuid}_{$tokenRole}";
+            
+            // ── 5.1: Non-blocking token read ────────────────────────────────────
+            // Only read from cache. If it's cold, dispatch the job to fetch it
+            // via the Netless API asynchronously so we don't block this response.
+            $whiteboardToken = \Illuminate\Support\Facades\Cache::get($cacheKey);
+
+            if ($whiteboardToken) {
+                $whiteboardPayload = [
+                    'room_uuid' => $whiteboardRoomUuid,
+                    'room_token' => $whiteboardToken,
+                ];
+            } else {
+                ProvisionVirtualClassroom::dispatch($booking);
+            }
         }
 
         return response()->json([

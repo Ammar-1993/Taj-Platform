@@ -80,7 +80,8 @@ Route::prefix('v1')->group(function () {
         // 4. الحجوزات والحصص (Bookings)
         Route::get('/bookings', [BookingController::class, 'index']);
         Route::post('/bookings', [BookingController::class, 'store']);
-        Route::get('/bookings/{id}/classroom', [ClassroomController::class, 'getAccessDetails']);
+        Route::get('/bookings/{id}/classroom', [ClassroomController::class, 'getAccessDetails'])
+            ->middleware('throttle:10,1');
         Route::get('/bookings/{id}/classroom/whiteboard-status', [ClassroomController::class, 'getWhiteboardStatus']);
         Route::post('/bookings/{id}/classroom/whiteboard-token', [ClassroomController::class, 'refreshWhiteboardToken']);
         Route::get('/bookings/{id}/refresh-token', [ClassroomController::class, 'refreshToken']);
