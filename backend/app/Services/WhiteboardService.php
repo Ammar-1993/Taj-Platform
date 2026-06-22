@@ -12,10 +12,46 @@ class WhiteboardService
     protected string $region;
     protected string $baseUrl = 'https://api.netless.link/v5';
 
+    /**
+     * Maximum attempts for every Netless HTTP call.
+     * Back-off: 500ms → 1 500ms → 4 500ms (each interval is tripled).
+     */
+    private const HTTP_TRIES      = 3;
+    private const HTTP_RETRY_MS   = 500;
+    private const HTTP_TIMEOUT_S  = 15;
+
     public function __construct()
     {
         $this->sdkToken = config('services.whiteboard.sdk_token') ?? env('WHITEBOARD_SDK_TOKEN');
         $this->region   = config('services.whiteboard.region') ?? env('WHITEBOARD_REGION', 'eu');
+    }
+
+    /**
+     * Build a pre-configured HTTP client with auth headers, timeout, and
+     * exponential back-off retries on 5xx / connection failures.
+     */
+    private function http(): \Illuminate\Http\Client\PendingRequest
+    {
+        return Http::withHeaders([
+            'token'        => $this->sdkToken,
+            'Content-Type' => 'application/json',
+            'region'       => $this->region,
+        ])
+        ->timeout(self::HTTP_TIMEOUT_S)
+        ->retry(
+            self::HTTP_TRIES,
+            self::HTTP_RETRY_MS,
+            // Only retry on server errors (5xx) or connection failures.
+            // Never retry on 4xx — those are always configuration/auth issues.
+            function (\Exception $exception, ?\Illuminate\Http\Client\Response $response = null): bool {
+                if ($response && $response->serverError()) {
+                    return true;
+                }
+                // Retry on connection-level failures (timeout, DNS, etc.)
+                return $exception instanceof \Illuminate\Http\Client\ConnectionException;
+            },
+            throw: false   // Return the last failed response instead of throwing
+        );
     }
 
     /**
@@ -28,11 +64,7 @@ class WhiteboardService
     {
         // Note: The 'name' parameter is intentionally omitted as it causes
         // "disable input name" errors in certain v5 API regions.
-        $response = Http::withHeaders([
-            'token'        => $this->sdkToken,
-            'Content-Type' => 'application/json',
-            'region'       => $this->region,
-        ])->post("{$this->baseUrl}/rooms", [
+        $response = $this->http()->post("{$this->baseUrl}/rooms", [
             'isRecord' => false,
             'limit'    => 0,
         ]);
@@ -74,17 +106,32 @@ class WhiteboardService
     }
 
     /**
+     * Force-mint a fresh room token, bypassing the cache.
+     *
+     * Used by the whiteboard token refresh endpoint when the SDK signals
+     * that the current token has expired mid-session.
+     *
+     * @throws Exception
+     */
+    public function refreshRoomToken(string $roomUuid, string $role, int $lifespanMs = 3600000): string
+    {
+        $token = $this->mintRoomToken($roomUuid, $role, $lifespanMs);
+
+        // Overwrite the stale cached token immediately
+        $cacheMinutes = max(1, (int) floor($lifespanMs / 60000) - 10);
+        Cache::put("whiteboard_token_{$roomUuid}_{$role}", $token, now()->addMinutes($cacheMinutes));
+
+        return $token;
+    }
+
+    /**
      * Actually call the Netless API to mint a room token (used by getRoomToken cache).
      *
      * @throws Exception
      */
     private function mintRoomToken(string $roomUuid, string $role, int $lifespanMs): string
     {
-        $response = Http::withHeaders([
-            'token'        => $this->sdkToken,
-            'Content-Type' => 'application/json',
-            'region'       => $this->region,
-        ])->post("{$this->baseUrl}/tokens/rooms/{$roomUuid}", [
+        $response = $this->http()->post("{$this->baseUrl}/tokens/rooms/{$roomUuid}", [
             'lifespan' => $lifespanMs,
             'role'     => $role,
         ]);

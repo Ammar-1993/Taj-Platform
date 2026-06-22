@@ -53,6 +53,17 @@ export const bookingService = {
   },
 
   /**
+   * Force-refresh a whiteboard room token that has expired mid-session.
+   * Bypasses the backend cache and mints a brand-new Netless token.
+   */
+  refreshWhiteboardToken: async (id: number) => {
+    const res = await api.post<{ status: string; room_token: string }>(
+      `/bookings/${id}/classroom/whiteboard-token`
+    );
+    return res.data;
+  },
+
+  /**
    * Silently refresh classroom tokens
    */
   refreshClassroomToken: async (id: number) => {

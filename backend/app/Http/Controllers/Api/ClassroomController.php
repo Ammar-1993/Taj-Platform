@@ -198,6 +198,60 @@ class ClassroomController extends Controller
             ]
         ]);
     }
+
+    /**
+     * Force-refresh the Netless whiteboard room token for the requesting user.
+     *
+     * Called by the frontend Whiteboard component when the SDK fires
+     * onPhaseChanged → Disconnected (token expired mid-session).
+     * Bypasses the cache and mints a brand-new token from the Netless API.
+     *
+     * @param Request $request
+     * @param int|string $bookingId
+     */
+    public function refreshWhiteboardToken(Request $request, $bookingId): JsonResponse
+    {
+        /** @var User $user */
+        $user    = $request->user();
+        $booking = Booking::findOrFail($bookingId);
+
+        if (
+            $booking->student_id   !== $user->id &&
+            $booking->teacher_id   !== $user->id &&
+            $booking->booked_by_id !== $user->id
+        ) {
+            return response()->json(['message' => 'غير مصرح لك'], 403);
+        }
+
+        $whiteboardRoomUuid = $booking->whiteboard_room_uuid;
+
+        if (!$whiteboardRoomUuid) {
+            return response()->json(['message' => 'غرفة السبورة غير موجودة بعد.'], 404);
+        }
+
+        try {
+            $tokenRole  = ($user->id === $booking->teacher_id) ? 'admin' : 'reader';
+            $durationMs = isset($booking->duration_minutes)
+                ? ($booking->duration_minutes + 30) * 60 * 1000
+                : 3600000;
+
+            // Force-mint a fresh token, overwriting the cache
+            $freshToken = $this->whiteboardService->refreshRoomToken($whiteboardRoomUuid, $tokenRole, $durationMs);
+
+            return response()->json([
+                'status'     => 'success',
+                'room_token' => $freshToken,
+            ]);
+        } catch (\Exception $e) {
+            Log::error("refreshWhiteboardToken failed for booking #{$bookingId}: " . $e->getMessage());
+
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'فشل تجديد توكن السبورة، يُرجى إعادة تحميل الصفحة.',
+            ], 500);
+        }
+    }
+
     /**
      * Lightweight endpoint for polling whiteboard readiness.
      *
