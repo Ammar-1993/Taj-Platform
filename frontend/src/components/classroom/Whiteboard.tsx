@@ -156,11 +156,13 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 const cleanFreshToken = String(freshToken).split('#')[0].trim();
 
                 const roomInstance = await sdkRef.current.joinRoom({
-                    uuid:         cleanRoomUuid,
-                    roomToken:    cleanFreshToken,
-                    uid:          rUid,
-                    isWritable:   rIsTeacher,
-                    useMultiViews: false,
+                    uuid:                           cleanRoomUuid,
+                    roomToken:                      cleanFreshToken,
+                    uid:                            rUid,
+                    isWritable:                     rIsTeacher,
+                    useMultiViews:                  false,
+                    floatBar:                       false,
+                    disableMagixEventDispatchLimit: true,
                 });
 
                 roomRef.current = roomInstance;
@@ -251,6 +253,17 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     uid:           rUid,
                     isWritable:    rIsTeacher,
                     useMultiViews: false,
+                    // ── Fix: Whiteboard drawing lag ──────────────────────────
+                    // The floating toolbar (floatingBar) intercepts pointer events
+                    // between strokes — it buffers the FIRST stroke of each
+                    // connected shape and only renders it when the next separate
+                    // stroke starts. Disabling it forces immediate rendering.
+                    floatBar:                         false,
+                    // Prevent the SDK from throttling real-time event dispatch
+                    // on slow connections (like 0.9 Mbps upload). Without this,
+                    // the SDK groups strokes into batches of up to 60 events/s,
+                    // adding 16-50ms of extra lag per stroke at low bandwidth.
+                    disableMagixEventDispatchLimit:   true,
                 });
 
                 roomRef.current = roomInstance;
