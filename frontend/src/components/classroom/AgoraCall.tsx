@@ -31,6 +31,13 @@ type AgoraCallProps = {
   externalScreenRef?: React.RefObject<HTMLDivElement>;
   /** Fires true when a remote screen-share starts, false when it stops. */
   onScreenShareActive?: (active: boolean) => void;
+  /**
+   * 3.4: Called when the Agora SDK fires token-privilege-will-expire.
+   * The main token is renewed internally; this callback lets the parent
+   * (page.tsx) renew any additional client tokens (e.g. the screen-share
+   * client) using the fresh tokens it already has.
+   */
+  onTokenWillExpire?: (freshToken: string, freshScreenToken: string | null) => void;
 };
 
 const AgoraCall = React.memo(({ 
@@ -43,9 +50,17 @@ const AgoraCall = React.memo(({
     lobbyMediaStream,
     externalScreenRef,
     onScreenShareActive,
+    onTokenWillExpire,
 }: AgoraCallProps) => {
-    // ✅ VP9: ~20% better compression than VP8 at the same quality — frees bandwidth for whiteboard WS traffic
-    const [client] = useState<IAgoraRTCClient>(() => AgoraRTC.createClient({ mode: "rtc", codec: "vp9" }));
+    // ── 3.5: Client instance ref ──────────────────────────────────────────────
+    // ✅ VP9: ~20% better compression than VP8 at the same quality
+    // We use a lazily-initialized ref rather than useState to ensure the
+    // client survives any parent re-renders without risking a remount loop.
+    const clientRef = useRef<IAgoraRTCClient | null>(null);
+    if (!clientRef.current) {
+        clientRef.current = AgoraRTC.createClient({ mode: "rtc", codec: "vp9" });
+    }
+    const client = clientRef.current;
     const [localVideoTrack, setLocalVideoTrack] = useState<ILocalVideoTrack | null>(null);
     const [localAudioTrack, setLocalAudioTrack] = useState<ILocalAudioTrack | null>(null);
     const [remoteUsers, setRemoteUsers] = useState<IAgoraRTCRemoteUser[]>([]);
@@ -62,6 +77,10 @@ const AgoraCall = React.memo(({
     const lobbyStreamRef = useRef(lobbyMediaStream);
     lobbyStreamRef.current = lobbyMediaStream;
 
+    // ── 3.1: createAndPublishVideoTrack ──────────────────────────────────────
+    // Only called once on join. After that, toggling the camera ONLY calls
+    // localVideoTrack.setEnabled(true/false) — never close+republish —
+    // so we avoid 300–800 ms WebRTC renegotiation on every toggle.
     const createAndPublishVideoTrack = async () => {
         if (!client || !isJoined || client.connectionState !== "CONNECTED") return null;
 
@@ -92,26 +111,6 @@ const AgoraCall = React.memo(({
         }
     };
 
-    const removeLocalVideoTrack = async (track: ILocalVideoTrack | null) => {
-        if (!track) return;
-
-        try {
-            await client.unpublish(track);
-        } catch (err) {
-            console.warn("[AgoraCall] Failed to unpublish video track:", err);
-        }
-
-        try {
-            track.close();
-        } catch (err) {
-            console.warn("[AgoraCall] Failed to close video track:", err);
-        }
-
-        if (localVideoTrack === track) {
-            setLocalVideoTrack(null);
-        }
-    };
-
     useEffect(() => {
         let isMounted = true;
         let vTrack: ILocalVideoTrack | null = null;
@@ -120,15 +119,25 @@ const AgoraCall = React.memo(({
 
         const init = async () => {
             try {
-                // 🔄 1. Token Refresh Logic (Task 5)
+                // ── 3.4: Token renewal ────────────────────────────────────────────────
+                // Renews BOTH the main channel token and, via the onTokenWillExpire
+                // callback, the screen-share client token in page.tsx — so neither
+                // a camera/mic stream nor an active screen share silently disconnects.
                 client.on("token-privilege-will-expire", async () => {
                     console.log("[Agora] Token is about to expire, refreshing...");
                     try {
                         const res = await bookingService.refreshClassroomToken(Number(bookingId));
-                        if (res.data.token) {
-                            await client.renewToken(res.data.token);
-                            console.log("[Agora] Token renewed successfully.");
+                        const freshToken       = res.data?.token ?? null;
+                        const freshScreenToken = res.data?.screen_token ?? null;
+
+                        if (freshToken) {
+                            await client.renewToken(freshToken);
+                            console.log("[Agora] Main token renewed successfully.");
                         }
+                        // Notify page.tsx so it can renew the screen-share client.
+                        // This keeps the renewal logic co-located with the screen client
+                        // instance instead of using brittle global references.
+                        onTokenWillExpire?.(freshToken ?? '', freshScreenToken);
                     } catch (err) {
                         console.error("[Agora] Failed to refresh token:", err);
                     }
@@ -177,8 +186,15 @@ const AgoraCall = React.memo(({
 
                 client.on("network-quality", (stats) => {
                     if (isMounted) {
+                        // ── 3.3: Use UPLINK quality for the local publisher tile ────────
+                        // Downlink measures how well we receive data (relevant for students
+                        // watching a remote stream). The local publisher's network badge
+                        // should reflect UPLINK — how well our own stream is being sent.
+                        // We still use downlink for the bandwidth-degradation logic below,
+                        // because that controls whether we subscribe to remote video.
+                        const up   = stats.uplinkNetworkQuality;
                         const down = stats.downlinkNetworkQuality;
-                        setNetworkQuality(down);
+                        setNetworkQuality(up);
 
                         // 🚫 Strict Bandwidth Profiles (Task 4): If quality is 5 (Very Bad) or 6 (Down)
                         // automatically stop receiving video to preserve audio.
@@ -327,25 +343,25 @@ const AgoraCall = React.memo(({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [client]);
 
+    // ── 3.1: Camera toggle — setEnabled() only, zero renegotiation ───────────
+    // The track is published once on join and stays published permanently.
+    // Toggling the camera just mutes/unmutes the video encoder — no
+    // ICE restart, no WebRTC renegotiation, no 300-800 ms freeze.
+    // createAndPublishVideoTrack() is only called if the track was never
+    // created at all (e.g. the user denied camera in the lobby and then
+    // grants it mid-session).
     useEffect(() => {
         if (!isJoined) return;
 
-        const syncCameraState = async () => {
-            if (isCameraEnabled) {
-                if (!localVideoTrack) {
-                    await createAndPublishVideoTrack();
-                } else {
-                    localVideoTrack.setEnabled(true);
-                }
-            } else {
-                if (localVideoTrack) {
-                    await removeLocalVideoTrack(localVideoTrack);
-                }
-            }
-        };
-
-        void syncCameraState();
-    }, [isCameraEnabled, localVideoTrack, isJoined]);
+        if (localVideoTrack) {
+            // Fast path: track already exists → just flip the encoder mute flag
+            localVideoTrack.setEnabled(isCameraEnabled);
+        } else if (isCameraEnabled) {
+            // Slow path: track never created (lobby camera denial, then mid-session grant)
+            void createAndPublishVideoTrack();
+        }
+        // When !isCameraEnabled and there is no track, nothing to do.
+    }, [isCameraEnabled, localVideoTrack, isJoined]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         if (localAudioTrack) localAudioTrack.setEnabled(isMicEnabled);
@@ -544,15 +560,23 @@ export default AgoraCall;
 function RemotePlayer({ user, isPrimary, networkQuality = 0, isForceDisabled = false }: { user: IAgoraRTCRemoteUser, isPrimary?: boolean, networkQuality?: number, isForceDisabled?: boolean }) {
     const videoRef = useRef<HTMLDivElement>(null);
 
+    // ── 3.2: RemotePlayer play guard ──────────────────────────────────────────
+    // `audioTrack.play()` called on an already-playing track opens a second
+    // Web Audio output node, doubling the volume and causing an echo.
+    // Guard both video and audio so re-renders never call play() redundantly.
     useEffect(() => {
         if (user.videoTrack && videoRef.current && !isForceDisabled) {
-            // استخدام 'contain' لمشاركة الشاشة و 'cover' للكاميرا
-            const fitMode = isPrimary ? 'contain' : 'cover';
-            user.videoTrack.play(videoRef.current, { fit: fitMode });
+            if (!user.videoTrack.isPlaying) {
+                const fitMode = isPrimary ? 'contain' : 'cover';
+                user.videoTrack.play(videoRef.current, { fit: fitMode });
+            }
         } else if (isForceDisabled && user.videoTrack?.isPlaying) {
             user.videoTrack.stop();
         }
-        if (user.audioTrack) user.audioTrack.play();
+        // Only call play() if the audio track exists but is not yet playing.
+        if (user.audioTrack && !user.audioTrack.isPlaying) {
+            user.audioTrack.play();
+        }
     }, [user.videoTrack, user.audioTrack, isPrimary, isForceDisabled]);
 
     return (

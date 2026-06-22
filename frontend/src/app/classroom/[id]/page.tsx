@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { bookingService } from "@/services/api";
 import { useQueryClient } from "@tanstack/react-query";
@@ -368,6 +368,22 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         screenUid,
       );
 
+      // ── 3.6: Dual-stream for screen share ──────────────────────────────────
+      // Enable simulcast for screen share so students with very bad connections
+      // can still see the board clearly at a lower resolution (480p, 5fps, 300kbps)
+      // instead of freezing on the 1080p high stream.
+      try {
+        await client.enableDualStream();
+        client.setLowStreamParameter({
+            width: 854,
+            height: 480,
+            framerate: 5,
+            bitrate: 300,
+        });
+      } catch (err) {
+        console.warn("[page] Failed to enable dual stream for screen share:", err);
+      }
+
       // 2. طلب إذن مشاركة الشاشة من المتصفح
       // 🚀 Network Resilience (Task 4): Use 5fps for screen sharing to save bandwidth while keeping text sharp.
       const track = await AgoraRTC.createScreenVideoTrack(
@@ -404,6 +420,24 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
       toast.error("تم إلغاء مشاركة الشاشة أو حدث خطأ.");
     }
   };
+
+  // ── 3.4: Screen-share token renewal callback ──────────────────────────────
+  // AgoraCall renews its own main token internally. For the screen-share
+  // client (which lives here in page.tsx as `screenClient` state), we
+  // receive the fresh tokens via this callback and call renewToken() on it.
+  // Using useCallback avoids creating a new function reference on every
+  // render, which would otherwise force AgoraCall to re-render (it is memo'd).
+  const handleTokenWillExpire = useCallback((
+    _freshToken: string,
+    freshScreenToken: string | null,
+  ) => {
+    if (freshScreenToken && screenClient) {
+      screenClient
+        .renewToken(freshScreenToken)
+        .then(() => console.log("[page] Screen token renewed successfully."))
+        .catch((err: unknown) => console.warn("[page] Screen token renewal failed:", err));
+    }
+  }, [screenClient]);
 
   // 🛡️ Memoize rtcProps to prevent AgoraCall from re-rendering on every parent state change (like isIdle)
   const rtcProps = useMemo(() => ({
@@ -567,6 +601,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                 lobbyMediaStream={mediaStream}
                 externalScreenRef={screenBgRef}
                 onScreenShareActive={setIsRemoteSharing}
+                onTokenWillExpire={handleTokenWillExpire}
               />
             </FloatingVideoWidget>
           </div>
