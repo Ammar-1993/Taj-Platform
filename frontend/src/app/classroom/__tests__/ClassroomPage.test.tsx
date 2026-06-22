@@ -7,9 +7,12 @@ import { bookingService } from '@/services/api';
 
 // ─── Mock Dependencies ────────────────────────────────────────────────────────
 
+// Capture the router mock so individual tests can assert on it
+const mockRouterReplace = jest.fn();
+
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
-    replace: jest.fn(),
+    replace: mockRouterReplace,
   }),
 }));
 
@@ -178,10 +181,8 @@ describe('ClassroomPage', () => {
 
   describe('إعادة التوجيه (Auth Redirect)', () => {
     it('يجب أن يُعيد توجيه المستخدم غير المُسجّل إلى صفحة الدخول', async () => {
-      const mockReplace = jest.fn();
-      jest.spyOn(require('next/navigation'), 'useRouter').mockReturnValue({
-        replace: mockReplace,
-      });
+      // Reset the shared mock before this test
+      mockRouterReplace.mockReset();
 
       (useAuth as jest.Mock).mockReturnValue({
         user: null,
@@ -191,7 +192,7 @@ describe('ClassroomPage', () => {
       render(<ClassroomPage params={{ id: '123' }} />);
 
       await waitFor(() => {
-        expect(mockReplace).toHaveBeenCalledWith('/login');
+        expect(mockRouterReplace).toHaveBeenCalledWith('/login');
       });
     });
   });
