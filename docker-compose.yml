@@ -52,6 +52,9 @@ services:
       - '${FRONTEND_PORT:-3000}:3000'
     volumes:
       - './frontend:/app'
+      # عزل مجلدات البناء والحزم داخل الحاوية فقط لمنع تعارض الصلاحيات مع المضيف
+      - /app/.next
+      - /app/node_modules
     environment:
       - NODE_ENV=development
     command: sh -c "npm install && npm run dev"
