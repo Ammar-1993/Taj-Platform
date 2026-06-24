@@ -20,7 +20,8 @@ services:
     networks:
       - taj-network
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
 
   # 2. MySQL Database Service (Isolated Port)
   mysql:
@@ -61,7 +62,8 @@ services:
     networks:
       - taj-network
     depends_on:
-      - laravel.test
+      laravel.test:
+        condition: service_started
 
 networks:
   taj-network:
