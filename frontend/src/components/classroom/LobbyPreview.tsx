@@ -8,8 +8,6 @@ import {
   MicOff,
   Settings,
   CheckCircle2,
-  Wifi,
-  WifiOff,
   Loader2,
   AlertTriangle,
 } from "lucide-react";
