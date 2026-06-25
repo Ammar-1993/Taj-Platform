@@ -10,6 +10,7 @@ import AgoraRTC, {
     ILocalAudioTrack
 } from 'agora-rtc-sdk-ng';
 import { bookingService } from '@/services/api/bookingService';
+import { NetworkBar } from './LobbyPreview';
 import { Loader2, User, MicOff, WifiOff } from 'lucide-react';
 
 type AgoraCallProps = {
@@ -518,16 +519,23 @@ const AgoraCall = React.memo(({
                 </div>
             )}
 
-            {/* ── Phase 1.1: مؤشر جودة الشبكة ───────────────────────────────────
-             * يظهر التحذير الآن فقط عند quality >= 5 (Very Bad)
-             * وليس عند quality > 3 (Poor) كما كان سابقاً.
-             * القيمة 3 (Poor) لا تزال قابلة للاستخدام في الغالب ولا تستحق تحذيراً.
-             * القيمة 4 (Bad) تُفعّل Simulcast تلقائياً لكن لا تُزعج المستخدم.
-             * القيمة 5+ هي الحالة التي يتأثر فيها الصوت فعلياً. ── */}
-            {networkQuality >= 5 && (
-                <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[60] bg-red-600/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 text-white text-xs font-bold animate-bounce shadow-xl border border-red-500/20">
-                    <WifiOff className="w-4 h-4" />
-                    اتصال الإنترنت لديك ضعيف حالياً
+            {/* ── Phase 3.2: Network quality indicator (non-intrusive) ──────────────
+             * Replaces the red bounce banner from Phase 1.1 with a compact
+             * NetworkBar widget. It appears only when quality >= 4 (Bad+),
+             * positioned top-left where it doesn’t block main content.
+             * At quality >= 5 a "weak" label is shown alongside the bars
+             * so the user understands the degradation without feeling alarmed. ── */}
+            {networkQuality >= 4 && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[60] backdrop-blur-md bg-slate-900/80 px-3 py-2 rounded-full border border-white/10 shadow-lg flex items-center gap-2">
+                    <NetworkBar
+                        quality={networkQuality >= 5 ? "weak" : "fair"}
+                    />
+                    {networkQuality >= 5 && (
+                        <span className="text-[11px] text-red-300 font-semibold flex items-center gap-1">
+                            <WifiOff className="w-3 h-3" />
+                            قد يتأثر الصوت
+                        </span>
+                    )}
                 </div>
             )}
 
