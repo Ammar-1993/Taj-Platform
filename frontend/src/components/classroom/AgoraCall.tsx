@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import AgoraRTC, { 
+    AREAS,
     IAgoraRTCClient, 
     IAgoraRTCRemoteUser,
     ILocalVideoTrack,
@@ -58,6 +59,14 @@ const AgoraCall = React.memo(({
     // client survives any parent re-renders without risking a remount loop.
     const clientRef = useRef<IAgoraRTCClient | null>(null);
     if (!clientRef.current) {
+        // ── Phase 1.3: Geofencing ─────────────────────────────────────
+        // Route media to the nearest Agora server edge.
+        // EUROPE covers the nearest cluster for Arab-region users (Saudi Arabia,
+        // UAE, Egypt). ASIA covers the Gulf subregion as secondary fallback.
+        // This replaces the SDK default which routes to US East, adding ~80-120ms.
+        // Valid values: AREAS.CHINA | AREAS.ASIA | AREAS.NORTH_AMERICA
+        //             | AREAS.EUROPE | AREAS.JAPAN | AREAS.INDIA
+        AgoraRTC.setArea({ areaCode: [AREAS.EUROPE, AREAS.ASIA] });
         clientRef.current = AgoraRTC.createClient({ mode: "rtc", codec: "vp9" });
     }
     const client = clientRef.current;
@@ -73,6 +82,13 @@ const AgoraCall = React.memo(({
     const localVideoRef = useRef<HTMLDivElement>(null);
     const localScreenRef = useRef<HTMLDivElement>(null);
     const propsRef = useRef(rtcProps);
+    // ── Phase 1.2: Quality smoothing history ──────────────────────────
+    // Stores the last 5 uplink quality readings (~5 seconds of history).
+    // This prevents a single momentary spike in jitter/loss from instantly
+    // triggering the "weak connection" banner. The warning only fires when
+    // the *average* of the last 5 readings is degraded, matching how Zoom
+    // behaves — it absorbs short bursts silently.
+    const qualityHistoryRef = useRef<number[]>([]);
     propsRef.current = rtcProps;
 
     const lobbyStreamRef = useRef(lobbyMediaStream);
@@ -187,15 +203,24 @@ const AgoraCall = React.memo(({
 
                 client.on("network-quality", (stats) => {
                     if (isMounted) {
-                        // ── 3.3: Use UPLINK quality for the local publisher tile ────────
+                        // ── 3.3: Use UPLINK quality for the local publisher tile ───────
                         // Downlink measures how well we receive data (relevant for students
-                        // watching a remote stream). The local publisher's network badge
+                        // watching a remote stream). The local publisher’s network badge
                         // should reflect UPLINK — how well our own stream is being sent.
                         // We still use downlink for the bandwidth-degradation logic below,
                         // because that controls whether we subscribe to remote video.
                         const up   = stats.uplinkNetworkQuality;
                         const down = stats.downlinkNetworkQuality;
-                        setNetworkQuality(up);
+
+                        // ── Phase 1.2: Smoothing with a 5-reading moving average ──────
+                        // Keep only the last 5 readings (sliding window).
+                        const history = qualityHistoryRef.current;
+                        qualityHistoryRef.current = [...history.slice(-4), up];
+                        const smoothedQuality = Math.round(
+                            qualityHistoryRef.current.reduce((a, b) => a + b, 0) /
+                            qualityHistoryRef.current.length
+                        );
+                        setNetworkQuality(smoothedQuality);
 
                         // 🚫 Strict Bandwidth Profiles (Task 4): If quality is 5 (Very Bad) or 6 (Down)
                         // automatically stop receiving video to preserve audio.
@@ -216,8 +241,11 @@ const AgoraCall = React.memo(({
                                             changed = true;
                                         }
                                         
-                                        // Standard Dual-stream optimization
-                                        if (down >= 3) {
+                                        // ── Phase 1.2: Activate Low Stream earlier (down >= 2) ──
+                                        // Previously this was >= 3. By triggering simulcast
+                                        // fallback one level earlier, we reduce the risk of
+                                        // bufferbloat before quality visibly degrades.
+                                        if (down >= 2) {
                                             client.setRemoteVideoStreamType(user.uid, 1); // 1: Low stream
                                         } else {
                                             client.setRemoteVideoStreamType(user.uid, 0); // 0: High stream
@@ -427,8 +455,13 @@ const AgoraCall = React.memo(({
                 </div>
             )}
 
-            {/* مؤشر جودة الشبكة */}
-            {networkQuality > 3 && (
+            {/* ── Phase 1.1: مؤشر جودة الشبكة ───────────────────────────────────
+             * يظهر التحذير الآن فقط عند quality >= 5 (Very Bad)
+             * وليس عند quality > 3 (Poor) كما كان سابقاً.
+             * القيمة 3 (Poor) لا تزال قابلة للاستخدام في الغالب ولا تستحق تحذيراً.
+             * القيمة 4 (Bad) تُفعّل Simulcast تلقائياً لكن لا تُزعج المستخدم.
+             * القيمة 5+ هي الحالة التي يتأثر فيها الصوت فعلياً. ── */}
+            {networkQuality >= 5 && (
                 <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[60] bg-red-600/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 text-white text-xs font-bold animate-bounce shadow-xl border border-red-500/20">
                     <WifiOff className="w-4 h-4" />
                     اتصال الإنترنت لديك ضعيف حالياً
