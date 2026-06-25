@@ -410,6 +410,69 @@ const AgoraCall = React.memo(({
         if (localAudioTrack) localAudioTrack.setEnabled(isMicEnabled);
     }, [isMicEnabled, localAudioTrack]);
 
+    // ── Phase 2.1: Adaptive Encoder Configuration ───────────────────────────────
+    // Dynamically adjusts the outgoing video encoder based on the smoothed
+    // network quality score (updated every ~1s by the network-quality event).
+    //
+    // Quality scale (Agora):
+    //   0 = Unknown  1 = Excellent  2 = Good  3 = Poor  4 = Bad  5 = Very Bad  6 = Down
+    //
+    // Encoder presets chosen to stay within upload budget at each quality level:
+    //   quality 1-2 (Good)    : 720p_2  → ~1 Mbps  (full quality)
+    //   quality 3   (Poor)    : 360p_7  → ~500 Kbps (slight downgrade, imperceptible)
+    //   quality 4   (Bad)     : 240p_4  → ~200 Kbps (clear degradation, but video survives)
+    //   quality 5+  (Very Bad): 120p_1  → ~80 Kbps  (survive on audio; Phase 2.2 will mute camera)
+    //
+    // This mirrors how Zoom adapts its encoder instead of letting the SDK
+    // overflow the upload pipe and trigger packet-loss spikes.
+    useEffect(() => {
+        if (!localVideoTrack || !isJoined) return;
+
+        const getEncoderConfig = (q: number) => {
+            if (q <= 2) return "720p_2";   // Excellent / Good  → ~1 Mbps
+            if (q === 3) return "360p_7";  // Poor              → ~500 Kbps
+            if (q === 4) return "240p_4";  // Bad               → ~200 Kbps
+            return "120p_1";               // Very Bad / Down   → ~80 Kbps
+        };
+
+        const config = getEncoderConfig(networkQuality);
+        localVideoTrack.setEncoderConfiguration(config).catch((err) => {
+            // Non-fatal: encoder config changes can fail if the track is being
+            // renegotiated. The current config stays active until the next cycle.
+            console.warn("[AgoraCall] Adaptive encoder update failed:", err);
+        });
+    }, [networkQuality, localVideoTrack, isJoined]);
+
+    // ── Phase 2.2: Audio-First Strategy ────────────────────────────────────────
+    // When network quality hits 5+ (Very Bad), mute the local camera track to
+    // free the ~750 Kbps upload budget for audio (which only needs ~50 Kbps).
+    // When quality recovers to ≤2 (Good), restore the camera if the user had it on.
+    //
+    // Critically: this uses setEnabled() (not close/republish), so the ICE
+    // connection is preserved and the camera resumes in <200ms when quality improves.
+    //
+    // A ref tracks whether WE disabled the camera (vs. the user choosing to turn
+    // it off themselves), so we never auto-restore a camera the user deliberately
+    // disabled.
+    const autoDisabledCameraRef = useRef(false);
+
+    useEffect(() => {
+        if (!localVideoTrack || !isJoined) return;
+
+        if (networkQuality >= 5 && isCameraEnabled && !autoDisabledCameraRef.current) {
+            // Auto-mute: quality is Very Bad and the user’s camera is currently on
+            autoDisabledCameraRef.current = true;
+            localVideoTrack.setEnabled(false);
+            console.info("[AgoraCall] Audio-First: camera muted automatically (quality=", networkQuality, ")");
+        } else if (networkQuality <= 2 && autoDisabledCameraRef.current) {
+            // Auto-restore: quality has recovered to Good or better
+            autoDisabledCameraRef.current = false;
+            localVideoTrack.setEnabled(true);
+            console.info("[AgoraCall] Audio-First: camera restored (quality=", networkQuality, ")");
+        }
+    }, [networkQuality, localVideoTrack, isJoined, isCameraEnabled]);
+
+
     useEffect(() => {
         if (localVideoTrack && localVideoRef.current) {
             localVideoTrack.play(localVideoRef.current, { fit: 'cover' });
