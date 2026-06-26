@@ -43,8 +43,15 @@ class WhiteboardService
             self::HTTP_RETRY_MS,
             // Only retry on server errors (5xx) or connection failures.
             // Never retry on 4xx — those are always configuration/auth issues.
-            function (\Exception $exception, ?\Illuminate\Http\Client\Response $response = null): bool {
-                if ($response && $response->serverError()) {
+            //
+            // Laravel's retry() passes: (Throwable $e, PendingRequest $pending, string $method).
+            // To inspect the HTTP response we must unwrap a RequestException, not receive
+            // a Response object directly — that was the root cause of the previous TypeError.
+            function (\Throwable $exception, \Illuminate\Http\Client\PendingRequest $pending, string $method): bool {
+                if (
+                    $exception instanceof \Illuminate\Http\Client\RequestException
+                    && $exception->response->serverError()
+                ) {
                     return true;
                 }
                 // Retry on connection-level failures (timeout, DNS, etc.)

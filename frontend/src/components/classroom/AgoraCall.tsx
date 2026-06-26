@@ -366,8 +366,14 @@ const AgoraCall = React.memo(({
                     console.error("Error creating tracks:", e);
                     if (isMounted) setIsJoined(true);
                 }
-            } catch (err) {
-                console.error("Agora Init Error:", err);
+            } catch (err: any) {
+                // Ignore OPERATION_ABORTED which happens in React Strict Mode 
+                // when the component unmounts before join() finishes.
+                if (err?.message?.includes("OPERATION_ABORTED") || err?.code === "OPERATION_ABORTED") {
+                    console.warn("[AgoraCall] Join aborted (expected during React Strict Mode cleanup).");
+                } else {
+                    console.error("Agora Init Error:", err);
+                }
             }
         };
 

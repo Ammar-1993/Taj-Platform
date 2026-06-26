@@ -21,17 +21,32 @@ type NetworkTestResult =
 
 async function measureNetworkRtt(): Promise<number> {
   const urls = [
-    "https://edge.agora.io/favicon.ico",
-    "https://www.cloudflare.com/favicon.ico",
+    "https://www.gstatic.com/generate_204",
+    "https://clients3.google.com/generate_204"
   ];
   const results: number[] = [];
   for (const url of urls) {
     const start = performance.now();
     try {
-      await fetch(`${url}?_=${Date.now()}`, { method: "HEAD", mode: "no-cors", cache: "no-store" });
-    } catch { /* no-cors resolves even without response body — that's expected */ }
-    results.push(performance.now() - start);
+      // Abort after 2 seconds to prevent UI hangs if the network drops
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      
+      await fetch(`${url}?_=${Date.now()}`, { 
+        method: "HEAD", 
+        mode: "no-cors", 
+        cache: "no-store",
+        signal: controller.signal 
+      });
+      
+      clearTimeout(timeoutId);
+      results.push(performance.now() - start);
+    } catch { 
+      // Silently ignore failures (the browser will still log network-level drops, but JS won't break)
+    }
   }
+  
+  if (results.length === 0) return 999; // Fallback if all servers fail
   return Math.min(...results);
 }
 
