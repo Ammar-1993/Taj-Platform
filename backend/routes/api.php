@@ -84,6 +84,8 @@ Route::prefix('v1')->group(function () {
             ->middleware('throttle:10,1');
         Route::get('/bookings/{id}/classroom/whiteboard-status', [ClassroomController::class, 'getWhiteboardStatus']);
         Route::post('/bookings/{id}/classroom/whiteboard-token', [ClassroomController::class, 'refreshWhiteboardToken']);
+        Route::post('/bookings/{id}/whiteboard/batch', [ClassroomController::class, 'whiteboardBatch'])
+            ->middleware('throttle:120,1'); // حد أقصى 120 دفعة/دقيقة للمعلم الواحد
         Route::get('/bookings/{id}/refresh-token', [ClassroomController::class, 'refreshToken']);
         Route::patch('/bookings/{id}/complete', [BookingController::class, 'complete']);
         Route::patch('/bookings/{id}/cancel', [BookingController::class, 'cancel']);

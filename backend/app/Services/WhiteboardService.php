@@ -152,6 +152,6 @@ class WhiteboardService
             return is_string($decoded) ? $decoded : $body;
         }
 
-        throw new Exception('فشل توليد توكن السبورة: ' . $response->body());
+        throw new Exception('فشل الحصول على توكن السبورة: ' . $response->body());
     }
 }
