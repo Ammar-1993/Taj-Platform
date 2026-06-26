@@ -137,11 +137,11 @@ export default function LobbyPreview({
   }, [mediaStream, cameraStatus, isCameraEnabled]);
 
   return (
-    <div className="h-full flex flex-col items-center justify-center space-y-6 md:space-y-8 p-4 md:p-8 text-center animate-fade-in-up bg-slate-950 relative overflow-y-auto">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
+    <div className="h-full flex flex-col items-center justify-center p-4 md:p-8 text-center animate-fade-in-up bg-slate-950 relative overflow-y-auto">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-blue-600/15 rounded-full blur-[120px] pointer-events-none animate-pulse" />
 
-      <div className="relative z-10 w-full max-w-2xl mx-auto flex flex-col items-center">
-        <div className="w-full aspect-video md:w-[480px] bg-slate-900 rounded-[32px] overflow-hidden border-2 border-white/5 shadow-2xl relative mb-8 group ring-1 ring-white/10">
+      <div className="relative z-10 w-full max-w-2xl mx-auto flex flex-col items-center justify-center min-h-full py-4">
+        <div className="w-full aspect-video md:w-[540px] bg-slate-900/80 backdrop-blur-xl rounded-[32px] overflow-hidden border border-white/10 shadow-2xl relative mb-8 group ring-1 ring-white/5 transition-all duration-500 hover:border-white/20 hover:shadow-blue-500/10">
           {cameraStatus === "granted" ? (
             <>
               <video
@@ -189,15 +189,16 @@ export default function LobbyPreview({
               </div>
             </>
           ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-6">
-              <div className="w-24 h-24 md:w-32 md:h-32 bg-blue-900/30 rounded-[40px] flex items-center justify-center text-blue-400 border border-blue-500/20 shadow-[0_20px_50px_rgba(30,58,138,0.3)] transform -rotate-6">
-                <Video className="w-12 h-12 md:w-16 md:h-16" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/40 backdrop-blur-sm space-y-5">
+              <div className="relative flex items-center justify-center group-hover:scale-105 transition-transform duration-700">
+                <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-2xl animate-pulse" />
+                <div className="relative w-24 h-24 md:w-28 md:h-28 bg-slate-800/80 backdrop-blur-md rounded-3xl flex items-center justify-center text-blue-400 border border-white/10 shadow-2xl">
+                  <Video className="w-10 h-10 md:w-12 md:h-12 opacity-80" />
+                </div>
               </div>
-              {cameraStatus === "pending" && (
-                <button onClick={onRequestPermissions} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 active:scale-95 flex items-center gap-2">
-                  تفعيل الكاميرا والمايكروفون
-                </button>
-              )}
+              <p className="text-slate-400 font-medium text-sm md:text-base animate-pulse">
+                بانتظار صلاحيات الكاميرا والمايكروفون...
+              </p>
             </div>
           )}
         </div>
@@ -231,12 +232,12 @@ export default function LobbyPreview({
 
         <button
           onClick={cameraStatus === "granted" || cameraStatus === "denied" ? onJoinClass : onRequestPermissions}
-          className={`relative z-10 font-black py-4 md:py-5 px-10 md:px-16 rounded-[28px] transition-all transform hover:scale-105 active:scale-95 text-lg md:text-xl tracking-wide flex items-center gap-3 shadow-2xl ${
+          className={`relative z-10 font-black py-4 md:py-5 px-10 md:px-16 rounded-full transition-all duration-300 transform hover:-translate-y-1 active:scale-95 text-lg md:text-xl tracking-wide flex items-center justify-center gap-3 shadow-2xl w-full max-w-sm md:max-w-md mx-auto ${
             cameraStatus === "granted"
-              ? "bg-emerald-600 hover:bg-emerald-700 text-white ring-8 ring-emerald-600/20"
+              ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white ring-4 ring-emerald-500/30 hover:ring-8 hover:ring-emerald-500/40"
               : cameraStatus === "denied"
-                ? "bg-amber-600 hover:bg-amber-700 text-white ring-8 ring-amber-600/20"
-                : "bg-blue-600 hover:bg-blue-700 text-white ring-8 ring-blue-600/20"
+                ? "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white ring-4 ring-amber-500/30 hover:ring-8 hover:ring-amber-500/40"
+                : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white ring-4 ring-blue-500/30 hover:ring-8 hover:ring-blue-500/40"
           }`}
         >
           {cameraStatus === "granted" ? (
@@ -244,7 +245,7 @@ export default function LobbyPreview({
           ) : cameraStatus === "denied" ? (
             "دخول الفصل (بدون كاميرا)"
           ) : (
-            "تجهيز الكاميرا والبدء"
+            <>تفعيل الكاميرا والبدء <Video className="w-6 h-6" /></>
           )}
         </button>
       </div>
