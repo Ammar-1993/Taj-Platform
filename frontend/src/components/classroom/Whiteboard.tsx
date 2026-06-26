@@ -163,11 +163,11 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     useMultiViews:                  false,
                     floatBar:                       false,
                     disableMagixEventDispatchLimit: true,
-                    // Must mirror the main join options so reconnected sessions
-                    // have identical behaviour (no first-stroke lag after reconnect).
-                    // @ts-expect-error: Undocumented performance toggle
-                    pencilWritingMode:              "fast",
                     disableEraseImage:              true,
+                    // تعطيل تحديد تردد رسم القلم لضمان الاستجابة الفورية
+                    disablePencilWrittingLimitFrequency: true,
+                    // تفعيل القلم الجديد (بالنعومة والتدرج) مع إلغاء التخزين المؤقت
+                    disableNewPencil: false,
                 });
 
                 roomRef.current = roomInstance;
@@ -267,38 +267,31 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     isWritable:    rIsTeacher,
                     useMultiViews: false,
 
-                    // ── Fix 1: Floating toolbar lag ──────────────────────────
-                    // floatBar intercepts pointerup between strokes and holds
-                    // the first connected stroke in a buffer until the NEXT
-                    // separate stroke begins. Disabling it forces the SDK to
-                    // commit every stroke immediately on pointerup.
+                    // ── Fix 1: إيقاف شريط الأدوات العائم ────────────────────
+                    // floatBar يعترض أحداث pointerup بين الضربات ويؤخر
+                    // ظهور الضربة الأولى حتى تبدأ ضربة منفصلة جديدة.
                     floatBar: false,
 
-                    // ── Fix 2: Event dispatch throttle ───────────────────────
-                    // On slow connections the SDK batches Magix events at
-                    // ≤60/s, adding 16–50 ms of extra lag per stroke.
-                    // Disabling the limit restores real-time dispatch.
+                    // ── Fix 2: إيقاف تحديد تردد أحداث Magix ─────────────────
+                    // بدون هذا يجمّع SDK الأحداث بحد أقصى 60/ثانية
+                    // مما يضيف 16-50ms تأخير لكل ضربة.
                     disableMagixEventDispatchLimit: true,
 
-                    // ── Fix 3: Pencil writing mode (THE CORE FIX) ────────────
-                    // By default the SDK uses "draw" mode which accumulates
-                    // all pointer-move points into a single Bezier path and
-                    // only flushes it to canvas on the NEXT separate stroke.
-                    // "fast" mode commits each sub-path immediately on every
-                    // pointerup — solving the "first word invisible until you
-                    // start writing the second word" symptom exactly.
-                    //
-                    // "fast"      → instant commit, slightly jagged curves
-                    // "beautiful" → smoothed Bezier, delayed commit (old bug)
-                    // Omitted     → SDK default ("beautiful"), same bug
-                    // @ts-expect-error: Undocumented performance toggle
-                    pencilWritingMode: "fast",
+                    // ── Fix 3: إيقاف تحديد تردد رسم القلم (الإصلاح الجوهري) ─
+                    // هذه الخاصية موجودة في نسخة 2.16.54 وتمنع SDK من
+                    // تخزين نقاط القلم مؤقتاً وإرسالها دفعةً واحدة.
+                    // بتعطيلها يُرسم كل جزء من الكلمة فوراً على canvas.
+                    disablePencilWrittingLimitFrequency: true,
 
-                    // ── Fix 4: Disable erase image to avoid pointer conflicts─
-                    // When eraseImage is enabled the SDK intercepts ALL pointer
-                    // events on the canvas to check for image hits, which adds
-                    // an extra async round-trip before every stroke is started,
-                    // contributing to the first-stroke delay on touch devices.
+                    // ── Fix 4: تفعيل القلم الجديد (مع ضمان عدم التأخير) ──────
+                    // disableNewPencil: false يفعّل القلم الحديث الذي يدعم
+                    // الرسم الفوري. القيمة الافتراضية true تستخدم القلم
+                    // القديم الذي يُجمّع الضربات قبل رسمها.
+                    disableNewPencil: false,
+
+                    // ── Fix 5: إيقاف مراقبة الصور عند المسح ─────────────────
+                    // يمنع SDK من اعتراض كل pointer event للبحث عن صور،
+                    // مما يقلل التأخير قبل بدء كل ضربة خاصة على اللمس.
                     disableEraseImage: true,
                 });
 
@@ -311,12 +304,6 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                         currentApplianceName: ApplianceNames.pencil,
                         strokeColor: hexToRgb('#000000'),
                         strokeWidth: 4,
-                        // Mirror the joinRoom pencilWritingMode here too.
-                        // setMemberState overrides are merged into the existing
-                        // member state, so asserting it here ensures the tool
-                        // starts in fast mode even if the SDK default won.
-                        // @ts-expect-error: Undocumented performance toggle
-                        pencilWritingMode: 'fast',
                     });
                 } else {
                     // 2.3: Students always follow the teacher's viewport
@@ -405,11 +392,6 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     currentApplianceName: ApplianceNames.pencil,
                     strokeColor: hexToRgb(resolvedColor),
                     strokeWidth: resolvedWidth,
-                    // Re-assert fast writing mode every time the pencil is
-                    // (re-)selected. Some SDK versions silently reset the mode
-                    // when switching away from and back to the pencil tool.
-                    // @ts-expect-error: Undocumented performance toggle
-                    pencilWritingMode: 'fast',
                 });
                 break;
             case 'rectangle': room.setMemberState({ currentApplianceName: ApplianceNames.rectangle, strokeColor: hexToRgb(resolvedColor), strokeWidth: resolvedWidth }); break;
