@@ -5,6 +5,12 @@ import { GripHorizontal, Minus, Maximize2 } from 'lucide-react';
 
 interface FloatingVideoWidgetProps {
     focusMode: boolean;
+    /**
+     * hidden=true → Widget مخفي بالكامل بصرياً (opacity-0 + pointer-events-none)
+     * لكن children لا تُفكّ (لا unmount) حتى يبقى الاتصال بـ Agora حياً.
+     * يُستخدم عند تفعيل السبورة لمنح أقصى مساحة للكتابة.
+     */
+    hidden?: boolean;
     children: React.ReactNode;
 }
 
@@ -19,7 +25,7 @@ const PAD       = 16;
  * focusMode=false → fills parent container (normal AgoraCall view).
  * focusMode=true  → draggable floating widget that can be collapsed to a title-bar.
  */
-export default function FloatingVideoWidget({ focusMode, children }: FloatingVideoWidgetProps) {
+export default function FloatingVideoWidget({ focusMode, hidden = false, children }: FloatingVideoWidgetProps) {
     const [pos, setPos]         = useState({ x: 0, y: 0 });
     const [collapsed, setCollapsed] = useState(false);
     const dragging              = useRef(false);
@@ -122,10 +128,13 @@ export default function FloatingVideoWidget({ focusMode, children }: FloatingVid
     // ── SINGLE RETURN ────────────────────────────────────────────────────────
     return (
         <div
-            className={`absolute overflow-hidden transition-[height] duration-300 ease-in-out ${
-                focusMode
-                    ? 'z-30 rounded-2xl border border-white/10 shadow-2xl bg-black cursor-grab active:cursor-grabbing select-none'
-                    : 'inset-0 z-10 rounded-3xl bg-black border border-white/5 shadow-2xl'
+            className={`absolute overflow-hidden transition-[height,opacity] duration-300 ease-in-out ${
+                hidden
+                    // مخفي كلياً عند تفعيل السبورة — pointer-events-none لمنع التفاعل العرضي
+                    ? 'opacity-0 pointer-events-none'
+                    : focusMode
+                        ? 'z-30 rounded-2xl border border-white/10 shadow-2xl bg-black cursor-grab active:cursor-grabbing select-none'
+                        : 'inset-0 z-10 rounded-3xl bg-black border border-white/5 shadow-2xl'
             }`}
             style={focusMode ? {
                 width:     WIDGET_W,
