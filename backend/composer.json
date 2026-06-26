@@ -12,6 +12,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "peterujah/php-agora-tokens": "^1.1",
+        "sentry/sentry-laravel": "^4.26",
         "spatie/laravel-permission": "^7.2"
     },
     "require-dev": {
