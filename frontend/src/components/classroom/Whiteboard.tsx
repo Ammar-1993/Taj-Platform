@@ -161,7 +161,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     roomToken:                      cleanFreshToken,
                     uid:                            rUid,
                     isWritable:                     rIsTeacher,
-                    useMultiViews:                  true,
+                    useMultiViews:                  false,
                     floatBar:                       false,
                     disableMagixEventDispatchLimit: true,
                     disableEraseImage:              true,
@@ -266,7 +266,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     roomToken:     cleanRoomToken,
                     uid:           rUid,
                     isWritable:    rIsTeacher,
-                    useMultiViews: true,
+                    useMultiViews: false,
 
                     // ── Fix 1: إيقاف شريط الأدوات العائم ────────────────────
                     // floatBar يعترض أحداث pointerup بين الضربات ويؤخر
