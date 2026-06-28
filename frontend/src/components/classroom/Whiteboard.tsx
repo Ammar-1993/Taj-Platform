@@ -143,6 +143,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
             // Ask the backend for a brand-new token (bypasses cache)
             const res = await bookingService.refreshWhiteboardToken(Number(bId));
             const freshToken = res.room_token;
+            initProps.current.roomToken = freshToken;
 
             // Disconnect the stale room instance first
             if (roomRef.current) {
