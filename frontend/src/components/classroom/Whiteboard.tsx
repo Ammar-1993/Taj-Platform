@@ -337,7 +337,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                         newPhase === RoomPhase.Disconnected ||
                         newPhase === RoomPhase.Reconnecting
                     ) {
-                        // Debounce: wait 2 s before attempting reconnect, in case
+                        // Debounce: wait 800ms before attempting reconnect, in case
                         // it is a momentary blip that the SDK self-recovers from.
                         if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
                         reconnectTimerRef.current = setTimeout(() => {
@@ -349,7 +349,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                             ) {
                                 reconnectWithFreshToken();
                             }
-                        }, 2000);
+                        }, 800);
                     } else if (newPhase === RoomPhase.Connected) {
                         if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
                         setIsReconnecting(false);
