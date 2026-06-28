@@ -26,6 +26,7 @@ export function useAgoraRTM({
     onCursorReceived,
     enabled,
 }: UseAgoraRTMOptions) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const clientRef = useRef<any>(null);
 
     // Using a ref for the callback so the effect doesn't re-run on every render
@@ -42,6 +43,7 @@ export function useAgoraRTM({
         clientRef.current = client;
 
         // Listen for messages on any subscribed channel
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         client.addEventListener("message", (event: any) => {
             if (event.channelType === "MESSAGE" && event.channelName === channel) {
                 try {
@@ -49,7 +51,7 @@ export function useAgoraRTM({
                     if (msg.type === "cursor") {
                         onCursorReceivedRef.current(event.publisher, msg);
                     }
-                } catch (e) {
+                } catch {
                     // Ignore malformed messages
                 }
             }
@@ -86,7 +88,7 @@ export function useAgoraRTM({
             if (!enabled || !clientRef.current) return;
             const payload = JSON.stringify({ type: "cursor", ...msg });
             
-            clientRef.current.publish(channel, payload).catch((e: any) => {
+            clientRef.current.publish(channel, payload).catch((e: unknown) => {
                 console.error("[RTM] Publish failed:", e);
             });
         },
