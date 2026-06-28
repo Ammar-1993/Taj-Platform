@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Events\DrawingBatchReceived;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Whiteboard\DrawingBatchRequest;
 use App\Jobs\ProvisionVirtualClassroom;
 use App\Models\Booking;
 use App\Models\User;
@@ -319,36 +317,5 @@ class ClassroomController extends Controller
         }
     }
 
-    /**
-     * استقبال دفعة من ضربات الرسم من المعلم وبثّها للطالب.
-     *
-     * يتحقق أولاً من أن المستخدم هو المعلم المعني بهذا الحجز،
-     * ثم يُطلق حدث DrawingBatchReceived ليُبثّ للطالب عبر
-     * قناة classroom.{bookingId}.
-     *
-     * @param DrawingBatchRequest $request  بيانات الرسم المُتحقَّق منها
-     * @param int|string          $bookingId
-     */
-    public function whiteboardBatch(DrawingBatchRequest $request, $bookingId): JsonResponse
-    {
-        /** @var User $user */
-        $user    = $request->user();
-        $booking = Booking::findOrFail($bookingId);
 
-        // أمان: فقط المعلم الخاص بهذه الحصة يحق له إرسال ضربات الرسم.
-        // الطلاب والمراقبون لا يملكون هذه الصلاحية.
-        if ($booking->teacher_id !== $user->id) {
-            return response()->json(['message' => 'غير مصرح لك بإرسال ضربات الرسم.'], 403);
-        }
-
-        // بث الحدث عبر Laravel Broadcasting (Pusher / Reverb)
-        event(new DrawingBatchReceived(
-            bookingId: (int) $bookingId,
-            points:    $request->validated('points'),
-            color:     $request->validated('color', '#000000'),
-            width:     $request->validated('width', 4),
-        ));
-
-        return response()->json(['status' => 'success']);
-    }
 }
