@@ -167,7 +167,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     // تعطيل تحديد تردد رسم القلم لضمان الاستجابة الفورية
                     disablePencilWrittingLimitFrequency: true,
                     // تفعيل القلم الجديد (بالنعومة والتدرج) مع إلغاء التخزين المؤقت
-                    disableNewPencil: false,
+                    disableNewPencil: true,
                 });
 
                 roomRef.current = roomInstance;
@@ -287,7 +287,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     // disableNewPencil: false يفعّل القلم الحديث الذي يدعم
                     // الرسم الفوري. القيمة الافتراضية true تستخدم القلم
                     // القديم الذي يُجمّع الضربات قبل رسمها.
-                    disableNewPencil: false,
+                    disableNewPencil: true,
 
                     // ── Fix 5: إيقاف مراقبة الصور عند المسح ─────────────────
                     // يمنع SDK من اعتراض كل pointer event للبحث عن صور،
