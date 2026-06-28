@@ -110,27 +110,52 @@ class BookingController extends Controller
         }
     }
 
-    // إلغاء الحصة من قبل المعلم
+    // إلغاء الحصة — المعلم: في أي وقت | الطالب/ولي الأمر: قبل 24 ساعة فقط
     public function cancel(Request $request, $id): JsonResponse
     {
         /** @var User $user */
-        $user = $request->user();
-        $booking = Booking::findOrFail($id);
+        $user    = $request->user();
+        $booking = Booking::with('teacherSlot')->findOrFail($id);
 
-        // حماية: المعلم صاحب الحصة فقط من يمكنه الإلغاء
-        if ($user->id !== $booking->teacher_id) {
-            return response()->json(['message' => 'غير مصرح لك بإلغاء هذه الحصة'], 403);
+        $isTeacher       = (int) $user->id === (int) $booking->teacher_id;
+        $isStudent       = (int) $user->id === (int) $booking->student_id;
+        $isBookingParent = (int) $user->id === (int) $booking->booked_by_id && $user->hasRole('parent');
+
+        // ── التحقق من الهوية: المعلم أو الطالب أو ولي الأمر الذي دفع ──
+        if (!$isTeacher && !$isStudent && !$isBookingParent) {
+            return response()->json(['message' => 'غير مصرح لك بإلغاء هذه الحصة.'], 403);
+        }
+
+        // ── قيد الـ 24 ساعة: ينطبق فقط على الطلاب وأولياء الأمور ──
+        if (!$isTeacher) {
+            $slotDate  = optional($booking->teacherSlot)->slot_date;
+            $startTime = optional($booking->teacherSlot)->start_time ?? '00:00:00';
+
+            if ($slotDate) {
+                // دمج التاريخ والوقت للحصول على لحظة بدء الحصة الدقيقة
+                $sessionStart = \Carbon\Carbon::parse("{$slotDate} {$startTime}");
+                $hoursUntil   = now()->diffInHours($sessionStart, absolute: false);
+
+                if ($hoursUntil < 24) {
+                    return response()->json([
+                        'message' => 'لا يمكن إلغاء الحجز قبل أقل من 24 ساعة من موعد الحصة. يرجى التواصل مع المعلم.',
+                    ], 422);
+                }
+            }
         }
 
         try {
-            $cancelledBooking = $this->bookingService->cancelBooking($booking, $user);
+            $this->bookingService->cancelBooking($booking, $user);
 
             return response()->json([
-                'status' => 'success',
-                'message' => 'تم إلغاء الحصة وإرجاع المبلغ لمحفظة الطالب بنجاح.',
+                'status'  => 'success',
+                'message' => $isTeacher
+                    ? 'تم إلغاء الحصة وإرجاع المبلغ لمحفظة الطالب بنجاح.'
+                    : 'تم إلغاء حجزك وإرجاع المبلغ لمحفظتك بنجاح.',
             ]);
         } catch (Exception $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 400);
         }
     }
 }
+

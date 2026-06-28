@@ -3,19 +3,22 @@
 namespace App\Jobs;
 
 use App\Models\Booking;
+use App\Notifications\ClassroomProvisioningFailed;
 use App\Services\WhiteboardService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 use Peterujah\Agora\Agora;
 use Peterujah\Agora\Builders\RtcToken;
 use Peterujah\Agora\Roles as AgoraRoles;
 use Peterujah\Agora\User as AgoraUser;
-use Illuminate\Support\Facades\Cache;
 
 class ProvisionVirtualClassroom implements ShouldQueue
 {
@@ -111,10 +114,29 @@ class ProvisionVirtualClassroom implements ShouldQueue
 
     /**
      * Handle a job failure.
+     *
+     * يُستدعى بعد استنفاد جميع محاولات الإعادة (5 محاولات بـ backoff تصاعدي).
+     * يُرسل تنبيهاً فورياً بالبريد الإلكتروني لمشرفي المنصة.
      */
     public function failed(\Throwable $exception): void
     {
-        Log::emergency("Virtual Classroom Provisioning FAILED permanently for booking #{$this->booking->id}. Error: " . $exception->getMessage());
-        // TODO: Send Slack/Email alert to admins
+        Log::emergency(
+            "Virtual Classroom Provisioning FAILED permanently for booking #{$this->booking->id}. Error: "
+            . $exception->getMessage()
+        );
+
+        // إرسال تنبيه بريد إلكتروني للمشرفين
+        $adminEmail = config('app.admin_alert_email');
+
+        if ($adminEmail) {
+            Notification::route('mail', $adminEmail)
+                ->notify(new ClassroomProvisioningFailed(
+                    booking:      $this->booking,
+                    errorMessage: $exception->getMessage(),
+                ));
+        } else {
+            Log::critical('ADMIN_ALERT_EMAIL not configured — skipping admin notification for booking #' . $this->booking->id);
+        }
     }
 }
+

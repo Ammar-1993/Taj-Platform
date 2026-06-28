@@ -2,8 +2,8 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
@@ -36,12 +36,13 @@ class DrawingBatchReceived implements ShouldBroadcast
 
     /**
      * القناة التي يُبثّ عليها الحدث.
-     * نستخدم قناة خاصة (private) لضمان أن الطالب المعني فقط
-     * هو من يستقبل البيانات دون غيره.
+     * نستخدم PrivateChannel (قناة خاصة) لضمان أن المستخدم مصادَق عليه
+     * عبر channels.php قبل السماح له بالاستماع — أي المعلم أو الطالب
+     * أو ولي الأمر المرتبط بهذا الحجز فقط.
      */
-    public function broadcastOn(): Channel
+    public function broadcastOn(): PrivateChannel
     {
-        return new Channel("classroom.{$this->bookingId}");
+        return new PrivateChannel("classroom.{$this->bookingId}");
     }
 
     /**
