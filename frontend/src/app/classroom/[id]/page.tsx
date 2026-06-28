@@ -34,7 +34,7 @@ const WHITEBOARD_APP_ID = (
   process.env.NEXT_PUBLIC_WHITEBOARD_APP_IDENTIFIER || ""
 ).trim();
 const WHITEBOARD_REGION = (
-  process.env.NEXT_PUBLIC_WHITEBOARD_REGION || "eu"
+  process.env.NEXT_PUBLIC_WHITEBOARD_REGION || "sg"
 ).trim();
 
 // استدعاء مكون الكاميرا الآمن من SSR

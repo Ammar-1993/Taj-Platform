@@ -137,6 +137,7 @@ class ClassroomController extends Controller
                 'token' => $token,
                 'screen_token' => $screenToken,
                 'whiteboard' => $whiteboardPayload,
+                'whiteboard_region' => config('services.whiteboard.region', 'sg'),
             ],
         ]);
     }

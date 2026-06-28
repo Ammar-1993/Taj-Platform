@@ -26,7 +26,7 @@ class WhiteboardServiceTest extends TestCase
         parent::setUp();
         // تهيئة الإعدادات اللازمة للاختبار
         config(['services.whiteboard.sdk_token' => 'NETLESSSDK_YWs9xxxxxxxxxxxxtest']);
-        config(['services.whiteboard.region' => 'eu']);
+        config(['services.whiteboard.region' => 'sg']);
         $this->service = new WhiteboardService();
     }
 

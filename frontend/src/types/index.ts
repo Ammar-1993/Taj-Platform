@@ -223,6 +223,7 @@ export interface ClassroomAccess {
     room_uuid: string;
     room_token: string;
   };
+  whiteboard_region?: string;
 }
 
 /** Response shape from GET /bookings/{id}/classroom/whiteboard-status */

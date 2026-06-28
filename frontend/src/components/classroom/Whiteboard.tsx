@@ -95,7 +95,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     uid,
     isTeacher,
     bookingId,
-    region = 'eu',
+    region = 'sg',
 }) => {
     const whiteboardRef = useRef<HTMLDivElement>(null);
     const roomRef       = useRef<Room | null>(null);
@@ -235,7 +235,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         const cleanAppId      = String(appId).split('#')[0].trim();
         const cleanRoomUuid   = String(rUuid).split('#')[0].trim();
         const cleanRoomToken  = String(rToken).split('#')[0].trim();
-        const supportedRegions = ['eu', 'us-sv', 'sg', 'cn-hz', 'in-mum'];
+        const supportedRegions = ['sg', 'us-sv', 'eu', 'cn-hz', 'in-mum'];
         const finalRegion     = supportedRegions.includes(rRegion.toLowerCase()) ? rRegion.toLowerCase() : 'eu';
 
         if (!cleanAppId || !cleanRoomUuid || !cleanRoomToken) {
