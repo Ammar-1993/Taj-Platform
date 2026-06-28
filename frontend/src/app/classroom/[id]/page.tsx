@@ -70,6 +70,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
 
   const [channelName, setChannelName] = useState("");
   const [agoraToken, setAgoraToken] = useState<string | null>(null);
+  const [rtmToken, setRtmToken] = useState<string | null>(null);
   const [screenToken, setScreenToken] = useState<string | null>(null);
   const [whiteboardData, setWhiteboardData] = useState<{
     room_uuid: string;
@@ -133,6 +134,10 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
 
         if (data.token) {
           setAgoraToken(data.token);
+        }
+
+        if (data.rtm_token) {
+          setRtmToken(data.rtm_token);
         }
 
         if (data.screen_token) {
@@ -583,6 +588,8 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                   isTeacher={!!isTeacher}
                   bookingId={params.id}
                   region={WHITEBOARD_REGION}
+                  agoraChannel={channelName}
+                  rtmToken={rtmToken}
                 />
               )}
             </div>

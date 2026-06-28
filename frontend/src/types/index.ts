@@ -218,6 +218,7 @@ export interface ClassroomAccess {
   uid: number;
   role: 'host' | 'audience';
   token?: string;
+  rtm_token?: string;
   screen_token?: string;
   whiteboard?: {
     room_uuid: string;

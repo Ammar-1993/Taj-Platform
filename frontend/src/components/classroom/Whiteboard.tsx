@@ -9,6 +9,7 @@ import {
     WifiOff, RefreshCw, Eye,
 } from 'lucide-react';
 import { bookingService } from '@/services/api';
+import { useAgoraRTM, CursorMessage } from '@/hooks/useAgoraRTM';
 
 // ─── Local types ─────────────────────────────────────────────────────────────
 
@@ -31,6 +32,8 @@ interface WhiteboardProps {
     isTeacher: boolean;
     bookingId: string;
     region?: string;
+    agoraChannel?: string;
+    rtmToken?: string | null;
 }
 
 interface ToolButtonProps {
@@ -96,6 +99,8 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     isTeacher,
     bookingId,
     region = 'sg',
+    agoraChannel,
+    rtmToken,
 }) => {
     const whiteboardRef = useRef<HTMLDivElement>(null);
     const roomRef       = useRef<Room | null>(null);
@@ -125,6 +130,33 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
 
     // ── 2.4: Detect touch device once on mount ───────────────────────────────
     const deviceType = useRef<DeviceType>(DeviceType.Desktop);
+
+    // ── RTM Cursor State ─────────────────────────────────────────────────────
+    const [remoteCursors, setRemoteCursors] = useState<Record<string, { x: number, y: number }>>({});
+
+    const handleCursorReceived = useCallback((senderUid: string, msg: CursorMessage) => {
+        setRemoteCursors(prev => ({
+            ...prev,
+            [senderUid]: { x: msg.x, y: msg.y }
+        }));
+    }, []);
+
+    const { sendCursorPosition } = useAgoraRTM({
+        appId: (process.env.NEXT_PUBLIC_AGORA_APP_ID || "").trim(), // Use Agora RTC App ID for RTM too
+        channel: agoraChannel || "",
+        uid,
+        token: rtmToken || null,
+        onCursorReceived: handleCursorReceived,
+        enabled: !!agoraChannel && !!rtmToken
+    });
+
+    const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        if (!whiteboardRef.current) return;
+        const rect = whiteboardRef.current.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = (e.clientY - rect.top) / rect.height;
+        sendCursorPosition({ x, y });
+    }, [sendCursorPosition]);
 
     const clearCanvas = useCallback(() => {
         if (!roomRef.current || !isTeacher) return;
@@ -663,9 +695,33 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
              */}
             <div
                 ref={whiteboardRef}
-                className={`flex-1 w-full h-full relative z-10 pointer-events-auto ${isTouchDevice ? '' : 'touch-none'}`}
+                className={`flex-1 w-full h-full relative z-10 pointer-events-auto overflow-hidden ${isTouchDevice ? '' : 'touch-none'}`}
                 style={{ minHeight: '400px' }}
-            />
+                onMouseMove={handleMouseMove}
+            >
+                {/* ── Render remote cursors ── */}
+                {Object.entries(remoteCursors).map(([cursorUid, pos]) => (
+                    String(cursorUid) !== String(uid) && (
+                        <div
+                            key={cursorUid}
+                            className="absolute pointer-events-none z-50 transition-all duration-75 ease-linear"
+                            style={{
+                                left: `${pos.x * 100}%`,
+                                top: `${pos.y * 100}%`,
+                                // Offset so the tip of the cursor is at the exact x,y
+                                transform: 'translate(-2px, -2px)'
+                            }}
+                        >
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-md">
+                                <path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87c.45 0 .67-.54.35-.85L5.85 3.21a.5.5 0 0 0-.85.35Z" fill="#3B82F6" stroke="white" strokeWidth="1.5" strokeLinejoin="round"/>
+                            </svg>
+                            <span className="absolute top-5 left-3 bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">
+                                مشارك
+                            </span>
+                        </div>
+                    )
+                ))}
+            </div>
         </div>
     );
 });

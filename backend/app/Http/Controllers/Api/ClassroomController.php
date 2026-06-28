@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Peterujah\Agora\Agora;
 use Peterujah\Agora\Builders\RtcToken;
+use Peterujah\Agora\Builders\RtmToken;
 use Peterujah\Agora\Roles as AgoraRoles;
 use Peterujah\Agora\User as AgoraUser;
 
@@ -56,10 +57,11 @@ class ClassroomController extends Controller
 
         // 🟢 1. محاولة جلب التوكن من الكاش أولاً (Instant Access)
         $token = Cache::get("agora_token_{$booking->id}_{$user->id}");
+        $rtmToken = Cache::get("agora_rtm_token_{$booking->id}_{$user->id}");
         $screenToken = ($user->id === $booking->teacher_id) ? Cache::get("agora_token_{$booking->id}_screen") : null;
 
         // 2. إذا لم يكن موجوداً، نقوم بتوليده فوراً
-        if (!$token) {
+        if (!$token || !$rtmToken) {
             $appId = config('services.agora.app_id');
             $appCertificate = config('services.agora.app_certificate');
 
@@ -67,15 +69,18 @@ class ClassroomController extends Controller
                 $client = new Agora($appId, $appCertificate);
                 $client->setExpiration(now()->addHours(2)->timestamp);
 
-                // التوكن الأساسي
+                // التوكن الأساسي (RTC و RTM)
                 $agoraUser = new AgoraUser($user->id);
                 $agoraUser->setChannel($booking->agora_channel);
                 $agoraUser->setRole($role === 'host' ? AgoraRoles::RTC_PUBLISHER : AgoraRoles::RTC_SUBSCRIBER);
                 $agoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
                 $token = RtcToken::buildTokenWithUid($client, $agoraUser);
 
+                $rtmToken = RtmToken::buildToken($client, (string) $user->id, now()->addHours(2)->timestamp);
+
                 // حفظه في الكاش للطلبات القادمة
                 Cache::put("agora_token_{$booking->id}_{$user->id}", $token, now()->addHours(2));
+                Cache::put("agora_rtm_token_{$booking->id}_{$user->id}", $rtmToken, now()->addHours(2));
 
                 // توكن مشاركة الشاشة للمعلم
                 if ($user->id === $booking->teacher_id) {
@@ -135,6 +140,7 @@ class ClassroomController extends Controller
                 'uid' => $user->id,
                 'role' => $role,
                 'token' => $token,
+                'rtm_token' => $rtmToken,
                 'screen_token' => $screenToken,
                 'whiteboard' => $whiteboardPayload,
                 'whiteboard_region' => config('services.whiteboard.region', 'sg'),
@@ -169,15 +175,18 @@ class ClassroomController extends Controller
         $client = new Agora($appId, $appCertificate);
         $client->setExpiration(now()->addHours(2)->timestamp);
 
-        // 1. Primary Token
+        // 1. Primary Token & RTM Token
         $agoraUser = new AgoraUser($user->id);
         $agoraUser->setChannel($booking->agora_channel);
         $agoraUser->setRole($role === 'host' ? AgoraRoles::RTC_PUBLISHER : AgoraRoles::RTC_SUBSCRIBER);
         $agoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
         $token = RtcToken::buildTokenWithUid($client, $agoraUser);
 
+        $rtmToken = RtmToken::buildToken($client, (string) $user->id, now()->addHours(2)->timestamp);
+
         // Update Cache
         Cache::put("agora_token_{$booking->id}_{$user->id}", $token, now()->addHours(2));
+        Cache::put("agora_rtm_token_{$booking->id}_{$user->id}", $rtmToken, now()->addHours(2));
 
         // 2. Screen Token (Only for Teacher)
         $screenToken = null;
@@ -194,6 +203,7 @@ class ClassroomController extends Controller
             'status' => 'success',
             'data' => [
                 'token' => $token,
+                'rtm_token' => $rtmToken,
                 'screen_token' => $screenToken
             ]
         ]);
