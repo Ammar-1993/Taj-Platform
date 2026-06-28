@@ -76,7 +76,9 @@ class ClassroomController extends Controller
                 $agoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
                 $token = RtcToken::buildTokenWithUid($client, $agoraUser);
 
-                $rtmToken = RtmToken::buildToken($client, (string) $user->id, now()->addHours(2)->timestamp);
+                $rtmUser = new AgoraUser((string) $user->id);
+                $rtmUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
+                $rtmToken = RtmToken::buildToken($client, $rtmUser);
 
                 // حفظه في الكاش للطلبات القادمة
                 Cache::put("agora_token_{$booking->id}_{$user->id}", $token, now()->addHours(2));
@@ -182,7 +184,9 @@ class ClassroomController extends Controller
         $agoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
         $token = RtcToken::buildTokenWithUid($client, $agoraUser);
 
-        $rtmToken = RtmToken::buildToken($client, (string) $user->id, now()->addHours(2)->timestamp);
+        $rtmUser = new AgoraUser((string) $user->id);
+        $rtmUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
+        $rtmToken = RtmToken::buildToken($client, $rtmUser);
 
         // Update Cache
         Cache::put("agora_token_{$booking->id}_{$user->id}", $token, now()->addHours(2));
