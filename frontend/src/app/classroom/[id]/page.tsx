@@ -293,6 +293,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
       setMicStatus("granted");
       setMediaStream(stream);
       setIsCameraEnabled(true);
+      setIsMicEnabled(true);
 
       // Note: We DON'T set inCall(true) yet. We let them see the preview first.
       toast.success("تم تفعيل الكاميرا والميكروفون بنجاح.");
