@@ -1,6 +1,5 @@
 "use client";
 
-import "regenerator-runtime/runtime";
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { WhiteWebSdk, Room, DeviceType, ViewMode, ApplianceNames, RoomPhase } from "white-web-sdk";
 import {
