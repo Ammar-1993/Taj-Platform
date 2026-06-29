@@ -36,11 +36,17 @@ export function useAgoraRTM({
     }, [onCursorReceived]);
 
     useEffect(() => {
-        if (!appId || !channel) return;
+        if (!enabled || !appId || !channel) return;
 
-        // Initialize RTM v2 Client
-        const client = new AgoraRTM.RTM(appId, String(uid));
-        clientRef.current = client;
+        let client;
+        try {
+            // Initialize RTM v2 Client
+            client = new AgoraRTM.RTM(appId, String(uid));
+            clientRef.current = client;
+        } catch (error) {
+            console.error("[RTM] Initialization failed (check NEXT_PUBLIC_AGORA_APP_ID):", error);
+            return;
+        }
 
         // Listen for messages on any subscribed channel
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
