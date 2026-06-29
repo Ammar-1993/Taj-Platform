@@ -319,6 +319,40 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
   };
 
   const handleToggleCamera = async () => {
+    if (!inCall) {
+      if (isCameraEnabled) {
+        // Turn OFF camera hardware (stop track and remove from stream)
+        if (mediaStream) {
+          mediaStream.getVideoTracks().forEach((track) => {
+            track.stop();
+            mediaStream.removeTrack(track);
+          });
+        }
+        setIsCameraEnabled(false);
+      } else {
+        // Turn ON camera hardware (fetch new video track and add to existing stream)
+        try {
+          const newStream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 1280, height: 720 },
+          });
+          const newVideoTrack = newStream.getVideoTracks()[0];
+
+          if (mediaStream) {
+            mediaStream.addTrack(newVideoTrack);
+          } else {
+            setMediaStream(newStream);
+          }
+          setIsCameraEnabled(true);
+        } catch (err) {
+          console.error("Failed to re-enable camera:", err);
+          toast.error("حدث خطأ أثناء محاولة تشغيل الكاميرا.");
+        }
+      }
+      return;
+    }
+
+    // In-call: we don't stop the hardware track to avoid renegotiation delays.
+    // The AgoraCall component will simply mute the track (setEnabled(false)).
     setIsCameraEnabled((prev) => !prev);
   };
 
