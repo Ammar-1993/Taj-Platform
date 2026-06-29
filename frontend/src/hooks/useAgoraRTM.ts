@@ -78,6 +78,7 @@ export function useAgoraRTM({
 
         return () => {
             const cleanup = async () => {
+                clientRef.current = null; // Prevent publishes during teardown
                 try {
                     await client.unsubscribe(channel);
                     await client.logout();
