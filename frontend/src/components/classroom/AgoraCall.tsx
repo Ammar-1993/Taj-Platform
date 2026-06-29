@@ -288,6 +288,7 @@ const AgoraCall = React.memo(({
 
                 const { appId, channel, token, uid } = propsRef.current;
                 await client.join(appId, channel, token, uid);
+                if (!isMounted) return;
 
                 // ✅ Dual-stream & Performance: Drastically reduce bandwidth and handle poor connections.
                 try {
@@ -370,8 +371,11 @@ const AgoraCall = React.memo(({
                 // Ignore OPERATION_ABORTED which happens in React Strict Mode 
                 // when the component unmounts before join() finishes.
                 const e = err as { message?: string; code?: string };
-                if (e?.message?.includes("OPERATION_ABORTED") || e?.code === "OPERATION_ABORTED") {
-                    console.warn("[AgoraCall] Join aborted (expected during React Strict Mode cleanup).");
+                if (
+                    e?.message?.includes("OPERATION_ABORTED") || e?.code === "OPERATION_ABORTED" ||
+                    e?.message?.includes("WS_ABORT")           || e?.code === "WS_ABORT"
+                ) {
+                    console.warn("[AgoraCall] Join aborted — component unmounted during WebSocket connection.");
                 } else {
                     console.error("Agora Init Error:", err);
                 }
@@ -388,7 +392,7 @@ const AgoraCall = React.memo(({
             clearInterval(qualityInterval);
             if (vTrack) vTrack.close();
             if (aTrack) aTrack.close();
-            client.leave();
+            void client.leave().catch(() => {});
             client.removeAllListeners();
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
