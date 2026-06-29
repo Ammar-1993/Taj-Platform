@@ -99,27 +99,32 @@ const AgoraCall = React.memo(({
     // Only called once on join. After that, toggling the camera ONLY calls
     // localVideoTrack.setEnabled(true/false) — never close+republish —
     // so we avoid 300–800 ms WebRTC renegotiation on every toggle.
+    const createAndPublishAudioTrack = async () => {
+        if (!client || !isJoined || client.connectionState !== "CONNECTED") return null;
+
+        let aTrack: ILocalAudioTrack | null = null;
+        try {
+            aTrack = await AgoraRTC.createMicrophoneAudioTrack({ encoderConfig: "music_standard", AEC: true, ANS: true, AGC: true });
+            await client.publish([aTrack]);
+            setLocalAudioTrack(aTrack);
+            return aTrack;
+        } catch (err) {
+            console.error("[AgoraCall] Failed to create/publish audio track:", err);
+            if (aTrack) aTrack.close();
+            return null;
+        }
+    };
+
     const createAndPublishVideoTrack = async () => {
         if (!client || !isJoined || client.connectionState !== "CONNECTED") return null;
 
         let vTrack: ILocalVideoTrack | null = null;
         try {
-            const lobbyStream = lobbyStreamRef.current;
-            if (lobbyStream) {
-                const videoTrackObj = lobbyStream.getVideoTracks()[0];
-                if (videoTrackObj) {
-                    vTrack = await AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: videoTrackObj });
-                }
-            }
-
-            if (!vTrack) {
-                vTrack = await AgoraRTC.createCameraVideoTrack(
-                    { encoderConfig: "360p_1", optimizationMode: "motion" },
-                );
-            }
+            vTrack = await AgoraRTC.createCameraVideoTrack(
+                { encoderConfig: "360p_1", optimizationMode: "motion" },
+            );
 
             await client.publish([vTrack]);
-            vTrack.setEnabled(true);
             setLocalVideoTrack(vTrack);
             return vTrack;
         } catch (err) {
@@ -338,22 +343,24 @@ const AgoraCall = React.memo(({
                         }
 
                         // Fallback if lobby stream was missing or partial
-                        if (!vTrack || !aTrack) {
-                            const [fallbackAudio, fallbackVideo] = await AgoraRTC.createMicrophoneAndCameraTracks(
-                                { encoderConfig: "music_standard", AEC: true, ANS: true, AGC: true },
-                                { encoderConfig: "360p_1", optimizationMode: "motion" }
-                            );
-                            if (!vTrack) vTrack = fallbackVideo; else fallbackVideo.close();
-                            if (!aTrack) aTrack = fallbackAudio; else fallbackAudio.close();
+                        if (isMicEnabled && !aTrack) {
+                            aTrack = await AgoraRTC.createMicrophoneAudioTrack({ encoderConfig: "music_standard", AEC: true, ANS: true, AGC: true });
+                        }
+                        if (isCameraEnabled && !vTrack) {
+                            vTrack = await AgoraRTC.createCameraVideoTrack({ encoderConfig: "360p_1", optimizationMode: "motion" });
                         }
                         
                         if (isMounted) {
                             setLocalAudioTrack(aTrack);
                             setLocalVideoTrack(vTrack);
                             
-                            await client.publish([aTrack, vTrack]);
-                            aTrack.setEnabled(isMicEnabled);
-                            vTrack.setEnabled(isCameraEnabled);
+                            const tracksToPublish = [];
+                            if (aTrack) tracksToPublish.push(aTrack);
+                            if (vTrack) tracksToPublish.push(vTrack);
+
+                            if (tracksToPublish.length > 0) {
+                                await client.publish(tracksToPublish);
+                            }
                             setIsJoined(true);
                         } else {
                             if (aTrack) aTrack.close();
@@ -398,29 +405,53 @@ const AgoraCall = React.memo(({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [client]);
 
-    // ── 3.1: Camera toggle — setEnabled() only, zero renegotiation ───────────
-    // The track is published once on join and stays published permanently.
-    // Toggling the camera just mutes/unmutes the video encoder — no
-    // ICE restart, no WebRTC renegotiation, no 300-800 ms freeze.
-    // createAndPublishVideoTrack() is only called if the track was never
-    // created at all (e.g. the user denied camera in the lobby and then
-    // grants it mid-session).
+    // ── 3.1: Camera toggle — hardware release ───────────
     useEffect(() => {
         if (!isJoined) return;
 
-        if (localVideoTrack) {
-            // Fast path: track already exists → just flip the encoder mute flag
-            localVideoTrack.setEnabled(isCameraEnabled);
-        } else if (isCameraEnabled) {
-            // Slow path: track never created (lobby camera denial, then mid-session grant)
-            void createAndPublishVideoTrack();
-        }
-        // When !isCameraEnabled and there is no track, nothing to do.
-    }, [isCameraEnabled, localVideoTrack, isJoined]); // eslint-disable-line react-hooks/exhaustive-deps
+        const toggleCamera = async () => {
+            if (isCameraEnabled) {
+                if (!localVideoTrack) {
+                    await createAndPublishVideoTrack();
+                }
+            } else {
+                if (localVideoTrack) {
+                    try {
+                        await client.unpublish(localVideoTrack);
+                        localVideoTrack.close();
+                    } catch (e) {
+                        console.error("Failed to close camera track", e);
+                    }
+                    setLocalVideoTrack(null);
+                }
+            }
+        };
+        toggleCamera();
+    }, [isCameraEnabled, isJoined]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // ── 3.2: Mic toggle — hardware release ──────────────────────────────────
     useEffect(() => {
-        if (localAudioTrack) localAudioTrack.setEnabled(isMicEnabled);
-    }, [isMicEnabled, localAudioTrack]);
+        if (!isJoined) return;
+
+        const toggleMic = async () => {
+            if (isMicEnabled) {
+                if (!localAudioTrack) {
+                    await createAndPublishAudioTrack();
+                }
+            } else {
+                if (localAudioTrack) {
+                    try {
+                        await client.unpublish(localAudioTrack);
+                        localAudioTrack.close();
+                    } catch (e) {
+                        console.error("Failed to close audio track", e);
+                    }
+                    setLocalAudioTrack(null);
+                }
+            }
+        };
+        toggleMic();
+    }, [isMicEnabled, isJoined]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Phase 2.1: Adaptive Encoder Configuration ───────────────────────────────
     // Dynamically adjusts the outgoing video encoder based on the smoothed
