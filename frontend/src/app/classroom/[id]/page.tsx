@@ -295,7 +295,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
       setIsCameraEnabled(true);
 
       // Note: We DON'T set inCall(true) yet. We let them see the preview first.
-      toast.success("");
+      toast.success("تم تفعيل الكاميرا والميكروفون بنجاح.");
     } catch (err: unknown) {
       console.error("Permission request failed:", err);
       const errorName = err instanceof Error ? err.name : "";
