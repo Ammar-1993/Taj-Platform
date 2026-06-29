@@ -438,7 +438,7 @@ const AgoraCall = React.memo(({
     // This mirrors how Zoom adapts its encoder instead of letting the SDK
     // overflow the upload pipe and trigger packet-loss spikes.
     useEffect(() => {
-        if (!localVideoTrack || !isJoined) return;
+        if (!localVideoTrack || !isJoined || !isCameraEnabled) return;
 
         const getEncoderConfig = (q: number) => {
             if (q <= 2) return "720p_2";   // Excellent / Good  → ~1 Mbps
