@@ -296,7 +296,6 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
       setIsMicEnabled(true);
 
       // Note: We DON'T set inCall(true) yet. We let them see the preview first.
-      toast.success("تم تفعيل الكاميرا والميكروفون بنجاح.");
     } catch (err: unknown) {
       console.error("Permission request failed:", err);
       const errorName = err instanceof Error ? err.name : "";
@@ -320,20 +319,6 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
   };
 
   const handleToggleCamera = async () => {
-    if (!inCall) {
-      if (isCameraEnabled) {
-        if (mediaStream) {
-          mediaStream.getVideoTracks().forEach((track) => track.stop());
-          setMediaStream(null);
-        }
-        setIsCameraEnabled(false);
-        return;
-      }
-
-      await requestMediaPermissions();
-      return;
-    }
-
     setIsCameraEnabled((prev) => !prev);
   };
 
