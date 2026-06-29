@@ -105,6 +105,9 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     const whiteboardRef = useRef<HTMLDivElement>(null);
     const roomRef       = useRef<Room | null>(null);
     const sdkRef        = useRef<WhiteWebSdk | null>(null);
+    const overlayRef    = useRef<HTMLCanvasElement>(null);
+    const isPointerDownRef = useRef(false);
+    const lastPointRef  = useRef<{x: number, y: number} | null>(null);
 
     // Freeze init props so the effect only runs once (Netless rooms cannot be
     // cleanly rejoined inside the same effect cycle)
@@ -129,10 +132,11 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // ── 2.4: Detect touch device once on mount ───────────────────────────────
-    const deviceType = useRef<DeviceType>(DeviceType.Desktop);
+    const [deviceTypeState, setDeviceTypeState] = useState<DeviceType>(DeviceType.Desktop);
 
     // ── RTM Cursor State ─────────────────────────────────────────────────────
     const [remoteCursors, setRemoteCursors] = useState<Record<string, { x: number, y: number }>>({});
+    const lastCursorRef = useRef<number>(0);
 
     const handleCursorReceived = useCallback((senderUid: string, msg: CursorMessage) => {
         setRemoteCursors(prev => ({
@@ -152,11 +156,65 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
 
     const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
         if (!whiteboardRef.current) return;
+
+        // Throttle cursor broadcasts to max 10/sec to avoid microtask queue starvation
+        const now = Date.now();
+        if (now - lastCursorRef.current < 100) return;
+        lastCursorRef.current = now;
+
         const rect = whiteboardRef.current.getBoundingClientRect();
         const x = (e.clientX - rect.left) / rect.width;
         const y = (e.clientY - rect.top) / rect.height;
         sendCursorPosition({ x, y });
     }, [sendCursorPosition]);
+
+    const getCanvasPoint = (e: React.PointerEvent<HTMLDivElement>) => {
+        const rect = whiteboardRef.current!.getBoundingClientRect();
+        return {
+            x: (e.clientX - rect.left) * (overlayRef.current!.width / rect.width),
+            y: (e.clientY - rect.top) * (overlayRef.current!.height / rect.height),
+        };
+    };
+
+    const handleOverlayPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+        if (!isTeacher || activeTool !== 'pencil' || !overlayRef.current) return;
+        
+        // At start of new stroke, clear the previous temporary stroke.
+        // Netless has already rendered it in the committed layer by now.
+        const ctx = overlayRef.current.getContext('2d');
+        ctx?.clearRect(0, 0, overlayRef.current.width, overlayRef.current.height);
+        isPointerDownRef.current = true;
+        lastPointRef.current = getCanvasPoint(e);
+    }, [isTeacher, activeTool]);
+
+    const handleOverlayPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+        if (!isPointerDownRef.current || !overlayRef.current || !lastPointRef.current) return;
+        
+        const ctx = overlayRef.current.getContext('2d');
+        if (!ctx) return;
+        
+        const point = getCanvasPoint(e);
+        const [r, g, b] = hexToRgb(strokeColor);
+        
+        ctx.strokeStyle = `rgb(${r},${g},${b})`;
+        ctx.lineWidth = strokeWidth * (overlayRef.current.width / whiteboardRef.current!.getBoundingClientRect().width);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        ctx.beginPath();
+        ctx.moveTo(lastPointRef.current.x, lastPointRef.current.y);
+        ctx.lineTo(point.x, point.y);
+        ctx.stroke();
+        
+        lastPointRef.current = point;
+    }, [strokeColor, strokeWidth]);
+
+    const handleOverlayPointerUp = useCallback(() => {
+        isPointerDownRef.current = false;
+        lastPointRef.current = null;
+        // Do NOT clear overlay here. Leave it visible to bridge the GAP
+        // until the next stroke begins.
+    }, []);
 
     const clearCanvas = useCallback(() => {
         if (!roomRef.current || !isTeacher) return;
@@ -257,7 +315,8 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         if (!whiteboardRef.current) return;
 
         // 2.4: Detect device type before initialising the SDK
-        deviceType.current = detectDeviceType();
+        const detected = detectDeviceType();
+        setDeviceTypeState(detected);
 
         const {
             appIdentifier: appId, roomUuid: rUuid, roomToken: rToken,
@@ -280,7 +339,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         try {
             sdk = new WhiteWebSdk({
                 appIdentifier: cleanAppId,
-                deviceType:    deviceType.current,       // 2.4: correct device type
+                deviceType:    detected,       // 2.4: correct device type
                 region:        finalRegion as WhiteboardRegion,
             });
             sdkRef.current = sdk;
@@ -522,7 +581,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
 
     // 2.4: On touch devices the whiteboard container must NOT suppress pointer
     // events with `touch-none` — Netless handles them internally via DeviceType.Touch.
-    const isTouchDevice = deviceType.current === DeviceType.Touch;
+    const isTouchDevice = deviceTypeState === DeviceType.Touch;
 
     // ─── Render ───────────────────────────────────────────────────────────────
     return (
@@ -698,7 +757,21 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 className={`flex-1 w-full h-full relative z-10 pointer-events-auto overflow-hidden ${isTouchDevice ? '' : 'touch-none'}`}
                 style={{ minHeight: '400px' }}
                 onMouseMove={handleMouseMove}
+                onPointerDown={handleOverlayPointerDown}
+                onPointerMove={handleOverlayPointerMove}
+                onPointerUp={handleOverlayPointerUp}
+                onPointerCancel={handleOverlayPointerUp}
+                onPointerLeave={handleOverlayPointerUp}
             >
+                {/* ── Overlay Canvas for Instant Stroke Rendering ── */}
+                <canvas
+                    ref={overlayRef}
+                    width={1920}
+                    height={1080}
+                    className="absolute inset-0 w-full h-full pointer-events-none z-30"
+                    style={{ opacity: activeTool === 'pencil' && isTeacher ? 1 : 0 }}
+                />
+
                 {/* ── Render remote cursors ── */}
                 {Object.entries(remoteCursors).map(([cursorUid, pos]) => (
                     String(cursorUid) !== String(uid) && (
