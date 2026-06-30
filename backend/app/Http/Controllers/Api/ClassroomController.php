@@ -254,6 +254,14 @@ class ClassroomController extends Controller
             // Force-mint a fresh token, overwriting the cache
             $freshToken = $this->whiteboardService->refreshRoomToken($whiteboardRoomUuid, $tokenRole, $durationMs);
 
+            \Sentry\addBreadcrumb(new \Sentry\Breadcrumb(
+                \Sentry\Breadcrumb::LEVEL_INFO,
+                \Sentry\Breadcrumb::TYPE_DEFAULT,
+                'whiteboard',
+                'whiteboard_token_refreshed',
+                ['booking_id' => $bookingId, 'user_id' => $user->id, 'role' => $tokenRole]
+            ));
+
             return response()->json([
                 'status'     => 'success',
                 'room_token' => $freshToken,

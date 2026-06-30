@@ -56,6 +56,13 @@ class ProvisionVirtualClassroom implements ShouldQueue
                     
                     $this->booking->update(['whiteboard_room_uuid' => $uuid]);
                     Log::info("Whiteboard room created for booking #{$this->booking->id}");
+                    \Sentry\addBreadcrumb(new \Sentry\Breadcrumb(
+                        \Sentry\Breadcrumb::LEVEL_INFO,
+                        \Sentry\Breadcrumb::TYPE_DEFAULT,
+                        'whiteboard',
+                        'whiteboard_room_provisioned',
+                        ['booking_id' => $this->booking->id, 'room_uuid' => $uuid]
+                    ));
                 }
 
                 // 3. 🚀 Pre-generate tokens for both participants to make entry instant
