@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { bookingService } from '@/services/api';
 import { useAgoraRTM, CursorMessage } from '@/hooks/useAgoraRTM';
+import * as Sentry from "@sentry/nextjs";
 
 // ─── Local types ─────────────────────────────────────────────────────────────
 
@@ -234,6 +235,17 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
             const freshToken = res.room_token;
             initProps.current.roomToken = freshToken;
 
+            Sentry.addBreadcrumb({
+                category: "whiteboard",
+                message:  "whiteboard_token_refreshed",
+                level:    "info",
+                data:     {
+                    booking_id: initProps.current.bookingId,
+                    room_uuid:  initProps.current.roomUuid,
+                    is_teacher: initProps.current.isTeacher,
+                },
+            });
+
             // Disconnect the stale room instance first
             if (roomRef.current) {
                 try { await roomRef.current.disconnect(); } catch { /* already disconnected */ }
@@ -293,6 +305,31 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 // Re-register phase listener
                 roomInstance.callbacks.on('onPhaseChanged', (newPhase: RoomPhase) => {
                     setPhase(newPhase);
+                    if (
+                        newPhase === RoomPhase.Disconnected ||
+                        newPhase === RoomPhase.Reconnecting
+                    ) {
+                        Sentry.addBreadcrumb({
+                            category: "whiteboard",
+                            message:  "whiteboard_disconnected",
+                            level:    "warning",
+                            data:     {
+                                phase:      newPhase,
+                                booking_id: initProps.current.bookingId,
+                                room_uuid:  initProps.current.roomUuid,
+                            },
+                        });
+                    } else if (newPhase === RoomPhase.Connected) {
+                        Sentry.addBreadcrumb({
+                            category: "whiteboard",
+                            message:  "whiteboard_reconnected",
+                            level:    "info",
+                            data:     {
+                                booking_id: initProps.current.bookingId,
+                                room_uuid:  initProps.current.roomUuid,
+                            },
+                        });
+                    }
                 });
 
                 const sceneState = roomInstance.state.sceneState;
@@ -301,6 +338,13 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 setError(null);
             }
         } catch (err) {
+            Sentry.captureException(err, {
+                tags:  { component: "Whiteboard", action: "reconnect_failed" },
+                extra: {
+                    booking_id: initProps.current.bookingId,
+                    room_uuid:  initProps.current.roomUuid,
+                },
+            });
             console.error('[Whiteboard] Reconnect failed:', err);
             setError('انقطع الاتصال بالسبورة. حاولنا إعادة الاتصال لكن فشل الأمر. يُرجى إعادة تحميل الصفحة.');
         } finally {
@@ -427,6 +471,16 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                         newPhase === RoomPhase.Disconnected ||
                         newPhase === RoomPhase.Reconnecting
                     ) {
+                        Sentry.addBreadcrumb({
+                            category: "whiteboard",
+                            message:  "whiteboard_disconnected",
+                            level:    "warning",
+                            data:     {
+                                phase:      newPhase,
+                                booking_id: initProps.current.bookingId,
+                                room_uuid:  initProps.current.roomUuid,
+                            },
+                        });
                         // Debounce: wait 800ms before attempting reconnect, in case
                         // it is a momentary blip that the SDK self-recovers from.
                         if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
@@ -441,6 +495,15 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                             }
                         }, 800);
                     } else if (newPhase === RoomPhase.Connected) {
+                        Sentry.addBreadcrumb({
+                            category: "whiteboard",
+                            message:  "whiteboard_reconnected",
+                            level:    "info",
+                            data:     {
+                                booking_id: initProps.current.bookingId,
+                                room_uuid:  initProps.current.roomUuid,
+                            },
+                        });
                         if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
                         setIsReconnecting(false);
                     }
@@ -452,6 +515,14 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 setLoading(false);
                 setError(null);
             } catch (joinError: unknown) {
+                Sentry.captureException(joinError, {
+                    tags:  { component: "Whiteboard", action: "join_failed" },
+                    extra: {
+                        booking_id: initProps.current.bookingId,
+                        room_uuid:  initProps.current.roomUuid,
+                        region:     initProps.current.region,
+                    },
+                });
                 setError(`فشل الانضمام للغرفة: ${joinError instanceof Error ? joinError.message : 'خطأ غير معروف'}`);
                 setLoading(false);
             }
