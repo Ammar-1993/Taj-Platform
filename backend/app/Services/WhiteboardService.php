@@ -80,7 +80,11 @@ class WhiteboardService
             return $response->json('uuid');
         }
 
-        throw new Exception('فشل إنشاء غرفة السبورة التفاعلية: ' . $response->body());
+        $errorMessage = 'فشل إنشاء غرفة السبورة التفاعلية: ' . $response->body();
+        if (class_exists(\Sentry\SentrySdk::class)) {
+            \Sentry\captureException(new Exception($errorMessage));
+        }
+        throw new Exception($errorMessage);
     }
 
     /**

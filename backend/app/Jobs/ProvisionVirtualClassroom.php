@@ -40,33 +40,35 @@ class ProvisionVirtualClassroom implements ShouldQueue
      */
     public function handle(WhiteboardService $whiteboardService): void
     {
-        // 🛡️ 1. Use a cache lock to prevent multiple joins from creating multiple rooms
-        $lock = Cache::lock("provision_classroom_{$this->booking->id}", 60);
+        \Sentry\trace(function () use ($whiteboardService) {
+            // 🛡️ 1. Use a cache lock to prevent multiple joins from creating multiple rooms
+            $lock = Cache::lock("provision_classroom_{$this->booking->id}", 60);
 
-        if (!$lock->get()) {
-            return;
-        }
-
-        try {
-            // 2. Provision Whiteboard if missing
-            if (!$this->booking->whiteboard_room_uuid) {
-                $roomName = "حصة: " . ($this->booking->student->name ?? 'طالب') . " مع " . ($this->booking->teacher->name ?? 'معلم');
-                $uuid = $whiteboardService->createRoom($roomName);
-                
-                $this->booking->update(['whiteboard_room_uuid' => $uuid]);
-                Log::info("Whiteboard room created for booking #{$this->booking->id}");
+            if (!$lock->get()) {
+                return;
             }
 
-            // 3. 🚀 Pre-generate tokens for both participants to make entry instant
-            $this->preGenerateTokens($this->booking);
+            try {
+                // 2. Provision Whiteboard if missing
+                if (!$this->booking->whiteboard_room_uuid) {
+                    $roomName = "حصة: " . ($this->booking->student->name ?? 'طالب') . " مع " . ($this->booking->teacher->name ?? 'معلم');
+                    $uuid = $whiteboardService->createRoom($roomName);
+                    
+                    $this->booking->update(['whiteboard_room_uuid' => $uuid]);
+                    Log::info("Whiteboard room created for booking #{$this->booking->id}");
+                }
 
-            Log::info("Virtual classroom fully provisioned for booking #{$this->booking->id}");
-        } catch (\Exception $e) {
-            Log::error("Provisioning failed for booking #{$this->booking->id}: " . $e->getMessage());
-            throw $e;
-        } finally {
-            $lock->release();
-        }
+                // 3. 🚀 Pre-generate tokens for both participants to make entry instant
+                $this->preGenerateTokens($this->booking);
+
+                Log::info("Virtual classroom fully provisioned for booking #{$this->booking->id}");
+            } catch (\Exception $e) {
+                Log::error("Provisioning failed for booking #{$this->booking->id}: " . $e->getMessage());
+                throw $e;
+            } finally {
+                $lock->release();
+            }
+        }, 'job', 'ProvisionVirtualClassroom');
     }
 
     /**

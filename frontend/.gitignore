@@ -39,3 +39,6 @@ next-env.d.ts
 GEMINI.md
 .GEMINI.md
 
+
+# Sentry Config File
+.env.sentry-build-plugin

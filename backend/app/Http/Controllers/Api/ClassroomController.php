@@ -62,38 +62,40 @@ class ClassroomController extends Controller
 
         // 2. إذا لم يكن موجوداً، نقوم بتوليده فوراً
         if (!$token || !$rtmToken) {
-            $appId = config('services.agora.app_id');
-            $appCertificate = config('services.agora.app_certificate');
+            \Sentry\trace(function () use (&$token, &$rtmToken, &$screenToken, $user, $booking, $role) {
+                $appId = config('services.agora.app_id');
+                $appCertificate = config('services.agora.app_certificate');
 
-            if ($appId && $appCertificate) {
-                $client = new Agora($appId, $appCertificate);
-                $client->setExpiration(now()->addHours(2)->timestamp);
+                if ($appId && $appCertificate) {
+                    $client = new Agora($appId, $appCertificate);
+                    $client->setExpiration(now()->addHours(2)->timestamp);
 
-                // التوكن الأساسي (RTC و RTM)
-                $agoraUser = new AgoraUser($user->id);
-                $agoraUser->setChannel($booking->agora_channel);
-                $agoraUser->setRole($role === 'host' ? AgoraRoles::RTC_PUBLISHER : AgoraRoles::RTC_SUBSCRIBER);
-                $agoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
-                $token = RtcToken::buildTokenWithUid($client, $agoraUser);
+                    // التوكن الأساسي (RTC و RTM)
+                    $agoraUser = new AgoraUser($user->id);
+                    $agoraUser->setChannel($booking->agora_channel);
+                    $agoraUser->setRole($role === 'host' ? AgoraRoles::RTC_PUBLISHER : AgoraRoles::RTC_SUBSCRIBER);
+                    $agoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
+                    $token = RtcToken::buildTokenWithUid($client, $agoraUser);
 
-                $rtmUser = new AgoraUser((string) $user->id);
-                $rtmUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
-                $rtmToken = RtmToken::buildToken($client, $rtmUser);
+                    $rtmUser = new AgoraUser((string) $user->id);
+                    $rtmUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
+                    $rtmToken = RtmToken::buildToken($client, $rtmUser);
 
-                // حفظه في الكاش للطلبات القادمة
-                Cache::put("agora_token_{$booking->id}_{$user->id}", $token, now()->addHours(2));
-                Cache::put("agora_rtm_token_{$booking->id}_{$user->id}", $rtmToken, now()->addHours(2));
+                    // حفظه في الكاش للطلبات القادمة
+                    Cache::put("agora_token_{$booking->id}_{$user->id}", $token, now()->addHours(2));
+                    Cache::put("agora_rtm_token_{$booking->id}_{$user->id}", $rtmToken, now()->addHours(2));
 
-                // توكن مشاركة الشاشة للمعلم
-                if ($user->id === $booking->teacher_id) {
-                    $screenAgoraUser = new AgoraUser($user->id + 1000000000);
-                    $screenAgoraUser->setChannel($booking->agora_channel);
-                    $screenAgoraUser->setRole(AgoraRoles::RTC_PUBLISHER);
-                    $screenAgoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
-                    $screenToken = RtcToken::buildTokenWithUid($client, $screenAgoraUser);
-                    Cache::put("agora_token_{$booking->id}_screen", $screenToken, now()->addHours(2));
+                    // توكن مشاركة الشاشة للمعلم
+                    if ($user->id === $booking->teacher_id) {
+                        $screenAgoraUser = new AgoraUser($user->id + 1000000000);
+                        $screenAgoraUser->setChannel($booking->agora_channel);
+                        $screenAgoraUser->setRole(AgoraRoles::RTC_PUBLISHER);
+                        $screenAgoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
+                        $screenToken = RtcToken::buildTokenWithUid($client, $screenAgoraUser);
+                        Cache::put("agora_token_{$booking->id}_screen", $screenToken, now()->addHours(2));
+                    }
                 }
-            }
+            }, 'agora', 'GenerateTokens');
         }
 
         // 🟢 تجهيز بيانات السبورة التفاعلية
