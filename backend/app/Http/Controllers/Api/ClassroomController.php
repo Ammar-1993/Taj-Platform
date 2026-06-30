@@ -62,6 +62,7 @@ class ClassroomController extends Controller
 
         // 2. إذا لم يكن موجوداً، نقوم بتوليده فوراً
         if (!$token || !$rtmToken) {
+            $context = \Sentry\Tracing\SpanContext::make()->setOp('agora')->setDescription('GenerateTokens');
             \Sentry\trace(function () use (&$token, &$rtmToken, &$screenToken, $user, $booking, $role) {
                 $appId = config('services.agora.app_id');
                 $appCertificate = config('services.agora.app_certificate');
@@ -95,7 +96,7 @@ class ClassroomController extends Controller
                         Cache::put("agora_token_{$booking->id}_screen", $screenToken, now()->addHours(2));
                     }
                 }
-            }, 'agora', 'GenerateTokens');
+            }, $context);
         }
 
         // 🟢 تجهيز بيانات السبورة التفاعلية

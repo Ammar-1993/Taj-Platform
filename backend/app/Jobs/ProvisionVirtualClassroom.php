@@ -40,6 +40,7 @@ class ProvisionVirtualClassroom implements ShouldQueue
      */
     public function handle(WhiteboardService $whiteboardService): void
     {
+        $context = \Sentry\Tracing\SpanContext::make()->setOp('job')->setDescription('ProvisionVirtualClassroom');
         \Sentry\trace(function () use ($whiteboardService) {
             // 🛡️ 1. Use a cache lock to prevent multiple joins from creating multiple rooms
             $lock = Cache::lock("provision_classroom_{$this->booking->id}", 60);
@@ -75,7 +76,7 @@ class ProvisionVirtualClassroom implements ShouldQueue
             } finally {
                 $lock->release();
             }
-        }, 'job', 'ProvisionVirtualClassroom');
+        }, $context);
     }
 
     /**
