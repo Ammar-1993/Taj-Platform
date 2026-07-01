@@ -156,6 +156,10 @@ class WhiteboardService
             return is_string($decoded) ? $decoded : $body;
         }
 
-        throw new Exception('فشل الحصول على توكن السبورة: ' . $response->body());
+        $errorMessage = 'فشل الحصول على توكن السبورة: ' . $response->body();
+        if (class_exists(\Sentry\SentrySdk::class)) {
+            \Sentry\captureException(new Exception($errorMessage));
+        }
+        throw new Exception($errorMessage);
     }
 }

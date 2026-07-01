@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import * as Sentry from '@sentry/nextjs';
 import AgoraRTC, { 
     AREAS,
     IAgoraRTCClient, 
@@ -110,6 +111,7 @@ const AgoraCall = React.memo(({
             return aTrack;
         } catch (err) {
             console.error("[AgoraCall] Failed to create/publish audio track:", err);
+            Sentry.captureException(err, { extra: { context: "[AgoraCall] Failed to create/publish audio track" } });
             if (aTrack) aTrack.close();
             return null;
         }
@@ -129,6 +131,7 @@ const AgoraCall = React.memo(({
             return vTrack;
         } catch (err) {
             console.error("[AgoraCall] Failed to create/publish video track:", err);
+            Sentry.captureException(err, { extra: { context: "[AgoraCall] Failed to create/publish video track" } });
             if (vTrack) vTrack.close();
             return null;
         }
@@ -163,6 +166,7 @@ const AgoraCall = React.memo(({
                         onTokenWillExpire?.(freshToken ?? '', freshScreenToken);
                     } catch (err) {
                         console.error("[Agora] Failed to refresh token:", err);
+                        Sentry.captureException(err, { extra: { context: "[Agora] Failed to refresh token" } });
                     }
                 });
 
@@ -372,6 +376,7 @@ const AgoraCall = React.memo(({
                     }
                 } catch (e) {
                     console.error("Error creating tracks:", e);
+                    Sentry.captureException(e, { extra: { context: "Error creating tracks" } });
                     if (isMounted) setIsJoined(true);
                 }
             } catch (err) {
@@ -385,6 +390,7 @@ const AgoraCall = React.memo(({
                     console.warn("[AgoraCall] Join aborted — component unmounted during WebSocket connection.");
                 } else {
                     console.error("Agora Init Error:", err);
+                    Sentry.captureException(err, { extra: { context: "Agora Init Error" } });
                 }
             }
         };
@@ -421,6 +427,7 @@ const AgoraCall = React.memo(({
                         localVideoTrack.close();
                     } catch (e) {
                         console.error("Failed to close camera track", e);
+                        Sentry.captureException(e, { extra: { context: "Failed to close camera track" } });
                     }
                     setLocalVideoTrack(null);
                 }
@@ -445,6 +452,7 @@ const AgoraCall = React.memo(({
                         localAudioTrack.close();
                     } catch (e) {
                         console.error("Failed to close audio track", e);
+                        Sentry.captureException(e, { extra: { context: "Failed to close audio track" } });
                     }
                     setLocalAudioTrack(null);
                 }
@@ -483,6 +491,7 @@ const AgoraCall = React.memo(({
             // Non-fatal: encoder config changes can fail if the track is being
             // renegotiated. The current config stays active until the next cycle.
             console.warn("[AgoraCall] Adaptive encoder update failed:", err);
+            Sentry.captureException(err, { level: 'warning', extra: { context: "[AgoraCall] Adaptive encoder update failed" } });
         });
     }, [networkQuality, localVideoTrack, isJoined]);
 
