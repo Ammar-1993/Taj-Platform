@@ -40,6 +40,13 @@ class SubjectResource extends Resource
                             ->unique(ignoreRecord: true) // منع التكرار
                             ->placeholder('مثال: لغتي الجميلة'),
 
+                        Forms\Components\Select::make('grade_level_id')
+                            ->label('المرحلة الدراسية')
+                            ->relationship('gradeLevel', 'name')
+                            ->required()
+                            ->preload()
+                            ->searchable(),
+
                         Forms\Components\FileUpload::make('icon_path')
                             ->label('أيقونة المادة (اختياري)')
                             ->image()
@@ -70,6 +77,12 @@ class SubjectResource extends Resource
                     ->sortable()
                     ->weight('bold')
                     ->color('primary'),
+
+                Tables\Columns\TextColumn::make('gradeLevel.name')
+                    ->label('المرحلة الدراسية')
+                    ->searchable()
+                    ->sortable()
+                    ->badge(),
 
                 // إضافة عداد المعلمين الذين يدرسون هذه المادة (لمسة احترافية)
                 Tables\Columns\TextColumn::make('teacher_profiles_count')
