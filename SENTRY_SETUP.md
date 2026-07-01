@@ -24,11 +24,17 @@ To enable Application Performance Monitoring (APM) and Error Tracking across the
    npx @sentry/wizard@latest -i nextjs
    ```
 
-2. Follow the wizard prompts to automatically configure `sentry.client.config.ts`, `sentry.server.config.ts`, and `sentry.edge.config.ts`.
+2. Follow the wizard prompts to automatically configure `instrumentation.ts`, `src/instrumentation-client.ts`, and the traditional `sentry.*.config.ts` files depending on your Next.js version.
 
 3. Ensure to upload source maps to Sentry on production builds in Vercel.
 
 ## 3. Key Metrics to Monitor
 - **Virtual Classroom Provisioning Time**: Track the duration of `ProvisionVirtualClassroom` job.
 - **Agora Token Generation Time**: Monitor caching effectiveness in `ClassroomController`.
-- **Whiteboard Connection Failures**: Alert if `WhiteboardService::createRoom` throws repeated errors.
+- **Whiteboard Connection Failures**: Alert if `WhiteboardService::createRoom` or `WhiteboardService::mintRoomToken` throws repeated errors.
+- **Video/Audio Call Failures**: Track errors in `AgoraCall.tsx` related to track creation, token renewal, and adaptive encoder failures.
+
+## 4. Environment Variables Checklist
+Ensure these variables are set with their actual values in your production dashboards, not just masked placeholders in `.env.example`:
+- **Backend (Render):** `SENTRY_LARAVEL_DSN`
+- **Frontend (Vercel):** `NEXT_PUBLIC_SENTRY_DSN` and `SENTRY_AUTH_TOKEN`
