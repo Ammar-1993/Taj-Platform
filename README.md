@@ -228,10 +228,10 @@ Edit `backend/.env` and fill in: database credentials, `AGORA_APP_ID` / `AGORA_A
 ### 3. Configure Frontend Environment
 
 ```bash
-cp frontend/.env.example frontend/.env.local
+cp frontend/.env.example frontend/.env
 ```
 
-Edit `frontend/.env.local` and fill in:
+Edit `frontend/.env` and fill in:
 
 | Variable | Purpose |
 |---|---|
