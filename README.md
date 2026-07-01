@@ -7,9 +7,9 @@
   <br />
 
   <h1>Taj Educational Platform <br/> (منصة تاج التعليمية)</h1>
-  
+
   <p>
-    <b>The Ultimate Production-Ready App for Live Tutoring, Mentorship, and Academic Excellence.</b>
+    <b>A Production-Grade, Arabic-First E-Learning Marketplace for Live 1-on-1 Tutoring.</b>
   </p>
 
   <p>
@@ -17,12 +17,14 @@
     <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-14.2-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 14" /></a>
     <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" /></a>
     <a href="https://filamentphp.com"><img src="https://img.shields.io/badge/Filament_V3-EAB308?style=for-the-badge&logo=filament&logoColor=white" alt="Filament" /></a>
-    <a href="https://tailwindcss.com"><img src="https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind" /></a>
+    <a href="https://www.agora.io"><img src="https://img.shields.io/badge/Agora-RTC%20%2F%20RTM-099DFD?style=for-the-badge&logo=agora&logoColor=white" alt="Agora" /></a>
+    <a href="https://www.netless.link"><img src="https://img.shields.io/badge/Netless-Whiteboard-6C47FF?style=for-the-badge" alt="Netless Whiteboard" /></a>
+    <a href="https://sentry.io"><img src="https://img.shields.io/badge/Sentry-Monitoring-362D59?style=for-the-badge&logo=sentry&logoColor=white" alt="Sentry" /></a>
     <a href="https://www.docker.com"><img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" /></a>
   </p>
 
   <p align="center" style="max-width: 800px; margin: 0 auto;">
-    Taj Educational Platform is a state-of-the-art, multi-tenant e-learning ecosystem designed to bridge the gap between students and specialized educators. Powered by a high-performance REST API and a stunningly responsive Next.js frontend, it delivers low-latency live video sessions and a seamless educational experience.
+    Taj connects students and parents in the MENA region with verified subject-specialist teachers for live, one-on-one tutoring. It ships with a fully-featured virtual classroom — HD video, adaptive screen sharing, and a real-time collaborative whiteboard — wrapped around a wallet-based economy with automated revenue splitting, built entirely with a native Arabic (RTL) experience.
   </p>
 </div>
 
@@ -30,60 +32,66 @@
 
 ## 📖 Table of Contents
 
-1. [📸 Project Showcase](#-project-showcase)
-2. [🏗️ System Architecture](#️-system-architecture)
-3. [🌐 Live Beta Access](#-live-beta-access)
-4. [✨ Functional Requirements](#-functional-requirements-fr)
-5. [🛠️ Technology Stack](#️-technology-stack)
-6. [📊 Project Stats](#-project-stats)
-7. [🚀 Getting Started](#-getting-started)
-8. [🧪 Testing](#-testing)
-9. [👤 Author](#-author)
+1. [🏗️ System Architecture](#️-system-architecture)
+2. [🌐 Live Beta Access](#-live-beta-access)
+3. [🆕 What's New](#-whats-new)
+4. [✨ Key Features](#-key-features)
+5. [🎓 Functional Requirements by Role](#-functional-requirements-by-role)
+6. [🛠️ Technology Stack](#️-technology-stack)
+7. [📊 Project Stats](#-project-stats)
+8. [🚀 Getting Started](#-getting-started)
+9. [🧪 Testing](#-testing)
+10. [👤 Author](#-author)
 
 ---
 
 ## 🏗️ System Architecture
 
-The following diagram illustrates the decoupled interaction between the **Next.js** presentation layer, the **Laravel** API heart, and the shared ecosystem services.
+The platform is a decoupled monorepo: a Next.js presentation layer talks to a Laravel API over REST, while the virtual classroom (video, screen share, and whiteboard) connects directly, client-to-client, through Agora and Netless — keeping the API server free of media traffic.
 
 ```mermaid
 graph TD
-    subgraph "Frontend Layer (User Facing)"
-        NJ[Next.js 14 App Router]
-        TW[Tailwind CSS / UI Components]
-        SC[Student/Teacher/Parent Portals]
+    subgraph "Frontend Layer — Next.js 14"
+        NJ[App Router / React 18 / TypeScript]
+        TW[Tailwind CSS]
+        PORTALS[Student • Teacher • Parent Portals]
     end
 
-    subgraph "Service Connectivity"
-        AX[Axios / REST API Calls]
-        AG[Agora RTC SDK / Live Video]
+    subgraph "Live Classroom — Direct Client Connections"
+        AGRTC[Agora RTC — Video / Audio / Screen Share]
+        AGRTM[Agora RTM — Cursor Sync]
+        NETLESS[Netless white-web-sdk — Interactive Whiteboard]
     end
 
-    subgraph "Backend Engine (Business Logic)"
-        LV[Laravel 12 API]
+    subgraph "Backend Engine — Laravel 12"
+        API[REST API]
         FL[Filament V3 Admin Panel]
-        SM[Sanctum Auth / RBAC]
+        SM[Sanctum Auth + Spatie RBAC]
+        QUEUE[Queue Worker — Async Classroom Provisioning]
     end
 
-    subgraph "Data & Media"
+    subgraph "Data & External Services"
         DB[(MySQL 8.0)]
-        ST[Public/Private Storage]
+        MOYASAR[Moyasar — SAR Payment Gateway]
+        SENTRY[Sentry — Error & Performance Monitoring]
     end
 
-    %% Flow Connections
-    NJ --> AX
-    AX --> LV
-    NJ --> AG
-    AG <-.-> LV
-    LV --> DB
-    LV --> ST
+    NJ --> API
+    API --> DB
+    API --> QUEUE
+    QUEUE --> NETLESS
+    API --> MOYASAR
+    NJ <-.direct WebRTC/WS.-> AGRTC
+    NJ <-.direct WS.-> AGRTM
+    NJ <-.direct WS.-> NETLESS
     FL --> DB
+    API -.errors/traces.-> SENTRY
+    NJ -.errors/traces.-> SENTRY
 ```
+
 ---
 
 ## 🌐 Live Beta Access
-
-Explore the live environments hosted in our beta phase:
 
 - **🎓 Frontend (Students & Teachers)**: <a href="https://taj-platform.vercel.app/" target="_blank" rel="noopener noreferrer">Live Demo</a>
 - **👑 Admin Dashboard Panel**: <a href="https://taj-backend-t4ki.onrender.com/admin/login" target="_blank" rel="noopener noreferrer">Admin Login</a>
@@ -91,89 +99,109 @@ Explore the live environments hosted in our beta phase:
 
 ---
 
-## ✨ Key Features
+## 🆕 What's New
 
-- 🔐 **Roles & Access Management:** Full RBAC using Spatie Permissions. Distinct portals for Students, Verified Teachers (e.g., Chemistry, Physics), and System Admins.
-- 📹 **Live Video Tutoring:** Real-time, low-latency audio and video communication powered by robust **Agora RTC SDK**.
-- 📅 **Smart Booking System:** Localized appointment scheduling enabling students to book subject matter experts efficiently.
-- 👑 **Advanced Admin Dashboard:** A deeply customizable administration UI built on **FilamentPHP**, fully localized into Arabic with custom Taj branding (منصة تاج التعليمية).
-- 🌍 **Full Localization & RTL Support:** Native Right-to-Left (RTL) interface modeling localized entirely in Arabic for the Middle Eastern audience.
-- 🛡️ **Secure API & Authentication:** Token-based security and robust protected API endpoints handled seamlessly by **Laravel Sanctum**.
+Recent additions that take the platform beyond a basic booking-and-video app:
+
+- **🖊️ Interactive Whiteboard** — A real-time collaborative whiteboard (Netless `white-web-sdk`) inside every classroom, with drawing tools, live cursor sync between teacher and student, and automatic reconnection on network drops.
+- **📡 Adaptive Network Resilience** — A multi-layer video quality system that smooths out network quality readings, switches to a low-resolution simulcast stream automatically, re-encodes the outgoing video in real time (from 720p down to 120p), and prioritizes audio over video when bandwidth is critically low — all without interrupting the call.
+- **🖥️ Isolated Screen Sharing** — Screen share runs on a fully separate media connection from the camera feed, so presenting a slide deck never competes with — or degrades — the main video call.
+- **🛰️ Full-Stack Error & Performance Monitoring** — Sentry is wired into both the Laravel backend and the Next.js frontend, with custom breadcrumbs tracking the health of the classroom provisioning pipeline and whiteboard connection lifecycle.
+- **💰 Automated Revenue Split** — Every completed session automatically credits the teacher's wallet with their share and retains the platform commission — no manual reconciliation required.
 
 ---
 
-## ✨ Functional Requirements (FR)
+## ✨ Key Features
 
-The Taj Educational Platform is designed with a robust, multi-tenant architecture serving four distinct user roles. Below are the core functional requirements implemented to deliver a seamless educational and financial flow:
+- 🔐 **Full RBAC** — Four distinct roles (Student, Teacher, Parent, Admin) via Spatie Permissions, each with its own dashboard and capabilities.
+- 📹 **Live HD Video Tutoring** — Low-latency audio/video sessions via Agora RTC, with automatic token renewal mid-session.
+- 🖊️ **Real-Time Interactive Whiteboard** — Synchronized drawing, shapes, and text between teacher and student powered by Netless.
+- 🖥️ **Dedicated Screen Sharing** — Independent media channel so screen shares stay smooth regardless of camera bandwidth.
+- 📅 **Race-Condition-Safe Booking** — Atomic, transaction-locked slot booking that makes double-booking the same time slot impossible.
+- 💳 **Wallet-Based Economy** — A central wallet system for students, parents, and teachers, backed by an overdraft-proof transaction ledger.
+- 💰 **Automated Payouts & Revenue Share** — Sessions automatically split earnings between teacher and platform on completion; teachers can request payouts to their bank account.
+- 💵 **Moyasar Payment Integration** — Saudi-market payment gateway for wallet top-ups, with signed webhook verification and idempotent crediting.
+- 👨‍👩‍👧 **Parent-Managed Sub-Accounts** — Parents can link multiple children, fund their wallets, and toggle independent booking permissions per child.
+- ⭐ **Mandatory Review System** — Students are prompted to rate their teacher after every completed session.
+- 👑 **Custom Admin Panel** — A fully Arabic-localized FilamentPHP dashboard for KYC verification, dispute resolution, refunds, and platform-wide analytics.
+- 🌍 **100% Arabic, RTL-Native UI** — Every screen, label, and system notification is built RTL-first for the MENA region.
+- 🛰️ **Production-Grade Monitoring** — Sentry error tracking and performance tracing across both frontend and backend.
 
-### 🌐 1. Common Features (All Users)
+---
 
-- **Centralized Authentication (RBAC):** Secure login and registration with Role-Based Access Control, ensuring users only access their designated interfaces.
-- **Interactive Dashboards:** Personalized landing pages for each role summarizing statistics, upcoming schedules, and recent notifications.
-- **Integrated Digital Wallet:** A unified wallet system allowing users to track current balances, view detailed transaction histories (top-ups, deductions, earnings, withdrawals), and manage funds safely.
-- **Real-Time Notifications:** In-app alerts for new bookings, class reminders, and wallet updates.
-- **Full Localization:** Native Right-to-Left (RTL) Arabic interface for optimal user experience in the MENA region.
+## 🎓 Functional Requirements by Role
 
-### 👨‍🎓 2. Student Features
+### 🌐 Common Features (All Users)
 
-- **Advanced Discovery & Search:** Ability to browse and filter tutors based on subjects, ratings, and hourly rates.
-- **Seamless Booking System:** Select available time slots from a teacher's calendar and pay instantly using wallet balance or direct gateway.
-- **Interactive Virtual Classroom:** Seamless integration with WebRTC (Agora) for real-time video, audio, and screen-sharing sessions directly within the browser (No external app required).
-- **Mandatory Review System:** Post-class pop-ups prompting students to rate and review teachers (1-5 stars) to maintain platform quality.
+- Secure, token-based authentication (Laravel Sanctum) with rate-limited login/registration.
+- Role-aware dashboards summarizing schedules, wallet balance, and notifications.
+- Full transaction history for every wallet movement (top-ups, deductions, earnings, refunds).
+- Native RTL Arabic interface throughout.
 
-### 👨‍👩‍👧‍👦 3. Parent Features
+### 👨‍🎓 Student Features
 
-- **Sub-Account Management:** Ability to create, link, and manage multiple student (children) accounts, specifying their educational levels.
-- **Financial Oversight & Funding:** Top-up the main parental wallet via credit cards (Stripe/PayTabs) and transfer specific allowances to children's wallets for self-booking.
-- **Booking Permissions:** Granular control to allow or restrict a child's ability to book and pay for sessions independently.
-- **Academic Monitoring:** Track children's upcoming schedules, view attendance history, and monitor teacher evaluations.
+- Search and filter teachers by subject, grade level, and availability.
+- Book a session directly from a teacher's live calendar, paid instantly from wallet balance.
+- Join a live classroom with video, audio, screen sharing, and the interactive whiteboard — no external app required.
+- Rate and review the teacher after each completed session.
 
-### 👨‍🏫 4. Teacher Features
+### 👨‍👩‍👧‍👦 Parent Features
 
-- **Automated KYC & Onboarding:** Secure portal to upload identity documents and academic certificates for admin verification before profile activation.
-- **Dynamic Schedule Management:** Interactive calendar to define and update weekly availability slots and working hours.
-- **Virtual Classroom Control:** Host privileges within the virtual room, including starting/ending the session, and screen sharing.
-- **Earnings & Payouts:** Automated fund transfer (Escrow release) upon class completion, with the ability to submit withdrawal requests (Payouts) to personal bank accounts.
+- Create and manage multiple linked child (student) accounts.
+- Top up the family wallet via Moyasar and allocate spending allowances per child.
+- Grant or revoke a child's ability to book and pay for sessions independently.
+- Monitor a child's schedule, attendance, and the reviews they've left.
 
-### 🛡️ 5. Admin (Super User) Features
+### 👨‍🏫 Teacher Features
 
-- **Global Analytics Dashboard:** Real-time metrics on user growth, active bookings, and total platform revenue.
-- **KYC & User Verification:** Review, approve, or reject teacher onboarding applications and verify uploaded credentials.
-- **Comprehensive Financial Oversight:** Monitor all platform transactions, manage platform commission percentages, and process teacher payout requests (marking them as completed after bank transfer).
-- **Dispute Resolution & Refunds:** Authority to intervene in user conflicts, cancel compromised bookings, and manually refund wallet balances.
-- **Academic Content Management:** Dynamically add, edit, or remove educational levels and subjects available on the platform.
+- Complete KYC onboarding by uploading identification and academic credentials for admin verification.
+- Manage a weekly availability calendar for bookable slots.
+- Host the virtual classroom: video, screen sharing, and full whiteboard drawing control.
+- Automatically receive 80% of each session's payment directly into their wallet upon marking it complete, with the option to request payouts to a bank account.
+
+### 🛡️ Admin (Super User) Features
+
+- Review and verify (or reject) teacher KYC applications.
+- Full visibility into all bookings, users, and platform-wide revenue — with retained platform commission tracked automatically.
+- Process teacher payout requests and issue manual refunds.
+- Manage the subject and grade-level catalog available across the platform.
+- Monitor system health and error rates via the integrated Sentry dashboard.
 
 ---
 
 ## 🛠️ Technology Stack
 
-The project operates as a modern monorepo, decoupling the interactive presentation layer from the backend RESTful API services.
-
 ### Backend (`/backend`)
 
-> **Core:** Laravel 12.0 • PHP 8.3 • MySQL 8.0 <br/>
-> **Admin & Security:** Filament V3 • Laravel Sanctum • Spatie Permission <br/>
-> **Testing:** PHPUnit / PestPHP
+> **Core:** Laravel 12.0 • PHP 8.3 • MySQL 8.0
+> **Admin & Security:** Filament V3 • Laravel Sanctum • Spatie Permission
+> **Real-Time & Media:** Agora RTC/RTM Token Generation • Netless Whiteboard REST API
+> **Payments:** Moyasar Payment Gateway (SAR)
+> **Monitoring:** Sentry (`sentry/sentry-laravel`)
+> **Async Processing:** Laravel Queues (background classroom provisioning)
 
 ### Frontend (`/frontend`)
 
-> **Core:** Next.js 14.2 (App Router) • React 18 • TypeScript <br/>
-> **Styling & UI:** Tailwind CSS 3.4 • PostCSS <br/>
-> **Real-time Engine:** Agora React UIKit • Agora RTC SDK <br/>
-> **Testing:** Jest • React Testing Library
+> **Core:** Next.js 14.2 (App Router) • React 18 • TypeScript
+> **Styling & UI:** Tailwind CSS 3.4
+> **Live Classroom:** `agora-rtc-sdk-ng` (video/audio/screen share) • `agora-rtm-sdk` (cursor sync) • `white-web-sdk` (interactive whiteboard)
+> **Data & State:** TanStack Query • Axios
+> **Monitoring:** `@sentry/nextjs`
 
 ---
 
 ## 📊 Project Stats
 
-| Metric                    | Details                               |
-| :------------------------ | :------------------------------------ |
-| **🚀 Stack Architecture** | Monorepo (Next.js + Laravel API)      |
-| **🔐 Role Support**       | Super Admin, Student, Teacher, Parent |
-| **📡 Streaming Service**  | WebRTC via Agora RTC (Global Edge)    |
-| **🌍 RTL Localization**   | 100% Arabic (Full Interface)          |
-| **🛡️ Security Layer**     | JWT/Sanctum + RBAC Persistence        |
-| **📱 Responsiveness**     | Advanced Tailwind Grid (Mobile First) |
+| Metric                   | Details                                              |
+| :------------------------ | :---------------------------------------------------- |
+| **🚀 Architecture**       | Monorepo (Next.js frontend + Laravel REST API)        |
+| **🔐 Role Support**       | Admin, Teacher, Student, Parent                        |
+| **📡 Video/Audio**        | Agora RTC — adaptive, simulcast-enabled                |
+| **🖊️ Whiteboard**         | Netless `white-web-sdk` — real-time collaborative      |
+| **💳 Payments**           | Moyasar (SAR, Saudi market)                             |
+| **🛰️ Monitoring**         | Sentry — full-stack (backend + frontend)                |
+| **🌍 Localization**       | 100% Arabic (RTL-native interface)                      |
+| **🛡️ Security**           | Sanctum tokens + Spatie RBAC + rate limiting            |
 
 ---
 
@@ -184,8 +212,8 @@ The recommended way to boot up the complete Taj Platform stack (Frontend, Backen
 ### Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) & [Docker Compose](https://docs.docker.com/compose/install/)
-- **Node.js 20+** (For local frontend development outside Docker)
-- **PHP 8.3 & Composer** (For local backend development outside Docker)
+- **Node.js 20+** (for local frontend development outside Docker)
+- **PHP 8.3 & Composer** (for local backend development outside Docker)
 
 ### 1. Clone & Prepare
 
@@ -194,14 +222,13 @@ The recommended way to boot up the complete Taj Platform stack (Frontend, Backen
 git clone https://github.com/Ammar-1993/Taj-Platform.git
 cd Taj-Platform
 
-# Copy Environment Files
+# Copy environment files
 cp backend/.env.example backend/.env
-# Note: Ensure you configure your Agora app credentials and Database settings in backend/.env
 ```
 
-### 2. Ignite the Docker Environment
+Configure the following in `backend/.env` before starting: database credentials, `AGORA_APP_ID` / `AGORA_APP_CERTIFICATE`, `WHITEBOARD_SDK_TOKEN`, `MOYASAR_PUBLISHABLE_KEY` / `MOYASAR_SECRET_KEY`, and `FRONTEND_URL`.
 
-Our `docker-compose.yml` automates the bootup of all essential services.
+### 2. Ignite the Docker Environment
 
 ```bash
 docker-compose up -d --build
@@ -209,13 +236,11 @@ docker-compose up -d --build
 
 > **What this spins up:**
 >
-> - 🗄️ **MySQL Engine** (Port `3307` mapped locally to `3306`)
+> - 🗄️ **MySQL Engine** (Port `3307` mapped locally to `3306`, to avoid conflicts with existing local MySQL installs)
 > - 🐘 **Laravel API Server** (Port `8000`)
 > - ⚛️ **Next.js Client** (Port `3000`)
 
 ### 3. Backend Setup & Seeding
-
-Execute these commands inside the `laravel.test` container terminal:
 
 ```bash
 # Enter the Laravel container
@@ -225,11 +250,13 @@ docker-compose exec laravel.test bash
 composer install
 php artisan key:generate
 
-# Migrate and seed the database with initial verified teacher accounts
+# Migrate and seed the database
 php artisan migrate --seed
 ```
 
-#### Local Development Endpoints
+> ⚠️ Remember to run a queue worker (`php artisan queue:work`) — classroom provisioning (whiteboard room creation and token pre-generation) runs asynchronously through Laravel's queue system.
+
+### Local Development Endpoints
 
 - **Frontend App:** [http://localhost:3000](http://localhost:3000)
 - **Backend API:** [http://localhost:8000/api](http://localhost:8000/api)
@@ -239,16 +266,14 @@ php artisan migrate --seed
 
 ## 🧪 Testing
 
-Both applications uphold their isolated testing frameworks ensuring maximal reliability before shipping.
-
-**Backend Tests (PHPUnit):**
+**Backend (PHPUnit, Laravel's built-in testing suite):**
 
 ```bash
 cd backend
 php artisan test
 ```
 
-**Frontend Tests (Jest):**
+**Frontend:**
 
 ```bash
 cd frontend
@@ -259,5 +284,5 @@ npm run test
 
 <div align="center">
   <br />
-  <p>Developed by ❤️ <b>Engineer Ammar Al-Najjar</b></p>
+  <p>Developed with ❤️ by <b>Engineer Ammar Al-Najjar</b></p>
 </div>
