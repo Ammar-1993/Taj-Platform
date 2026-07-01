@@ -47,46 +47,41 @@
 
 ## 🏗️ System Architecture
 
-The platform is a decoupled monorepo: a Next.js presentation layer talks to a Laravel API over REST, while the virtual classroom (video, screen share, and whiteboard) connects directly, client-to-client, through Agora and Netless — keeping the API server free of media traffic.
+The platform is a decoupled monorepo: the Next.js frontend talks to the Laravel API over REST, while the virtual classroom (video, screen share, and whiteboard) connects **directly, browser-to-provider**, through Agora and Netless — keeping the API server completely free of media traffic.
+
+> **Note:** GitHub automatically overlays zoom/pan controls on every Mermaid diagram it renders — this is a native GitHub UI element with no supported way to disable it from Markdown. The diagram below is kept intentionally compact so it's fully readable at the default view without needing those controls.
 
 ```mermaid
-graph TD
-    subgraph "Frontend Layer — Next.js 14"
-        NJ[App Router / React 18 / TypeScript]
-        TW[Tailwind CSS]
-        PORTALS[Student • Teacher • Parent Portals]
+graph LR
+    FE[Next.js Frontend]
+
+    subgraph Live["🎓 Live Classroom — Direct Connections"]
+        RTC[Agora RTC]
+        RTM[Agora RTM]
+        WB[Netless Whiteboard]
     end
 
-    subgraph "Live Classroom — Direct Client Connections"
-        AGRTC[Agora RTC — Video / Audio / Screen Share]
-        AGRTM[Agora RTM — Cursor Sync]
-        NETLESS[Netless white-web-sdk — Interactive Whiteboard]
+    subgraph BE["⚙️ Laravel Backend"]
+        API[REST API v1]
+        ADMIN[Filament Admin]
+        QUEUE[Queue Worker]
     end
 
-    subgraph "Backend Engine — Laravel 12"
-        API[REST API]
-        FL[Filament V3 Admin Panel]
-        SM[Sanctum Auth + Spatie RBAC]
-        QUEUE[Queue Worker — Async Classroom Provisioning]
-    end
+    DB[(MySQL)]
+    PAY[Moyasar]
+    MON[Sentry]
 
-    subgraph "Data & External Services"
-        DB[(MySQL 8.0)]
-        MOYASAR[Moyasar — SAR Payment Gateway]
-        SENTRY[Sentry — Error & Performance Monitoring]
-    end
-
-    NJ --> API
+    FE -->|REST| API
+    FE <--> RTC
+    FE <--> RTM
+    FE <--> WB
     API --> DB
+    ADMIN --> DB
     API --> QUEUE
-    QUEUE --> NETLESS
-    API --> MOYASAR
-    NJ <-.direct WebRTC/WS.-> AGRTC
-    NJ <-.direct WS.-> AGRTM
-    NJ <-.direct WS.-> NETLESS
-    FL --> DB
-    API -.errors/traces.-> SENTRY
-    NJ -.errors/traces.-> SENTRY
+    QUEUE --> WB
+    API --> PAY
+    API -.-> MON
+    FE -.-> MON
 ```
 
 ---
@@ -215,20 +210,39 @@ The recommended way to boot up the complete Taj Platform stack (Frontend, Backen
 - **Node.js 20+** (for local frontend development outside Docker)
 - **PHP 8.3 & Composer** (for local backend development outside Docker)
 
-### 1. Clone & Prepare
+### 1. Clone the Repository
 
 ```bash
-# Clone the repository
 git clone https://github.com/Ammar-1993/Taj-Platform.git
 cd Taj-Platform
+```
 
-# Copy environment files
+### 2. Configure Backend Environment
+
+```bash
 cp backend/.env.example backend/.env
 ```
 
-Configure the following in `backend/.env` before starting: database credentials, `AGORA_APP_ID` / `AGORA_APP_CERTIFICATE`, `WHITEBOARD_SDK_TOKEN`, `MOYASAR_PUBLISHABLE_KEY` / `MOYASAR_SECRET_KEY`, and `FRONTEND_URL`.
+Edit `backend/.env` and fill in: database credentials, `AGORA_APP_ID` / `AGORA_APP_CERTIFICATE`, `WHITEBOARD_SDK_TOKEN`, `MOYASAR_PUBLISHABLE_KEY` / `MOYASAR_SECRET_KEY`, `FRONTEND_URL` (used for CORS and Moyasar payment redirects), and, if you want error/performance monitoring, `SENTRY_LARAVEL_DSN`.
 
-### 2. Ignite the Docker Environment
+### 3. Configure Frontend Environment
+
+```bash
+cp frontend/.env.example frontend/.env.local
+```
+
+Edit `frontend/.env.local` and fill in:
+
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | Backend API base URL — **must include the `/api/v1` prefix**, e.g. `http://localhost:8000/api/v1` |
+| `NEXT_PUBLIC_AGORA_APP_ID` | Agora App ID for video/audio classrooms |
+| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | Google reCAPTCHA site key used on auth forms |
+| `NEXT_PUBLIC_WHITEBOARD_APP_IDENTIFIER` | Netless App Identifier for the interactive whiteboard |
+| `NEXT_PUBLIC_WHITEBOARD_REGION` | Netless region (defaults to `sg`, closest to MENA users) |
+| `NEXT_PUBLIC_SENTRY_DSN` / `SENTRY_AUTH_TOKEN` | Frontend error monitoring + automatic source map uploads on build (optional) |
+
+### 4. Launch the Docker Environment
 
 ```bash
 docker-compose up -d --build
@@ -236,30 +250,45 @@ docker-compose up -d --build
 
 > **What this spins up:**
 >
-> - 🗄️ **MySQL Engine** (Port `3307` mapped locally to `3306`, to avoid conflicts with existing local MySQL installs)
-> - 🐘 **Laravel API Server** (Port `8000`)
-> - ⚛️ **Next.js Client** (Port `3000`)
+> - 🗄️ **MySQL 8.0** — port `3307` on the host, mapped to `3306` inside the container (to avoid conflicts with any local MySQL install)
+> - 🐘 **Laravel API Server** — port `8000`
+> - ⚛️ **Next.js Client** — port `3000`. The `nextjs` container automatically runs `npm install --legacy-peer-deps && npm run dev` on every startup — **no manual `npm install` step is needed inside Docker.** The first `docker-compose up` will take noticeably longer while dependencies install; subsequent restarts are fast.
 
-### 3. Backend Setup & Seeding
+### 5. Backend Setup & Seeding
+
+The Laravel container does **not** auto-run Composer or migrations — this step is manual:
 
 ```bash
 # Enter the Laravel container
 docker-compose exec laravel.test bash
 
-# Install dependencies and bootstrap the instance
+# Install PHP dependencies and generate the app key
 composer install
 php artisan key:generate
 
-# Migrate and seed the database
+# Run migrations and seed initial data (verified teacher accounts, subjects, etc.)
 php artisan migrate --seed
 ```
 
-> ⚠️ Remember to run a queue worker (`php artisan queue:work`) — classroom provisioning (whiteboard room creation and token pre-generation) runs asynchronously through Laravel's queue system.
+> ⚠️ **Queue worker required:** classroom provisioning (whiteboard room creation and Agora/Netless token pre-generation) runs asynchronously through Laravel's queue system. Without a running worker, this background job will sit unprocessed. Run it inside the same container:
+> ```bash
+> php artisan queue:work
+> ```
+
+### 6. (Alternative) Running the Frontend Outside Docker
+
+If you prefer to run the frontend directly on your machine instead of inside the `nextjs` container:
+
+```bash
+cd frontend
+npm install --legacy-peer-deps
+npm run dev
+```
 
 ### Local Development Endpoints
 
 - **Frontend App:** [http://localhost:3000](http://localhost:3000)
-- **Backend API:** [http://localhost:8000/api](http://localhost:8000/api)
+- **Backend API:** [http://localhost:8000/api/v1](http://localhost:8000/api/v1)
 - **Filament Admin Panel:** [http://localhost:8000/admin](http://localhost:8000/admin)
 
 ---
@@ -284,5 +313,5 @@ npm run test
 
 <div align="center">
   <br />
-  <p>Developed with ❤️ by <b>Engineer Ammar Al-Najjar</b></p>
+  <p>Developed By ❤️ <b>Engineer Ammar Al-Najjar</b></p>
 </div>
