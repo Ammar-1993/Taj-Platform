@@ -8,6 +8,7 @@ use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardStats extends BaseWidget
 {
@@ -20,11 +21,20 @@ class DashboardStats extends BaseWidget
         $totalPlatformRevenue = Booking::where('status', 'completed')->sum('net_paid') * 0.20;
 
         // بيانات النمو لأرباح المنصة آخر 7 أيام لتزين واجهة الـ Widget
-        $platformSparkline = collect(range(6, 0))->map(function ($daysAgo) {
-            // أرباح المنصة هي 20%
+        $dailySums = Cache::remember('dashboard_daily_completed_sums', now()->addMinutes(5), function () {
             return Booking::where('status', 'completed')
-                ->whereDate('booking_date', Carbon::now()->subDays($daysAgo)->toDateString())
-                ->sum('net_paid') * 0.20;
+                ->whereBetween('booking_date', [
+                    Carbon::now()->subDays(6)->startOfDay(),
+                    Carbon::now()->endOfDay(),
+                ])
+                ->selectRaw('DATE(booking_date) as day, SUM(net_paid) as total')
+                ->groupBy('day')
+                ->pluck('total', 'day');
+        });
+
+        $platformSparkline = collect(range(6, 0))->map(function ($daysAgo) use ($dailySums) {
+            $day = Carbon::now()->subDays($daysAgo)->toDateString();
+            return (float) ($dailySums[$day] ?? 0) * 0.20;
         })->toArray();
 
         return [

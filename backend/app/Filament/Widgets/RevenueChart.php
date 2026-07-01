@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Models\Booking;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class RevenueChart extends ChartWidget
 {
@@ -19,20 +20,26 @@ class RevenueChart extends ChartWidget
 
     protected function getData(): array
     {
+        $dailySums = Cache::remember('dashboard_daily_completed_sums', now()->addMinutes(5), function () {
+            return Booking::where('status', 'completed')
+                ->whereBetween('booking_date', [
+                    Carbon::now()->subDays(6)->startOfDay(),
+                    Carbon::now()->endOfDay(),
+                ])
+                ->selectRaw('DATE(booking_date) as day, SUM(net_paid) as total')
+                ->groupBy('day')
+                ->pluck('total', 'day');
+        });
+
         $data = [];
         $labels = [];
 
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i);
+            $day  = $date->toDateString();
 
-            // حساب الإيرادات للحصص المكتملة في هذا اليوم
-            $sum = Booking::where('status', 'completed')
-                ->whereDate('booking_date', $date->toDateString())
-                ->sum('net_paid');
-
-            // تنسيق التاريخ بالعربية
             $labels[] = $date->translatedFormat('D, d M');
-            $data[] = $sum;
+            $data[]   = (float) ($dailySums[$day] ?? 0);
         }
 
         return [

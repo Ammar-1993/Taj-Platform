@@ -8,6 +8,7 @@ use App\Models\Wallet;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class FinancialOverview extends BaseWidget
 {
@@ -26,10 +27,20 @@ class FinancialOverview extends BaseWidget
         $pendingPayouts = PayoutRequest::where('status', 'pending')->sum('amount');
 
         // إنشاء بيانات الرسم البياني الجانبي (Sparkline) لآخر 7 أيام
-        $salesSparkline = collect(range(6, 0))->map(function ($daysAgo) {
+        $dailySums = Cache::remember('dashboard_daily_completed_sums', now()->addMinutes(5), function () {
             return Booking::where('status', 'completed')
-                ->whereDate('booking_date', Carbon::now()->subDays($daysAgo)->toDateString())
-                ->sum('net_paid');
+                ->whereBetween('booking_date', [
+                    Carbon::now()->subDays(6)->startOfDay(),
+                    Carbon::now()->endOfDay(),
+                ])
+                ->selectRaw('DATE(booking_date) as day, SUM(net_paid) as total')
+                ->groupBy('day')
+                ->pluck('total', 'day');
+        });
+
+        $salesSparkline = collect(range(6, 0))->map(function ($daysAgo) use ($dailySums) {
+            $day = Carbon::now()->subDays($daysAgo)->toDateString();
+            return (float) ($dailySums[$day] ?? 0);
         })->toArray();
 
         return [
