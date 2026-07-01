@@ -223,7 +223,17 @@ cd Taj-Platform
 cp backend/.env.example backend/.env
 ```
 
-Edit `backend/.env` and fill in: database credentials, `AGORA_APP_ID` / `AGORA_APP_CERTIFICATE`, `WHITEBOARD_SDK_TOKEN`, `MOYASAR_PUBLISHABLE_KEY` / `MOYASAR_SECRET_KEY`, `FRONTEND_URL` (used for CORS and Moyasar payment redirects), and, if you want error/performance monitoring, `SENTRY_LARAVEL_DSN`.
+Edit `backend/.env` and fill in: 
+
+| Variable | Purpose |
+|---|---|
+| `DB_DATABASE` / `DB_USERNAME` / `DB_PASSWORD` | Database connection credentials |
+| `AGORA_APP_ID` / `AGORA_APP_CERTIFICATE` | Agora credentials used to generate RTC/RTM tokens for the classroom |
+| `WHITEBOARD_SDK_TOKEN` | Netless SDK token used to create whiteboard rooms and mint room tokens |
+| `MOYASAR_PUBLISHABLE_KEY` / `MOYASAR_SECRET_KEY` / `MOYASAR_WEBHOOK_SECRET` | Moyasar payment gateway credentials and webhook signature verification |
+| `FRONTEND_URL` | Used for CORS and for building Moyasar payment redirect URLs |
+| `SENTRY_LARAVEL_DSN` | Backend error/performance monitoring (optional) |
+| `ADMIN_ALERT_EMAIL` | Recipient for alerts when classroom provisioning fails after all retries (optional, but recommended) |
 
 ### 3. Configure Frontend Environment
 
