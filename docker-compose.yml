@@ -22,6 +22,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      redis:
+        condition: service_healthy
 
   # 2. MySQL Database Service (Isolated Port)
   mysql:
@@ -42,6 +44,20 @@ services:
       - taj-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD:-secret}"]
+      retries: 3
+      timeout: 5s
+
+  # ─── خدمة Redis للمعالجة الخلفية ───────────────────────────
+  redis:
+    image: 'redis:alpine'
+    ports:
+      - '${FORWARD_REDIS_PORT:-6390}:6379'      # منفذ مختلف لتفادي التعارض
+    volumes:
+      - 'taj-redis:/data'
+    networks:
+      - taj-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
       retries: 3
       timeout: 5s
 
@@ -73,4 +89,6 @@ networks:
 
 volumes:
   taj-mysql:
+    driver: local
+  taj-redis:
     driver: local
