@@ -2,7 +2,8 @@ import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  environment: process.env.NODE_ENV,
+  // تستخدم VERCEL_ENV إذا كانت موجودة (production/preview) وإلا NODE_ENV (development)
+  environment: process.env.NEXT_PUBLIC_VERCEL_ENV ?? process.env.NODE_ENV,
 
   // 20% sampling in production to control costs
   tracesSampleRate: process.env.NODE_ENV === "production" ? 0.2 : 1.0,
