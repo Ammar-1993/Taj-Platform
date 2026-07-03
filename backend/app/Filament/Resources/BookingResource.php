@@ -65,6 +65,7 @@ class BookingResource extends Resource
                         'in_progress' => 'warning',
                         'completed' => 'success',
                         'cancelled', 'refunded' => 'danger',
+                        'abandoned' => 'gray',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
@@ -73,6 +74,7 @@ class BookingResource extends Resource
                         'completed' => 'مكتمل',
                         'cancelled' => 'ملغي',
                         'refunded' => 'مسترجع',
+                        'abandoned' => 'مهجورة',
                         default => $state,
                     }),
             ])
@@ -85,6 +87,7 @@ class BookingResource extends Resource
                         'in_progress' => 'قيد التنفيذ',
                         'completed' => 'مكتمل',
                         'cancelled' => 'ملغي',
+                        'abandoned' => 'مهجورة',
                     ]),
                 Tables\Filters\Filter::make('booking_date')
                     ->form([

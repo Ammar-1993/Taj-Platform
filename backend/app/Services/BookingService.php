@@ -178,10 +178,50 @@ class BookingService
                 );
             }
 
-            // 4. إزالة توكنز Agora من الكاش حتى لا يمكن الدخول للغرفة بعد الإلغاء
-            \Illuminate\Support\Facades\Cache::forget("agora_token_{$booking->id}_{$booking->teacher_id}");
-            \Illuminate\Support\Facades\Cache::forget("agora_token_{$booking->id}_{$booking->student_id}");
-            \Illuminate\Support\Facades\Cache::forget("agora_token_{$booking->id}_screen");
+            // 4. إزالة جميع توكنز الفصل الافتراضي (Agora + RTM + السبورة) من الكاش
+            $this->clearClassroomCacheTokens($booking);
+
+            return $booking;
+        });
+    }
+
+    /**
+     * يمسح كل توكنات الوصول للفصل الافتراضي المرتبطة بحجز معين من الكاش:
+     * Agora RTC، Agora RTM، وتوكنات السبورة التفاعلية (Netless).
+     * يُستخدم عند إلغاء الحجز أو عند إغلاق حصة مهجورة تلقائياً.
+     */
+    private function clearClassroomCacheTokens(Booking $booking): void
+    {
+        \Illuminate\Support\Facades\Cache::forget("agora_token_{$booking->id}_{$booking->teacher_id}");
+        \Illuminate\Support\Facades\Cache::forget("agora_token_{$booking->id}_{$booking->student_id}");
+        \Illuminate\Support\Facades\Cache::forget("agora_token_{$booking->id}_screen");
+        \Illuminate\Support\Facades\Cache::forget("agora_rtm_token_{$booking->id}_{$booking->teacher_id}");
+        \Illuminate\Support\Facades\Cache::forget("agora_rtm_token_{$booking->id}_{$booking->student_id}");
+
+        if ($booking->whiteboard_room_uuid) {
+            \Illuminate\Support\Facades\Cache::forget("whiteboard_token_{$booking->whiteboard_room_uuid}_admin");
+            \Illuminate\Support\Facades\Cache::forget("whiteboard_token_{$booking->whiteboard_room_uuid}_reader");
+        }
+    }
+
+    /**
+     * يُغلق حصة عالقة في in_progress دون أي نبضة حياة حديثة.
+     * لا يُطلق أي معاملة مالية — فقط يُنهي حالة الحجز ويحرر الموعد ويمسح التوكنات.
+     */
+    public function abandonBooking(Booking $booking): Booking
+    {
+        return DB::transaction(function () use ($booking) {
+            $booking = Booking::where('id', $booking->id)->lockForUpdate()->firstOrFail();
+
+            // إعادة الفحص داخل القفل: قد تكون اكتملت أو أُلغيت بين لحظة الاستعلام وهذه اللحظة
+            if ($booking->status !== 'in_progress') {
+                return $booking;
+            }
+
+            $booking->update(['status' => 'abandoned']);
+            $booking->teacherSlot?->update(['status' => 'available']);
+
+            $this->clearClassroomCacheTokens($booking);
 
             return $booking;
         });

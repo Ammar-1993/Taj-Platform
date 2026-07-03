@@ -343,5 +343,27 @@ class ClassroomController extends Controller
         }
     }
 
+    /**
+     * يستقبل نبضة حياة دورية من الفرونت إند أثناء الحصة (كل 30 ثانية تقريباً)
+     * لتحديد ما إذا كانت الحصة لا تزال نشطة فعلياً أم مهجورة.
+     */
+    public function heartbeat(Request $request, $bookingId): JsonResponse
+    {
+        $user    = $request->user();
+        $booking = Booking::findOrFail($bookingId);
 
+        if (
+            $user->id !== $booking->teacher_id &&
+            $user->id !== $booking->student_id &&
+            $user->id !== $booking->booked_by_id
+        ) {
+            return response()->json(['message' => 'غير مصرح لك بالوصول لهذه الغرفة'], 403);
+        }
+
+        Booking::where('id', $bookingId)
+            ->where('status', 'in_progress')
+            ->update(['last_heartbeat_at' => now()]);
+
+        return response()->json(['status' => 'ok']);
+    }
 }

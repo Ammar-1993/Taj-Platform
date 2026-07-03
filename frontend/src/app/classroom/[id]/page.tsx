@@ -189,6 +189,22 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     };
   }, [whiteboardPending, whiteboardData, loading, error, params.id]);
 
+  // ── Heartbeat: تُرسَل كل 30 ثانية أثناء الحصة لتفادي إغلاقها تلقائياً كـ"مهجورة" ──
+  useEffect(() => {
+      if (!inCall) return;
+
+      const sendHeartbeat = () => {
+          bookingService.sendHeartbeat(Number(params.id)).catch(() => {
+              // فشل صامت — انقطاع نبضة واحدة مقبول ضمن فترة السماح في الباك إند
+          });
+      };
+
+      sendHeartbeat();
+      const interval = setInterval(sendHeartbeat, 30000);
+
+      return () => clearInterval(interval);
+  }, [inCall, params.id]);
+
   // ── 4.5: Graceful Cleanup on Browser Close ────────────────────────────────
   useEffect(() => {
     const handleUnload = () => {

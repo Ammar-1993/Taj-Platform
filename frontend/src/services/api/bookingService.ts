@@ -70,4 +70,9 @@ export const bookingService = {
     const res = await api.get<ApiResponse<{ token: string; screen_token: string | null }>>(`/bookings/${id}/refresh-token`);
     return res.data;
   },
+
+  /**
+   * Send heartbeat during classroom session
+   */
+  sendHeartbeat: (bookingId: number) => api.post(`/bookings/${bookingId}/heartbeat`),
 };
