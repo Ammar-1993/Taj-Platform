@@ -4,7 +4,6 @@ import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { bookingService } from "@/services/api";
 import { useQueryClient } from "@tanstack/react-query";
-import * as Sentry from "@sentry/nextjs";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
