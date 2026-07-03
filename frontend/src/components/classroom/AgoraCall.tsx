@@ -81,6 +81,9 @@ const AgoraCall = React.memo(({
     const [forceDisabledVideos, setForceDisabledVideos] = useState<Set<number | string>>(new Set());
     const [isReconnecting, setIsReconnecting] = useState(false);
 
+    const [joinFailed, setJoinFailed] = useState(false);
+    const [retryKey, setRetryKey] = useState(0);
+
     const localVideoRef = useRef<HTMLDivElement>(null);
     const localScreenRef = useRef<HTMLDivElement>(null);
     const propsRef = useRef(rtcProps);
@@ -144,6 +147,7 @@ const AgoraCall = React.memo(({
         let qualityInterval: NodeJS.Timeout;
 
         const init = async () => {
+            if (isMounted) setJoinFailed(false);
             try {
                 // ── 3.4: Token renewal ────────────────────────────────────────────────
                 // Renews BOTH the main channel token and, via the onTokenWillExpire
@@ -296,7 +300,34 @@ const AgoraCall = React.memo(({
                 }, 2000);
 
                 const { appId, channel, token, uid } = propsRef.current;
-                await client.join(appId, channel, token, uid);
+
+                const MAX_JOIN_ATTEMPTS = 3;
+                const attemptJoin = async (attempt = 1): Promise<void> => {
+                    try {
+                        await client.join(appId, channel, token, uid);
+                    } catch (joinErr) {
+                        const je = joinErr as { message?: string; code?: string };
+                        const isAbort =
+                            je?.message?.includes("OPERATION_ABORTED") || je?.code === "OPERATION_ABORTED" ||
+                            je?.message?.includes("WS_ABORT")           || je?.code === "WS_ABORT";
+
+                        // Never retry an abort — the component is unmounting, retrying would leak a connection.
+                        if (isAbort || !isMounted) throw joinErr;
+
+                        if (attempt < MAX_JOIN_ATTEMPTS) {
+                            console.warn(`[AgoraCall] Join attempt ${attempt} failed, retrying in ${attempt}s...`, joinErr);
+                            await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+                            if (!isMounted) throw joinErr; // re-check after the delay
+                            return attemptJoin(attempt + 1);
+                        }
+
+                        // All attempts exhausted — rethrow so the outer catch handles
+                        // Sentry capture and the user-facing error state.
+                        throw joinErr;
+                    }
+                };
+
+                await attemptJoin();
                 if (!isMounted) return;
 
                 // ✅ Dual-stream & Performance: Drastically reduce bandwidth and handle poor connections.
@@ -391,6 +422,7 @@ const AgoraCall = React.memo(({
                 } else {
                     console.error("Agora Init Error:", err);
                     Sentry.captureException(err, { extra: { context: "Agora Init Error" } });
+                    if (isMounted) setJoinFailed(true);
                 }
             }
         };
@@ -409,7 +441,7 @@ const AgoraCall = React.memo(({
             client.removeAllListeners();
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [client]);
+    }, [client, retryKey]);
 
     // ── 3.1: Camera toggle — hardware release ───────────
     useEffect(() => {
@@ -545,6 +577,21 @@ const AgoraCall = React.memo(({
     }, [remoteUsers, onScreenShareActive]);
 
     if (!isJoined) {
+        if (joinFailed) {
+            return (
+                <div className="flex flex-col items-center justify-center h-full text-white space-y-4 px-6 text-center">
+                    <WifiOff className="w-10 h-10 text-red-400" />
+                    <p className="font-bold">تعذر الاتصال بالغرفة</p>
+                    <p className="text-sm text-slate-400">يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى</p>
+                    <button
+                        onClick={() => { setJoinFailed(false); setRetryKey((k) => k + 1); }}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-bold text-sm transition"
+                    >
+                        إعادة المحاولة
+                    </button>
+                </div>
+            );
+        }
         return (
             <div className="flex flex-col items-center justify-center h-full text-white space-y-4">
                 <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
