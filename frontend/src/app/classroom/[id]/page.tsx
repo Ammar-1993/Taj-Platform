@@ -400,7 +400,23 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
 
     // حالة بدء المشاركة
     try {
-      // 1. إنشاء عميل (مستخدم) جديد مخصص للشاشة فقط
+      // 1. طلب إذن مشاركة الشاشة من المتصفح (نطلب الإذن أولاً لتجنب إنشاء عميل معلق إذا تراجع المستخدم)
+      // 🚀 Network Resilience (Task 4): Use 5fps for screen sharing to save bandwidth while keeping text sharp.
+      const track = await AgoraRTC.createScreenVideoTrack(
+        { 
+          encoderConfig: {
+            width: 1920,
+            height: 1080,
+            frameRate: 5,
+            bitrateMax: 1500,
+            bitrateMin: 600
+          }, 
+          optimizationMode: "detail" 
+        },
+        "disable",
+      );
+
+      // 2. إنشاء عميل (مستخدم) جديد مخصص للشاشة فقط
       // VP9: ضغط أفضل بـ 30% من VP8 بنفس الجودة البصرية
       const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp9" });
 
@@ -437,22 +453,6 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
       } catch (err) {
         console.warn("[page] Failed to enable dual stream for screen share:", err);
       }
-
-      // 2. طلب إذن مشاركة الشاشة من المتصفح
-      // 🚀 Network Resilience (Task 4): Use 5fps for screen sharing to save bandwidth while keeping text sharp.
-      const track = await AgoraRTC.createScreenVideoTrack(
-        { 
-          encoderConfig: {
-            width: 1920,
-            height: 1080,
-            frameRate: 5,
-            bitrateMax: 1500,
-            bitrateMin: 600
-          }, 
-          optimizationMode: "detail" 
-        },
-        "disable",
-      );
 
       // 3. البث للغرفة
       await client.publish(track);
