@@ -88,7 +88,7 @@ export function useAgoraRTM({
             };
             cleanup();
         };
-    }, [appId, channel, uid, token]);
+    }, [appId, channel, uid, token, enabled]);
 
     const sendCursorPosition = useCallback(
         (msg: Omit<CursorMessage, "type">) => {

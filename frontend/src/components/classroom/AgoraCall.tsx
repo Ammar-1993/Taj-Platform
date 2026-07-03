@@ -525,7 +525,7 @@ const AgoraCall = React.memo(({
             console.warn("[AgoraCall] Adaptive encoder update failed:", err);
             Sentry.captureException(err, { level: 'warning', extra: { context: "[AgoraCall] Adaptive encoder update failed" } });
         });
-    }, [networkQuality, localVideoTrack, isJoined]);
+    }, [networkQuality, localVideoTrack, isJoined, isCameraEnabled]);
 
     // ── Phase 2.2: Audio-First Strategy ────────────────────────────────────────
     // When network quality hits 5+ (Very Bad), mute the local camera track to
