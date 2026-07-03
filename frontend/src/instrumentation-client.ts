@@ -20,7 +20,7 @@ Sentry.init({
   ],
 
   enableLogs: true,
-  enabled: process.env.NODE_ENV === "production",
+  enabled: true, // تفعيل Sentry في بيئة التطوير مؤقتاً للاختبار
 
   beforeSend(event) {
     // Don't report expected Agora SDK cleanup errors
