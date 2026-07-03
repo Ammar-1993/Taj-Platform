@@ -119,7 +119,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     // [SENTRY VERIFICATION] Test log to ensure Sentry Logs is capturing frontend logs
-    Sentry.logger.info('User triggered test log', { log_source: 'sentry_test' });
+    console.log('User triggered test log', { log_source: 'sentry_test' });
 
     if (!authLoading && !user) {
       router.replace("/login");
