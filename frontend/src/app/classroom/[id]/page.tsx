@@ -471,7 +471,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
       setIsSharing(true);
     } catch (error) {
       console.error("Screen share error:", error);
-      toast.error("تم إلغاء مشاركة الشاشة أو حدث خطأ.");
+      toast.error("تم إلغاء مشاركة الشاشة");
     }
   };
 
