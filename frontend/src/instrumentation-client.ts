@@ -16,8 +16,10 @@ Sentry.init({
       maskAllText: false,
       blockAllMedia: false,
     }),
+    Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
   ],
 
+  enableLogs: true,
   enabled: process.env.NODE_ENV === "production",
 
   beforeSend(event) {
