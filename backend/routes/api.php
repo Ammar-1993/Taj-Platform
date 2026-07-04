@@ -28,6 +28,15 @@ Route::prefix('v1')->group(function () {
     // مسارات غير محمية (Public Routes)
     // ==========================================
 
+    // مسار مؤقت لاختبار Sentry
+    Route::get('/sentry-test', function () {
+        \Illuminate\Support\Facades\Log::info('Sentry Logs test from taj-backend via HTTP', ['log_source' => 'sentry_verify_http', 'environment' => app()->environment()]);
+        \Illuminate\Support\Facades\Log::warning('تحذير اختبار من taj-backend عبر HTTP', ['log_source' => 'sentry_verify_http']);
+        \Illuminate\Support\Facades\Log::error('خطأ اختبار من taj-backend عبر HTTP', ['log_source' => 'sentry_verify_http']);
+        \Illuminate\Support\Facades\Log::channel('sentry_logs')->info('Direct Sentry channel test via HTTP', ['log_source' => 'sentry_direct_http']);
+        return response()->json(['success' => true, 'message' => '✅ تم إرسال 4 سجلات إلى Sentry بنجاح!']);
+    });
+
     // 1. المصادقة (Auth)
     Route::prefix('auth')->group(function () {
         Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
