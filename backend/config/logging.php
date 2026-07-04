@@ -54,7 +54,12 @@ return [
 
         'stack' => [
             'driver' => 'stack',
-            'channels' => explode(',', (string) env('LOG_STACK', 'single')),
+            // نُدمِج sentry_logs برمجياً إذا كان SENTRY_ENABLE_LOGS=true
+            // هذا أكثر موثوقية من الاعتماد على تحليل LOG_STACK بالفاصلة
+            'channels' => array_unique(array_filter(array_merge(
+                explode(',', trim((string) env('LOG_STACK', 'single'))),
+                env('SENTRY_ENABLE_LOGS', false) ? ['sentry_logs'] : []
+            ))),
             'ignore_exceptions' => false,
         ],
 
