@@ -25,4 +25,7 @@ return [
 
     'traces_sample_rate'   => (float) env('SENTRY_TRACES_SAMPLE_RATE', 0.2),
     'profiles_sample_rate' => (float) env('SENTRY_PROFILES_SAMPLE_RATE', 0.1),
+
+    // تفعيل ميزة إرسال Logs إلى Sentry (يتطلب sentry/sentry-laravel >= 4.15)
+    'enable_logs' => env('SENTRY_ENABLE_LOGS', false),
 ];

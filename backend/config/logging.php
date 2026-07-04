@@ -65,6 +65,13 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // ─── Sentry Logs Channel ───────────────────────────────────────────────
+        // يُرسِل السجلات مباشرةً إلى Sentry (يتطلب sentry/sentry-laravel >= 4.15)
+        'sentry_logs' => [
+            'driver' => 'sentry_logs',
+            'level' => env('LOG_LEVEL', 'info'),
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
