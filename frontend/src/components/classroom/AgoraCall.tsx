@@ -731,11 +731,13 @@ const AgoraCall = React.memo(({
                      */}
                     {rtcProps.role === 'host' && (
                         <div className={`absolute overflow-hidden transition-all duration-500 ease-in-out ${
-                            visibleRemoteUsers.length > 0
-                                // 📱 PiP mode
-                                ? 'bottom-4 right-4 w-36 h-48 md:w-44 md:h-60 rounded-2xl border-2 border-slate-700 shadow-2xl shadow-black/70 z-20 ring-1 ring-white/10'
-                                // 🖥️ Solo mode
-                                : 'inset-0 z-0'
+                            isScreenSharingActive
+                                ? 'opacity-0 pointer-events-none scale-95' // 👁️ Hide PiP completely when sharing screen
+                                : visibleRemoteUsers.length > 0
+                                    // 📱 PiP mode
+                                    ? 'bottom-4 right-4 w-36 h-48 md:w-44 md:h-60 rounded-2xl border-2 border-slate-700 shadow-2xl shadow-black/70 z-20 ring-1 ring-white/10 opacity-100 scale-100'
+                                    // 🖥️ Solo mode
+                                    : 'inset-0 z-0 opacity-100 scale-100'
                         }`}>
                             {/* Video track container — track is played into this ref */}
                             <div ref={localVideoRef} className="w-full h-full [&>video]:object-cover relative">
