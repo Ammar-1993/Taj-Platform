@@ -1,0 +1,46 @@
+FROM php:8.3-fpm
+
+LABEL maintainer="Taj Platform — Production"
+
+WORKDIR /var/www/html
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# ── تثبيت التبعيات الأساسية ──────────────────────────────────
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       nginx supervisor curl ca-certificates zip unzip git \
+       libzip-dev libicu-dev libonig-dev libxml2-dev zlib1g-dev \
+       libpng-dev libfreetype6-dev libjpeg62-turbo-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo_mysql mbstring xml zip intl bcmath gd \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── تثبيت Composer ────────────────────────────────────────────
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# ── نسخ ملفات المشروع وتثبيت الحزم ──────────────────────────
+COPY . .
+
+RUN composer install --no-dev --optimize-autoloader \
+    && npm install \
+    && npm run build \
+    && php artisan storage:link \
+    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
+# ── إعداد Nginx ───────────────────────────────────────────────
+RUN rm -f /etc/nginx/sites-enabled/default
+COPY docker/8.3/nginx-prod.conf /etc/nginx/sites-available/taj-platform
+RUN ln -s /etc/nginx/sites-available/taj-platform /etc/nginx/sites-enabled/taj-platform
+
+# ── إعداد Supervisor (يُشغّل PHP-FPM + Nginx معاً) ────────────
+COPY docker/8.3/supervisord-prod.conf /etc/supervisor/conf.d/supervisord.conf
+
+EXPOSE 80
+
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

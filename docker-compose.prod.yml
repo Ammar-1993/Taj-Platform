@@ -1,0 +1,65 @@
+# docker-compose.prod.yml — بيئة الإنتاج على DigitalOcean VPS
+# لا تُرفع هذه الملف لـ Git مع الـ .env الإنتاجي
+# الاستخدام: docker compose -f docker-compose.prod.yml up -d --build
+
+services:
+
+  # ── تطبيق Laravel (API + Filament Admin) ─────────────────────
+  taj_app_web:
+    build:
+      context: ./backend
+      dockerfile: docker/8.3/Dockerfile.prod
+    image: taj-platform-prod:latest
+    container_name: taj_app_web
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+    env_file:
+      - ./backend/.env.prod
+    extra_hosts:
+      - "host.docker.internal:host-gateway"    # للوصول لـ job_mysql عبر host
+    networks:
+      - taj-net
+      - job-platform_default                   # للتواصل المباشر مع job_mysql
+    depends_on:
+      - taj_redis
+
+  # ── Queue Worker (معالجة المهام الخلفية) ─────────────────────
+  taj_queue_worker:
+    image: taj-platform-prod:latest
+    container_name: taj_queue_worker
+    restart: unless-stopped
+    command: php artisan queue:work redis --sleep=3 --tries=5 --max-time=3600 --backoff=10,30,60
+    env_file:
+      - ./backend/.env.prod
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - taj-net
+      - job-platform_default
+    depends_on:
+      - taj_app_web
+      - taj_redis
+
+  # ── Redis (Cache + Queue Driver) ─────────────────────────────
+  taj_redis:
+    image: redis:7-alpine
+    container_name: taj_redis
+    restart: unless-stopped
+    ports:
+      - "6381:6379"                             # منفذ مختلف تجنباً لـ job_redis
+    volumes:
+      - taj_redis_data:/data
+    command: redis-server --maxmemory 96mb --maxmemory-policy noeviction --save ""
+    networks:
+      - taj-net
+
+networks:
+  taj-net:
+    driver: bridge
+  job-platform_default:
+    external: true                              # شبكة Job Platform (تحتوي على job_mysql)
+
+volumes:
+  taj_redis_data:
+    driver: local
