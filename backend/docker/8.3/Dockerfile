@@ -34,4 +34,4 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ 
     && npm run build
 
 # 🟢 التعديل الجوهري: جعل المنفذ ديناميكياً ليتناسب مع Render
-CMD php artisan optimize:clear && php artisan storage:link && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-80}
+CMD ["sh", "-c", "php artisan optimize:clear && php artisan storage:link && php artisan migrate --force && exec php artisan serve --host=0.0.0.0 --port=${PORT:-80}"]
