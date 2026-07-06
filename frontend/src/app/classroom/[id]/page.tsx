@@ -473,12 +473,9 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
       setScreenTrack(track);
       setIsSharing(true);
     } catch (error: unknown) {
+      // نكتفي بتسجيل الخطأ في الكونسول للمطورين بدون إزعاج المعلم برسالة خطأ
+      // لأن الإلغاء (Cancel) يعتبر خطأ في نظر المتصفح
       console.error("Screen share error:", error);
-      // لا تظهر رسالة خطأ إذا قام المستخدم بإلغاء العملية بنفسه
-      const err = error as Error;
-      if (err?.name !== "NotAllowedError" && err?.message !== "Permission denied") {
-        toast.error("حدث خطأ أثناء محاولة مشاركة الشاشة.");
-      }
     }
   };
 
