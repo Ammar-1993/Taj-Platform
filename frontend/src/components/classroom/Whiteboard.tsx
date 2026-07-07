@@ -1028,7 +1028,7 @@ const ToolButton: React.FC<ToolButtonProps> = React.memo(({ icon, active, onClic
         };
     }, []);
 
-    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleClick = () => {
         setShowTooltip(false);
         if (onClick) onClick();
     };
