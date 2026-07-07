@@ -157,8 +157,10 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         });
     }, []);
 
+    const agoraAppId = (process.env.NEXT_PUBLIC_AGORA_APP_ID || "").trim();
+
     const { sendCursorPosition } = useAgoraRTM({
-        appId: (process.env.NEXT_PUBLIC_AGORA_APP_ID || "").trim(), // Use Agora RTC App ID for RTM too
+        appId: agoraAppId, // Use Agora RTC App ID for RTM too
         channel: agoraChannel || "",
         uid,
         token: rtmToken || null,
