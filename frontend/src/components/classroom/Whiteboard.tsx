@@ -124,8 +124,6 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     const [strokeColor, setStrokeColor]       = useState('#000000');
     const [strokeWidth, setStrokeWidth]       = useState(4);
     const [pageState, setPageState]           = useState({ current: 0, total: 1 });
-    const [canUndo, setCanUndo]               = useState(false);
-    const [canRedo, setCanRedo]               = useState(false);
     const [toolbarVisible, setToolbarVisible] = useState(true);
     const [pageFlash, setPageFlash]           = useState(false);     // 2.5: animate page change for students
 
@@ -388,9 +386,6 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     }
                 });
 
-                roomInstance.callbacks.on('onCanUndoStepsUpdate', (steps: number) => setCanUndo(steps > 0));
-                roomInstance.callbacks.on('onCanRedoStepsUpdate', (steps: number) => setCanRedo(steps > 0));
-
                 // Re-register phase listener
                 roomInstance.callbacks.on('onPhaseChanged', (newPhase: RoomPhase) => {
                     setPhase(newPhase);
@@ -552,9 +547,6 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     }
                 });
 
-                roomInstance.callbacks.on('onCanUndoStepsUpdate', (steps: number) => setCanUndo(steps > 0));
-                roomInstance.callbacks.on('onCanRedoStepsUpdate', (steps: number) => setCanRedo(steps > 0));
-
                 // ── 2.2f: Phase listener — token expiry / disconnect handling ──
                 roomInstance.callbacks.on('onPhaseChanged', (newPhase: RoomPhase) => {
                     setPhase(newPhase);
@@ -691,10 +683,10 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 e.preventDefault(); setTool(TOOL_HOTKEYS[key]); return;
             }
             if ((e.ctrlKey || e.metaKey) && key === 'z' && !e.shiftKey) {
-                e.preventDefault(); if (canUndo) undo(); return;
+                e.preventDefault(); undo(); return;
             }
             if ((e.ctrlKey || e.metaKey) && (key === 'y' || (key === 'z' && e.shiftKey))) {
-                e.preventDefault(); if (canRedo) redo(); return;
+                e.preventDefault(); redo(); return;
             }
             if (key === 'delete' && e.ctrlKey) {
                 e.preventDefault(); clearCanvas(); return;
@@ -718,7 +710,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isTeacher, clearCanvas, setTool, undo, redo, canUndo, canRedo]);
+    }, [isTeacher, clearCanvas, setTool, undo, redo]);
 
     // Auto-hide toolbar after load
     useEffect(() => {
@@ -913,8 +905,8 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
 
                         <div className="w-px h-6 bg-white/10 mx-1.5 shrink-0" />
 
-                        <ToolButton icon={<Undo2 size={16} />}  onClick={() => { undo(); showToolbar(); }} label="تراجع (Ctrl+Z)" disabled={!canUndo} />
-                        <ToolButton icon={<Redo2 size={16} />}  onClick={() => { redo(); showToolbar(); }} label="إعادة (Ctrl+Y)" disabled={!canRedo} />
+                        <ToolButton icon={<Undo2 size={16} />}  onClick={() => { undo(); showToolbar(); }} label="تراجع (Ctrl+Z)" />
+                        <ToolButton icon={<Redo2 size={16} />}  onClick={() => { redo(); showToolbar(); }} label="إعادة (Ctrl+Y)" />
 
                         <div className="w-px h-6 bg-white/10 mx-1.5 shrink-0" />
 
