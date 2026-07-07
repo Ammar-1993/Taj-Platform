@@ -655,8 +655,15 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         if (activeTool !== 'selector' && activeTool !== 'eraser') applyTool(activeTool, strokeColor, width);
     }, [activeTool, strokeColor, applyTool]);
 
-    const undo = useCallback(() => roomRef.current?.undo(), []);
-    const redo = useCallback(() => roomRef.current?.redo(), []);
+    const undo = useCallback(() => {
+        clearOverlay();
+        roomRef.current?.undo();
+    }, [clearOverlay]);
+
+    const redo = useCallback(() => {
+        clearOverlay();
+        roomRef.current?.redo();
+    }, [clearOverlay]);
 
     const showToolbar = useCallback(() => {
         setToolbarVisible(true);
