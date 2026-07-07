@@ -5,7 +5,7 @@ import { WhiteWebSdk, Room, DeviceType, ViewMode, ApplianceNames, RoomPhase } fr
 import {
     Loader2, Pencil, Eraser, Square, Circle, Type,
     MousePointer2, Trash2, Undo2, Redo2, ChevronLeft, ChevronRight, Plus,
-    WifiOff, RefreshCw, Eye,
+    WifiOff, RefreshCw, Eye, ChevronDown,
 } from 'lucide-react';
 import { bookingService } from '@/services/api';
 import { useAgoraRTM, CursorMessage } from '@/hooks/useAgoraRTM';
@@ -13,7 +13,9 @@ import * as Sentry from "@sentry/nextjs";
 
 // ─── Local types ─────────────────────────────────────────────────────────────
 
-type WhiteboardRegion = "cn-hz" | "us-sv" | "sg" | "in-mum" | "gb-lon" | "eu";
+// Note: 'gb-lon' (London) region has been deprecated by Agora/Netless. 
+// Any requests for 'gb-lon' will correctly fallback to 'eu' (Frankfurt) in the validation logic.
+type WhiteboardRegion = "cn-hz" | "us-sv" | "sg" | "in-mum" | "eu";
 
 interface SceneState {
     index: number;
@@ -145,12 +147,21 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         }));
     }, []);
 
+    const handleMemberLeft = useCallback((senderUid: string) => {
+        setRemoteCursors(prev => {
+            const next = { ...prev };
+            delete next[senderUid];
+            return next;
+        });
+    }, []);
+
     const { sendCursorPosition } = useAgoraRTM({
         appId: (process.env.NEXT_PUBLIC_AGORA_APP_ID || "").trim(), // Use Agora RTC App ID for RTM too
         channel: agoraChannel || "",
         uid,
         token: rtmToken || null,
         onCursorReceived: handleCursorReceived,
+        onMemberLeft: handleMemberLeft,
         enabled: !!agoraChannel && !!rtmToken
     });
 
@@ -630,6 +641,16 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         return () => { if (hideTimerRef.current) clearTimeout(hideTimerRef.current); };
     }, [loading, error, isTeacher]);
 
+    // Clear overlay on page change to prevent "stuck" strokes floating over the new page
+    useEffect(() => {
+        if (overlayRef.current) {
+            const ctx = overlayRef.current.getContext('2d');
+            if (ctx) {
+                ctx.clearRect(0, 0, overlayRef.current.width, overlayRef.current.height);
+            }
+        }
+    }, [pageState.current]);
+
     // Page navigation helpers
     const addPage  = useCallback(() => {
         const room = roomRef.current;
@@ -707,7 +728,22 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
 
             {/* ── Teacher: invisible hover target to reveal toolbar ── */}
             {isTeacher && !loading && !error && (
-                <div className="absolute top-0 left-0 right-0 h-4 z-50" onMouseEnter={showToolbar} />
+                <div 
+                    className={`absolute top-0 left-0 right-0 h-6 z-50 flex items-center justify-center cursor-pointer transition-colors ${
+                        isTouchDevice ? 'bg-black/5 hover:bg-black/10' : ''
+                    }`} 
+                    onMouseEnter={showToolbar}
+                    onClick={showToolbar}
+                    onTouchStart={showToolbar}
+                >
+                    <div className={`transition-opacity duration-300 flex items-center justify-center ${toolbarVisible ? 'opacity-0' : 'opacity-100'}`}>
+                        {isTouchDevice ? (
+                            <ChevronDown className="w-4 h-4 text-slate-400 opacity-70" />
+                        ) : (
+                            <div className="w-12 h-1 rounded-full bg-black/20 animate-pulse" />
+                        )}
+                    </div>
+                </div>
             )}
 
             {/* ── Teacher: Drawing toolbar ── */}

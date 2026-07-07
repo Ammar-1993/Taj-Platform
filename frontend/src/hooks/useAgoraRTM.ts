@@ -15,6 +15,7 @@ type UseAgoraRTMOptions = {
     uid: number | string;
     token: string | null;
     onCursorReceived: (uid: string, msg: CursorMessage) => void;
+    onMemberLeft?: (uid: string) => void;
     enabled: boolean;
 };
 
@@ -24,6 +25,7 @@ export function useAgoraRTM({
     uid,
     token,
     onCursorReceived,
+    onMemberLeft,
     enabled,
 }: UseAgoraRTMOptions) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -31,9 +33,12 @@ export function useAgoraRTM({
 
     // Using a ref for the callback so the effect doesn't re-run on every render
     const onCursorReceivedRef = useRef(onCursorReceived);
+    const onMemberLeftRef = useRef(onMemberLeft);
+
     useEffect(() => {
         onCursorReceivedRef.current = onCursorReceived;
-    }, [onCursorReceived]);
+        onMemberLeftRef.current = onMemberLeft;
+    }, [onCursorReceived, onMemberLeft]);
 
     useEffect(() => {
         if (!enabled || !appId || !channel) return;
@@ -63,11 +68,23 @@ export function useAgoraRTM({
             }
         });
 
+        // Listen for presence events to detect when members leave
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        client.addEventListener("presence", (event: any) => {
+            if (event.channelType === "MESSAGE" && event.channelName === channel) {
+                if (event.eventType === "REMOTE_LEAVE" || event.eventType === "REMOTE_TIMEOUT") {
+                    if (onMemberLeftRef.current) {
+                        onMemberLeftRef.current(event.publisher);
+                    }
+                }
+            }
+        });
+
         const connect = async () => {
             try {
                 await client.login({ token: token ?? undefined });
-                // Subscribe to the channel to receive messages
-                await client.subscribe(channel);
+                // Subscribe to the channel to receive messages AND presence events
+                await client.subscribe(channel, { withMessage: true, withPresence: true });
                 console.log("[RTM] Connected and subscribed to channel:", channel);
             } catch (error) {
                 console.error("[RTM] Connection failed:", error);
