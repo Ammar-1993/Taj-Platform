@@ -39,6 +39,13 @@ export const getStatusBadge = (status: string) => {
           مسترجع
         </span>
       );
+    case "abandoned":
+      return (
+        <span className={`${base} bg-slate-100 text-slate-700`}>
+          <span className="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+          مهجورة
+        </span>
+      );
     default:
       return (
         <span className={`${base} bg-gray-100 text-gray-700`}>

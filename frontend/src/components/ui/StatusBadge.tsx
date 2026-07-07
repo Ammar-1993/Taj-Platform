@@ -48,6 +48,12 @@ const statusMap: Record<string, BadgeConfig> = {
     text: "text-purple-700",
     dot: "bg-purple-500",
   },
+  abandoned: {
+    label: "مهجورة",
+    bg: "bg-slate-100",
+    text: "text-slate-700",
+    dot: "bg-slate-500",
+  },
 
   // حالات طلبات السحب (Payouts)
   pending: {
