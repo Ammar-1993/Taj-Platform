@@ -1,11 +1,10 @@
 import React from 'react';
-import { act, fireEvent, render, waitFor } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import Whiteboard from '../Whiteboard';
 
 const mockGetContext = jest.fn();
 
 const mockSendCursorPosition = jest.fn();
-const mockJoinRoom = jest.fn();
 
 jest.mock('@/hooks/useAgoraRTM', () => ({
   useAgoraRTM: () => ({ sendCursorPosition: mockSendCursorPosition }),

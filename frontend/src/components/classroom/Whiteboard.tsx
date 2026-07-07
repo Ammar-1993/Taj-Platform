@@ -110,6 +110,8 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     const overlayRef    = useRef<HTMLCanvasElement>(null);
     const isPointerDownRef = useRef(false);
     const lastPointRef  = useRef<{x: number, y: number} | null>(null);
+    const lastStrokeEndTimeRef = useRef(0);
+    const clearOverlayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Freeze init props so the effect only runs once (Netless rooms cannot be
     // cleanly rejoined inside the same effect cycle)
@@ -239,10 +241,19 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
 
     const handleOverlayPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
         if (!isTeacher || activeTool !== 'pencil' || !overlayRef.current) return;
-        
-        // At start of new stroke, clear the previous temporary stroke.
-        // Netless has already rendered it in the committed layer by now.
-        clearOverlay();
+
+        if (clearOverlayTimeoutRef.current) {
+            clearTimeout(clearOverlayTimeoutRef.current);
+            clearOverlayTimeoutRef.current = null;
+        }
+
+        const now = Date.now();
+        const shouldClearOverlay = now - lastStrokeEndTimeRef.current >= 120;
+
+        if (shouldClearOverlay) {
+            clearOverlay();
+        }
+
         isPointerDownRef.current = true;
         lastPointRef.current = getCanvasPoint(e);
     }, [clearOverlay, isTeacher, activeTool]);
@@ -276,9 +287,16 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     const handleOverlayPointerUp = useCallback(() => {
         isPointerDownRef.current = false;
         lastPointRef.current = null;
-        // Do NOT clear overlay here. Leave it visible to bridge the GAP
-        // until the next stroke begins.
-    }, []);
+        lastStrokeEndTimeRef.current = Date.now();
+
+        if (clearOverlayTimeoutRef.current) {
+            clearTimeout(clearOverlayTimeoutRef.current);
+        }
+
+        clearOverlayTimeoutRef.current = setTimeout(() => {
+            clearOverlay();
+        }, 120);
+    }, [clearOverlay]);
 
     const clearCanvas = useCallback(() => {
         if (!roomRef.current || !isTeacher) return;
