@@ -649,6 +649,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 ctx.clearRect(0, 0, overlayRef.current.width, overlayRef.current.height);
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pageState.current]);
 
     // Page navigation helpers
