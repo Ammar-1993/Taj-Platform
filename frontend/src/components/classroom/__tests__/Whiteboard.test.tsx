@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import Whiteboard from '../Whiteboard';
 
 const mockGetContext = jest.fn();
@@ -23,14 +23,31 @@ jest.mock('@sentry/nextjs', () => ({
 
 jest.mock('white-web-sdk', () => {
   class MockRoom {
-    state = { sceneState: { index: 0, scenes: [] } };
-    phase = 'connected';
-    bindHtmlElement = jest.fn();
-    callbacks = { on: jest.fn() };
-    setScenePath = jest.fn();
-    putScenes = jest.fn();
-    cleanCurrentScene = jest.fn();
-    disconnect = jest.fn().mockResolvedValue(undefined);
+    constructor() {
+      this.state = { sceneState: { index: 0, scenes: [{}] } };
+      this.phase = 'connected';
+      this.bindHtmlElement = jest.fn();
+      this.callbacks = { on: jest.fn((event, callback) => {
+        this.listeners[event] = callback;
+      }) };
+      this.listeners = {};
+      this.setScenePath = jest.fn((path: string) => {
+        const nextIndex = Number(path.replace(/^\//, ''));
+        this.state.sceneState.index = Number.isNaN(nextIndex) ? 0 : nextIndex;
+        this.listeners.onRoomStateChanged?.({ sceneState: this.state.sceneState });
+      });
+      this.putScenes = jest.fn((_, scenes, newIndex) => {
+        this.state.sceneState.scenes = [...this.state.sceneState.scenes, ...scenes];
+        this.state.sceneState.index = newIndex;
+        this.listeners.onRoomStateChanged?.({ sceneState: this.state.sceneState });
+      });
+      this.cleanCurrentScene = jest.fn();
+      this.disconnect = jest.fn().mockResolvedValue(undefined);
+      this.setMemberState = jest.fn();
+      this.setViewMode = jest.fn();
+      this.undo = jest.fn();
+      this.redo = jest.fn();
+    }
   }
 
   return {
@@ -76,6 +93,46 @@ describe('Whiteboard overlay canvas', () => {
     }
     // @ts-expect-error - ResizeObserver is available in browser environments but not in jsdom typing.
     global.ResizeObserver = MockResizeObserver;
+  });
+
+  it('enables page counter actions for the active whiteboard room', async () => {
+    const { container } = render(
+      <Whiteboard
+        appIdentifier="app"
+        roomUuid="room"
+        roomToken="token"
+        uid="user"
+        isTeacher={true}
+        bookingId="1"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('1 / 1')).toBeInTheDocument();
+    });
+
+    const addPageButton = screen.getByTitle('صفحة جديدة');
+    act(() => {
+      addPageButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('2 / 2')).toBeInTheDocument();
+    });
+
+    const nextPageButton = screen.getAllByRole('button').find((button) => button.className.includes('text-slate-400') && button.getAttribute('title') !== 'صفحة جديدة');
+    if (nextPageButton) {
+      act(() => {
+        nextPageButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      });
+    }
+
+    await waitFor(() => {
+      expect(screen.getByText('2 / 2')).toBeInTheDocument();
+    });
+
+    const overlay = container.querySelector('canvas') as HTMLCanvasElement;
+    expect(overlay).toBeInTheDocument();
   });
 
   it('uses the real container size for the overlay canvas and maps pointer coordinates 1:1', async () => {

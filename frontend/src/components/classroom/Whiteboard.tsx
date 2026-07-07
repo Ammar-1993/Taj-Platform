@@ -754,19 +754,20 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     }, [pageState.current, clearOverlay]);
 
     // Page navigation helpers
-    const addPage  = useCallback(() => {
+    const addPage = useCallback(() => {
         const room = roomRef.current;
-        if (!room || !isTeacher) return;
+        if (!room) return;
+
         const newIndex = pageState.total;
         room.putScenes('/', [{}], newIndex);
         room.setScenePath(`/${newIndex}`);
-    }, [isTeacher, pageState.total]);
+    }, [pageState.total]);
 
     const goToPage = useCallback((index: number) => {
         const room = roomRef.current;
-        if (!room || !isTeacher || index < 0 || index >= pageState.total) return;
+        if (!room || index < 0 || index >= pageState.total) return;
         room.setScenePath(`/${index}`);
-    }, [isTeacher, pageState.total]);
+    }, [pageState.total]);
 
     // ── Derived phase booleans ────────────────────────────────────────────────
     const isConnected    = phase === RoomPhase.Connected;
@@ -916,16 +917,13 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
             {/* ── 2.5: Page counter — visible to ALL users ── */}
             {!loading && !error && (
                 <div className="absolute bottom-5 left-4 md:left-6 z-40 flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-xl border border-white/10">
-                    {/* Prev button (teacher only) */}
-                    {isTeacher && (
-                        <button
-                            onClick={() => goToPage(pageState.current - 1)}
-                            disabled={pageState.current === 0}
-                            className="p-1 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
-                        >
-                            <ChevronRight size={16} />
-                        </button>
-                    )}
+                    <button
+                        onClick={() => goToPage(pageState.current - 1)}
+                        disabled={pageState.current === 0}
+                        className="p-1 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+                    >
+                        <ChevronRight size={16} />
+                    </button>
 
                     {/* Page indicator — animated flash for students on teacher navigation */}
                     <span
@@ -936,22 +934,17 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                         {pageState.current + 1} / {pageState.total}
                     </span>
 
-                    {/* Next + add page (teacher only) */}
-                    {isTeacher && (
-                        <>
-                            <button
-                                onClick={() => goToPage(pageState.current + 1)}
-                                disabled={pageState.current >= pageState.total - 1}
-                                className="p-1 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
-                            >
-                                <ChevronLeft size={16} />
-                            </button>
-                            <div className="w-px h-4 bg-white/10" />
-                            <button onClick={addPage} title="صفحة جديدة" className="p-1 text-slate-400 hover:text-emerald-400 transition">
-                                <Plus size={16} />
-                            </button>
-                        </>
-                    )}
+                    <button
+                        onClick={() => goToPage(pageState.current + 1)}
+                        disabled={pageState.current >= pageState.total - 1}
+                        className="p-1 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+                    >
+                        <ChevronLeft size={16} />
+                    </button>
+                    <div className="w-px h-4 bg-white/10" />
+                    <button onClick={addPage} title="صفحة جديدة" className="p-1 text-slate-400 hover:text-emerald-400 transition">
+                        <Plus size={16} />
+                    </button>
                 </div>
             )}
 
