@@ -69,9 +69,9 @@ services:
       - '${FRONTEND_PORT:-3000}:3000'
     volumes:
       - './frontend:/app'
-      # عزل مجلدات البناء والحزم داخل الحاوية فقط لمنع تعارض الصلاحيات مع المضيف
-      - /app/.next
-      - /app/node_modules
+      # عزل مجلدات البناء والحزم داخل الحاوية كـ volumes مسمّاة لتجنّب تعارض الصلاحيات
+      - nextjs_build:/app/.next
+      - nextjs_node_modules:/app/node_modules
     environment:
       - NODE_ENV=development
     tty: true
@@ -91,4 +91,8 @@ volumes:
   taj-mysql:
     driver: local
   taj-redis:
+    driver: local
+  nextjs_node_modules:
+    driver: local
+  nextjs_build:
     driver: local
