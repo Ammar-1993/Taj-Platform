@@ -180,23 +180,72 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     }, [sendCursorPosition]);
 
     const getCanvasPoint = (e: React.PointerEvent<HTMLDivElement>) => {
-        const rect = whiteboardRef.current!.getBoundingClientRect();
+        const rect = whiteboardRef.current?.getBoundingClientRect();
+        const overlay = overlayRef.current;
+        if (!overlay || !rect) return { x: 0, y: 0 };
+
+        const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
+        const logicalWidth = overlay.width / dpr || 1;
+        const logicalHeight = overlay.height / dpr || 1;
+        const rectWidth = rect.width || logicalWidth || 1;
+        const rectHeight = rect.height || logicalHeight || 1;
+        const offsetX = rect.left || 0;
+        const offsetY = rect.top || 0;
+
         return {
-            x: (e.clientX - rect.left) * (overlayRef.current!.width / rect.width),
-            y: (e.clientY - rect.top) * (overlayRef.current!.height / rect.height),
+            x: (e.clientX - offsetX) * (logicalWidth / rectWidth),
+            y: (e.clientY - offsetY) * (logicalHeight / rectHeight),
         };
     };
+
+    const syncOverlayCanvasSize = useCallback(() => {
+        const overlay = overlayRef.current;
+        const container = whiteboardRef.current;
+        if (!overlay || !container) return;
+
+        const rect = container.getBoundingClientRect();
+        const width = Math.max(1, Math.round(rect.width || container.clientWidth || 0));
+        const height = Math.max(1, Math.round(rect.height || container.clientHeight || 0));
+        const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
+
+        if (width === 0 || height === 0) return;
+
+        const nextWidth = Math.round(width * dpr);
+        const nextHeight = Math.round(height * dpr);
+
+        if (overlay.width !== nextWidth || overlay.height !== nextHeight) {
+            overlay.width = nextWidth;
+            overlay.height = nextHeight;
+        }
+
+        const ctx = overlay.getContext('2d');
+        if (!ctx) return;
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+    }, []);
+
+    const clearOverlay = useCallback(() => {
+        const overlay = overlayRef.current;
+        if (!overlay) return;
+
+        const ctx = overlay.getContext('2d');
+        if (!ctx) return;
+
+        const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, overlay.width / dpr, overlay.height / dpr);
+    }, []);
 
     const handleOverlayPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
         if (!isTeacher || activeTool !== 'pencil' || !overlayRef.current) return;
         
         // At start of new stroke, clear the previous temporary stroke.
         // Netless has already rendered it in the committed layer by now.
-        const ctx = overlayRef.current.getContext('2d');
-        ctx?.clearRect(0, 0, overlayRef.current.width, overlayRef.current.height);
+        clearOverlay();
         isPointerDownRef.current = true;
         lastPointRef.current = getCanvasPoint(e);
-    }, [isTeacher, activeTool]);
+    }, [clearOverlay, isTeacher, activeTool]);
 
     const handleOverlayPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
         if (!isPointerDownRef.current || !overlayRef.current || !lastPointRef.current) return;
@@ -204,11 +253,15 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         const ctx = overlayRef.current.getContext('2d');
         if (!ctx) return;
         
+        const rect = whiteboardRef.current?.getBoundingClientRect();
         const point = getCanvasPoint(e);
         const [r, g, b] = hexToRgb(strokeColor);
+        const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
+        const logicalWidth = overlayRef.current.width / dpr;
         
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.strokeStyle = `rgb(${r},${g},${b})`;
-        ctx.lineWidth = strokeWidth * (overlayRef.current.width / whiteboardRef.current!.getBoundingClientRect().width);
+        ctx.lineWidth = strokeWidth * (logicalWidth / (rect?.width || logicalWidth));
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         
@@ -641,16 +694,37 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         return () => { if (hideTimerRef.current) clearTimeout(hideTimerRef.current); };
     }, [loading, error, isTeacher]);
 
+    useEffect(() => {
+        syncOverlayCanvasSize();
+    }, [syncOverlayCanvasSize]);
+
+    useEffect(() => {
+        const container = whiteboardRef.current;
+        if (!container) return;
+
+        const resizeObserver = typeof ResizeObserver !== 'undefined'
+            ? new ResizeObserver(() => syncOverlayCanvasSize())
+            : null;
+
+        if (resizeObserver) {
+            resizeObserver.observe(container);
+        } else if (typeof window !== 'undefined') {
+            window.addEventListener('resize', syncOverlayCanvasSize);
+        }
+
+        return () => {
+            resizeObserver?.disconnect();
+            if (!resizeObserver && typeof window !== 'undefined') {
+                window.removeEventListener('resize', syncOverlayCanvasSize);
+            }
+        };
+    }, [syncOverlayCanvasSize]);
+
     // Clear overlay on page change to prevent "stuck" strokes floating over the new page
     useEffect(() => {
-        if (overlayRef.current) {
-            const ctx = overlayRef.current.getContext('2d');
-            if (ctx) {
-                ctx.clearRect(0, 0, overlayRef.current.width, overlayRef.current.height);
-            }
-        }
+        clearOverlay();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pageState.current]);
+    }, [pageState.current, clearOverlay]);
 
     // Page navigation helpers
     const addPage  = useCallback(() => {
@@ -873,8 +947,6 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 {/* ── Overlay Canvas for Instant Stroke Rendering ── */}
                 <canvas
                     ref={overlayRef}
-                    width={1920}
-                    height={1080}
                     className="absolute inset-0 w-full h-full pointer-events-none z-30"
                     style={{ opacity: activeTool === 'pencil' && isTeacher ? 1 : 0 }}
                 />
