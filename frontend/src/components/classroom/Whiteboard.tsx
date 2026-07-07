@@ -683,10 +683,10 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 e.preventDefault(); setTool(TOOL_HOTKEYS[key]); return;
             }
             if ((e.ctrlKey || e.metaKey) && key === 'z' && !e.shiftKey) {
-                e.preventDefault(); roomRef.current?.undo(); return;
+                e.preventDefault(); undo(); return;
             }
             if ((e.ctrlKey || e.metaKey) && (key === 'y' || (key === 'z' && e.shiftKey))) {
-                e.preventDefault(); roomRef.current?.redo(); return;
+                e.preventDefault(); redo(); return;
             }
             if (key === 'delete' && e.ctrlKey) {
                 e.preventDefault(); clearCanvas(); return;
@@ -710,7 +710,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isTeacher, clearCanvas, setTool]);
+    }, [isTeacher, clearCanvas, setTool, undo, redo]);
 
     // Auto-hide toolbar after load
     useEffect(() => {
