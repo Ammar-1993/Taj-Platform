@@ -858,7 +858,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                         hideTimerRef.current = setTimeout(() => setToolbarVisible(false), 3000);
                     }}
                 >
-                    <div className="flex items-center gap-0.5 px-4 py-2 bg-slate-900/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10">
+                    <div className="flex items-center gap-0.5 px-2 py-1.5 sm:px-4 sm:py-2 bg-slate-900/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10 max-w-[92vw] overflow-x-auto scrollbar-hide">
                         <ToolButton icon={<MousePointer2 size={16} />} active={activeTool === 'selector'}  onClick={() => { setTool('selector');  showToolbar(); }} label="تحديد (S)" />
                         <ToolButton icon={<Pencil size={16} />}        active={activeTool === 'pencil'}    onClick={() => { setTool('pencil');    showToolbar(); }} label="قلم (P)" />
                         <ToolButton icon={<Square size={16} />}        active={activeTool === 'rectangle'} onClick={() => { setTool('rectangle'); showToolbar(); }} label="مستطيل (R)" />
@@ -874,7 +874,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                                 <button
                                     key={hex} title={label}
                                     onClick={() => { setColor(hex); showToolbar(); }}
-                                    className={`w-5 h-5 rounded-full border-2 transition-all hover:scale-110 active:scale-95 shrink-0 ${
+                                    className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 transition-all hover:scale-110 active:scale-95 shrink-0 ${
                                         strokeColor === hex ? 'border-blue-400 scale-110 ring-2 ring-blue-400/40' : 'border-white/20'
                                     }`}
                                     style={{ backgroundColor: hex }}
@@ -890,7 +890,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                                 <button
                                     key={w} title={`سُمك ${w}`}
                                     onClick={() => { setWidth(w); showToolbar(); }}
-                                    className={`w-9 h-8 rounded-lg flex items-center justify-center transition-all ${
+                                    className={`w-8 h-7 sm:w-9 sm:h-8 rounded-lg flex items-center justify-center transition-all ${
                                         strokeWidth === w ? 'bg-blue-600/20 ring-1 ring-blue-500' : 'hover:bg-white/5'
                                     }`}
                                 >
