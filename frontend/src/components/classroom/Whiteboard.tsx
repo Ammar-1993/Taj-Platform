@@ -124,6 +124,8 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     const [strokeColor, setStrokeColor]       = useState('#000000');
     const [strokeWidth, setStrokeWidth]       = useState(4);
     const [pageState, setPageState]           = useState({ current: 0, total: 1 });
+    const [canUndo, setCanUndo]               = useState(false);
+    const [canRedo, setCanRedo]               = useState(false);
     const [toolbarVisible, setToolbarVisible] = useState(true);
     const [pageFlash, setPageFlash]           = useState(false);     // 2.5: animate page change for students
 
@@ -386,6 +388,9 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     }
                 });
 
+                roomInstance.callbacks.on('onCanUndoStepsUpdate', (steps: number) => setCanUndo(steps > 0));
+                roomInstance.callbacks.on('onCanRedoStepsUpdate', (steps: number) => setCanRedo(steps > 0));
+
                 // Re-register phase listener
                 roomInstance.callbacks.on('onPhaseChanged', (newPhase: RoomPhase) => {
                     setPhase(newPhase);
@@ -547,6 +552,9 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     }
                 });
 
+                roomInstance.callbacks.on('onCanUndoStepsUpdate', (steps: number) => setCanUndo(steps > 0));
+                roomInstance.callbacks.on('onCanRedoStepsUpdate', (steps: number) => setCanRedo(steps > 0));
+
                 // ── 2.2f: Phase listener — token expiry / disconnect handling ──
                 roomInstance.callbacks.on('onPhaseChanged', (newPhase: RoomPhase) => {
                     setPhase(newPhase);
@@ -683,10 +691,10 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 e.preventDefault(); setTool(TOOL_HOTKEYS[key]); return;
             }
             if ((e.ctrlKey || e.metaKey) && key === 'z' && !e.shiftKey) {
-                e.preventDefault(); undo(); return;
+                e.preventDefault(); if (canUndo) undo(); return;
             }
             if ((e.ctrlKey || e.metaKey) && (key === 'y' || (key === 'z' && e.shiftKey))) {
-                e.preventDefault(); redo(); return;
+                e.preventDefault(); if (canRedo) redo(); return;
             }
             if (key === 'delete' && e.ctrlKey) {
                 e.preventDefault(); clearCanvas(); return;
@@ -710,7 +718,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isTeacher, clearCanvas, setTool, undo, redo]);
+    }, [isTeacher, clearCanvas, setTool, undo, redo, canUndo, canRedo]);
 
     // Auto-hide toolbar after load
     useEffect(() => {
@@ -893,9 +901,10 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                                 <button
                                     key={w} title={`سُمك ${w}`}
                                     onClick={() => { setWidth(w); showToolbar(); }}
+                                    disabled={activeTool === 'text'}
                                     className={`w-8 h-7 sm:w-9 sm:h-8 rounded-lg flex items-center justify-center transition-all ${
                                         strokeWidth === w ? 'bg-blue-600/20 ring-1 ring-blue-500' : 'hover:bg-white/5'
-                                    }`}
+                                    } ${activeTool === 'text' ? 'opacity-30 cursor-not-allowed' : ''}`}
                                 >
                                     <div className="rounded-full bg-white/80" style={{ width: 22, height: Math.max(1, Math.round(w * 0.55)) }} />
                                 </button>
@@ -904,8 +913,8 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
 
                         <div className="w-px h-6 bg-white/10 mx-1.5 shrink-0" />
 
-                        <ToolButton icon={<Undo2 size={16} />}  onClick={() => { undo(); showToolbar(); }} label="تراجع (Ctrl+Z)" />
-                        <ToolButton icon={<Redo2 size={16} />}  onClick={() => { redo(); showToolbar(); }} label="إعادة (Ctrl+Y)" />
+                        <ToolButton icon={<Undo2 size={16} />}  onClick={() => { undo(); showToolbar(); }} label="تراجع (Ctrl+Z)" disabled={!canUndo} />
+                        <ToolButton icon={<Redo2 size={16} />}  onClick={() => { redo(); showToolbar(); }} label="إعادة (Ctrl+Y)" disabled={!canRedo} />
 
                         <div className="w-px h-6 bg-white/10 mx-1.5 shrink-0" />
 
@@ -1003,23 +1012,46 @@ export default Whiteboard;
 
 // ─── ToolButton ───────────────────────────────────────────────────────────────
 
-const ToolButton: React.FC<ToolButtonProps> = React.memo(({ icon, active, onClick, label, variant = 'primary', disabled }) => (
-    <button
-        onClick={onClick}
-        title={label}
-        disabled={disabled}
-        className={`p-2 rounded-xl transition-all duration-150 group relative disabled:opacity-30 disabled:cursor-not-allowed ${
-            active
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                : variant === 'danger'
-                    ? 'text-red-400 hover:bg-red-500/10'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
-        }`}
-    >
-        {icon}
-        <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-lg border border-white/10">
-            {label}
-        </span>
-    </button>
-));
+const ToolButton: React.FC<ToolButtonProps> = React.memo(({ icon, active, onClick, label, variant = 'primary', disabled }) => {
+    const [showTooltip, setShowTooltip] = useState(false);
+    const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleTouchStart = () => {
+        setShowTooltip(true);
+        if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+        hideTimeoutRef.current = setTimeout(() => setShowTooltip(false), 1500);
+    };
+
+    useEffect(() => {
+        return () => {
+            if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+        };
+    }, []);
+
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+        setShowTooltip(false);
+        if (onClick) onClick(e as any);
+    };
+
+    return (
+        <button
+            onClick={handleClick}
+            onTouchStart={handleTouchStart}
+            title={label}
+            disabled={disabled}
+            className={`p-2 rounded-xl transition-all duration-150 group relative disabled:opacity-30 disabled:cursor-not-allowed ${
+                active
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                    : variant === 'danger'
+                        ? 'text-red-400 hover:bg-red-500/10'
+                        : 'text-slate-400 hover:bg-white/5 hover:text-white'
+            }`}
+        >
+            {icon}
+            <span className={`absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-lg border border-white/10 ${showTooltip ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                {label}
+            </span>
+        </button>
+    );
+});
 ToolButton.displayName = 'ToolButton';
