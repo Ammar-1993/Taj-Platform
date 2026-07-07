@@ -915,7 +915,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
 
             {/* ── 2.5: Page counter — visible to ALL users ── */}
             {!loading && !error && (
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-xl border border-white/10">
+                <div className="absolute bottom-5 left-4 md:left-6 z-40 flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-xl border border-white/10">
                     {/* Prev button (teacher only) */}
                     {isTeacher && (
                         <button
