@@ -25,22 +25,24 @@ jobs:
           script: |
             set -e
 
-            echo "📥 [1/5] سحب آخر التحديثات من GitHub..."
+            echo "📥 [1/6] سحب آخر التحديثات من GitHub..."
             cd /opt/taj-platform
             GIT_SSH_COMMAND="ssh -i /root/.ssh/taj_deploy -o StrictHostKeyChecking=no" \
               git pull origin main
 
-            echo "🔨 [2/5] بناء صورة Docker الجديدة..."
+            echo "🔨 [2/6] بناء صورة Docker الجديدة..."
             docker compose -f docker-compose.prod.yml build taj_app_web
 
-            echo "🚀 [3/5] نشر الحاويات بدون توقف (Zero Downtime)..."
+            echo "🔧 [3/6] تشغيل التهجيرات بأمان قبل النشر..."
+            docker compose -f docker-compose.prod.yml run --rm taj_app_web php artisan migrate --force
+
+            echo "🚀 [4/6] تحديث الحاويات لتشغيل الكود الجديد (Minimal Downtime)..."
             docker compose -f docker-compose.prod.yml up -d --no-deps taj_app_web taj_queue_worker
 
-            echo "🔧 [4/5] تشغيل التهجيرات وتحسين الأداء..."
-            docker exec taj_app_web php artisan migrate --force
+            echo "⚡ [5/6] تحسين الأداء وتفعيل الكاش..."
             docker exec taj_app_web php artisan optimize
 
-            echo "🧹 [5/5] تنظيف الصور القديمة لتوفير المساحة..."
+            echo "🧹 [6/6] تنظيف الصور القديمة لتوفير المساحة..."
             docker image prune -f
 
             echo "✅ تم النشر بنجاح في $(date '+%Y-%m-%d %H:%M:%S')"
