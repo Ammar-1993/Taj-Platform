@@ -1,28 +1,38 @@
-# docker-compose.prod.yml — بيئة الإنتاج على DigitalOcean VPS
-# لا تُرفع هذه الملف لـ Git مع الـ .env الإنتاجي
-# الاستخدام: docker compose -f docker-compose.prod.yml up -d --build
+version: '3.8'
+
+# قالب لتحديد حجم السجلات بـ 10 ميجابايت كحد أقصى
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
 
 services:
 
   # ── تطبيق Laravel (API + Filament Admin) ─────────────────────
-  taj_app_web:
+  taj_admin_web:
     build:
       context: ./backend
       dockerfile: docker/8.3/Dockerfile.prod
     image: taj-platform-prod:latest
-    container_name: taj_app_web
+    container_name: taj_admin_web
     restart: unless-stopped
     ports:
       - "8082:80"
     env_file:
       - ./backend/.env.prod
     extra_hosts:
-      - "host.docker.internal:host-gateway"    # للوصول لـ job_mysql عبر host
+      - "host.docker.internal:host-gateway"
     networks:
       - taj-net
-      - job-platform_default                   # للتواصل المباشر مع job_mysql
+      - job-platform_default
     depends_on:
       - taj_redis
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 256M # حد أقصى لاستهلاك الذاكرة لتطبيق الويب
 
   # ── Queue Worker (معالجة المهام الخلفية) ─────────────────────
   taj_queue_worker:
@@ -38,8 +48,13 @@ services:
       - taj-net
       - job-platform_default
     depends_on:
-      - taj_app_web
+      - taj_admin_web
       - taj_redis
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 128M # الـ Worker يحتاج ذاكرة أقل لإجراء المهام في الخلفية
 
   # ── Redis (Cache + Queue Driver) ─────────────────────────────
   taj_redis:
@@ -47,18 +62,23 @@ services:
     container_name: taj_redis
     restart: unless-stopped
     ports:
-      - "6381:6379"                             # منفذ مختلف تجنباً لـ job_redis
+      - "6381:6379"
     volumes:
       - taj_redis_data:/data
-    command: redis-server --maxmemory 96mb --maxmemory-policy noeviction --save ""
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru --save ""
     networks:
       - taj-net
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 96M
 
 networks:
   taj-net:
     driver: bridge
   job-platform_default:
-    external: true                              # شبكة Job Platform (تحتوي على job_mysql)
+    external: true
 
 volumes:
   taj_redis_data:

@@ -1,3 +1,25 @@
+# ==========================================
+# Stage 1: Node.js Frontend Assets Builder
+# ==========================================
+FROM node:20-slim AS node-builder
+WORKDIR /app
+COPY package.json package-lock.json vite.config.js* postcss.config.js* tailwind.config.js* ./
+COPY . .
+RUN npm ci && npm run build
+
+# ==========================================
+# Stage 2: PHP/Composer Dependencies Builder
+# ==========================================
+FROM composer:2 AS php-builder
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --ignore-platform-reqs --no-interaction --no-plugins --no-scripts --prefer-dist
+COPY . .
+RUN composer dump-autoload --optimize --no-dev
+
+# ==========================================
+# Stage 3: Final Minimal Production Image
+# ==========================================
 FROM php:8.3-fpm
 
 LABEL maintainer="Taj Platform — Production"
@@ -8,37 +30,34 @@ ENV TZ=UTC
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# ── تثبيت التبعيات الأساسية ──────────────────────────────────
+# تثبيت التبعيات الأساسية لتشغيل خادم الويب فقط دون أدوات البناء
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-       nginx supervisor curl ca-certificates zip unzip git \
+       nginx supervisor ca-certificates zip unzip git \
        libzip-dev libicu-dev libonig-dev libxml2-dev zlib1g-dev \
        libpng-dev libfreetype6-dev libjpeg62-turbo-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo_mysql mbstring xml zip intl bcmath gd \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# ── تثبيت Composer ────────────────────────────────────────────
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# ── نسخ ملفات المشروع وتثبيت الحزم ──────────────────────────
+# نسخ ملفات المشروع بالكامل
 COPY . .
 
-RUN composer install --no-dev --optimize-autoloader \
-    && npm install \
-    && npm run build \
-    && php artisan storage:link \
+# جلب الحزم الجاهزة والملفات المبنية من المراحل السابقة (عزل تام للمخلفات)
+COPY --from=php-builder /app/vendor/ ./vendor/
+COPY --from=node-builder /app/public/build/ ./public/build/
+
+# ضبط الصلاحيات وروابط التخزين لـ Laravel
+RUN php artisan storage:link \
     && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# ── إعداد Nginx ───────────────────────────────────────────────
+# إعداد Nginx
 RUN rm -f /etc/nginx/sites-enabled/default
 COPY docker/8.3/nginx-prod.conf /etc/nginx/sites-available/taj-platform
 RUN ln -s /etc/nginx/sites-available/taj-platform /etc/nginx/sites-enabled/taj-platform
 
-# ── إعداد Supervisor (يُشغّل PHP-FPM + Nginx معاً) ────────────
+# إعداد Supervisor
 COPY docker/8.3/supervisord-prod.conf /etc/supervisor/conf.d/supervisord.conf
 
 EXPOSE 80
