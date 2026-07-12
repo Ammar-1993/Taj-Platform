@@ -66,7 +66,7 @@
         </div>
 
         <div class="space-y-5">
-            <a href="https://taj-platform.vercel.app" target="_blank" rel="noopener noreferrer" class="group relative flex items-center justify-center gap-3 w-full p-0.5 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 transition-all duration-300 hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] hover:-translate-y-1">
+            <a href="{{ env('FRONTEND_URL', 'https://www.taj-edu.online') }}" target="_blank" rel="noopener noreferrer" class="group relative flex items-center justify-center gap-3 w-full p-0.5 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 transition-all duration-300 hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] hover:-translate-y-1">
                 <div class="flex items-center justify-center gap-3 w-full px-6 py-4 bg-white/10 backdrop-blur-sm rounded-[15px] text-white font-black text-lg transition-all duration-300 group-hover:bg-transparent">
                     <span>الذهاب للمنصة</span>
                     <i data-lucide="rocket" class="w-6 h-6 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300"></i>
