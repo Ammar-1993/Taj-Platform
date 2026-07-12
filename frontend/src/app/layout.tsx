@@ -25,15 +25,15 @@ const mono = IBM_Plex_Mono({
 export function generateMetadata(): Metadata {
   return {
     title: {
-      default: "منصة تاج التعليمية",
+      default: "منصة تاج التعليمية | نخبة المعلمين",
       template: "%s | منصة تاج التعليمية",
     },
-    description: "منصتك الأولى للدروس الخصوصية",
-    metadataBase: new URL("https://taj-platform.vercel.app"),
+    description: "المنصة الأولى للتعليم عن بعد. نخبة من المعلمين المعتمدين في جميع المواد. اختر معلمك وانطلق نحو التفوق.",
+    metadataBase: new URL("https://www.taj-edu.online"),
     openGraph: {
       title: "منصة تاج التعليمية",
-      description: "منصتك الأولى للدروس الخصوصية",
-      url: "https://taj-platform.vercel.app",
+      description: "المنصة الأولى للتعليم عن بعد. نخبة من المعلمين المعتمدين في جميع المواد. اختر معلمك وانطلق نحو التفوق.",
+      url: "https://www.taj-edu.online",
       siteName: "منصة تاج التعليمية",
       images: [
         {
