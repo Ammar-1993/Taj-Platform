@@ -23,7 +23,9 @@ return [
     // في بيئة التطوير سيعمل على localhost:3000، وفي الإنتاج سيأخذ الرابط من ملف .env
     'allowed_origins' => [
         env('FRONTEND_URL', 'http://localhost:3000'),
-        'https://taj-platform.vercel.app', // 🟢 أضفنا رابط منصتك الحي هنا صراحةً
+        'https://taj-platform.vercel.app', // الرابط القديم لضمان استمراريته
+        'https://taj-edu.online',          // الدومين الجديد
+        'https://www.taj-edu.online',      // الدومين الجديد مع www
     ],
 
     'allowed_origins_patterns' => [],
