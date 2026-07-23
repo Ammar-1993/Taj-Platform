@@ -73,5 +73,11 @@ export default withSentryConfig(nextConfig, {
     // NOTE: removeDebugLogging was removed intentionally.
     // Setting it to true strips ALL console.log and Sentry logger calls
     // from production builds, preventing logs from reaching Sentry.
+  },
+
+  // إيقاف رفع ملفات Source Maps مؤقتاً لتجنب فشل البناء على Vercel 
+  // بسبب خطأ (Project not found) في إعدادات Sentry
+  sourcemaps: {
+    disable: true,
   }
 });
