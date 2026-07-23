@@ -842,7 +842,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
             {!loading && !error && isTeacher && onToggleFocusMode && (
                 <button
                     onClick={onToggleFocusMode}
-                    className="absolute top-3 right-3 z-50 p-2 bg-slate-900/40 hover:bg-slate-900/90 text-white rounded-xl backdrop-blur-md transition border border-white/10"
+                    className="absolute top-3 left-3 md:left-5 z-50 p-2 bg-slate-900/40 hover:bg-slate-900/90 text-white rounded-xl backdrop-blur-md transition border border-white/10"
                     title={isAbsoluteFocusMode ? "إنهاء وضع التركيز" : "وضع التركيز المطلق"}
                 >
                     {isAbsoluteFocusMode ? <Minimize size={20} /> : <Maximize size={20} />}
