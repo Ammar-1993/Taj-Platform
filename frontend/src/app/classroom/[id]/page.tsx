@@ -88,8 +88,9 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
   const [permBannerDismissed, setPermBannerDismissed] = useState(false);
   const [bannerShake, setBannerShake] = useState(false);
 
-  // 🧭 Auto-hide UI states
+  // 🧭 Auto-hide & Focus UI states
   const [isIdle, setIsIdle] = useState(false);
+  const [absoluteFocusMode, setAbsoluteFocusMode] = useState(false);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 🔐 حالات صلاحيات الميديا
@@ -273,11 +274,33 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     requestMediaPermissions();
   };
 
-  // ── Auto-hide UI Logic (Task 4) ──
+  // ── Auto-hide UI Logic (Task 4 & Focus Mode) ──
   useEffect(() => {
     if (!inCall) return;
 
+    const handlePointerMove = (e: Event) => {
+      // 1. If absolute focus mode is active, keep UI hidden
+      if (absoluteFocusMode) return;
+
+      let clientY = 0;
+      if (e instanceof MouseEvent) {
+        clientY = e.clientY;
+      } else if (window.TouchEvent && e instanceof TouchEvent) {
+        clientY = e.touches[0].clientY;
+      }
+
+      // 2. Smart auto-show: If mouse/touch is near the top (80px) or bottom (120px) edges, show UI immediately
+      if (clientY < 80 || clientY > window.innerHeight - 120) {
+        setIsIdle(false);
+        if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+        return;
+      }
+
+      resetIdleTimer();
+    };
+
     const resetIdleTimer = () => {
+      if (absoluteFocusMode) return;
       setIsIdle(false);
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       // Auto-hide after 3 seconds of inactivity
@@ -287,19 +310,21 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     // Initial timer start
     resetIdleTimer();
 
-    window.addEventListener("mousemove", resetIdleTimer);
+    window.addEventListener("mousemove", handlePointerMove);
     window.addEventListener("mousedown", resetIdleTimer);
-    window.addEventListener("touchstart", resetIdleTimer, { passive: true });
+    window.addEventListener("touchstart", handlePointerMove, { passive: true });
     window.addEventListener("keydown", resetIdleTimer);
 
     return () => {
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-      window.removeEventListener("mousemove", resetIdleTimer);
+      window.removeEventListener("mousemove", handlePointerMove);
       window.removeEventListener("mousedown", resetIdleTimer);
-      window.removeEventListener("touchstart", resetIdleTimer);
+      window.removeEventListener("touchstart", handlePointerMove);
       window.removeEventListener("keydown", resetIdleTimer);
     };
-  }, [inCall]);
+  }, [inCall, absoluteFocusMode]);
+
+  const isUiHidden = isIdle || absoluteFocusMode;
 
   const requestMediaPermissions = async () => {
     try {
@@ -542,7 +567,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
       {/* 1. Floating Header — Room Info Badge Only */}
       <div 
         className={`absolute top-0 left-0 w-full p-4 md:p-5 z-40 pointer-events-none transition-all duration-300 ease-in-out ${
-          isIdle && inCall ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"
+          isUiHidden && inCall ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"
         }`}
       >
         <div className="inline-flex items-center gap-3 pointer-events-auto bg-black/30 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/5 shadow-lg">
@@ -596,7 +621,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         )}
 
       {/* 2. Main Content Area */}
-      <div className={`flex-1 relative overflow-hidden transition-all duration-300 ${showWhiteboard ? "p-0" : "p-2 md:p-4"}`}>
+      <div className={`flex-1 relative overflow-hidden transition-all duration-300 ${showWhiteboard ? "p-0 rounded-none" : "p-2 md:p-4"}`}>
         {!inCall ? (
           <LobbyPreview
             cameraStatus={cameraStatus}
@@ -630,7 +655,15 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                   region={WHITEBOARD_REGION}
                   agoraChannel={channelName}
                   rtmToken={rtmToken}
-                  onInteract={() => setIsIdle(true)}
+                  isAbsoluteFocusMode={absoluteFocusMode}
+                  onToggleFocusMode={() => setAbsoluteFocusMode(!absoluteFocusMode)}
+                  onInteract={() => {
+                    // Force UI to hide immediately on whiteboard interaction
+                    if (!absoluteFocusMode) {
+                      setIsIdle(true);
+                      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+                    }
+                  }}
                 />
               )}
             </div>
@@ -651,7 +684,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
              *  isFocusMode = whiteboard OR screen share active
              *  • false → fills entire content area (normal call view)
              *  • true  → draggable floating widget (camera feeds only) */}
-            <FloatingVideoWidget focusMode={showWhiteboard || isSharing || isRemoteSharing} hidden={showWhiteboard}>
+            <FloatingVideoWidget focusMode={showWhiteboard || isSharing || isRemoteSharing} hidden={showWhiteboard && absoluteFocusMode}>
               <AgoraCall
                 bookingId={params.id}
                 rtcProps={rtcProps}
@@ -673,7 +706,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
       {inCall && (
         <div
           className={`absolute bottom-0 left-0 w-full flex items-center justify-center px-4 pb-5 pt-2 z-50 transition-all duration-300 ease-in-out ${
-            isIdle ? "translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
+            isUiHidden ? "translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
           }`}
           dir="ltr"
         >

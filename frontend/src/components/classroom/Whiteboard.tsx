@@ -5,7 +5,7 @@ import { WhiteWebSdk, Room, DeviceType, ViewMode, ApplianceNames, RoomPhase } fr
 import {
     Loader2, Pencil, Eraser, Square, Circle, Type,
     MousePointer2, Trash2, Undo2, Redo2, ChevronLeft, ChevronRight, Plus,
-    WifiOff, RefreshCw, Eye, ChevronDown,
+    WifiOff, RefreshCw, Eye, ChevronDown, Maximize, Minimize,
 } from 'lucide-react';
 import { bookingService } from '@/services/api';
 import { useAgoraRTM, CursorMessage } from '@/hooks/useAgoraRTM';
@@ -36,6 +36,8 @@ interface WhiteboardProps {
     region?: string;
     agoraChannel?: string;
     rtmToken?: string | null;
+    isAbsoluteFocusMode?: boolean;
+    onToggleFocusMode?: () => void;
     onInteract?: () => void;
 }
 
@@ -104,6 +106,8 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     region = 'sg',
     agoraChannel,
     rtmToken,
+    isAbsoluteFocusMode,
+    onToggleFocusMode,
     onInteract
 }) => {
     const whiteboardRef = useRef<HTMLDivElement>(null);
@@ -834,6 +838,17 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 </div>
             )}
 
+            {/* ── Absolute Focus Toggle ── */}
+            {!loading && !error && isTeacher && onToggleFocusMode && (
+                <button
+                    onClick={onToggleFocusMode}
+                    className="absolute top-3 right-3 z-50 p-2 bg-slate-900/40 hover:bg-slate-900/90 text-white rounded-xl backdrop-blur-md transition border border-white/10"
+                    title={isAbsoluteFocusMode ? "إنهاء وضع التركيز" : "وضع التركيز المطلق"}
+                >
+                    {isAbsoluteFocusMode ? <Minimize size={20} /> : <Maximize size={20} />}
+                </button>
+            )}
+
             {/* ── Teacher: invisible hover target to reveal toolbar ── */}
             {isTeacher && !loading && !error && (
                 <div 
@@ -922,18 +937,18 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
 
             {/* ── 2.5: Page counter — visible to ALL users ── */}
             {!loading && !error && (
-                <div className="absolute bottom-5 left-4 md:left-6 z-40 flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-xl border border-white/10">
+                <div className="absolute bottom-4 right-4 z-40 flex items-center gap-2 bg-slate-900/40 hover:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg border border-white/10 transition-colors duration-300">
                     <button
                         onClick={() => goToPage(pageState.current - 1)}
                         disabled={pageState.current === 0}
-                        className="p-1 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+                        className="p-1 text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
                     >
-                        <ChevronRight size={16} />
+                        <ChevronRight size={14} />
                     </button>
 
                     {/* Page indicator — animated flash for students on teacher navigation */}
                     <span
-                        className={`text-white text-xs font-bold min-w-[60px] text-center transition-all duration-300 ${
+                        className={`text-slate-200 text-xs font-bold min-w-[50px] text-center transition-all duration-300 ${
                             pageFlash && !isTeacher ? 'scale-125 text-blue-300' : 'scale-100'
                         }`}
                     >
@@ -943,13 +958,13 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     <button
                         onClick={() => goToPage(pageState.current + 1)}
                         disabled={pageState.current >= pageState.total - 1}
-                        className="p-1 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+                        className="p-1 text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
                     >
-                        <ChevronLeft size={16} />
+                        <ChevronLeft size={14} />
                     </button>
                     <div className="w-px h-4 bg-white/10" />
-                    <button onClick={addPage} title="صفحة جديدة" className="p-1 text-slate-400 hover:text-emerald-400 transition">
-                        <Plus size={16} />
+                    <button onClick={addPage} title="صفحة جديدة" className="p-1 text-slate-300 hover:text-emerald-400 transition">
+                        <Plus size={14} />
                     </button>
                 </div>
             )}
