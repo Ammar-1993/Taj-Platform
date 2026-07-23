@@ -596,7 +596,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
         )}
 
       {/* 2. Main Content Area */}
-      <div className="flex-1 relative overflow-hidden p-2 md:p-4">
+      <div className={`flex-1 relative overflow-hidden transition-all duration-300 ${showWhiteboard ? "p-0" : "p-2 md:p-4"}`}>
         {!inCall ? (
           <LobbyPreview
             cameraStatus={cameraStatus}
@@ -630,6 +630,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                   region={WHITEBOARD_REGION}
                   agoraChannel={channelName}
                   rtmToken={rtmToken}
+                  onInteract={() => setIsIdle(true)}
                 />
               )}
             </div>

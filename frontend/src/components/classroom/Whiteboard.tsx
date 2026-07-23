@@ -36,6 +36,7 @@ interface WhiteboardProps {
     region?: string;
     agoraChannel?: string;
     rtmToken?: string | null;
+    onInteract?: () => void;
 }
 
 interface ToolButtonProps {
@@ -103,6 +104,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     region = 'sg',
     agoraChannel,
     rtmToken,
+    onInteract
 }) => {
     const whiteboardRef = useRef<HTMLDivElement>(null);
     const roomRef       = useRef<Room | null>(null);
@@ -779,7 +781,10 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
 
     // ─── Render ───────────────────────────────────────────────────────────────
     return (
-        <div className="w-full h-full flex flex-col bg-white rounded-xl overflow-hidden shadow-2xl relative">
+        <div 
+            className="w-full h-full flex flex-col bg-white overflow-hidden relative"
+            onPointerDownCapture={onInteract}
+        >
 
             {/* ── Loading overlay ── */}
             {loading && (

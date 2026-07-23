@@ -23,11 +23,26 @@ jest.mock('@sentry/nextjs', () => ({
 
 jest.mock('white-web-sdk', () => {
   class MockRoom {
+    state: { sceneState: { index: number; scenes: Record<string, unknown>[] } };
+    phase: string;
+    bindHtmlElement: jest.Mock;
+    callbacks: { on: jest.Mock };
+    listeners: Record<string, ((...args: unknown[]) => void)>;
+    setScenePath: jest.Mock;
+    putScenes: jest.Mock;
+    cleanCurrentScene: jest.Mock;
+    disconnect: jest.Mock;
+    setMemberState: jest.Mock;
+    setViewMode: jest.Mock;
+    undo: jest.Mock;
+    redo: jest.Mock;
+    disableDeviceInputs: boolean;
+
     constructor() {
       this.state = { sceneState: { index: 0, scenes: [{}] } };
       this.phase = 'connected';
       this.bindHtmlElement = jest.fn();
-      this.callbacks = { on: jest.fn((event, callback) => {
+      this.callbacks = { on: jest.fn((event: string, callback: (...args: unknown[]) => void) => {
         this.listeners[event] = callback;
       }) };
       this.listeners = {};
@@ -36,7 +51,7 @@ jest.mock('white-web-sdk', () => {
         this.state.sceneState.index = Number.isNaN(nextIndex) ? 0 : nextIndex;
         this.listeners.onRoomStateChanged?.({ sceneState: this.state.sceneState });
       });
-      this.putScenes = jest.fn((_, scenes, newIndex) => {
+      this.putScenes = jest.fn((_path: string, scenes: Record<string, unknown>[], newIndex: number) => {
         this.state.sceneState.scenes = [...this.state.sceneState.scenes, ...scenes];
         this.state.sceneState.index = newIndex;
         this.listeners.onRoomStateChanged?.({ sceneState: this.state.sceneState });
@@ -47,6 +62,7 @@ jest.mock('white-web-sdk', () => {
       this.setViewMode = jest.fn();
       this.undo = jest.fn();
       this.redo = jest.fn();
+      this.disableDeviceInputs = false;
     }
   }
 
