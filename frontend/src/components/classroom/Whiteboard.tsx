@@ -626,7 +626,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isTeacher, clearCanvas, setTool, undo, redo]);
+    }, [isTeacher, setTool, applyTool, undo, redo, clearCanvas, undoSteps, redoSteps]);
 
     // Auto-hide toolbar after load
     useEffect(() => {
