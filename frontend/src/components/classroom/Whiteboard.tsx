@@ -580,7 +580,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 const room = roomRef.current;
                 if (room) {
                     const idx = room.state.sceneState.index;
-                    if (idx < room.state.sceneState.scenes.length - 1) room.setScenePath(`/${idx + 1}`);
+                    if (idx < room.state.sceneState.scenes.length - 1) room.setSceneIndex(idx + 1);
                 }
                 return;
             }
@@ -588,7 +588,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 e.preventDefault();
                 const room = roomRef.current;
                 if (room && room.state.sceneState.index > 0) {
-                    room.setScenePath(`/${room.state.sceneState.index - 1}`);
+                    room.setSceneIndex(room.state.sceneState.index - 1);
                 }
             }
         };
@@ -612,15 +612,16 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         const room = roomRef.current;
         if (!room) return;
 
+        const dir = room.state.sceneState.scenePath.substring(0, room.state.sceneState.scenePath.lastIndexOf('/')) || '/';
         const newIndex = pageState.total;
-        room.putScenes('/', [{}], newIndex);
-        room.setScenePath(`/${newIndex}`);
+        room.putScenes(dir, [{}], newIndex);
+        room.setSceneIndex(newIndex);
     }, [pageState.total]);
 
     const goToPage = useCallback((index: number) => {
         const room = roomRef.current;
         if (!room || index < 0 || index >= pageState.total) return;
-        room.setScenePath(`/${index}`);
+        room.setSceneIndex(index);
     }, [pageState.total]);
 
     // ── Derived phase booleans ────────────────────────────────────────────────
@@ -783,8 +784,8 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 </div>
             )}
 
-            {/* ── 2.5: Page counter — visible to ALL users ── */}
-            {!loading && !error && (
+            {/* ── 2.5: Page counter — visible based on focus mode or if pages > 1 ── */}
+            {!loading && !error && (isAbsoluteFocusMode || pageState.total > 1) && (
                 <div className="absolute bottom-4 right-4 z-40 flex items-center gap-2 bg-slate-900/40 hover:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg border border-white/10 transition-colors duration-300">
                     <button
                         onClick={() => goToPage(pageState.current - 1)}
@@ -810,10 +811,15 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     >
                         <ChevronLeft size={14} />
                     </button>
-                    <div className="w-px h-4 bg-white/10" />
-                    <button onClick={addPage} title="صفحة جديدة" className="p-1 text-slate-300 hover:text-emerald-400 transition">
-                        <Plus size={14} />
-                    </button>
+                    
+                    {isTeacher && (
+                        <>
+                            <div className="w-px h-4 bg-white/10" />
+                            <button onClick={addPage} title="صفحة جديدة" className="p-1 text-slate-300 hover:text-emerald-400 transition">
+                                <Plus size={14} />
+                            </button>
+                        </>
+                    )}
                 </div>
             )}
 
