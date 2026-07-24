@@ -699,7 +699,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
 
             {/* ── 2.3: "Follower mode" status badge for students ── */}
             {!loading && !error && !isTeacher && (
-                <div className="absolute top-3 right-3 z-40 flex items-center gap-2 pointer-events-none">
+                <div className="absolute top-3 left-3 md:left-5 z-40 flex items-center gap-2 pointer-events-none">
                     <div className="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
                         {isConnected ? (
                             <>
