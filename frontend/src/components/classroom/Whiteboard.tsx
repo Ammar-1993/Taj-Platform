@@ -784,8 +784,8 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 </div>
             )}
 
-            {/* ── 2.5: Page counter — visible based on focus mode or if pages > 1 ── */}
-            {!loading && !error && (isAbsoluteFocusMode || pageState.total > 1) && (
+            {/* ── 2.5: Page counter — visible ONLY in focus mode ── */}
+            {!loading && !error && isAbsoluteFocusMode && (
                 <div className="absolute bottom-4 right-4 z-40 flex items-center gap-2 bg-slate-900/40 hover:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg border border-white/10 transition-colors duration-300">
                     <button
                         onClick={() => goToPage(pageState.current - 1)}
