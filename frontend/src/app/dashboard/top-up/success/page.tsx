@@ -7,16 +7,18 @@ import { paymentService } from '@/services/api';
 import PageHeader from '@/components/ui/PageHeader';
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { CheckCircle2, XCircle, ArrowRight, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight, Loader2, Clock } from "lucide-react";
 import RedirectCountdown from "@/components/ui/RedirectCountdown";
-import toast from 'react-hot-toast';
+
+type PaymentStatus = 'verifying' | 'success' | 'failed' | 'pending';
 
 export default function PaymentSuccessPage() {
     const { user } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isVerifying, setIsVerifying] = useState(true);
-    const [paymentStatus, setPaymentStatus] = useState<'verifying' | 'success' | 'failed'>('verifying');
+    const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('verifying');
+    const [statusMessage, setStatusMessage] = useState('');
     const hasVerified = useRef(false);
 
     useEffect(() => {
@@ -24,7 +26,6 @@ export default function PaymentSuccessPage() {
         
         const verifyPayment = async (id: string) => {
             hasVerified.current = true;
-            const toastId = toast.loading('جاري التحقق من عملية الشحن وتحديث الرصيد...');
             try {
                 // استدعاء التحقق المباشر من السيرفر
                 const response = (await paymentService.verify(id)) as { 
@@ -35,18 +36,17 @@ export default function PaymentSuccessPage() {
                 console.log("Verification Response:", response);
                 
                 if (response.status === 'success') {
-                    toast.success('تم تحديث الرصيد بنجاح!', { id: toastId });
                     setPaymentStatus('success');
                 } else {
-                    toast.error(response.message || 'الدفع لا يزال قيد المعالجة', { id: toastId });
-                    setPaymentStatus('success'); // Still show success UI as it might be pending
+                    setStatusMessage(response.message || 'الدفع لا يزال قيد المعالجة');
+                    setPaymentStatus('pending');
                 }
             } catch (error: unknown) {
                 console.error("Payment verification failed:", error);
                 const axiosError = error as { response?: { data?: { error?: string } } };
                 const msg = axiosError.response?.data?.error || "فشل التحقق التلقائي، سيتم التحديث خلال دقائق";
-                toast.error(msg, { id: toastId });
-                setPaymentStatus('success');
+                setStatusMessage(msg);
+                setPaymentStatus('pending');
             } finally {
                 setIsVerifying(false);
             }
@@ -132,6 +132,29 @@ export default function PaymentSuccessPage() {
                                     العودة إلى لوحة التحكم
                                     <ArrowRight className="w-4 h-4 mr-2" />
                                 </Button>
+                            </div>
+                        ) : paymentStatus === 'pending' ? (
+                            <div className="space-y-6 animate-fade-in-up">
+                                <div className="w-24 h-24 bg-amber-50 border border-amber-100 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                                    <Clock className="w-12 h-12 text-amber-500" />
+                                </div>
+
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-900 mb-2">جاري معالجة الدفع</h3>
+                                    <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                                        {statusMessage}
+                                    </p>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <Button
+                                        onClick={() => router.push('/dashboard')}
+                                        className="w-full h-12"
+                                    >
+                                        العودة إلى لوحة التحكم
+                                        <ArrowRight className="w-4 h-4 mr-2" />
+                                    </Button>
+                                </div>
                             </div>
                         ) : (
                             <div className="space-y-6 animate-fade-in-up">
