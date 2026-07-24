@@ -67,9 +67,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } finally {
             // التنظيف المحلي في كل الأحوال
             Cookies.remove('auth_token');
-            setUser(null);
             
             // إعادة توجيه المستخدم وتفريغ الذاكرة (Full Reload)
+            // ملاحظة: لا نقوم باستدعاء setUser(null) هنا لتجنب تضارب التوجيه (InvalidStateError)
+            // بين AuthGuard (الذي يستخدم router.push) و window.location.
             window.location.href = '/login';
         }
     };
