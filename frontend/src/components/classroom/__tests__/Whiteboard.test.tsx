@@ -81,7 +81,7 @@ jest.mock('white-web-sdk', () => {
   };
 });
 
-describe('Whiteboard overlay canvas', () => {
+describe('Whiteboard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     global.PointerEvent = class PointerEvent extends MouseEvent {
@@ -146,56 +146,6 @@ describe('Whiteboard overlay canvas', () => {
     await waitFor(() => {
       expect(screen.getByText('2 / 2')).toBeInTheDocument();
     });
-
-    const overlay = container.querySelector('canvas') as HTMLCanvasElement;
-    expect(overlay).toBeInTheDocument();
   });
 
-  it('uses the real container size for the overlay canvas and maps pointer coordinates 1:1', async () => {
-    const ctx = {
-      setTransform: jest.fn(),
-      clearRect: jest.fn(),
-      beginPath: jest.fn(),
-      moveTo: jest.fn(),
-      lineTo: jest.fn(),
-      stroke: jest.fn(),
-      strokeStyle: '',
-      lineWidth: 0,
-      lineCap: '',
-      lineJoin: '',
-    };
-    mockGetContext.mockReturnValue(ctx as never);
-    jest.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => ctx as never);
-    const { container } = render(
-      <Whiteboard
-        appIdentifier="app"
-        roomUuid="room"
-        roomToken="token"
-        uid="user"
-        isTeacher={true}
-        bookingId="1"
-      />
-    );
-
-    const whiteboard = container.querySelector('div[class*="pointer-events-auto"]') as HTMLDivElement;
-    const overlay = container.querySelector('canvas') as HTMLCanvasElement;
-
-    await waitFor(() => {
-      expect(overlay.width).toBe(800);
-      expect(overlay.height).toBe(600);
-    });
-
-    Object.defineProperty(whiteboard, 'getBoundingClientRect', {
-      configurable: true,
-      value: () => ({ left: 10, top: 20, width: 400, height: 300 }),
-    });
-
-    act(() => {
-      whiteboard.dispatchEvent(new PointerEvent('pointerdown', { clientX: 110, clientY: 60, pointerId: 1, bubbles: true }));
-      whiteboard.dispatchEvent(new PointerEvent('pointermove', { clientX: 160, clientY: 90, pointerId: 1, bubbles: true }));
-    });
-
-    expect(ctx.moveTo).toHaveBeenCalledWith(100, 40);
-    expect(ctx.lineTo).toHaveBeenCalledWith(150, 70);
-  });
 });

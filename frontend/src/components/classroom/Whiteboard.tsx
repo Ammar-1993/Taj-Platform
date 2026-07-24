@@ -113,11 +113,6 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     const whiteboardRef = useRef<HTMLDivElement>(null);
     const roomRef       = useRef<Room | null>(null);
     const sdkRef        = useRef<WhiteWebSdk | null>(null);
-    const overlayRef    = useRef<HTMLCanvasElement>(null);
-    const isPointerDownRef = useRef(false);
-    const lastPointRef  = useRef<{x: number, y: number} | null>(null);
-    const lastStrokeEndTimeRef = useRef(0);
-    const clearOverlayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Freeze init props so the effect only runs once (Netless rooms cannot be
     // cleanly rejoined inside the same effect cycle)
@@ -189,122 +184,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         sendCursorPosition({ x, y });
     }, [sendCursorPosition]);
 
-    const getCanvasPoint = (e: React.PointerEvent<HTMLDivElement>) => {
-        const rect = whiteboardRef.current?.getBoundingClientRect();
-        const overlay = overlayRef.current;
-        if (!overlay || !rect) return { x: 0, y: 0 };
 
-        const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
-        const logicalWidth = overlay.width / dpr || 1;
-        const logicalHeight = overlay.height / dpr || 1;
-        const rectWidth = rect.width || logicalWidth || 1;
-        const rectHeight = rect.height || logicalHeight || 1;
-        const offsetX = rect.left || 0;
-        const offsetY = rect.top || 0;
-
-        return {
-            x: (e.clientX - offsetX) * (logicalWidth / rectWidth),
-            y: (e.clientY - offsetY) * (logicalHeight / rectHeight),
-        };
-    };
-
-    const syncOverlayCanvasSize = useCallback(() => {
-        const overlay = overlayRef.current;
-        const container = whiteboardRef.current;
-        if (!overlay || !container) return;
-
-        const rect = container.getBoundingClientRect();
-        const width = Math.max(1, Math.round(rect.width || container.clientWidth || 0));
-        const height = Math.max(1, Math.round(rect.height || container.clientHeight || 0));
-        const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
-
-        if (width === 0 || height === 0) return;
-
-        const nextWidth = Math.round(width * dpr);
-        const nextHeight = Math.round(height * dpr);
-
-        if (overlay.width !== nextWidth || overlay.height !== nextHeight) {
-            overlay.width = nextWidth;
-            overlay.height = nextHeight;
-        }
-
-        const ctx = overlay.getContext('2d');
-        if (!ctx) return;
-
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.clearRect(0, 0, width, height);
-    }, []);
-
-    const clearOverlay = useCallback(() => {
-        const overlay = overlayRef.current;
-        if (!overlay) return;
-
-        const ctx = overlay.getContext('2d');
-        if (!ctx) return;
-
-        const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.clearRect(0, 0, overlay.width / dpr, overlay.height / dpr);
-    }, []);
-
-    const handleOverlayPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-        if (!isTeacher || activeTool !== 'pencil' || !overlayRef.current) return;
-
-        if (clearOverlayTimeoutRef.current) {
-            clearTimeout(clearOverlayTimeoutRef.current);
-            clearOverlayTimeoutRef.current = null;
-        }
-
-        const now = Date.now();
-        const shouldClearOverlay = now - lastStrokeEndTimeRef.current >= 120;
-
-        if (shouldClearOverlay) {
-            clearOverlay();
-        }
-
-        isPointerDownRef.current = true;
-        lastPointRef.current = getCanvasPoint(e);
-    }, [clearOverlay, isTeacher, activeTool]);
-
-    const handleOverlayPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-        if (!isPointerDownRef.current || !overlayRef.current || !lastPointRef.current) return;
-        
-        const ctx = overlayRef.current.getContext('2d');
-        if (!ctx) return;
-        
-        const rect = whiteboardRef.current?.getBoundingClientRect();
-        const point = getCanvasPoint(e);
-        const [r, g, b] = hexToRgb(strokeColor);
-        const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
-        const logicalWidth = overlayRef.current.width / dpr;
-        
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.strokeStyle = `rgb(${r},${g},${b})`;
-        ctx.lineWidth = strokeWidth * (logicalWidth / (rect?.width || logicalWidth));
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        
-        ctx.beginPath();
-        ctx.moveTo(lastPointRef.current.x, lastPointRef.current.y);
-        ctx.lineTo(point.x, point.y);
-        ctx.stroke();
-        
-        lastPointRef.current = point;
-    }, [strokeColor, strokeWidth]);
-
-    const handleOverlayPointerUp = useCallback(() => {
-        isPointerDownRef.current = false;
-        lastPointRef.current = null;
-        lastStrokeEndTimeRef.current = Date.now();
-
-        if (clearOverlayTimeoutRef.current) {
-            clearTimeout(clearOverlayTimeoutRef.current);
-        }
-
-        clearOverlayTimeoutRef.current = setTimeout(() => {
-            clearOverlay();
-        }, 120);
-    }, [clearOverlay]);
 
     const clearCanvas = useCallback(() => {
         if (!roomRef.current || !isTeacher) return;
@@ -359,7 +239,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     // تعطيل تحديد تردد رسم القلم لضمان الاستجابة الفورية
                     disablePencilWrittingLimitFrequency: true,
                     // تفعيل القلم الجديد (بالنعومة والتدرج) مع إلغاء التخزين المؤقت
-                    disableNewPencil: false,
+                    disableNewPencil: true,
                 });
 
                 roomRef.current = roomInstance;
@@ -512,7 +392,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     // disableNewPencil: false يفعّل القلم الحديث الذي يدعم
                     // الرسم الفوري. القيمة الافتراضية true تستخدم القلم
                     // القديم الذي يُجمّع الضربات قبل رسمها.
-                    disableNewPencil: false,
+                    disableNewPencil: true,
 
                     // ── Fix 5: إيقاف مراقبة الصور عند المسح ─────────────────
                     // يمنع SDK من اعتراض كل pointer event للبحث عن صور،
@@ -664,14 +544,12 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     }, [activeTool, strokeColor, applyTool]);
 
     const undo = useCallback(() => {
-        clearOverlay();
         roomRef.current?.undo();
-    }, [clearOverlay]);
+    }, []);
 
     const redo = useCallback(() => {
-        clearOverlay();
         roomRef.current?.redo();
-    }, [clearOverlay]);
+    }, []);
 
     const showToolbar = useCallback(() => {
         setToolbarVisible(true);
@@ -727,37 +605,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         return () => { if (hideTimerRef.current) clearTimeout(hideTimerRef.current); };
     }, [loading, error, isTeacher]);
 
-    useEffect(() => {
-        syncOverlayCanvasSize();
-    }, [syncOverlayCanvasSize]);
 
-    useEffect(() => {
-        const container = whiteboardRef.current;
-        if (!container) return;
-
-        const resizeObserver = typeof ResizeObserver !== 'undefined'
-            ? new ResizeObserver(() => syncOverlayCanvasSize())
-            : null;
-
-        if (resizeObserver) {
-            resizeObserver.observe(container);
-        } else if (typeof window !== 'undefined') {
-            window.addEventListener('resize', syncOverlayCanvasSize);
-        }
-
-        return () => {
-            resizeObserver?.disconnect();
-            if (!resizeObserver && typeof window !== 'undefined') {
-                window.removeEventListener('resize', syncOverlayCanvasSize);
-            }
-        };
-    }, [syncOverlayCanvasSize]);
-
-    // Clear overlay on page change to prevent "stuck" strokes floating over the new page
-    useEffect(() => {
-        clearOverlay();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pageState.current, clearOverlay]);
 
     // Page navigation helpers
     const addPage = useCallback(() => {
@@ -979,18 +827,9 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 className={`flex-1 w-full h-full relative z-10 pointer-events-auto overflow-hidden ${isTouchDevice ? '' : 'touch-none'}`}
                 style={{ minHeight: '400px' }}
                 onMouseMove={handleMouseMove}
-                onPointerDown={handleOverlayPointerDown}
-                onPointerMove={handleOverlayPointerMove}
-                onPointerUp={handleOverlayPointerUp}
-                onPointerCancel={handleOverlayPointerUp}
-                onPointerLeave={handleOverlayPointerUp}
+                dir="ltr"
             >
-                {/* ── Overlay Canvas for Instant Stroke Rendering ── */}
-                <canvas
-                    ref={overlayRef}
-                    className="absolute inset-0 w-full h-full pointer-events-none z-30"
-                    style={{ opacity: activeTool === 'pencil' && isTeacher ? 1 : 0 }}
-                />
+
 
                 {/* ── Render remote cursors ── */}
                 {Object.entries(remoteCursors).map(([cursorUid, pos]) => (
