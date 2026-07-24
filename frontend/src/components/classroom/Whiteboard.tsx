@@ -650,6 +650,42 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     // events with `touch-none` — Netless handles them internally via DeviceType.Touch.
     const isTouchDevice = deviceTypeState === DeviceType.Touch;
 
+    const handleToggleFocusMode = useCallback(async () => {
+        if (!onToggleFocusMode) return;
+        
+        const willBeAbsolute = !isAbsoluteFocusMode;
+        onToggleFocusMode();
+
+        if (willBeAbsolute) {
+            // Auto-expand horizontally on small screens
+            if (window.innerWidth < 768 && document.documentElement.requestFullscreen) {
+                try {
+                    await document.documentElement.requestFullscreen();
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const orientation = (window.screen as any)?.orientation;
+                    if (orientation && typeof orientation.lock === 'function') {
+                        await orientation.lock("landscape").catch(() => {});
+                    }
+                } catch (err) {
+                    console.warn("Fullscreen or orientation lock failed:", err);
+                }
+            }
+        } else {
+            if (document.fullscreenElement) {
+                try {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const orientation = (window.screen as any)?.orientation;
+                    if (orientation && typeof orientation.unlock === 'function') {
+                        orientation.unlock();
+                    }
+                    await document.exitFullscreen().catch(() => {});
+                } catch (err) {
+                    console.warn("Exit fullscreen failed:", err);
+                }
+            }
+        }
+    }, [isAbsoluteFocusMode, onToggleFocusMode]);
+
     // ─── Render ───────────────────────────────────────────────────────────────
     return (
         <div 
@@ -697,45 +733,51 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 </div>
             )}
 
-            {/* ── 2.3: "Follower mode" status badge for students ── */}
-            {!loading && !error && !isTeacher && (
-                <div className="absolute top-3 left-3 md:left-5 z-40 flex items-center gap-2 pointer-events-none">
-                    <div className="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
-                        {isConnected ? (
-                            <>
-                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-emerald-400 text-[10px] font-bold">متصل</span>
-                            </>
-                        ) : isReconnecting ? (
-                            <>
-                                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                                <span className="text-amber-400 text-[10px] font-bold">جاري الاتصال</span>
-                            </>
-                        ) : (
-                            <>
-                                <div className="w-2 h-2 rounded-full bg-red-500" />
-                                <span className="text-red-400 text-[10px] font-bold">غير متصل</span>
-                            </>
-                        )}
-                    </div>
-                    {isConnected && (
-                        <div className="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
-                            <Eye className="w-3 h-3 text-blue-400 shrink-0" />
-                            <span className="text-slate-300 text-[10px] font-bold">وضع المتابعة</span>
+            {/* ── Top Left Controls (Focus Mode & Status) ── */}
+            {!loading && !error && (
+                <div className="absolute top-3 left-3 md:left-5 z-50 flex items-center gap-2">
+                    
+                    {/* Focus Mode Toggle (Available for everyone) */}
+                    {onToggleFocusMode && (
+                        <button
+                            onClick={handleToggleFocusMode}
+                            className="p-2 bg-slate-900/60 hover:bg-slate-900/90 text-white rounded-xl backdrop-blur-md transition border border-white/10 shadow-lg pointer-events-auto"
+                            title={isAbsoluteFocusMode ? "إنهاء وضع التركيز" : "وضع التركيز المطلق"}
+                        >
+                            {isAbsoluteFocusMode ? <Minimize size={18} /> : <Maximize size={18} />}
+                        </button>
+                    )}
+
+                    {/* Follower mode & Status badge for students */}
+                    {!isTeacher && (
+                        <div className="flex items-center gap-2 pointer-events-none">
+                            <div className="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/10 shadow-lg">
+                                {isConnected ? (
+                                    <>
+                                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                        <span className="text-emerald-400 text-[10px] font-bold">متصل</span>
+                                    </>
+                                ) : isReconnecting ? (
+                                    <>
+                                        <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                                        <span className="text-amber-400 text-[10px] font-bold">جاري الاتصال</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="w-2 h-2 rounded-full bg-red-500" />
+                                        <span className="text-red-400 text-[10px] font-bold">غير متصل</span>
+                                    </>
+                                )}
+                            </div>
+                            {isConnected && (
+                                <div className="hidden sm:flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/10 shadow-lg">
+                                    <Eye className="w-3 h-3 text-blue-400 shrink-0" />
+                                    <span className="text-slate-300 text-[10px] font-bold">وضع المتابعة</span>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
-            )}
-
-            {/* ── Absolute Focus Toggle ── */}
-            {!loading && !error && isTeacher && onToggleFocusMode && (
-                <button
-                    onClick={onToggleFocusMode}
-                    className="absolute top-3 left-3 md:left-5 z-50 p-2 bg-slate-900/40 hover:bg-slate-900/90 text-white rounded-xl backdrop-blur-md transition border border-white/10"
-                    title={isAbsoluteFocusMode ? "إنهاء وضع التركيز" : "وضع التركيز المطلق"}
-                >
-                    {isAbsoluteFocusMode ? <Minimize size={20} /> : <Maximize size={20} />}
-                </button>
             )}
 
             {/* ── Teacher: invisible hover target to reveal toolbar ── */}
