@@ -4,6 +4,26 @@ import userEvent from '@testing-library/user-event';
 import ClassroomPage from '../[id]/page';
 import { useAuth } from '@/context/AuthContext';
 import { bookingService } from '@/services/api';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+// ─── Query Client Setup ───────────────────────────────────────────────────────
+
+const createTestQueryClient = () => new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
+const renderWithClient = (ui: React.ReactElement) => {
+  const testQueryClient = createTestQueryClient();
+  return render(
+    <QueryClientProvider client={testQueryClient}>
+      {ui}
+    </QueryClientProvider>
+  );
+};
 
 // ─── Mock Dependencies ────────────────────────────────────────────────────────
 
@@ -26,6 +46,8 @@ jest.mock('@/services/api', () => ({
     getWhiteboardStatus: jest.fn(),
     refreshClassroomToken: jest.fn(),
     refreshWhiteboardToken: jest.fn(),
+    sendHeartbeat: jest.fn().mockResolvedValue({}),
+    complete: jest.fn().mockResolvedValue({}),
   },
 }));
 
@@ -110,6 +132,20 @@ describe('ClassroomPage', () => {
   // إعادة تعيين الـ mocks بعد كل اختبار
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useRealTimers();
+
+    // Mock navigator.mediaDevices to reject with NotAllowedError to auto-join
+    Object.defineProperty(global.navigator, 'mediaDevices', {
+      value: {
+        getUserMedia: jest.fn().mockImplementation(() => {
+          const err = new Error('Not allowed');
+          err.name = 'NotAllowedError';
+          return Promise.reject(err);
+        }),
+      },
+      writable: true,
+      configurable: true,
+    });
   });
 
   // ─── 1. Loading State Tests ────────────────────────────────────────────────
@@ -122,7 +158,7 @@ describe('ClassroomPage', () => {
       });
       (bookingService.getClassroomAccess as jest.Mock).mockReturnValue(new Promise(() => {}));
 
-      render(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
 
       expect(screen.getByText(/جاري تجهيز الفصل الافتراضي/i)).toBeInTheDocument();
     });
@@ -135,7 +171,7 @@ describe('ClassroomPage', () => {
       // وعد معلّق — الطلب لم ينته بعد
       (bookingService.getClassroomAccess as jest.Mock).mockReturnValue(new Promise(() => {}));
 
-      render(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
 
       expect(screen.getByText(/جاري تجهيز الفصل الافتراضي/i)).toBeInTheDocument();
     });
@@ -153,7 +189,7 @@ describe('ClassroomPage', () => {
         new Error('Unauthorized')
       );
 
-      render(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
 
       await waitFor(() => {
         expect(
@@ -169,7 +205,7 @@ describe('ClassroomPage', () => {
       });
       (bookingService.getClassroomAccess as jest.Mock).mockRejectedValue(new Error('403'));
 
-      render(<ClassroomPage params={{ id: '456' }} />);
+      renderWithClient(<ClassroomPage params={{ id: '456' }} />);
 
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /العودة للوحة التحكم/i })).toBeInTheDocument();
@@ -189,7 +225,7 @@ describe('ClassroomPage', () => {
         loading: false, // Auth انتهت، لكن لا يوجد مستخدم
       });
 
-      render(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
 
       await waitFor(() => {
         expect(mockRouterReplace).toHaveBeenCalledWith('/login');
@@ -209,7 +245,7 @@ describe('ClassroomPage', () => {
         CLASSROOM_ACCESS_SUCCESS
       );
 
-      render(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
 
       await waitFor(() => {
         expect(screen.getByTestId('lobby-preview')).toBeInTheDocument();
@@ -226,7 +262,7 @@ describe('ClassroomPage', () => {
         CLASSROOM_ACCESS_SUCCESS
       );
 
-      render(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
 
       await waitFor(() => {
         expect(screen.getByTestId('lobby-preview')).toBeInTheDocument();
@@ -255,7 +291,7 @@ describe('ClassroomPage', () => {
         whiteboard: null,
       });
 
-      render(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
 
       // انتظر انتهاء الجلب الأولي
       await waitFor(() => {
@@ -293,7 +329,7 @@ describe('ClassroomPage', () => {
         },
       });
 
-      render(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
 
       await waitFor(() => {
         expect(screen.getByTestId('lobby-preview')).toBeInTheDocument();
@@ -304,10 +340,14 @@ describe('ClassroomPage', () => {
         jest.advanceTimersByTime(4000);
       });
 
-      // بعد استلام البيانات، لا يجب استدعاء API مرة أخرى
-      await waitFor(() => {
-        expect(bookingService.getWhiteboardStatus).toHaveBeenCalledTimes(1);
+      // Flush microtasks to allow the promise to resolve and state to update
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
       });
+
+      // بعد استلام البيانات، لا يجب استدعاء API مرة أخرى
+      expect(bookingService.getWhiteboardStatus).toHaveBeenCalledTimes(1);
 
       // تقدم مرة أخرى — يجب ألا يُستدعى polling إضافي
       act(() => {
@@ -316,8 +356,6 @@ describe('ClassroomPage', () => {
 
       // لا تزيد عن استدعاء واحد
       expect(bookingService.getWhiteboardStatus).toHaveBeenCalledTimes(1);
-
-      jest.useRealTimers();
     });
   });
 
@@ -335,7 +373,7 @@ describe('ClassroomPage', () => {
         CLASSROOM_ACCESS_SUCCESS
       );
 
-      render(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
 
       // انتظر ظهور الـ Lobby
       await waitFor(() => {
@@ -367,7 +405,7 @@ describe('ClassroomPage', () => {
         },
       });
 
-      render(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
 
       await waitFor(() => {
         expect(bookingService.getClassroomAccess).toHaveBeenCalledWith(123);
