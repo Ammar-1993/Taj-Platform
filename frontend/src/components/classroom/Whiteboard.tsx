@@ -8,7 +8,7 @@ import {
     WifiOff, RefreshCw, Eye, ChevronDown, Maximize, Minimize,
 } from 'lucide-react';
 import { bookingService } from '@/services/api';
-import { useAgoraRTM, CursorMessage, RTMMessage } from '@/hooks/useAgoraRTM';
+import { useAgoraRTM, RTMMessage } from '@/hooks/useAgoraRTM';
 import * as Sentry from "@sentry/nextjs";
 
 // ─── Local types ─────────────────────────────────────────────────────────────
