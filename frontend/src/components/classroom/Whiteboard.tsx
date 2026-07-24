@@ -131,6 +131,8 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     const [pageState, setPageState]           = useState({ current: 0, total: 1 });
     const [toolbarVisible, setToolbarVisible] = useState(true);
     const [pageFlash, setPageFlash]           = useState(false);     // 2.5: animate page change for students
+    const [undoSteps, setUndoSteps]           = useState(0);
+    const [redoSteps, setRedoSteps]           = useState(0);
 
     // ── 2.2f / 2.3: Connection phase state ───────────────────────────────────
     const [phase, setPhase]           = useState<RoomPhase>(RoomPhase.Connecting);
@@ -261,6 +263,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 });
 
                 roomRef.current = roomInstance;
+                roomInstance.disableSerialization = false;
                 roomInstance.bindHtmlElement(whiteboardRef.current);
                 roomInstance.disableDeviceInputs = !rIsTeacher;
 
@@ -289,6 +292,9 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                         });
                     }
                 });
+
+                roomInstance.callbacks.on('onCanUndoStepsUpdate', (steps: number) => setUndoSteps(steps));
+                roomInstance.callbacks.on('onCanRedoStepsUpdate', (steps: number) => setRedoSteps(steps));
 
                 // Re-register phase listener
                 roomInstance.callbacks.on('onPhaseChanged', (newPhase: RoomPhase) => {
@@ -419,6 +425,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 });
 
                 roomRef.current = roomInstance;
+                roomInstance.disableSerialization = false;
                 roomInstance.bindHtmlElement(whiteboardRef.current);
                 roomInstance.disableDeviceInputs = !rIsTeacher;
 
@@ -450,6 +457,9 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                         });
                     }
                 });
+
+                roomInstance.callbacks.on('onCanUndoStepsUpdate', (steps: number) => setUndoSteps(steps));
+                roomInstance.callbacks.on('onCanRedoStepsUpdate', (steps: number) => setRedoSteps(steps));
 
                 // ── 2.2f: Phase listener — token expiry / disconnect handling ──
                 roomInstance.callbacks.on('onPhaseChanged', (newPhase: RoomPhase) => {
@@ -585,10 +595,14 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 e.preventDefault(); setTool(TOOL_HOTKEYS[key]); return;
             }
             if ((e.ctrlKey || e.metaKey) && key === 'z' && !e.shiftKey) {
-                e.preventDefault(); undo(); return;
+                e.preventDefault(); 
+                if (undoSteps > 0) undo(); 
+                return;
             }
             if ((e.ctrlKey || e.metaKey) && (key === 'y' || (key === 'z' && e.shiftKey))) {
-                e.preventDefault(); redo(); return;
+                e.preventDefault(); 
+                if (redoSteps > 0) redo(); 
+                return;
             }
             if (key === 'delete' && e.ctrlKey) {
                 e.preventDefault(); clearCanvas(); return;
@@ -856,8 +870,8 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
 
                         <div className="w-px h-6 bg-white/10 mx-1.5 shrink-0" />
 
-                        <ToolButton icon={<Undo2 size={16} />}  onClick={() => { undo(); showToolbar(); }} label="تراجع (Ctrl+Z)" />
-                        <ToolButton icon={<Redo2 size={16} />}  onClick={() => { redo(); showToolbar(); }} label="إعادة (Ctrl+Y)" />
+                        <ToolButton icon={<Undo2 size={16} />}  disabled={undoSteps === 0} onClick={() => { undo(); showToolbar(); }} label="تراجع (Ctrl+Z)" />
+                        <ToolButton icon={<Redo2 size={16} />}  disabled={redoSteps === 0} onClick={() => { redo(); showToolbar(); }} label="إعادة (Ctrl+Y)" />
 
                         <div className="w-px h-6 bg-white/10 mx-1.5 shrink-0" />
 
