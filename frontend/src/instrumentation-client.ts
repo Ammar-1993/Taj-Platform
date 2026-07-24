@@ -12,13 +12,37 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0,
   replaysSessionSampleRate: 0.0,
 
-  integrations: [
-    Sentry.replayIntegration({
-      maskAllText: false,
-      blockAllMedia: false,
-    }),
-    Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
-  ],
+  integrations: (defaults) => {
+    let replayIntegration = null;
+
+    if (typeof window !== "undefined") {
+      // Prevent Multiple Sentry Session Replay instances if this file is evaluated multiple times
+      if (!(window as any).__sentryReplayAdded) {
+        (window as any).__sentryReplayAdded = true;
+        replayIntegration = Sentry.replayIntegration({
+          maskAllText: false,
+          blockAllMedia: false,
+        });
+      }
+    } else {
+      // On server/edge just in case this gets run there, though it's -client
+      replayIntegration = Sentry.replayIntegration({
+        maskAllText: false,
+        blockAllMedia: false,
+      });
+    }
+
+    // Filter out the default Replay integration if it was automatically added
+    const filteredDefaults = defaults.filter(
+      (integration) => integration.name !== "Replay"
+    );
+
+    return [
+      ...filteredDefaults,
+      Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
+      ...(replayIntegration ? [replayIntegration] : [])
+    ];
+  },
 
   enableLogs: true,
   enabled: true, // تفعيل Sentry في بيئة التطوير مؤقتاً للاختبار
