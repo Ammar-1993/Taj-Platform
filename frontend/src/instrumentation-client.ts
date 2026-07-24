@@ -17,8 +17,10 @@ Sentry.init({
 
     if (typeof window !== "undefined") {
       // Prevent Multiple Sentry Session Replay instances if this file is evaluated multiple times
-      if (!(window as any).__sentryReplayAdded) {
-        (window as any).__sentryReplayAdded = true;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const win = window as any;
+      if (!win.__sentryReplayAdded) {
+        win.__sentryReplayAdded = true;
         replayIntegration = Sentry.replayIntegration({
           maskAllText: false,
           blockAllMedia: false,
