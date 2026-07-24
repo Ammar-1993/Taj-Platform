@@ -497,6 +497,11 @@ const AgoraCall = React.memo(({
     // Dynamically adjusts the outgoing video encoder based on the smoothed
     // network quality score (updated every ~1s by the network-quality event).
     //
+    // A ref tracks whether WE disabled the camera (vs. the user choosing to turn
+    // it off themselves), so we never auto-restore a camera the user deliberately
+    // disabled.
+    const autoDisabledCameraRef = useRef(false);
+
     // Quality scale (Agora):
     //   0 = Unknown  1 = Excellent  2 = Good  3 = Poor  4 = Bad  5 = Very Bad  6 = Down
     //
@@ -509,7 +514,8 @@ const AgoraCall = React.memo(({
     // This mirrors how Zoom adapts its encoder instead of letting the SDK
     // overflow the upload pipe and trigger packet-loss spikes.
     useEffect(() => {
-        if (!localVideoTrack || !isJoined || !isCameraEnabled) return;
+        // If the track doesn't exist, isn't joined, user muted it, or we auto-muted it for bandwidth
+        if (!localVideoTrack || !isJoined || !isCameraEnabled || autoDisabledCameraRef.current) return;
 
         const getEncoderConfig = (q: number) => {
             if (q <= 2) return "720p_2";   // Excellent / Good  → ~1 Mbps
@@ -523,7 +529,12 @@ const AgoraCall = React.memo(({
             // Non-fatal: encoder config changes can fail if the track is being
             // renegotiated. The current config stays active until the next cycle.
             console.warn("[AgoraCall] Adaptive encoder update failed:", err);
-            Sentry.captureException(err, { level: 'warning', extra: { context: "[AgoraCall] Adaptive encoder update failed" } });
+            
+            // Ignore TRACK_IS_DISABLED errors to prevent noisy Sentry reporting 
+            // when track state is changing concurrently.
+            if (err?.code !== 'TRACK_IS_DISABLED' && !err?.message?.includes('TRACK_IS_DISABLED')) {
+                Sentry.captureException(err, { level: 'warning', extra: { context: "[AgoraCall] Adaptive encoder update failed" } });
+            }
         });
     }, [networkQuality, localVideoTrack, isJoined, isCameraEnabled]);
 
@@ -535,11 +546,6 @@ const AgoraCall = React.memo(({
     // Critically: this uses setEnabled() (not close/republish), so the ICE
     // connection is preserved and the camera resumes in <200ms when quality improves.
     //
-    // A ref tracks whether WE disabled the camera (vs. the user choosing to turn
-    // it off themselves), so we never auto-restore a camera the user deliberately
-    // disabled.
-    const autoDisabledCameraRef = useRef(false);
-
     useEffect(() => {
         if (!localVideoTrack || !isJoined) return;
 
