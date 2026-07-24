@@ -657,6 +657,8 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                   rtmToken={rtmToken}
                   isAbsoluteFocusMode={absoluteFocusMode}
                   onToggleFocusMode={() => setAbsoluteFocusMode(!absoluteFocusMode)}
+                  showWhiteboard={showWhiteboard}
+                  onRemoteToggle={setShowWhiteboard}
                   onInteract={() => {
                     // Force UI to hide immediately on whiteboard interaction
                     if (!absoluteFocusMode) {

@@ -9,12 +9,19 @@ export type CursorMessage = {
     y: number;
 };
 
+export type WhiteboardToggleMessage = {
+    type: "whiteboard_toggle";
+    show: boolean;
+};
+
+export type RTMMessage = CursorMessage | WhiteboardToggleMessage;
+
 type UseAgoraRTMOptions = {
     appId: string;
     channel: string;
     uid: number | string;
     token: string | null;
-    onCursorReceived: (uid: string, msg: CursorMessage) => void;
+    onMessageReceived: (uid: string, msg: RTMMessage) => void;
     onMemberLeft?: (uid: string) => void;
     enabled: boolean;
 };
@@ -24,7 +31,7 @@ export function useAgoraRTM({
     channel,
     uid,
     token,
-    onCursorReceived,
+    onMessageReceived,
     onMemberLeft,
     enabled,
 }: UseAgoraRTMOptions) {
@@ -32,13 +39,13 @@ export function useAgoraRTM({
     const clientRef = useRef<any>(null);
 
     // Using a ref for the callback so the effect doesn't re-run on every render
-    const onCursorReceivedRef = useRef(onCursorReceived);
+    const onMessageReceivedRef = useRef(onMessageReceived);
     const onMemberLeftRef = useRef(onMemberLeft);
 
     useEffect(() => {
-        onCursorReceivedRef.current = onCursorReceived;
+        onMessageReceivedRef.current = onMessageReceived;
         onMemberLeftRef.current = onMemberLeft;
-    }, [onCursorReceived, onMemberLeft]);
+    }, [onMessageReceived, onMemberLeft]);
 
     useEffect(() => {
         if (!enabled || !appId || !channel) return;
@@ -58,10 +65,8 @@ export function useAgoraRTM({
         client.addEventListener("message", (event: any) => {
             if (event.channelType === "MESSAGE" && event.channelName === channel) {
                 try {
-                    const msg: CursorMessage = JSON.parse(event.message as string);
-                    if (msg.type === "cursor") {
-                        onCursorReceivedRef.current(event.publisher, msg);
-                    }
+                    const msg: RTMMessage = JSON.parse(event.message as string);
+                    onMessageReceivedRef.current(event.publisher, msg);
                 } catch {
                     // Ignore malformed messages
                 }
@@ -119,5 +124,17 @@ export function useAgoraRTM({
         [enabled, channel]
     );
 
-    return { sendCursorPosition };
+    const sendCustomMessage = useCallback(
+        (msg: RTMMessage) => {
+            if (!enabled || !clientRef.current) return;
+            const payload = JSON.stringify(msg);
+            
+            clientRef.current.publish(channel, payload).catch((e: unknown) => {
+                console.error("[RTM] Publish failed:", e);
+            });
+        },
+        [enabled, channel]
+    );
+
+    return { sendCursorPosition, sendCustomMessage };
 }

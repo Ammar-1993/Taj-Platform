@@ -8,7 +8,7 @@ import {
     WifiOff, RefreshCw, Eye, ChevronDown, Maximize, Minimize,
 } from 'lucide-react';
 import { bookingService } from '@/services/api';
-import { useAgoraRTM, CursorMessage } from '@/hooks/useAgoraRTM';
+import { useAgoraRTM, CursorMessage, RTMMessage } from '@/hooks/useAgoraRTM';
 import * as Sentry from "@sentry/nextjs";
 
 // ─── Local types ─────────────────────────────────────────────────────────────
@@ -39,6 +39,8 @@ interface WhiteboardProps {
     isAbsoluteFocusMode?: boolean;
     onToggleFocusMode?: () => void;
     onInteract?: () => void;
+    showWhiteboard?: boolean;
+    onRemoteToggle?: (show: boolean) => void;
 }
 
 interface ToolButtonProps {
@@ -108,7 +110,9 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     rtmToken,
     isAbsoluteFocusMode,
     onToggleFocusMode,
-    onInteract
+    onInteract,
+    showWhiteboard,
+    onRemoteToggle
 }) => {
     const whiteboardRef = useRef<HTMLDivElement>(null);
     const roomRef       = useRef<Room | null>(null);
@@ -143,12 +147,18 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     const [remoteCursors, setRemoteCursors] = useState<Record<string, { x: number, y: number }>>({});
     const lastCursorRef = useRef<number>(0);
 
-    const handleCursorReceived = useCallback((senderUid: string, msg: CursorMessage) => {
-        setRemoteCursors(prev => ({
-            ...prev,
-            [senderUid]: { x: msg.x, y: msg.y }
-        }));
-    }, []);
+    const handleMessageReceived = useCallback((senderUid: string, msg: RTMMessage) => {
+        if (msg.type === "cursor") {
+            setRemoteCursors(prev => ({
+                ...prev,
+                [senderUid]: { x: msg.x, y: msg.y }
+            }));
+        } else if (msg.type === "whiteboard_toggle" && !isTeacher) {
+            if (onRemoteToggle) {
+                onRemoteToggle(msg.show);
+            }
+        }
+    }, [isTeacher, onRemoteToggle]);
 
     const handleMemberLeft = useCallback((senderUid: string) => {
         setRemoteCursors(prev => {
@@ -160,15 +170,23 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
 
     const agoraAppId = (process.env.NEXT_PUBLIC_AGORA_APP_ID || "").trim();
 
-    const { sendCursorPosition } = useAgoraRTM({
+    const { sendCursorPosition, sendCustomMessage } = useAgoraRTM({
         appId: agoraAppId, // Use Agora RTC App ID for RTM too
         channel: agoraChannel || "",
         uid,
         token: rtmToken || null,
-        onCursorReceived: handleCursorReceived,
+        onMessageReceived: handleMessageReceived,
         onMemberLeft: handleMemberLeft,
         enabled: !!agoraChannel && !!rtmToken
     });
+
+    const lastLocalShowRef = useRef(showWhiteboard);
+    useEffect(() => {
+        if (isTeacher && showWhiteboard !== undefined && showWhiteboard !== lastLocalShowRef.current) {
+            lastLocalShowRef.current = showWhiteboard;
+            sendCustomMessage({ type: 'whiteboard_toggle', show: showWhiteboard });
+        }
+    }, [showWhiteboard, isTeacher, sendCustomMessage]);
 
     const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
         if (!whiteboardRef.current) return;
@@ -680,10 +698,32 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
             )}
 
             {/* ── 2.3: "Follower mode" status badge for students ── */}
-            {!loading && !error && !isTeacher && isConnected && (
-                <div className="absolute top-3 right-3 z-40 flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 pointer-events-none">
-                    <Eye className="w-3 h-3 text-blue-400 shrink-0" />
-                    <span className="text-slate-300 text-[10px] font-bold">وضع المتابعة</span>
+            {!loading && !error && !isTeacher && (
+                <div className="absolute top-3 right-3 z-40 flex items-center gap-2 pointer-events-none">
+                    <div className="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
+                        {isConnected ? (
+                            <>
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="text-emerald-400 text-[10px] font-bold">متصل</span>
+                            </>
+                        ) : isReconnecting ? (
+                            <>
+                                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                                <span className="text-amber-400 text-[10px] font-bold">جاري الاتصال</span>
+                            </>
+                        ) : (
+                            <>
+                                <div className="w-2 h-2 rounded-full bg-red-500" />
+                                <span className="text-red-400 text-[10px] font-bold">غير متصل</span>
+                            </>
+                        )}
+                    </div>
+                    {isConnected && (
+                        <div className="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
+                            <Eye className="w-3 h-3 text-blue-400 shrink-0" />
+                            <span className="text-slate-300 text-[10px] font-bold">وضع المتابعة</span>
+                        </div>
+                    )}
                 </div>
             )}
 
