@@ -684,7 +684,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
              *  isFocusMode = whiteboard OR screen share active
              *  • false → fills entire content area (normal call view)
              *  • true  → draggable floating widget (camera feeds only) */}
-            <FloatingVideoWidget focusMode={showWhiteboard || isSharing || isRemoteSharing} hidden={showWhiteboard && absoluteFocusMode}>
+            <FloatingVideoWidget focusMode={showWhiteboard || isSharing || isRemoteSharing} hidden={showWhiteboard}>
               <AgoraCall
                 bookingId={params.id}
                 rtcProps={rtcProps}
