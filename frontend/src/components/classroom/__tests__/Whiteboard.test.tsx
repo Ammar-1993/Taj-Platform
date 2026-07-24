@@ -2,7 +2,6 @@ import React from 'react';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import Whiteboard from '../Whiteboard';
 
-const mockGetContext = jest.fn();
 
 const mockSendCursorPosition = jest.fn();
 
@@ -112,7 +111,7 @@ describe('Whiteboard', () => {
   });
 
   it('enables page counter actions for the active whiteboard room', async () => {
-    const { container } = render(
+    render(
       <Whiteboard
         appIdentifier="app"
         roomUuid="room"
