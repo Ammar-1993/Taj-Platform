@@ -90,3 +90,17 @@ This section tracks recent architectural improvements and bug fixes for future r
 
 ### 2. Sentry Replay & False Positives
 - **Third-Party Extensions:** Logged and ignored false positive errors (`TypeError: Cannot read properties of undefined (reading 'getReader')` and `ext:core/...`). These are caused by client-side browser extensions (e.g., ad blockers) crashing and clashing with Sentry's `rrweb` DOM recorder, not by Next.js application logic.
+
+## 📖 Session Log & Recent Updates (Aug 25, 2026)
+
+### 1. Infrastructure Access & Security (WSL & SSH)
+- **Resolved SSH Access from WSL:** Diagnosed a `Permission denied (publickey)` error when attempting to access the DigitalOcean production server (`152.42.194.175`) from a local WSL (Ubuntu 22.04) environment.
+- **Root Cause:** WSL operates with an isolated SSH key (`~/.ssh/id_ed25519`) distinct from the host Windows environment. 
+- **Resolution:** Retrieved the WSL public key and manually appended it to the remote server's `~/.ssh/authorized_keys` file via an active PowerShell session, successfully granting WSL native, frictionless SSH access without disrupting existing host configurations or GitHub keys.
+
+### 2. Technical CV Verification Protocol
+- Established a step-by-step, manual testing protocol to definitively prove CV claims ("Fully deployed on DigitalOcean VPS" and "Moyasar-powered escrow payments") directly on the production server.
+- **Server Identity:** Verified DigitalOcean hosting using `curl ipinfo.io/152.42.194.175`.
+- **Async Queue:** Validated `QUEUE_CONNECTION=redis` in `.env.prod` to ensure robust, non-blocking background jobs (confirmed via `docker ps` showing the active `taj_queue_worker`).
+- **Payment Readiness:** Verified production status by checking for `pk_live_` / `sk_live_` Moyasar API keys.
+- **True Escrow Verification (SQL Tracking):** Detailed a practical database test using `docker exec -it job_mysql mysql -u taj_user -p`. By tracking the `wallets` table before and after a booking, we proved the "true escrow" logic: funds are deducted from the student's wallet immediately, held in escrow (platform), and only released to the teacher's wallet upon the session's completion (`status: Completed`), strictly differentiating it from a simple, immediate revenue split.
