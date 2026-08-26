@@ -62,7 +62,7 @@ services:
     container_name: taj_redis
     restart: unless-stopped
     ports:
-      - "6381:6379"
+      - "127.0.0.1:6381:6379"
     volumes:
       - taj_redis_data:/data
     command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru --save ""
