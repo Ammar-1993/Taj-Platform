@@ -540,7 +540,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 try {
                     // Unbind to prevent internal pointer/mouse events from firing after disconnect begins
                     roomRef.current.bindHtmlElement(null);
-                } catch (e) { /* ignore */ }
+                } catch { /* ignore */ }
                 roomRef.current.disconnect().catch(() => {/* ignore disconnect errors on unmount */});
                 roomRef.current = null;
             }
