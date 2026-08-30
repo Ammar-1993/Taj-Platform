@@ -16,9 +16,8 @@ export function useNavLinks() {
   const navLinks = [
     { name: "لوحة التحكم", href: "/dashboard", icon: LayoutDashboard, show: true },
     { name: "السجل المالي", href: "/dashboard/financial-record", icon: History, show: true },
-
-    { name: "الجدول والمواعيد", href: "/dashboard/schedule", icon: CalendarDays, show: isTeacher },
     { name: "سحب الأرباح", href: "/dashboard/payout", icon: CreditCard, show: isTeacher },
+    { name: "الجدول والمواعيد", href: "/dashboard/schedule", icon: CalendarDays, show: isTeacher },
     { name: "ملف التوثيق", href: "/dashboard/profile", icon: User, show: isTeacher },
     { name: "إعدادات الحساب", href: "/dashboard/settings", icon: Settings, show: isTeacher || isStudent || isParent },
     { name: "إدارة الأبناء", href: "/dashboard/children", icon: Users, show: isParent },
