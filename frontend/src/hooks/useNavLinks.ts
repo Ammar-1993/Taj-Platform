@@ -19,9 +19,9 @@ export function useNavLinks() {
     { name: "سحب الأرباح", href: "/dashboard/payout", icon: CreditCard, show: isTeacher },
     { name: "الجدول والمواعيد", href: "/dashboard/schedule", icon: CalendarDays, show: isTeacher },
     { name: "ملف التوثيق", href: "/dashboard/profile", icon: User, show: isTeacher },
-    { name: "إعدادات الحساب", href: "/dashboard/settings", icon: Settings, show: isTeacher || isStudent || isParent },
     { name: "إدارة الأبناء", href: "/dashboard/children", icon: Users, show: isParent },
     { name: "شحن المحفظة", href: "/dashboard/top-up", icon: CreditCard, show: isParent || isStudent },
+    { name: "إعدادات الحساب", href: "/dashboard/settings", icon: Settings, show: isTeacher || isStudent || isParent },
     { name: "الدعم الفني", href: "/dashboard/support", icon: LifeBuoy, show: true },
   ];
 
