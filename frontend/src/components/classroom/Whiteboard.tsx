@@ -238,7 +238,11 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
 
             // Disconnect the stale room instance first
             if (roomRef.current) {
-                try { await roomRef.current.disconnect(); } catch { /* already disconnected */ }
+                try {
+                    // Unbind the HTML element to prevent lingering pointer events causing frameGenerator exceptions
+                    roomRef.current.bindHtmlElement(null);
+                    await roomRef.current.disconnect(); 
+                } catch { /* already disconnected */ }
                 roomRef.current = null;
             }
 
@@ -533,6 +537,10 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
             if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
             if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
             if (roomRef.current) {
+                try {
+                    // Unbind to prevent internal pointer/mouse events from firing after disconnect begins
+                    roomRef.current.bindHtmlElement(null);
+                } catch (e) { /* ignore */ }
                 roomRef.current.disconnect().catch(() => {/* ignore disconnect errors on unmount */});
                 roomRef.current = null;
             }

@@ -165,3 +165,8 @@ All public endpoints were manually verified with `curl` and confirmed working:
 - `POST /api/v1/auth/login` → ✅ Returns correct Arabic error message on bad credentials
 - Frontend `http://localhost:3000` → ✅ Running
 - Backend `http://localhost:8000` → ✅ Running
+
+### 4. Interactive Whiteboard (White-Web-SDK) - Teardown Fix
+- **Issue:** Investigated an intermittent crash (`cannot invoke onMouseMove, frameGenerator is not prepare`) occurring when a user disconnects from the whiteboard or when the component unmounts (e.g. clicking "Complete Booking").
+- **Root Cause:** The `white-web-sdk` was asynchronously disconnecting, but the HTML element bindings remained active. If a mouse or pointer event fired in that split second, the SDK attempted to process it using a destroyed internal state (`frameGenerator`).
+- **Resolution:** Explicitly called `roomRef.current.bindHtmlElement(null)` right before `roomRef.current.disconnect()` in both the cleanup `useEffect` and the reconnect flows. This synchronously detaches the event listeners from the DOM, safely preventing any lingering pointer events from causing a fatal exception during the SDK teardown.
