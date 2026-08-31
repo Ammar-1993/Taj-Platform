@@ -181,3 +181,17 @@ Resolved three critical build warnings during `npm run build` in the frontend:
 - **`npm warn allow-scripts`:** Added the `"allowScripts"` block to `package.json` to explicitly whitelist postinstall scripts (`@sentry/cli`, `core-js`, `protobufjs`, `unrs-resolver`), satisfying npm's strict security policies and suppressing the warning.
 - **`SWC Minifier Deprecation`:** Removed `swcMinify: false` from `next.config.mjs` to comply with Next.js 15 future deprecations, allowing Next.js to use its default SWC minifier while retaining `transpilePackages: ['agora-react-uikit', 'agora-rtc-sdk-ng']` to ensure Agora SDK functions correctly.
 - **`Sentry: No project provided`:** Added `project: process.env.SENTRY_PROJECT || "taj-platform"` and `org: process.env.SENTRY_ORG || "taj"` to the `withSentryConfig` in `next.config.mjs` to properly link source maps and releases.
+
+### 7. Sentry Full Integration (Vercel Production)
+- **Context:** After resolving the "No project provided" warning locally, the Vercel deployment was still failing with `error: Project not found` because `SENTRY_AUTH_TOKEN` in Vercel was linked to organization `freelance-jw`, but `project` and `org` were not explicitly provided.
+- **Resolution (Two-Step):**
+  1. Added `SENTRY_PROJECT=taj-frontend` and `SENTRY_ORG=freelance-jw` to Vercel Environment Variables (Production).
+  2. Updated `next.config.mjs` to read `project` and `org` from env vars, removed `sourcemaps: { disable: true }`, and kept the dynamic `disableServerWebpackPlugin: !process.env.SENTRY_PROJECT` guard so the plugin is silently skipped in local/preview environments without the vars set.
+- **Result:** Sentry now fully uploads Source Maps on every Vercel production deploy, enabling precise stack traces in the Sentry dashboard.
+
+### 8. Google Fonts ETIMEDOUT in WSL (Local Build Fix)
+- **Issue:** `npm run build` was failing locally in WSL with `FetchError: ETIMEDOUT` when Next.js tried to fetch `Cairo` and `IBM Plex Mono` from `fonts.googleapis.com` during the build phase.
+- **Root Cause:** Even with `preload: false`, Next.js still attempts to fetch font fallback metrics from Google Fonts to compute `adjustFontFallback`. This network request is blocked in WSL due to Docker/WSL network restrictions.
+- **Resolution:** Added `adjustFontFallback: false` to both font configurations in `src/app/layout.tsx`. This prevents all build-time network calls to Google Fonts. The fonts continue to load normally in the browser via CSS `@import`, and Vercel builds are completely unaffected.
+- **Result:** `npm run build` now completes successfully in WSL: `✓ Compiled successfully`, `✓ Generating static pages (25/25)`, exit code 0.
+

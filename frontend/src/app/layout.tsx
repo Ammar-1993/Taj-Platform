@@ -11,7 +11,8 @@ const cairo = Cairo({
   weight: ["200", "300", "400", "500", "600", "700", "800", "900"],
   display: "swap",
   variable: "--font-sans",
-  preload: false, // Prevent font download during build
+  preload: false,
+  adjustFontFallback: false, // Prevent fetching fallback metrics from Google Fonts (fixes WSL ETIMEDOUT)
 });
 
 const mono = IBM_Plex_Mono({
@@ -19,7 +20,8 @@ const mono = IBM_Plex_Mono({
   weight: ["400", "600"],
   display: "swap",
   variable: "--font-mono",
-  preload: false, // Prevent font download during build
+  preload: false,
+  adjustFontFallback: false, // Prevent fetching fallback metrics from Google Fonts (fixes WSL ETIMEDOUT)
 });
 
 export function generateMetadata(): Metadata {
