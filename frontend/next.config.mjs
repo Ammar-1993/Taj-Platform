@@ -45,8 +45,8 @@ const nextConfig = {
     ];
   },
   sentry: {
-    // إيقاف تشغيل بلجن Sentry تلقائياً إذا لم يتم إعداد اسم المشروع في Vercel
-    // لتفادي فشل البناء (Project not found) بسبب Token يعود لمنظمة أخرى
+    // يتم إيقاف البلجن تلقائياً في البيئات التي لا تحتوي على SENTRY_PROJECT
+    // (مثل بيئة التطوير المحلية) لتفادي أخطاء رفع Source Maps
     disableServerWebpackPlugin: !process.env.SENTRY_PROJECT,
     disableClientWebpackPlugin: !process.env.SENTRY_PROJECT,
   }
@@ -55,6 +55,10 @@ const nextConfig = {
 export default withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
+
+  // ربط Sentry بالمشروع والمنظمة الصحيحَين (مقروء من متغيرات البيئة في Vercel)
+  project: process.env.SENTRY_PROJECT,
+  org: process.env.SENTRY_ORG,
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
@@ -77,10 +81,4 @@ export default withSentryConfig(nextConfig, {
     // Setting it to true strips ALL console.log and Sentry logger calls
     // from production builds, preventing logs from reaching Sentry.
   },
-
-  // إيقاف رفع ملفات Source Maps مؤقتاً لتجنب فشل البناء على Vercel 
-  // بسبب خطأ (Project not found) في إعدادات Sentry
-  sourcemaps: {
-    disable: true,
-  }
 });
