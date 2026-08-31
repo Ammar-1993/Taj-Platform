@@ -65,8 +65,12 @@ export default withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
-  // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: true,
+  // NOTE: widenClientFileUpload was removed intentionally.
+  // Enabling it causes Sentry to attempt uploading ALL client-side chunks
+  // including third-party bundles (e.g. agora-rtc-sdk-ng) that have no
+  // corresponding source maps, producing:
+  // "warning: could not determine a source map reference"
+  // Sentry will still correctly upload source maps for all application code.
 
   // Uncomment to route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
   // This can increase your server load as well as your hosting bill.
