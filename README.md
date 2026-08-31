@@ -68,6 +68,7 @@ graph LR
     end
 
     DB[(MySQL)]
+    REDIS[(Redis)]
     PAY[Moyasar]
     MON[Sentry]
 
@@ -76,8 +77,10 @@ graph LR
     FE <--> RTM
     FE <--> WB
     API --> DB
+    API --> REDIS
     ADMIN --> DB
     API --> QUEUE
+    QUEUE -->|Redis| REDIS
     QUEUE --> WB
     API --> PAY
     API -.-> MON
@@ -98,11 +101,12 @@ graph LR
 
 Recent additions that take the platform beyond a basic booking-and-video app:
 
-- **🖊️ Interactive Whiteboard** — A real-time collaborative whiteboard (Netless `white-web-sdk`) inside every classroom, with drawing tools, live cursor sync between teacher and student, and automatic reconnection on network drops.
+- **🖊️ Interactive Whiteboard** — A real-time collaborative whiteboard (Netless `white-web-sdk`) inside every classroom, with drawing tools, live cursor sync between teacher and student, undo/redo support, and automatic reconnection on network drops.
 - **📡 Adaptive Network Resilience** — A multi-layer video quality system that smooths out network quality readings, switches to a low-resolution simulcast stream automatically, re-encodes the outgoing video in real time (from 720p down to 120p), and prioritizes audio over video when bandwidth is critically low — all without interrupting the call.
 - **🖥️ Isolated Screen Sharing** — Screen share runs on a fully separate media connection from the camera feed, so presenting a slide deck never competes with — or degrades — the main video call.
-- **🛰️ Full-Stack Error & Performance Monitoring** — Sentry is wired into both the Laravel backend and the Next.js frontend, with custom breadcrumbs tracking the health of the classroom provisioning pipeline and whiteboard connection lifecycle.
-- **💰 Automated Revenue Split** — Every completed session automatically credits the teacher's wallet with their share and retains the platform commission — no manual reconciliation required.
+- **🛰️ Full-Stack Error & Performance Monitoring** — Sentry is wired into both the Laravel backend and the Next.js frontend, with Source Maps uploaded on every Vercel production deploy for precise stack traces.
+- **💰 Automated Revenue Split** — Every completed session automatically credits the teacher's wallet with their share (80%) and retains the platform commission — no manual reconciliation required.
+- **🔒 Race-Condition-Safe Booking** — Atomic, database-transaction-locked slot reservation prevents double-booking even under concurrent requests.
 
 ---
 
@@ -110,7 +114,7 @@ Recent additions that take the platform beyond a basic booking-and-video app:
 
 - 🔐 **Full RBAC** — Four distinct roles (Student, Teacher, Parent, Admin) via Spatie Permissions, each with its own dashboard and capabilities.
 - 📹 **Live HD Video Tutoring** — Low-latency audio/video sessions via Agora RTC, with automatic token renewal mid-session.
-- 🖊️ **Real-Time Interactive Whiteboard** — Synchronized drawing, shapes, and text between teacher and student powered by Netless.
+- 🖊️ **Real-Time Interactive Whiteboard** — Synchronized drawing, shapes, and text between teacher and student powered by Netless; teacher controls drawing tools, students follow in real time.
 - 🖥️ **Dedicated Screen Sharing** — Independent media channel so screen shares stay smooth regardless of camera bandwidth.
 - 📅 **Race-Condition-Safe Booking** — Atomic, transaction-locked slot booking that makes double-booking the same time slot impossible.
 - 💳 **Wallet-Based Economy** — A central wallet system for students, parents, and teachers, backed by an overdraft-proof transaction ledger.
@@ -120,7 +124,7 @@ Recent additions that take the platform beyond a basic booking-and-video app:
 - ⭐ **Mandatory Review System** — Students are prompted to rate their teacher after every completed session.
 - 👑 **Custom Admin Panel** — A fully Arabic-localized FilamentPHP dashboard for KYC verification, dispute resolution, refunds, and platform-wide analytics.
 - 🌍 **100% Arabic, RTL-Native UI** — Every screen, label, and system notification is built RTL-first for the MENA region.
-- 🛰️ **Production-Grade Monitoring** — Sentry error tracking and performance tracing across both frontend and backend.
+- 🛰️ **Production-Grade Monitoring** — Sentry error tracking and performance tracing across both frontend and backend, with Source Maps for precise stack traces.
 
 ---
 
@@ -172,31 +176,37 @@ Recent additions that take the platform beyond a basic booking-and-video app:
 > **Admin & Security:** Filament V3 • Laravel Sanctum • Spatie Permission
 > **Real-Time & Media:** Agora RTC/RTM Token Generation • Netless Whiteboard REST API
 > **Payments:** Moyasar Payment Gateway (SAR)
+> **Async Processing:** Laravel Queues backed by **Redis** (Predis client)
 > **Monitoring:** Sentry (`sentry/sentry-laravel`)
-> **Async Processing:** Laravel Queues (background classroom provisioning)
+> **Testing:** PHPUnit via `php artisan test` — **69 tests, 190 assertions**
 
 ### Frontend (`/frontend`)
 
-> **Core:** Next.js 14.2 (App Router) • React 18 • TypeScript
-> **Styling & UI:** Tailwind CSS 3.4
-> **Live Classroom:** `agora-rtc-sdk-ng` (video/audio/screen share) • `agora-rtm-sdk` (cursor sync) • `white-web-sdk` (interactive whiteboard)
-> **Data & State:** TanStack Query • Axios
-> **Monitoring:** `@sentry/nextjs`
+> **Core:** Next.js 14.2 (App Router) • React 18 • TypeScript 5 (strict mode)
+> **Styling & UI:** Tailwind CSS 3.4 • Lucide React icons
+> **Live Classroom:** `agora-rtc-sdk-ng` (video/audio/screen share) • `agora-rtm-sdk` (cursor & event sync) • `white-web-sdk` (interactive whiteboard)
+> **Data & State:** TanStack Query (React Query) • Axios
+> **Monitoring:** `@sentry/nextjs` with Source Maps
+> **Testing:** Jest + React Testing Library — **28 tests across 5 test suites**
 
 ---
 
 ## 📊 Project Stats
 
-| Metric                   | Details                                              |
-| :------------------------ | :---------------------------------------------------- |
-| **🚀 Architecture**       | Monorepo (Next.js frontend + Laravel REST API)        |
-| **🔐 Role Support**       | Admin, Teacher, Student, Parent                        |
-| **📡 Video/Audio**        | Agora RTC — adaptive, simulcast-enabled                |
-| **🖊️ Whiteboard**         | Netless `white-web-sdk` — real-time collaborative      |
-| **💳 Payments**           | Moyasar (SAR, Saudi market)                             |
-| **🛰️ Monitoring**         | Sentry — full-stack (backend + frontend)                |
-| **🌍 Localization**       | 100% Arabic (RTL-native interface)                      |
-| **🛡️ Security**           | Sanctum tokens + Spatie RBAC + rate limiting            |
+| Metric                   | Details                                                          |
+| :------------------------ | :--------------------------------------------------------------- |
+| **🚀 Architecture**       | Monorepo (Next.js frontend + Laravel REST API)                   |
+| **🔐 Role Support**       | Admin, Teacher, Student, Parent                                  |
+| **📡 Video/Audio**        | Agora RTC — adaptive bitrate, simulcast-enabled                  |
+| **🖊️ Whiteboard**         | Netless `white-web-sdk` — real-time collaborative                |
+| **💳 Payments**           | Moyasar (SAR, Saudi market) with webhook verification            |
+| **🔁 Async Queue**        | Laravel Queue Worker backed by Redis                             |
+| **🛰️ Monitoring**         | Sentry — full-stack (backend + frontend) with Source Maps        |
+| **🌍 Localization**       | 100% Arabic (RTL-native interface)                               |
+| **🛡️ Security**           | Sanctum tokens + Spatie RBAC + rate limiting                     |
+| **🧪 Backend Tests**      | 69 tests · 190 assertions (PHPUnit)                              |
+| **🧪 Frontend Tests**     | 28 tests · 5 suites (Jest + React Testing Library)               |
+| **📦 Deployment**         | Backend → DigitalOcean VPS / Render · Frontend → Vercel          |
 
 ---
 
@@ -206,7 +216,7 @@ The recommended way to boot up the complete Taj Platform stack (Frontend, Backen
 
 ### Prerequisites
 
-- [Docker](https://docs.docker.com/get-docker/) & [Docker Compose](https://docs.docker.com/compose/install/)
+- [Docker](https://docs.docker.com/get-docker/) & [Docker Compose](https://docs.docker.com/compose/install/) v2+
 - **Node.js 20+** (for local frontend development outside Docker)
 - **PHP 8.3 & Composer** (for local backend development outside Docker)
 
@@ -232,6 +242,8 @@ Edit `backend/.env` and fill in:
 | `WHITEBOARD_SDK_TOKEN` | Netless SDK token used to create whiteboard rooms and mint room tokens |
 | `MOYASAR_PUBLISHABLE_KEY` / `MOYASAR_SECRET_KEY` / `MOYASAR_WEBHOOK_SECRET` | Moyasar payment gateway credentials and webhook signature verification |
 | `FRONTEND_URL` | Used for CORS and for building Moyasar payment redirect URLs |
+| `QUEUE_CONNECTION` | Set to `redis` for production-grade async job processing |
+| `REDIS_HOST` / `REDIS_PORT` | Redis server connection (defaults work with Docker Compose) |
 | `SENTRY_LARAVEL_DSN` | Backend error/performance monitoring (optional) |
 | `ADMIN_ALERT_EMAIL` | Recipient for alerts when classroom provisioning fails after all retries (optional, but recommended) |
 
@@ -250,19 +262,22 @@ Edit `frontend/.env` and fill in:
 | `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | Google reCAPTCHA site key used on auth forms |
 | `NEXT_PUBLIC_WHITEBOARD_APP_IDENTIFIER` | Netless App Identifier for the interactive whiteboard |
 | `NEXT_PUBLIC_WHITEBOARD_REGION` | Netless region (defaults to `sg`, closest to MENA users) |
-| `NEXT_PUBLIC_SENTRY_DSN` / `SENTRY_AUTH_TOKEN` | Frontend error monitoring + automatic source map uploads on build (optional) |
+| `NEXT_PUBLIC_SENTRY_DSN` | Frontend error monitoring DSN (optional) |
+| `SENTRY_AUTH_TOKEN` | Allows Sentry to upload Source Maps on Vercel production builds (optional) |
+| `SENTRY_PROJECT` / `SENTRY_ORG` | Sentry project slug and organization slug — required for Source Map uploads |
 
 ### 4. Launch the Docker Environment
 
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 > **What this spins up:**
 >
 > - 🗄️ **MySQL 8.0** — port `3307` on the host, mapped to `3306` inside the container (to avoid conflicts with any local MySQL install)
+> - 🔴 **Redis** — port `6390` on the host, mapped to `6379` inside the container
 > - 🐘 **Laravel API Server** — port `8000`
-> - ⚛️ **Next.js Client** — port `3000`. The `nextjs` container automatically runs `npm install --legacy-peer-deps && npm run dev` on every startup — **no manual `npm install` step is needed inside Docker.** The first `docker-compose up` will take noticeably longer while dependencies install; subsequent restarts are fast.
+> - ⚛️ **Next.js Client** — port `3000`. The `nextjs` container automatically runs `npm install --legacy-peer-deps && npm run dev` on every startup — **no manual `npm install` step is needed inside Docker.** The first `docker compose up` will take noticeably longer while dependencies install; subsequent restarts are fast.
 
 ### 5. Backend Setup & Seeding
 
@@ -270,7 +285,7 @@ The Laravel container does **not** auto-run Composer or migrations — this step
 
 ```bash
 # Enter the Laravel container
-docker-compose exec laravel.test bash
+docker compose exec laravel.test bash
 
 # Install PHP dependencies and generate the app key
 composer install
@@ -282,7 +297,7 @@ php artisan migrate --seed
 
 > ⚠️ **Queue worker required:** classroom provisioning (whiteboard room creation and Agora/Netless token pre-generation) runs asynchronously through Laravel's queue system. Without a running worker, this background job will sit unprocessed. Run it inside the same container:
 > ```bash
-> php artisan queue:work
+> php artisan queue:work redis --sleep=3 --tries=5 --max-time=3600
 > ```
 
 ### 6. (Alternative) Running the Frontend Outside Docker
@@ -305,19 +320,66 @@ npm run dev
 
 ## 🧪 Testing
 
-**Backend (PHPUnit, Laravel's built-in testing suite):**
+### Backend — PHPUnit
+
+The backend test suite uses **PHPUnit** via `php artisan test` with an in-memory **SQLite** database (configured in `phpunit.xml`) so no running MySQL server is required.
 
 ```bash
+# Inside the Docker container:
+docker compose exec laravel.test php artisan test
+
+# Or directly if PHP is installed locally:
 cd backend
 php artisan test
 ```
 
-**Frontend:**
+**Current results:** `69 tests · 190 assertions` — all passing ✅
+
+The suite covers:
+
+| Test File | Area |
+|---|---|
+| `tests/Feature/Auth/` | Registration, login, Sanctum token issuance |
+| `tests/Feature/BookingLifecycleTest.php` | Full booking → session → completion → payout flow |
+| `tests/Feature/BookingServiceTest.php` | Race-condition-safe slot reservation |
+| `tests/Feature/ClassroomAccessTest.php` | Token generation, classroom join, Agora token refresh |
+| `tests/Feature/DiscoveryTest.php` | Teacher search, subject & grade-level filtering |
+| `tests/Feature/ParentChildTest.php` | Parent sub-account management & spending permissions |
+| `tests/Feature/PayoutRequestTest.php` | Teacher payout request lifecycle |
+| `tests/Feature/ProfileTest.php` | Teacher KYC profile update & verification reset |
+| `tests/Feature/ReviewTest.php` | Mandatory post-session review submission |
+| `tests/Feature/SupportTicketTest.php` | Support ticket creation & messaging |
+| `tests/Feature/TeacherSlotTest.php` | Availability slot creation, update, deletion |
+| `tests/Feature/WalletServiceTest.php` | Wallet deposit, deduction, overdraft protection |
+| `tests/Unit/BookingServiceUnitTest.php` | Unit: booking business rules |
+| `tests/Unit/PayoutServiceUnitTest.php` | Unit: payout calculation & commission split |
+| `tests/Unit/ReviewServiceUnitTest.php` | Unit: review validation logic |
+| `tests/Unit/WalletServiceUnitTest.php` | Unit: wallet transaction ledger |
+| `tests/Unit/WhiteboardServiceTest.php` | Unit: Netless room creation & token minting |
+
+### Frontend — Jest + React Testing Library
+
+The frontend test suite uses **Jest** with `jest-environment-jsdom` and **React Testing Library**.
 
 ```bash
 cd frontend
 npm run test
+
+# Run in watch mode during development:
+npm run test:watch
 ```
+
+**Current results:** `28 tests · 5 test suites` — all passing ✅
+
+The suite covers:
+
+| Test File | Area |
+|---|---|
+| `src/components/classroom/__tests__/Whiteboard.test.tsx` | Whiteboard SDK integration & connection lifecycle |
+| `src/components/dashboard/__tests__/utils.test.tsx` | Dashboard utility functions |
+| `src/components/dashboard/financial/__tests__/WalletSummary.test.tsx` | Wallet summary component rendering |
+| `src/app/classroom/__tests__/ClassroomPage.test.tsx` | Classroom page access control & rendering |
+| `src/lib/__tests__/formatters.test.ts` | Date, currency, and number formatting helpers |
 
 ---
 
