@@ -44,14 +44,17 @@ const nextConfig = {
       },
     ];
   },
+  sentry: {
+    // إيقاف تشغيل بلجن Sentry تلقائياً إذا لم يتم إعداد اسم المشروع في Vercel
+    // لتفادي فشل البناء (Project not found) بسبب Token يعود لمنظمة أخرى
+    disableServerWebpackPlugin: !process.env.SENTRY_PROJECT,
+    disableClientWebpackPlugin: !process.env.SENTRY_PROJECT,
+  }
 };
 
 export default withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
-
-  project: process.env.SENTRY_PROJECT || "taj-platform",
-  org: process.env.SENTRY_ORG || "taj",
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
