@@ -20,9 +20,10 @@ const nextConfig = {
   reactStrictMode: true, 
 
   // ==========================================
-  // 🟢 الحل الجذري لمنع Vercel من تدمير كود Agora
+  // ملاحظة بخصوص Vercel و Agora: تمت إزالة swcMinify: false
+  // بناءً على تحذير Next.js، حيث سيتم إيقاف دعمه مستقبلاً.
+  // تم الإبقاء على transpilePackages لضمان ترجمة المكتبة.
   // ==========================================
-  swcMinify: false, // إيقاف الضغط العنيف الذي يغير أسماء الدوال إلى r
   transpilePackages: ['agora-react-uikit', 'agora-rtc-sdk-ng'], // إجبار السيرفر على ترجمة المكتبة بشكل صحيح
 
   images: {
@@ -48,6 +49,9 @@ const nextConfig = {
 export default withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
+
+  project: process.env.SENTRY_PROJECT || "taj-platform",
+  org: process.env.SENTRY_ORG || "taj",
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,

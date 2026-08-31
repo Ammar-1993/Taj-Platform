@@ -175,3 +175,9 @@ All public endpoints were manually verified with `curl` and confirmed working:
 - **Issue:** The queue worker (`php artisan queue:work`) would randomly crash after long periods of polling, throwing `Predis\Connection\ConnectionException: Stream is already at the end [tcp://redis:6379]`.
 - **Root Cause:** Laravel uses `Predis` by default which has a default `read_write_timeout` of 60 seconds. When the worker polls an empty queue with a blocking `BLPOP` operation, idle network limits or Docker TCP keep-alive mismatches cause the connection to drop on the PHP side, throwing an EOF error.
 - **Resolution:** Added `'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1)` to both the `default` and `cache` redis connections in `config/database.php`. A value of `-1` explicitly disables the read timeout in Predis, making it perfectly resilient for long-running blocking processes like `queue:work`.
+
+### 6. Frontend Build Warnings Resolution
+Resolved three critical build warnings during `npm run build` in the frontend:
+- **`npm warn allow-scripts`:** Added the `"allowScripts"` block to `package.json` to explicitly whitelist postinstall scripts (`@sentry/cli`, `core-js`, `protobufjs`, `unrs-resolver`), satisfying npm's strict security policies and suppressing the warning.
+- **`SWC Minifier Deprecation`:** Removed `swcMinify: false` from `next.config.mjs` to comply with Next.js 15 future deprecations, allowing Next.js to use its default SWC minifier while retaining `transpilePackages: ['agora-react-uikit', 'agora-rtc-sdk-ng']` to ensure Agora SDK functions correctly.
+- **`Sentry: No project provided`:** Added `project: process.env.SENTRY_PROJECT || "taj-platform"` and `org: process.env.SENTRY_ORG || "taj"` to the `withSentryConfig` in `next.config.mjs` to properly link source maps and releases.
