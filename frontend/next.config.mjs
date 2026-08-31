@@ -44,12 +44,6 @@ const nextConfig = {
       },
     ];
   },
-  sentry: {
-    // يتم إيقاف البلجن تلقائياً في البيئات التي لا تحتوي على SENTRY_PROJECT
-    // (مثل بيئة التطوير المحلية) لتفادي أخطاء رفع Source Maps
-    disableServerWebpackPlugin: !process.env.SENTRY_PROJECT,
-    disableClientWebpackPlugin: !process.env.SENTRY_PROJECT,
-  }
 };
 
 export default withSentryConfig(nextConfig, {
@@ -59,6 +53,11 @@ export default withSentryConfig(nextConfig, {
   // ربط Sentry بالمشروع والمنظمة الصحيحَين (مقروء من متغيرات البيئة في Vercel)
   project: process.env.SENTRY_PROJECT,
   org: process.env.SENTRY_ORG,
+
+  // إيقاف البلجن تلقائياً في البيئات التي لا تحتوي على SENTRY_PROJECT
+  // (مثل بيئة التطوير المحلية) لتفادي أخطاء رفع Source Maps
+  disableServerWebpackPlugin: !process.env.SENTRY_PROJECT,
+  disableClientWebpackPlugin: !process.env.SENTRY_PROJECT,
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
