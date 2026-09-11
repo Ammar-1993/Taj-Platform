@@ -22,6 +22,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 return false;
             }
 
+            // تجاهل محاولات تعديل الخصائص المحمية (Locked Properties) بواسطة أدوات الفحص
+            if ($e instanceof \Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException) {
+                return false;
+            }
+
             if (app()->bound('sentry')) {
                 \Sentry\captureException($e);
             }
