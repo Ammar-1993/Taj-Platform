@@ -1,20 +1,38 @@
 import { withSentryConfig } from '@sentry/nextjs';
 /** @type {import('next').NextConfig} */
 
+const isProd = process.env.NODE_ENV === 'production';
+
+const cspDirectives = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://*.agora.io https://*.sd-rtn.com https://*.sentry.io",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "img-src 'self' blob: data: https://ui-avatars.com https://*.agora.io https://*.google.com https://*.gstatic.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "connect-src 'self' http://localhost:8000 http://127.0.0.1:8000 https://api.taj-edu.online https://www.google.com/recaptcha/ https://*.agora.io https://*.sd-rtn.com https://*.netless.link https://*.whiteboard.agora.io https://*.sentry.io https://*.ingest.sentry.io wss://*.agora.io wss://*.sd-rtn.com wss://*.netless.link wss://*.whiteboard.agora.io https://www.gstatic.com/generate_204 https://clients3.google.com/generate_204",
+  "frame-src 'self' https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://*.moyasar.com",
+  "media-src 'self' blob: mediastream: https://*.agora.io",
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self' https://*.moyasar.com",
+  "frame-ancestors 'none'",
+];
+
+if (isProd) {
+  cspDirectives.push('upgrade-insecure-requests');
+}
+
 const securityHeaders = [
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
   { key: 'X-XSS-Protection', value: '1; mode=block' },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
-  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' }
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), display-capture=(self), geolocation=()' },
+  { key: 'Content-Security-Policy', value: cspDirectives.join('; ') },
+  { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' }
 ];
-
-if (process.env.NODE_ENV === 'production') {
-  securityHeaders.push({
-    key: 'Strict-Transport-Security',
-    value: 'max-age=31536000; includeSubDomains; preload'
-  });
-}
 
 const nextConfig = {
   reactStrictMode: true, 

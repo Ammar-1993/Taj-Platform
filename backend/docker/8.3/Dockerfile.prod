@@ -52,6 +52,9 @@ COPY --from=node-builder /app/public/build/ ./public/build/
 RUN php artisan storage:link \
     && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
+# إعداد PHP وتأمين الإعدادات
+COPY php.ini /usr/local/etc/php/conf.d/taj-security.ini
+
 # إعداد Nginx
 RUN rm -f /etc/nginx/sites-enabled/default
 COPY docker/8.3/nginx-prod.conf /etc/nginx/sites-available/taj-platform
