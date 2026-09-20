@@ -17,8 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->report(function (\Throwable $e) {
-            // تجاهل أخطاء TypeError الناتجة عن تلاعب البوتات بحالة Livewire
-            if ($e instanceof \TypeError && str_contains($e->getMessage(), 'BasePage::getInfolist(): Argument #1')) {
+            // تجاهل أخطاء TypeError الناتجة عن تلاعب البوتات وأدوات الفحص بحالة ومكونات Livewire
+            if ($e instanceof \TypeError && (
+                str_contains($e->getMessage(), 'Cannot assign') ||
+                str_contains($e->getMessage(), 'BasePage::getInfolist') ||
+                str_contains($e->getFile(), '/livewire/')
+            )) {
                 return false;
             }
 

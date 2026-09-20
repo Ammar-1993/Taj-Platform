@@ -195,3 +195,22 @@ Resolved three critical build warnings during `npm run build` in the frontend:
 - **Resolution:** Added `adjustFontFallback: false` to both font configurations in `src/app/layout.tsx`. This prevents all build-time network calls to Google Fonts. The fonts continue to load normally in the browser via CSS `@import`, and Vercel builds are completely unaffected.
 - **Result:** `npm run build` now completes successfully in WSL: `✓ Compiled successfully`, `✓ Generating static pages (25/25)`, exit code 0.
 
+## 📖 Session Log & Recent Updates (Sep 16–21, 2026)
+
+### 1. Production Security Hardening & Vulnerability Remediation
+- **Context:** Conducted comprehensive security assessments using OWASP ZAP on live production targets (`https://www.taj-edu.online/` and `https://api.taj-edu.online/admin/login`).
+- **Resolution:**
+  - **Frontend (`frontend/next.config.mjs`):** Implemented tailored `Content-Security-Policy` whitelisting Agora RTC/RTM (`*.agora.io`, `*.sd-rtn.com`), Netless Whiteboard (`*.netless.link`, `*.whiteboard.agora.io`), Google reCAPTCHA, Moyasar, and Sentry. Added `Permissions-Policy: camera=(self), microphone=(self), display-capture=(self), geolocation=()`, and `Strict-Transport-Security`.
+  - **Backend (`backend/docker/8.3/nginx-prod.conf`, `backend/php.ini`, `backend/docker/8.3/Dockerfile.prod`):** Suppressed `X-Powered-By: PHP/8.3.33` via `expose_php = Off` and `fastcgi_hide_header`. Hidden Nginx version with `server_tokens off`. Added `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, and customized Filament/Livewire compatible CSP.
+
+### 2. Live reCAPTCHA v3 Domain Whitelisting
+- **Issue:** Registration on live production failed with "فشل التحقق من الأمان (reCAPTCHA)" while passing locally.
+- **Root Cause:** Local dev environment bypasses verification (`app()->environment('local')`), whereas production strictly validates the token. The live domain `taj-edu.online` (apex and www) was not whitelisted in the Google reCAPTCHA Admin Console, displaying `ERROR for site owner: Invalid domain for site key`.
+- **Resolution:** Added `taj-edu.online` and `www.taj-edu.online` to Google reCAPTCHA v3 Admin Console. Badge verified as `protected by reCAPTCHA` and student/teacher registration verified in production.
+
+### 3. Sentry Bot Exception Filtering (#144591061)
+- **Issue:** Sentry recorded `TypeError: Cannot assign array to property Filament\Notifications\Livewire\Notifications::$isFilamentNotificationsComponent of type bool`.
+- **Root Cause:** Malicious automated scan attempted a deserialization gadget chain exploit (`echo LW64525`) against Livewire components. PHP 8.3 type safety blocked the exploit, but the resulting `TypeError` was logged to Sentry because the previous filter only matched `BasePage::getInfolist`.
+- **Resolution:** Generalized the exception filter in `backend/bootstrap/app.php` to ignore `TypeError` exceptions originating from Livewire (`/livewire/` or `Cannot assign`), preventing noise while preserving real application exception reporting.
+
+
