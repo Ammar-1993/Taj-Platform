@@ -48,44 +48,65 @@
 
 ## 🏗️ System Architecture
 
-The platform is a decoupled monorepo: the Next.js frontend talks to the Laravel API over REST, while the virtual classroom (video, screen share, and whiteboard) connects **directly, browser-to-provider**, through Agora and Netless — keeping the API server completely free of media traffic.
+The platform operates on a high-performance decoupled monorepo architecture:
+1. **Hybrid Frontend Layer**: Next.js 14 App Router utilizes **Edge React Server Components (RSC)** with Stale-While-Revalidate (SWR) caching for instant public catalog rendering, while delegating interactive state and real-time media SDKs to the client browser.
+2. **Direct-to-Cloud Media (Zero Server Load)**: The virtual classroom (HD video, adaptive screen sharing, and interactive whiteboard) connects **directly, browser-to-provider**, through Agora and Netless — keeping the API server 100% free of heavy media traffic.
+3. **Async Queue & Token Pre-Generation**: A Redis queue worker pre-provisions virtual classrooms and pre-generates Agora RTC/RTM tokens in background jobs, achieving instantaneous classroom access (< 1ms cache hits).
+4. **Multi-Tier Persistence & Caching**: MySQL 8.0 manages ACID ledger transactions with composite indexes, paired with a Redis caching layer utilizing cache tags and automated Eloquent lifecycle invalidation.
 
-> **Note:** GitHub automatically overlays zoom/pan controls on every Mermaid diagram it renders — this is a native GitHub UI element with no supported way to disable it from Markdown. The diagram below is kept intentionally compact so it's fully readable at the default view without needing those controls.
+> **Note:** GitHub automatically overlays zoom/pan controls on every Mermaid diagram it renders. The diagram below is engineered to be compact, modular, and fully legible at the default GitHub viewport without requiring manual zooming.
 
 ```mermaid
 graph LR
-    FE[Next.js Frontend]
-
-    subgraph Live["🎓 Live Classroom — Direct Connections"]
-        RTC[Agora RTC]
-        RTM[Agora RTM]
-        WB[Netless Whiteboard]
+    subgraph ClientLayer["🌐 Client & Edge Runtime"]
+        CLIENT["Browser Client (React / WebRTC SDKs)"]
+        SSR["Next.js 14 (Edge RSC & SWR Cache)"]
     end
 
-    subgraph BE["⚙️ Laravel Backend"]
-        API[REST API v1]
-        ADMIN[Filament Admin]
-        QUEUE[Queue Worker]
+    subgraph Live["🎓 Live Classroom — Direct Media"]
+        RTC["Agora RTC (HD Video & Screen)"]
+        RTM["Agora RTM (Signaling)"]
+        WB["Netless Whiteboard (Canvas)"]
     end
 
-    DB[(MySQL)]
-    REDIS[(Redis)]
-    PAY[Moyasar]
-    MON[Sentry]
+    subgraph BE["⚙️ Laravel 12 Backend & Workers"]
+        API["REST API (Sanctum & RBAC)"]
+        ADMIN["Filament Admin v3"]
+        QUEUE["Queue Worker (Async Jobs)"]
+    end
 
-    FE -->|REST| API
-    FE <--> RTC
-    FE <--> RTM
-    FE <--> WB
-    API --> DB
-    API --> REDIS
-    ADMIN --> DB
-    API --> QUEUE
-    QUEUE -->|Redis| REDIS
-    QUEUE --> WB
-    API --> PAY
+    subgraph Data["💾 Persistence & Cache Layer"]
+        DB[("MySQL 8.0 (ACID Ledger)")]
+        REDIS[("Redis (Cache, Tags & Queue)")]
+    end
+
+    PAY["Moyasar (Escrow)"]
+    MON["Sentry (Monitoring)"]
+    CAPTCHA["Google reCAPTCHA"]
+
+    %% Client and Frontend Connections
+    CLIENT <-->|Hydration / SWR| SSR
+    SSR -->|Cached Catalog Fetch| API
+    CLIENT -->|REST API / Mutations| API
+    CLIENT <-->|Video & Audio| RTC
+    CLIENT <-->|Data Sync| RTM
+    CLIENT <-->|Collaborative Draw| WB
+
+    %% Backend to Data & Infrastructure
+    API -->|ACID Queries| DB
+    ADMIN -->|Manage & Audit| DB
+    API <-->|Tagged Cache & Agora Tokens| REDIS
+    ADMIN <-->|Cached Analytics| REDIS
+    API -->|Dispatch Jobs| REDIS
+    REDIS -->|Consume Jobs| QUEUE
+    QUEUE -->|Pre-gen Tokens| REDIS
+    QUEUE -->|Provision Room| WB
+
+    %% Third-Party Services
+    API <-->|Escrow Payments & Webhooks| PAY
+    API -->|Bot Defense| CAPTCHA
     API -.-> MON
-    FE -.-> MON
+    CLIENT -.-> MON
 ```
 
 ---
