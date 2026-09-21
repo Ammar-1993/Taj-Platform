@@ -48,66 +48,95 @@
 
 ## 🏗️ System Architecture
 
-The platform operates on a high-performance decoupled monorepo architecture:
+The platform operates on a high-performance decoupled monorepo architecture engineered for sub-second page loads, real-time media isolation, and financial integrity:
+
 1. **Hybrid Frontend Layer**: Next.js 14 App Router utilizes **Edge React Server Components (RSC)** with Stale-While-Revalidate (SWR) caching for instant public catalog rendering, while delegating interactive state and real-time media SDKs to the client browser.
 2. **Direct-to-Cloud Media (Zero Server Load)**: The virtual classroom (HD video, adaptive screen sharing, and interactive whiteboard) connects **directly, browser-to-provider**, through Agora and Netless — keeping the API server 100% free of heavy media traffic.
 3. **Async Queue & Token Pre-Generation**: A Redis queue worker pre-provisions virtual classrooms and pre-generates Agora RTC/RTM tokens in background jobs, achieving instantaneous classroom access (< 1ms cache hits).
 4. **Multi-Tier Persistence & Caching**: MySQL 8.0 manages ACID ledger transactions with composite indexes, paired with a Redis caching layer utilizing cache tags and automated Eloquent lifecycle invalidation.
 
-> **Note:** GitHub automatically overlays zoom/pan controls on every Mermaid diagram it renders. The diagram below is engineered to be compact, modular, and fully legible at the default GitHub viewport without requiring manual zooming.
-
 ```mermaid
-graph LR
-    subgraph ClientLayer["🌐 Client & Edge Runtime"]
-        CLIENT["Browser Client (React / WebRTC SDKs)"]
-        SSR["Next.js 14 (Edge RSC & SWR Cache)"]
+flowchart TD
+    %% Custom Styling for High Contrast and Maximum Readability
+    classDef client fill:#EFF6FF,stroke:#2563EB,stroke-width:2.5px,color:#1E3A8A,font-size:15px,font-weight:bold;
+    classDef media fill:#F0FDF4,stroke:#16A34A,stroke-width:2.5px,color:#14532D,font-size:15px,font-weight:bold;
+    classDef backend fill:#FEF2F2,stroke:#DC2626,stroke-width:2.5px,color:#7F1D1D,font-size:15px,font-weight:bold;
+    classDef data fill:#FAF5FF,stroke:#9333EA,stroke-width:2.5px,color:#581C87,font-size:15px,font-weight:bold;
+    classDef cloud fill:#FFFBEB,stroke:#D97706,stroke-width:2.5px,color:#78350F,font-size:15px,font-weight:bold;
+
+    subgraph Tier1 ["1. Client & Presentation Layer (Next.js 14)"]
+        direction LR
+        USERS["👥 Platform Users (Students, Teachers, Parents)"]
+        FE["⚡ Next.js 14 App Router (RSC & Browser Client)"]
     end
 
-    subgraph Live["🎓 Live Classroom — Direct Media"]
-        RTC["Agora RTC (HD Video & Screen)"]
-        RTM["Agora RTM (Signaling)"]
-        WB["Netless Whiteboard (Canvas)"]
+    subgraph Tier2 ["2. Live Classroom — Direct Media (Zero Server Load)"]
+        direction LR
+        RTC["📹 Agora RTC (HD Video & Screen)"]
+        RTM["💬 Agora RTM (Signaling & Sync)"]
+        WB["🖊️ Netless Whiteboard (Canvas)"]
     end
 
-    subgraph BE["⚙️ Laravel 12 Backend & Workers"]
-        API["REST API (Sanctum & RBAC)"]
-        ADMIN["Filament Admin v3"]
-        QUEUE["Queue Worker (Async Jobs)"]
+    subgraph Tier3 ["3. Backend Application Core (Laravel 12)"]
+        direction LR
+        API["🔌 Laravel 12 REST API"]
+        ADMIN["👑 FilamentPHP v3 Admin"]
+        QUEUE["⚡ Redis Queue Worker"]
     end
 
-    subgraph Data["💾 Persistence & Cache Layer"]
-        DB[("MySQL 8.0 (ACID Ledger)")]
-        REDIS[("Redis (Cache, Tags & Queue)")]
+    subgraph Tier4 ["4. Persistence, Caching & Cloud Infrastructure"]
+        direction LR
+        DB[("🗄️ MySQL 8.0 (ACID Ledger)")]
+        REDIS[("⚡ Redis (Cache, Tags & Queue)")]
+        PAY["💳 Moyasar (Escrow)"]
+        MON["🛰️ Sentry (APM)"]
     end
 
-    PAY["Moyasar (Escrow)"]
-    MON["Sentry (Monitoring)"]
-    CAPTCHA["Google reCAPTCHA"]
+    %% User Interaction
+    USERS -->|Interact / Browse| FE
+    USERS -.->|Admin Portal| ADMIN
 
-    %% Client and Frontend Connections
-    CLIENT <-->|Hydration / SWR| SSR
-    SSR -->|Cached Catalog Fetch| API
-    CLIENT -->|REST API / Mutations| API
-    CLIENT <-->|Video & Audio| RTC
-    CLIENT <-->|Data Sync| RTM
-    CLIENT <-->|Collaborative Draw| WB
+    %% Direct Media Streams (Browser to Cloud)
+    FE <-->|Direct Video & Screen Feed| RTC
+    FE <-->|Direct RTM State Signals| RTM
+    FE <-->|Direct Drawing Sync| WB
 
-    %% Backend to Data & Infrastructure
-    API -->|ACID Queries| DB
-    ADMIN -->|Manage & Audit| DB
+    %% API Communication
+    FE -->|REST API & Edge SWR| API
+
+    %% Core Data & Caching Operations
+    API -->|ACID Transactions| DB
+    ADMIN -->|Audit & KYC Verification| DB
     API <-->|Tagged Cache & Agora Tokens| REDIS
-    ADMIN <-->|Cached Analytics| REDIS
+    ADMIN <-->|Cached Dashboard Stats| REDIS
     API -->|Dispatch Jobs| REDIS
-    REDIS -->|Consume Jobs| QUEUE
-    QUEUE -->|Pre-gen Tokens| REDIS
-    QUEUE -->|Provision Room| WB
+    REDIS -->|Process Provisioning Jobs| QUEUE
+    QUEUE -->|Pre-generate Tokens| REDIS
+    QUEUE -->|Provision Rooms| WB
 
-    %% Third-Party Services
-    API <-->|Escrow Payments & Webhooks| PAY
-    API -->|Bot Defense| CAPTCHA
-    API -.-> MON
-    CLIENT -.-> MON
+    %% Cloud Integrations
+    API <-->|Signed Webhooks & Payouts| PAY
+    API -.->|Error Tracing| MON
+    FE -.->|Exception & Session Replay| MON
+
+    %% Class Bindings
+    class USERS,FE client;
+    class RTC,RTM,WB media;
+    class API,ADMIN,QUEUE backend;
+    class DB,REDIS data;
+    class PAY,MON cloud;
 ```
+
+### 📋 Architecture & Data Flow Key
+
+| Layer / Stream | Primary Technology | Architectural Role & Purpose |
+| :--- | :--- | :--- |
+| **Client & Edge** | Next.js 14 App Router (Vercel) | Hybrid rendering: Edge React Server Components (RSC) with SWR for catalog pages, paired with client-side React Query state for authenticated user interactions. |
+| **Live Classroom** | Agora RTC + Agora RTM + Netless | **Direct browser-to-provider streaming**: High-definition video, adaptive low-bandwidth simulcast, and whiteboard sync connect directly to cloud CDNs, imposing zero media I/O on the backend server. |
+| **Application Core** | Laravel 12 + Sanctum + Spatie | Stateless REST API, role-based authorization (RBAC), and automated escrow calculations (80% teacher / 20% platform revenue split). |
+| **Background Queue** | Laravel Queue Worker + Redis | Asynchronous virtual classroom provisioning (`ProvisionVirtualClassroom`), pre-computing Agora RTC/RTM tokens and Netless room UUIDs ahead of session start. |
+| **Persistence & Cache**| MySQL 8.0 + Redis | Two-tier architecture: InnoDB ACID ledger with composite indexes for bookings and wallets, alongside Tagged Redis Caching for catalog, schedule, and dashboard data. |
+| **Cloud Services** | Moyasar + Sentry + reCAPTCHA | Seamless Saudi Mada/Visa escrow payments, full-stack APM tracing with source maps, and bot protection on registration forms. |
 
 ---
 
