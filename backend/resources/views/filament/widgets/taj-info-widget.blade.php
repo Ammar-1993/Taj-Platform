@@ -12,7 +12,7 @@
                         منصة تاج التعليمية
                     </h2>
                     <p class="text-sm text-gray-500 dark:text-gray-400">
-                        الإصدار 1.0.0
+                        الإصدار 2.0.0
                     </p>
                 </div>
             </div>

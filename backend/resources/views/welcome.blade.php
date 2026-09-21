@@ -80,7 +80,7 @@
         </div>
 
         <div class="mt-10 flex justify-between items-center text-xs font-bold text-gray-400 px-2">
-            <span class="bg-white/50 px-3 py-1.5 rounded-lg border border-gray-100 backdrop-blur-sm">الإصدار 1.0.0</span>
+            <span class="bg-white/50 px-3 py-1.5 rounded-lg border border-gray-100 backdrop-blur-sm">الإصدار 2.0.0</span>
             <span class="flex items-center gap-1.5 text-emerald-600 bg-emerald-50/80 px-3 py-1.5 rounded-lg border border-emerald-100 backdrop-blur-sm">
                 بنية تحتية مؤمنة
                 <i data-lucide="lock" class="w-3.5 h-3.5"></i>
