@@ -7,6 +7,7 @@ use App\Http\Requests\Booking\StoreBookingRequest;
 use App\Models\Booking;
 use App\Models\User;
 use App\Services\BookingService;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -61,12 +62,20 @@ class BookingController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $query = Booking::with(['teacher', 'student', 'teacherSlot', 'review']);
+        $query = Booking::with([
+            'teacher:id,name,email',
+            'student:id,name,email',
+            'teacherSlot:id,slot_date,start_time,end_time,status',
+            'review:id,booking_id,rating,comment',
+        ]);
 
         if ($user->hasRole('teacher')) {
             $query->where('teacher_id', $user->id);
         } else {
-            $query->where('student_id', $user->id)->orWhere('booked_by_id', $user->id);
+            $query->where(function ($q) use ($user) {
+                $q->where('student_id', $user->id)
+                    ->orWhere('booked_by_id', $user->id);
+            });
         }
 
         if ($request->has('status')) {
@@ -114,27 +123,27 @@ class BookingController extends Controller
     public function cancel(Request $request, $id): JsonResponse
     {
         /** @var User $user */
-        $user    = $request->user();
+        $user = $request->user();
         $booking = Booking::with('teacherSlot')->findOrFail($id);
 
-        $isTeacher       = (int) $user->id === (int) $booking->teacher_id;
-        $isStudent       = (int) $user->id === (int) $booking->student_id;
+        $isTeacher = (int) $user->id === (int) $booking->teacher_id;
+        $isStudent = (int) $user->id === (int) $booking->student_id;
         $isBookingParent = (int) $user->id === (int) $booking->booked_by_id && $user->hasRole('parent');
 
         // ── التحقق من الهوية: المعلم أو الطالب أو ولي الأمر الذي دفع ──
-        if (!$isTeacher && !$isStudent && !$isBookingParent) {
+        if (! $isTeacher && ! $isStudent && ! $isBookingParent) {
             return response()->json(['message' => 'غير مصرح لك بإلغاء هذه الحصة.'], 403);
         }
 
         // ── قيد الـ 24 ساعة: ينطبق فقط على الطلاب وأولياء الأمور ──
-        if (!$isTeacher) {
-            $slotDate  = optional($booking->teacherSlot)->slot_date;
+        if (! $isTeacher) {
+            $slotDate = optional($booking->teacherSlot)->slot_date;
             $startTime = optional($booking->teacherSlot)->start_time ?? '00:00:00';
 
             if ($slotDate) {
                 // دمج التاريخ والوقت للحصول على لحظة بدء الحصة الدقيقة
-                $sessionStart = \Carbon\Carbon::parse("{$slotDate} {$startTime}");
-                $hoursUntil   = now()->diffInHours($sessionStart, absolute: false);
+                $sessionStart = Carbon::parse("{$slotDate} {$startTime}");
+                $hoursUntil = now()->diffInHours($sessionStart, absolute: false);
 
                 if ($hoursUntil < 24) {
                     return response()->json([
@@ -148,7 +157,7 @@ class BookingController extends Controller
             $this->bookingService->cancelBooking($booking, $user);
 
             return response()->json([
-                'status'  => 'success',
+                'status' => 'success',
                 'message' => $isTeacher
                     ? 'تم إلغاء الحصة وإرجاع المبلغ لمحفظة الطالب بنجاح.'
                     : 'تم إلغاء حجزك وإرجاع المبلغ لمحفظتك بنجاح.',
@@ -158,4 +167,3 @@ class BookingController extends Controller
         }
     }
 }
-

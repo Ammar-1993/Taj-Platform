@@ -6,29 +6,28 @@ use App\Http\Controllers\Controller;
 use App\Jobs\ProvisionVirtualClassroom;
 use App\Models\Booking;
 use App\Models\User;
+use App\Services\AgoraService;
 use App\Services\WhiteboardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Peterujah\Agora\Agora;
-use Peterujah\Agora\Builders\RtcToken;
-use Peterujah\Agora\Builders\RtmToken;
-use Peterujah\Agora\Roles as AgoraRoles;
-use Peterujah\Agora\User as AgoraUser;
+use Sentry\Breadcrumb;
 
 class ClassroomController extends Controller
 {
     protected WhiteboardService $whiteboardService;
 
-    public function __construct(WhiteboardService $whiteboardService)
+    protected AgoraService $agoraService;
+
+    public function __construct(WhiteboardService $whiteboardService, AgoraService $agoraService)
     {
         $this->whiteboardService = $whiteboardService;
+        $this->agoraService = $agoraService;
     }
 
     /**
-     * @param Request $request
-     * @param int|string $bookingId
+     * @param  int|string  $bookingId
      */
     public function getAccessDetails(Request $request, $bookingId): JsonResponse
     {
@@ -55,65 +54,29 @@ class ClassroomController extends Controller
         // تحديد الدور: المعلم والطالب هم "host" (إرسال واستقبال)، المراقبين "audience" (استقبال فقط)
         $role = ($user->id === $booking->teacher_id || $user->id === $booking->student_id) ? 'host' : 'audience';
 
-        // 🟢 1. محاولة جلب التوكن من الكاش أولاً (Instant Access)
-        $token = Cache::get("agora_token_{$booking->id}_{$user->id}");
-        $rtmToken = Cache::get("agora_rtm_token_{$booking->id}_{$user->id}");
-        $screenToken = ($user->id === $booking->teacher_id) ? Cache::get("agora_token_{$booking->id}_screen") : null;
-
-        // 2. إذا لم يكن موجوداً، نقوم بتوليده فوراً
-        if (!$token || !$rtmToken) {
-            $context = \Sentry\Tracing\SpanContext::make()->setOp('agora')->setDescription('GenerateTokens');
-            \Sentry\trace(function () use (&$token, &$rtmToken, &$screenToken, $user, $booking, $role) {
-                $appId = config('services.agora.app_id');
-                $appCertificate = config('services.agora.app_certificate');
-
-                if ($appId && $appCertificate) {
-                    $client = new Agora($appId, $appCertificate);
-                    $client->setExpiration(now()->addHours(2)->timestamp);
-
-                    // التوكن الأساسي (RTC و RTM)
-                    $agoraUser = new AgoraUser($user->id);
-                    $agoraUser->setChannel($booking->agora_channel);
-                    $agoraUser->setRole($role === 'host' ? AgoraRoles::RTC_PUBLISHER : AgoraRoles::RTC_SUBSCRIBER);
-                    $agoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
-                    $token = RtcToken::buildTokenWithUid($client, $agoraUser);
-
-                    $rtmUser = new AgoraUser((string) $user->id);
-                    $rtmUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
-                    $rtmToken = RtmToken::buildToken($client, $rtmUser);
-
-                    // حفظه في الكاش للطلبات القادمة
-                    Cache::put("agora_token_{$booking->id}_{$user->id}", $token, now()->addHours(2));
-                    Cache::put("agora_rtm_token_{$booking->id}_{$user->id}", $rtmToken, now()->addHours(2));
-
-                    // توكن مشاركة الشاشة للمعلم
-                    if ($user->id === $booking->teacher_id) {
-                        $screenAgoraUser = new AgoraUser($user->id + 1000000000);
-                        $screenAgoraUser->setChannel($booking->agora_channel);
-                        $screenAgoraUser->setRole(AgoraRoles::RTC_PUBLISHER);
-                        $screenAgoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
-                        $screenToken = RtcToken::buildTokenWithUid($client, $screenAgoraUser);
-                        Cache::put("agora_token_{$booking->id}_screen", $screenToken, now()->addHours(2));
-                    }
-                }
-            }, $context);
-        }
+        // 🟢 1. جلب التوكنات بشكل ذري ومخزن مؤقتاً عبر AgoraService
+        $agoraRole = ($role === 'host') ? 'publisher' : 'subscriber';
+        $token = $this->agoraService->getRtcToken($booking->agora_channel, $user->id, $agoraRole, $booking->id);
+        $rtmToken = $this->agoraService->getRtmToken($user->id, $booking->id);
+        $screenToken = ($user->id === $booking->teacher_id)
+            ? $this->agoraService->getScreenToken($booking->agora_channel, $user->id, $booking->id)
+            : null;
 
         // 🟢 تجهيز بيانات السبورة التفاعلية
         $whiteboardRoomUuid = $booking->whiteboard_room_uuid;
         $whiteboardToken = null;
 
         // 🚀 Optimization: Try to provision synchronously if missing to avoid "Pending" state on first load
-        if (!$whiteboardRoomUuid) {
+        if (! $whiteboardRoomUuid) {
             try {
-                $roomName = "حصة: " . ($booking->student->name ?? 'طالب') . " مع " . ($booking->teacher->name ?? 'معلم');
+                $roomName = 'حصة: '.($booking->student->name ?? 'طالب').' مع '.($booking->teacher->name ?? 'معلم');
                 $whiteboardRoomUuid = $this->whiteboardService->createRoom($roomName);
                 $booking->update(['whiteboard_room_uuid' => $whiteboardRoomUuid]);
-                
+
                 // Dispatch job anyway to handle token pre-generation in background
                 ProvisionVirtualClassroom::dispatch($booking);
             } catch (\Exception $e) {
-                Log::warning("Sync whiteboard provisioning failed, falling back to async: " . $e->getMessage());
+                Log::warning('Sync whiteboard provisioning failed, falling back to async: '.$e->getMessage());
                 ProvisionVirtualClassroom::dispatch($booking);
             }
         }
@@ -122,11 +85,11 @@ class ClassroomController extends Controller
         if ($whiteboardRoomUuid) {
             $tokenRole = ($user->id === $booking->teacher_id) ? 'admin' : 'reader';
             $cacheKey = "whiteboard_token_{$whiteboardRoomUuid}_{$tokenRole}";
-            
+
             // ── 5.1: Non-blocking token read ────────────────────────────────────
             // Only read from cache. If it's cold, dispatch the job to fetch it
             // via the Netless API asynchronously so we don't block this response.
-            $whiteboardToken = \Illuminate\Support\Facades\Cache::get($cacheKey);
+            $whiteboardToken = Cache::get($cacheKey);
 
             if ($whiteboardToken) {
                 $whiteboardPayload = [
@@ -154,8 +117,7 @@ class ClassroomController extends Controller
     }
 
     /**
-     * @param Request $request
-     * @param int|string $bookingId
+     * @param  int|string  $bookingId
      */
     public function refreshToken(Request $request, $bookingId): JsonResponse
     {
@@ -168,52 +130,17 @@ class ClassroomController extends Controller
             return response()->json(['message' => 'غير مصرح لك بتجديد التوكن'], 403);
         }
 
-        $role = ($user->id === $booking->teacher_id || $user->id === $booking->student_id) ? 'host' : 'audience';
+        try {
+            $isTeacher = ($user->id === $booking->teacher_id);
+            $tokens = $this->agoraService->refreshTokens($booking->agora_channel, $user->id, $isTeacher, $booking->id);
 
-        $appId = config('services.agora.app_id');
-        $appCertificate = config('services.agora.app_certificate');
-
-        if (!$appId || !$appCertificate) {
-            return response()->json(['message' => 'Agora configuration missing'], 500);
+            return response()->json([
+                'status' => 'success',
+                'data' => $tokens,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
         }
-
-        $client = new Agora($appId, $appCertificate);
-        $client->setExpiration(now()->addHours(2)->timestamp);
-
-        // 1. Primary Token & RTM Token
-        $agoraUser = new AgoraUser($user->id);
-        $agoraUser->setChannel($booking->agora_channel);
-        $agoraUser->setRole($role === 'host' ? AgoraRoles::RTC_PUBLISHER : AgoraRoles::RTC_SUBSCRIBER);
-        $agoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
-        $token = RtcToken::buildTokenWithUid($client, $agoraUser);
-
-        $rtmUser = new AgoraUser((string) $user->id);
-        $rtmUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
-        $rtmToken = RtmToken::buildToken($client, $rtmUser);
-
-        // Update Cache
-        Cache::put("agora_token_{$booking->id}_{$user->id}", $token, now()->addHours(2));
-        Cache::put("agora_rtm_token_{$booking->id}_{$user->id}", $rtmToken, now()->addHours(2));
-
-        // 2. Screen Token (Only for Teacher)
-        $screenToken = null;
-        if ($user->id === $booking->teacher_id) {
-            $screenAgoraUser = new AgoraUser($user->id + 1000000000);
-            $screenAgoraUser->setChannel($booking->agora_channel);
-            $screenAgoraUser->setRole(AgoraRoles::RTC_PUBLISHER);
-            $screenAgoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
-            $screenToken = RtcToken::buildTokenWithUid($client, $screenAgoraUser);
-            Cache::put("agora_token_{$booking->id}_screen", $screenToken, now()->addHours(2));
-        }
-
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'token' => $token,
-                'rtm_token' => $rtmToken,
-                'screen_token' => $screenToken
-            ]
-        ]);
     }
 
     /**
@@ -223,18 +150,17 @@ class ClassroomController extends Controller
      * onPhaseChanged → Disconnected (token expired mid-session).
      * Bypasses the cache and mints a brand-new token from the Netless API.
      *
-     * @param Request $request
-     * @param int|string $bookingId
+     * @param  int|string  $bookingId
      */
     public function refreshWhiteboardToken(Request $request, $bookingId): JsonResponse
     {
         /** @var User $user */
-        $user    = $request->user();
+        $user = $request->user();
         $booking = Booking::findOrFail($bookingId);
 
         if (
-            $booking->student_id   !== $user->id &&
-            $booking->teacher_id   !== $user->id &&
+            $booking->student_id !== $user->id &&
+            $booking->teacher_id !== $user->id &&
             $booking->booked_by_id !== $user->id
         ) {
             return response()->json(['message' => 'غير مصرح لك'], 403);
@@ -242,12 +168,12 @@ class ClassroomController extends Controller
 
         $whiteboardRoomUuid = $booking->whiteboard_room_uuid;
 
-        if (!$whiteboardRoomUuid) {
+        if (! $whiteboardRoomUuid) {
             return response()->json(['message' => 'غرفة السبورة غير موجودة بعد.'], 404);
         }
 
         try {
-            $tokenRole  = ($user->id === $booking->teacher_id) ? 'admin' : 'reader';
+            $tokenRole = ($user->id === $booking->teacher_id) ? 'admin' : 'reader';
             $durationMs = isset($booking->duration_minutes)
                 ? ($booking->duration_minutes + 30) * 60 * 1000
                 : 3600000;
@@ -255,23 +181,23 @@ class ClassroomController extends Controller
             // Force-mint a fresh token, overwriting the cache
             $freshToken = $this->whiteboardService->refreshRoomToken($whiteboardRoomUuid, $tokenRole, $durationMs);
 
-            \Sentry\addBreadcrumb(new \Sentry\Breadcrumb(
-                \Sentry\Breadcrumb::LEVEL_INFO,
-                \Sentry\Breadcrumb::TYPE_DEFAULT,
+            \Sentry\addBreadcrumb(new Breadcrumb(
+                Breadcrumb::LEVEL_INFO,
+                Breadcrumb::TYPE_DEFAULT,
                 'whiteboard',
                 'whiteboard_token_refreshed',
                 ['booking_id' => $bookingId, 'user_id' => $user->id, 'role' => $tokenRole]
             ));
 
             return response()->json([
-                'status'     => 'success',
+                'status' => 'success',
                 'room_token' => $freshToken,
             ]);
         } catch (\Exception $e) {
-            Log::error("refreshWhiteboardToken failed for booking #{$bookingId}: " . $e->getMessage());
+            Log::error("refreshWhiteboardToken failed for booking #{$bookingId}: ".$e->getMessage());
 
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'فشل تجديد توكن السبورة، يُرجى إعادة تحميل الصفحة.',
             ], 500);
         }
@@ -289,19 +215,18 @@ class ClassroomController extends Controller
      * Safe to call every 2–3 seconds from the frontend without causing
      * DB writes or external API calls on repeated invocations.
      *
-     * @param Request $request
-     * @param int|string $bookingId
+     * @param  int|string  $bookingId
      */
     public function getWhiteboardStatus(Request $request, $bookingId): JsonResponse
     {
         /** @var User $user */
-        $user    = $request->user();
+        $user = $request->user();
         $booking = Booking::findOrFail($bookingId);
 
         // Security: same access control as the main endpoint
         if (
-            $booking->student_id  !== $user->id &&
-            $booking->teacher_id  !== $user->id &&
+            $booking->student_id !== $user->id &&
+            $booking->teacher_id !== $user->id &&
             $booking->booked_by_id !== $user->id
         ) {
             return response()->json(['message' => 'غير مصرح لك'], 403);
@@ -310,7 +235,7 @@ class ClassroomController extends Controller
         $whiteboardRoomUuid = $booking->whiteboard_room_uuid;
 
         // Room not provisioned yet — tell the frontend to keep polling
-        if (!$whiteboardRoomUuid) {
+        if (! $whiteboardRoomUuid) {
             return response()->json([
                 'status' => 'pending',
                 'whiteboard' => null,
@@ -319,8 +244,8 @@ class ClassroomController extends Controller
 
         // Room exists — generate (or retrieve from cache) the room token
         try {
-            $tokenRole   = ($user->id === $booking->teacher_id) ? 'admin' : 'reader';
-            $durationMs  = isset($booking->duration_minutes)
+            $tokenRole = ($user->id === $booking->teacher_id) ? 'admin' : 'reader';
+            $durationMs = isset($booking->duration_minutes)
                 ? ($booking->duration_minutes + 30) * 60 * 1000
                 : 3600000;
 
@@ -329,15 +254,15 @@ class ClassroomController extends Controller
             return response()->json([
                 'status' => 'ready',
                 'whiteboard' => [
-                    'room_uuid'  => $whiteboardRoomUuid,
+                    'room_uuid' => $whiteboardRoomUuid,
                     'room_token' => $whiteboardToken,
                 ],
             ]);
         } catch (\Exception $e) {
-            Log::error("getWhiteboardStatus: Failed to generate token for booking #{$bookingId}: " . $e->getMessage());
+            Log::error("getWhiteboardStatus: Failed to generate token for booking #{$bookingId}: ".$e->getMessage());
 
             return response()->json([
-                'status'     => 'error',
+                'status' => 'error',
                 'whiteboard' => null,
             ], 500);
         }
@@ -349,7 +274,7 @@ class ClassroomController extends Controller
      */
     public function heartbeat(Request $request, $bookingId): JsonResponse
     {
-        $user    = $request->user();
+        $user = $request->user();
         $booking = Booking::findOrFail($bookingId);
 
         if (

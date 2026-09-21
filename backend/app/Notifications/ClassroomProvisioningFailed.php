@@ -20,8 +20,8 @@ class ClassroomProvisioningFailed extends Notification
     use Queueable;
 
     public function __construct(
-        public readonly Booking   $booking,
-        public readonly string    $errorMessage,
+        public readonly Booking $booking,
+        public readonly string $errorMessage,
     ) {}
 
     /**
@@ -44,13 +44,13 @@ class ClassroomProvisioningFailed extends Notification
             ->greeting('تنبيه عاجل لفريق الإدارة')
             ->line("**فشل تجهيز الفصل الافتراضي للحجز رقم #{$booking->id}** بعد استنفاد جميع محاولات الإعادة.")
             ->line('**تفاصيل الحجز:**')
-            ->line("- **الطالب:** " . ($booking->student->name ?? 'غير معروف'))
-            ->line("- **المعلم:** " . ($booking->teacher->name ?? 'غير معروف'))
-            ->line("- **تاريخ الحصة:** " . optional($booking->teacherSlot)->slot_date)
+            ->line('- **الطالب:** '.($booking->student->name ?? 'غير معروف'))
+            ->line('- **المعلم:** '.($booking->teacher->name ?? 'غير معروف'))
+            ->line('- **تاريخ الحصة:** '.optional($booking->teacherSlot)->slot_date)
             ->line('')
             ->line('**رسالة الخطأ:**')
             ->line("`{$this->errorMessage}`")
-            ->action('فتح لوحة التحكم', url('/admin/bookings/' . $booking->id))
+            ->action('فتح لوحة التحكم', url('/admin/bookings/'.$booking->id))
             ->line('يرجى التحقق من إعدادات السبورة البيضاء وAPI Netless والتواصل مع الطالب.')
             ->salutation('نظام منصة تاج التعليمية');
     }
@@ -61,10 +61,10 @@ class ClassroomProvisioningFailed extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'booking_id'    => $this->booking->id,
+            'booking_id' => $this->booking->id,
             'error_message' => $this->errorMessage,
-            'student_name'  => $this->booking->student->name ?? null,
-            'teacher_name'  => $this->booking->teacher->name ?? null,
+            'student_name' => $this->booking->student->name ?? null,
+            'teacher_name' => $this->booking->teacher->name ?? null,
         ];
     }
 }

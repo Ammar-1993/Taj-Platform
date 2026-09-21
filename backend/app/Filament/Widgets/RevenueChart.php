@@ -36,10 +36,10 @@ class RevenueChart extends ChartWidget
 
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i);
-            $day  = $date->toDateString();
+            $day = $date->toDateString();
 
             $labels[] = $date->translatedFormat('D, d M');
-            $data[]   = (float) ($dailySums[$day] ?? 0);
+            $data[] = (float) ($dailySums[$day] ?? 0);
         }
 
         return [

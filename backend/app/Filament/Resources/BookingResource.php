@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
- // 🟢 استدعاء كلاس الأكشن
+// 🟢 استدعاء كلاس الأكشن
 
 class BookingResource extends Resource
 {

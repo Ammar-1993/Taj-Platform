@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Jobs\ProvisionVirtualClassroom;
 use App\Models\Booking;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -50,8 +49,8 @@ class ClassroomAccessTest extends TestCase
         $student->assignRole('student');
 
         $booking = Booking::factory()->create([
-            'teacher_id'   => $teacher->id,
-            'student_id'   => $student->id,
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
             'booked_by_id' => $student->id,
         ]);
 
@@ -90,10 +89,10 @@ class ClassroomAccessTest extends TestCase
         $student->assignRole('student');
 
         $booking = Booking::factory()->create([
-            'teacher_id'        => $teacher->id,
-            'student_id'        => $student->id,
-            'booked_by_id'      => $student->id,
-            'agora_channel'     => 'test_channel_123',
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'booked_by_id' => $student->id,
+            'agora_channel' => 'test_channel_123',
             'student_joined_at' => null,
         ]);
 
@@ -129,9 +128,9 @@ class ClassroomAccessTest extends TestCase
 
         $firstJoin = now()->subMinutes(5);
         $booking = Booking::factory()->create([
-            'teacher_id'        => $teacher->id,
-            'student_id'        => $student->id,
-            'booked_by_id'      => $student->id,
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'booked_by_id' => $student->id,
             'student_joined_at' => $firstJoin,  // طابع زمني موجود مسبقًا
         ]);
 
@@ -162,9 +161,9 @@ class ClassroomAccessTest extends TestCase
         $student->assignRole('student');
 
         $booking = Booking::factory()->create([
-            'teacher_id'       => $teacher->id,
-            'student_id'       => $student->id,
-            'booked_by_id'     => $student->id,
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'booked_by_id' => $student->id,
         ]);
 
         Cache::put("agora_token_{$booking->id}_{$teacher->id}", 'teacher_token', now()->addHours(2));
@@ -193,9 +192,9 @@ class ClassroomAccessTest extends TestCase
         $student->assignRole('student');
 
         $booking = Booking::factory()->create([
-            'teacher_id'          => $teacher->id,
-            'student_id'          => $student->id,
-            'booked_by_id'        => $student->id,
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'booked_by_id' => $student->id,
             'whiteboard_room_uuid' => null,     // لم تُهيَّأ بعد
         ]);
 
@@ -213,7 +212,7 @@ class ClassroomAccessTest extends TestCase
     public function test_whiteboard_status_is_protected_from_unauthorized_users(): void
     {
         $stranger = User::factory()->create();
-        $booking  = Booking::factory()->create();
+        $booking = Booking::factory()->create();
 
         $response = $this->actingAs($stranger)->getJson("/api/v1/bookings/{$booking->id}/classroom/whiteboard-status");
 
@@ -234,13 +233,13 @@ class ClassroomAccessTest extends TestCase
         $student->assignRole('student');
 
         $booking = Booking::factory()->create([
-            'teacher_id'   => $teacher->id,
-            'student_id'   => $student->id,
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
             'booked_by_id' => $student->id,
         ]);
 
         // استخدام UUID صالح بتنسيق مقبول من مكتبة Agora SDK
-        config(['services.agora.app_id'          => '12345678901234567890123456789012']);
+        config(['services.agora.app_id' => '12345678901234567890123456789012']);
         config(['services.agora.app_certificate' => '12345678901234567890123456789012']);
 
         $response = $this->actingAs($student)->getJson("/api/v1/bookings/{$booking->id}/refresh-token");
@@ -257,7 +256,7 @@ class ClassroomAccessTest extends TestCase
     public function test_refresh_token_is_rejected_for_unauthorized_user(): void
     {
         $stranger = User::factory()->create();
-        $booking  = Booking::factory()->create();
+        $booking = Booking::factory()->create();
 
         $response = $this->actingAs($stranger)->getJson("/api/v1/bookings/{$booking->id}/refresh-token");
 

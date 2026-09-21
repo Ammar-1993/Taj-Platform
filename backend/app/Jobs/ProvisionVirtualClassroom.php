@@ -4,62 +4,59 @@ namespace App\Jobs;
 
 use App\Models\Booking;
 use App\Notifications\ClassroomProvisioningFailed;
+use App\Services\AgoraService;
 use App\Services\WhiteboardService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
-
-use Peterujah\Agora\Agora;
-use Peterujah\Agora\Builders\RtcToken;
-use Peterujah\Agora\Roles as AgoraRoles;
-use Peterujah\Agora\User as AgoraUser;
+use Sentry\Breadcrumb;
+use Sentry\Tracing\SpanContext;
 
 class ProvisionVirtualClassroom implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 5;
+
     public int $timeout = 30;
+
     public array $backoff = [10, 30, 60, 120, 300];
 
     /**
      * Create a new job instance.
      */
-    public function __construct(public Booking $booking)
-    {
-    }
+    public function __construct(public Booking $booking) {}
 
     /**
      * Execute the job.
      */
     public function handle(WhiteboardService $whiteboardService): void
     {
-        $context = \Sentry\Tracing\SpanContext::make()->setOp('job')->setDescription('ProvisionVirtualClassroom');
+        $context = SpanContext::make()->setOp('job')->setDescription('ProvisionVirtualClassroom');
         \Sentry\trace(function () use ($whiteboardService) {
             // 🛡️ 1. Use a cache lock to prevent multiple joins from creating multiple rooms
             $lock = Cache::lock("provision_classroom_{$this->booking->id}", 60);
 
-            if (!$lock->get()) {
+            if (! $lock->get()) {
                 return;
             }
 
             try {
                 // 2. Provision Whiteboard if missing
-                if (!$this->booking->whiteboard_room_uuid) {
-                    $roomName = "حصة: " . ($this->booking->student->name ?? 'طالب') . " مع " . ($this->booking->teacher->name ?? 'معلم');
+                if (! $this->booking->whiteboard_room_uuid) {
+                    $roomName = 'حصة: '.($this->booking->student->name ?? 'طالب').' مع '.($this->booking->teacher->name ?? 'معلم');
                     $uuid = $whiteboardService->createRoom($roomName);
-                    
+
                     $this->booking->update(['whiteboard_room_uuid' => $uuid]);
                     Log::info("Whiteboard room created for booking #{$this->booking->id}");
-                    \Sentry\addBreadcrumb(new \Sentry\Breadcrumb(
-                        \Sentry\Breadcrumb::LEVEL_INFO,
-                        \Sentry\Breadcrumb::TYPE_DEFAULT,
+                    \Sentry\addBreadcrumb(new Breadcrumb(
+                        Breadcrumb::LEVEL_INFO,
+                        Breadcrumb::TYPE_DEFAULT,
                         'whiteboard',
                         'whiteboard_room_provisioned',
                         ['booking_id' => $this->booking->id, 'room_uuid' => $uuid]
@@ -71,7 +68,7 @@ class ProvisionVirtualClassroom implements ShouldQueue
 
                 Log::info("Virtual classroom fully provisioned for booking #{$this->booking->id}");
             } catch (\Exception $e) {
-                Log::error("Provisioning failed for booking #{$this->booking->id}: " . $e->getMessage());
+                Log::error("Provisioning failed for booking #{$this->booking->id}: ".$e->getMessage());
                 throw $e;
             } finally {
                 $lock->release();
@@ -84,30 +81,19 @@ class ProvisionVirtualClassroom implements ShouldQueue
      */
     private function preGenerateTokens(Booking $booking): void
     {
-        $appId = config('services.agora.app_id');
-        $appCertificate = config('services.agora.app_certificate');
+        try {
+            $agoraService = app(AgoraService::class);
 
-        if (!$appId || !$appCertificate) return;
+            // Pre-generate RTC & RTM for Teacher and Student
+            foreach ([$booking->teacher_id, $booking->student_id] as $uid) {
+                $agoraService->getRtcToken($booking->agora_channel, $uid, 'publisher', $booking->id);
+                $agoraService->getRtmToken($uid, $booking->id);
+            }
 
-        $client = new Agora($appId, $appCertificate);
-        $client->setExpiration(now()->addHours(2)->timestamp);
-
-        // Generate for Teacher and Student
-        $participants = [
-            ['id' => $booking->teacher_id, 'role' => 'host'],
-            ['id' => $booking->student_id, 'role' => 'host'],
-        ];
-
-        foreach ($participants as $p) {
-            $agoraUser = new AgoraUser($p['id']);
-            $agoraUser->setChannel($booking->agora_channel);
-            $agoraUser->setRole(AgoraRoles::RTC_PUBLISHER);
-            $agoraUser->setPrivilegeExpire(now()->addHours(2)->timestamp);
-            
-            $token = RtcToken::buildTokenWithUid($client, $agoraUser);
-            
-            // Cache the Agora Token for 2 hours
-            Cache::put("agora_token_{$booking->id}_{$p['id']}", $token, now()->addHours(2));
+            // Pre-generate screen-sharing token for Teacher
+            $agoraService->getScreenToken($booking->agora_channel, $booking->teacher_id, $booking->id);
+        } catch (\Exception $e) {
+            Log::warning("Failed to pre-generate Agora tokens for booking #{$booking->id}: ".$e->getMessage());
         }
 
         // Pre-generate Whiteboard tokens (admin for teacher, reader for student)
@@ -117,7 +103,7 @@ class ProvisionVirtualClassroom implements ShouldQueue
                 $whiteboardService->getRoomToken($booking->whiteboard_room_uuid, 'admin');
                 $whiteboardService->getRoomToken($booking->whiteboard_room_uuid, 'reader');
             } catch (\Exception $e) {
-                Log::warning("Failed to pre-generate Whiteboard tokens for booking #{$booking->id}: " . $e->getMessage());
+                Log::warning("Failed to pre-generate Whiteboard tokens for booking #{$booking->id}: ".$e->getMessage());
             }
         }
     }
@@ -132,7 +118,7 @@ class ProvisionVirtualClassroom implements ShouldQueue
     {
         Log::emergency(
             "Virtual Classroom Provisioning FAILED permanently for booking #{$this->booking->id}. Error: "
-            . $exception->getMessage()
+            .$exception->getMessage()
         );
 
         // إرسال تنبيه بريد إلكتروني للمشرفين
@@ -141,12 +127,11 @@ class ProvisionVirtualClassroom implements ShouldQueue
         if ($adminEmail) {
             Notification::route('mail', $adminEmail)
                 ->notify(new ClassroomProvisioningFailed(
-                    booking:      $this->booking,
+                    booking: $this->booking,
                     errorMessage: $exception->getMessage(),
                 ));
         } else {
-            Log::critical('ADMIN_ALERT_EMAIL not configured — skipping admin notification for booking #' . $this->booking->id);
+            Log::critical('ADMIN_ALERT_EMAIL not configured — skipping admin notification for booking #'.$this->booking->id);
         }
     }
 }
-

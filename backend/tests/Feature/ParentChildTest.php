@@ -175,4 +175,45 @@ class ParentChildTest extends TestCase
         $this->assertEquals('dark', $this->parent->refresh()->metadata['theme']);
         $this->assertTrue($this->parent->metadata['notifications']);
     }
+
+    public function test_parent_dashboard_is_cached_and_invalidated_on_new_booking()
+    {
+        $child = User::factory()->create(['parent_id' => $this->parent->id]);
+        $child->assignRole('student');
+
+        // Initial call: total_spent is 0
+        $res1 = $this->actingAs($this->parent)->getJson('/api/v1/parent/dashboard');
+        $res1->assertStatus(200)->assertJsonPath('data.total_spent', 0);
+
+        // Teacher and slot setup
+        $teacher = User::factory()->create();
+        $teacher->assignRole('teacher');
+
+        $slot = TeacherSlot::create([
+            'teacher_id' => $teacher->id,
+            'slot_date' => now()->addDays(2)->toDateString(),
+            'start_time' => '10:00:00',
+            'end_time' => '11:00:00',
+            'status' => 'booked',
+        ]);
+
+        // Create booking - triggers Booking::booted() cache invalidation
+        Booking::create([
+            'student_id' => $child->id,
+            'teacher_id' => $teacher->id,
+            'booked_by_id' => $this->parent->id,
+            'teacher_slot_id' => $slot->id,
+            'booking_date' => now()->addDays(2)->toDateString(),
+            'session_price' => 150,
+            'net_paid' => 150,
+            'agora_channel' => 'test-cache-inv-channel',
+            'status' => 'scheduled',
+        ]);
+
+        // Second call: must reflect the newly added booking (total_spent = 150)
+        $res2 = $this->actingAs($this->parent)->getJson('/api/v1/parent/dashboard');
+        $res2->assertStatus(200)
+            ->assertJsonPath('data.total_spent', 150)
+            ->assertJsonCount(1, 'data.bookings.data');
+    }
 }

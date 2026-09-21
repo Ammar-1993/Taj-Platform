@@ -11,6 +11,7 @@ use App\Models\Wallet;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -59,6 +60,8 @@ class ParentController extends Controller
 
             DB::commit();
 
+            self::clearParentDashboardCache($user->id);
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'تم إضافة حساب الابن بنجاح',
@@ -86,6 +89,8 @@ class ParentController extends Controller
             'grade_level_id' => $request->grade_level_id,
         ]);
 
+        self::clearParentDashboardCache($user->id);
+
         return response()->json([
             'status' => 'success',
             'message' => 'تم تحديث بيانات الابن بنجاح',
@@ -110,6 +115,8 @@ class ParentController extends Controller
             ]);
         }
 
+        self::clearParentDashboardCache($user->id);
+
         return response()->json([
             'status' => 'success',
             'message' => 'تم تحديث صلاحية الحجز للابن بنجاح',
@@ -122,39 +129,66 @@ class ParentController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
+        $page = (int) $request->get('page', 1);
 
-        // 1. جلب معرّفات (IDs) جميع أبناء هذا الولي
-        $childrenIds = User::where('parent_id', $user->id)->pluck('id');
+        $cacheKey = "parent_dashboard:{$user->id}:page:{$page}";
+        $tags = ['parent_dashboard', "parent_{$user->id}"];
 
-        // 2. حساب إجمالي الإنفاق (مجموع المبالغ المدفوعة للحجوزات المكتملة والمجدولة)
-        $totalSpent = Booking::whereIn('student_id', $childrenIds)
-            ->whereIn('status', ['completed', 'scheduled', 'in_progress'])
-            ->sum('net_paid');
+        $fetchData = function () use ($user) {
+            // 1. جلب معرّفات (IDs) جميع أبناء هذا الولي
+            $childrenIds = User::where('parent_id', $user->id)->pluck('id');
 
-        // 3. جلب حجوزات الأبناء (مع بيانات الابن والمعلم) مع التصفح
-        $bookings = Booking::whereIn('student_id', $childrenIds)
-            ->with(['student:id,name', 'teacher:id,name', 'teacherSlot', 'review'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            // 2. حساب إجمالي الإنفاق (مجموع المبالغ المدفوعة للحجوزات المكتملة والمجدولة)
+            $totalSpent = Booking::whereIn('student_id', $childrenIds)
+                ->whereIn('status', ['completed', 'scheduled', 'in_progress'])
+                ->sum('net_paid');
 
-        // 4. جلب محافظ الأبناء مع آخر العمليات المالية (الفواتير)
-        $wallets = Wallet::whereIn('user_id', $childrenIds)
-            ->with(['transactions' => function ($query) {
-                $query->orderBy('created_at', 'desc')->limit(10); // آخر 10 عمليات
-            }, 'user:id,name'])
-            ->get();
+            // 3. جلب حجوزات الأبناء (مع بيانات الابن والمعلم) مع التصفح
+            $bookings = Booking::whereIn('student_id', $childrenIds)
+                ->with([
+                    'student:id,name,email',
+                    'teacher:id,name,email',
+                    'teacherSlot:id,slot_date,start_time,end_time,status',
+                    'review:id,booking_id,rating,comment',
+                ])
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
 
-        // التأكد من وجود محفظة للأب وجلب رصيدها
+            // 4. جلب محافظ الأبناء مع آخر العمليات المالية (الفواتير)
+            $wallets = Wallet::whereIn('user_id', $childrenIds)
+                ->with(['transactions' => function ($query) {
+                    $query->orderBy('created_at', 'desc')->limit(10); // آخر 10 عمليات
+                }, 'user:id,name'])
+                ->get();
+
+            return [
+                'total_spent' => $totalSpent,
+                'bookings' => $bookings,
+                'wallets' => $wallets,
+            ];
+        };
+
+        $cachedData = Cache::supportsTags()
+            ? Cache::tags($tags)->remember($cacheKey, now()->addMinutes(10), $fetchData)
+            : Cache::remember($cacheKey, now()->addMinutes(10), $fetchData);
+
+        // التأكد من وجود محفظة للأب وجلب رصيدها الحي دون تخزين مؤقت لتفادي أي تضارب مالي
         $parentWallet = $user->wallet()->firstOrCreate(['user_id' => $user->id], ['balance' => 0.00]);
 
         return response()->json([
             'status' => 'success',
-            'data' => [
-                'parent_balance' => $parentWallet->balance, // 👈 السطر الجديد (رصيد الأب)
-                'total_spent' => $totalSpent,
-                'bookings' => $bookings,
-                'wallets' => $wallets,
-            ],
+            'data' => array_merge($cachedData, [
+                'parent_balance' => $parentWallet->balance,
+            ]),
         ]);
+    }
+
+    public static function clearParentDashboardCache(int $parentId): void
+    {
+        if (Cache::supportsTags()) {
+            Cache::tags(["parent_{$parentId}", 'parent_dashboard'])->flush();
+        } else {
+            Cache::forget("parent_dashboard:{$parentId}:page:1");
+        }
     }
 }

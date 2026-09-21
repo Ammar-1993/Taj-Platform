@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
 
 class TeacherProfile extends Model
 {
@@ -20,6 +21,19 @@ class TeacherProfile extends Model
             'reviews_count' => 'integer',
             'metadata' => 'array',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(fn () => self::clearDiscoveryCache());
+        static::deleted(fn () => self::clearDiscoveryCache());
+    }
+
+    public static function clearDiscoveryCache(): void
+    {
+        if (Cache::supportsTags()) {
+            Cache::tags(['teachers', 'discovery'])->flush();
+        }
     }
 
     public function user(): BelongsTo

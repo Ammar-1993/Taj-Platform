@@ -117,4 +117,81 @@ class DiscoveryTest extends TestCase
         $guestResponse->assertStatus(200)
             ->assertJsonCount(2, 'data.data');
     }
+
+    public function test_subjects_are_cached_and_invalidated_when_subject_changes(): void
+    {
+        $response1 = $this->getJson('/api/v1/discovery/subjects');
+        $response1->assertStatus(200)->assertJsonCount(1, 'data');
+
+        // Creating a new subject should trigger model booted event and invalidate cache
+        $grade = GradeLevel::first();
+        Subject::create([
+            'grade_level_id' => $grade->id,
+            'name' => 'Arabic Literature',
+            'is_active' => true,
+        ]);
+
+        $response2 = $this->getJson('/api/v1/discovery/subjects');
+        $response2->assertStatus(200)->assertJsonCount(2, 'data');
+    }
+
+    public function test_grade_levels_are_cached_and_invalidated_when_grade_level_changes(): void
+    {
+        $response1 = $this->getJson('/api/v1/discovery/grade-levels');
+        $response1->assertStatus(200)->assertJsonCount(1, 'data');
+
+        // Creating a new grade level invalidates catalog cache
+        GradeLevel::create([
+            'name' => 'Middle School 1',
+            'session_price' => 75,
+            'is_active' => true,
+        ]);
+
+        $response2 = $this->getJson('/api/v1/discovery/grade-levels');
+        $response2->assertStatus(200)->assertJsonCount(2, 'data');
+    }
+
+    public function test_teacher_slots_are_cached_and_invalidated_when_slot_created_or_deleted(): void
+    {
+        $teacher = User::role('teacher')->first();
+
+        $res1 = $this->getJson("/api/v1/discovery/teachers/{$teacher->id}/slots");
+        $res1->assertStatus(200);
+        $this->assertCount(1, array_values($res1->json('data'))[0]);
+
+        // Add a new slot
+        $tomorrow = now()->addDay()->toDateString();
+        $newSlot = TeacherSlot::create([
+            'teacher_id' => $teacher->id,
+            'slot_date' => $tomorrow,
+            'start_time' => '14:00:00',
+            'end_time' => '15:00:00',
+            'status' => 'available',
+        ]);
+
+        $res2 = $this->getJson("/api/v1/discovery/teachers/{$teacher->id}/slots");
+        $res2->assertStatus(200);
+        $this->assertCount(2, array_values($res2->json('data'))[0]);
+
+        // Delete slot
+        $newSlot->delete();
+
+        $res3 = $this->getJson("/api/v1/discovery/teachers/{$teacher->id}/slots");
+        $res3->assertStatus(200);
+        $this->assertCount(1, array_values($res3->json('data'))[0]);
+    }
+
+    public function test_teachers_search_is_cached_and_invalidated_on_profile_update(): void
+    {
+        $teacher = User::role('teacher')->first();
+
+        $res1 = $this->getJson('/api/v1/discovery/teachers');
+        $res1->assertStatus(200)->assertJsonCount(1, 'data.data');
+
+        // Verify unverified teacher is not included
+        $teacher->teacherProfile->update(['is_verified' => false]);
+
+        $res2 = $this->getJson('/api/v1/discovery/teachers');
+        $res2->assertStatus(200)->assertJsonCount(0, 'data.data');
+    }
 }

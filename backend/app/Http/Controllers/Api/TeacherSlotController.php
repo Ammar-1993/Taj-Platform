@@ -7,6 +7,7 @@ use App\Models\TeacherSlot;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class TeacherSlotController extends Controller
 {
@@ -16,12 +17,21 @@ class TeacherSlotController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $slots = TeacherSlot::where('teacher_id', $user->id)
-            ->where('slot_date', '>=', now()->toDateString()) // جلب مواعيد اليوم والمستقبل فقط
-            ->orderBy('slot_date')
-            ->orderBy('start_time')
-            ->get()
-            ->groupBy('slot_date'); // تجميعها حسب اليوم لتسهيل عرضها في الواجهة
+        $cacheKey = "teacher:{$user->id}:slots:".now()->toDateString();
+        $tags = ["teacher_{$user->id}", 'slots'];
+
+        $fetchSlots = function () use ($user) {
+            return TeacherSlot::where('teacher_id', $user->id)
+                ->where('slot_date', '>=', now()->toDateString()) // جلب مواعيد اليوم والمستقبل فقط
+                ->orderBy('slot_date')
+                ->orderBy('start_time')
+                ->get()
+                ->groupBy('slot_date'); // تجميعها حسب اليوم لتسهيل عرضها في الواجهة
+        };
+
+        $slots = Cache::supportsTags()
+            ? Cache::tags($tags)->remember($cacheKey, now()->addMinutes(15), $fetchSlots)
+            : Cache::remember($cacheKey, now()->addMinutes(15), $fetchSlots);
 
         return response()->json([
             'status' => 'success',

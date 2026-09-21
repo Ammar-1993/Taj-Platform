@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Booking;
 use Illuminate\Support\Facades\Broadcast;
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
@@ -11,8 +12,8 @@ Broadcast::channel('teacher.{id}', function ($user, $id) {
 });
 
 Broadcast::channel('classroom.{bookingId}', function ($user, $bookingId) {
-    $booking = \App\Models\Booking::find($bookingId);
-    if (!$booking) {
+    $booking = Booking::find($bookingId);
+    if (! $booking) {
         return false;
     }
 

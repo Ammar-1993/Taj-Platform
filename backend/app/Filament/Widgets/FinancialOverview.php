@@ -40,6 +40,7 @@ class FinancialOverview extends BaseWidget
 
         $salesSparkline = collect(range(6, 0))->map(function ($daysAgo) use ($dailySums) {
             $day = Carbon::now()->subDays($daysAgo)->toDateString();
+
             return (float) ($dailySums[$day] ?? 0);
         })->toArray();
 

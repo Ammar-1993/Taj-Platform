@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -16,9 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->report(function (\Throwable $e) {
+        $exceptions->report(function (Throwable $e) {
             // تجاهل أخطاء TypeError الناتجة عن تلاعب البوتات وأدوات الفحص بحالة ومكونات Livewire
-            if ($e instanceof \TypeError && (
+            if ($e instanceof TypeError && (
                 str_contains($e->getMessage(), 'Cannot assign') ||
                 str_contains($e->getMessage(), 'BasePage::getInfolist') ||
                 str_contains($e->getFile(), '/livewire/')
@@ -27,7 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             // تجاهل محاولات تعديل الخصائص المحمية (Locked Properties) بواسطة أدوات الفحص
-            if ($e instanceof \Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException) {
+            if ($e instanceof CannotUpdateLockedPropertyException) {
                 return false;
             }
 

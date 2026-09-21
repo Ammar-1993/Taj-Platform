@@ -113,6 +113,43 @@ class BookingLifecycleTest extends TestCase
             ->getJson('/api/v1/bookings');
 
         $response->assertStatus(200)
-            ->assertJsonStructure(['status', 'data']);
+            ->assertJsonStructure(['status', 'data'])
+            ->assertJsonMissing(['password']);
+    }
+
+    public function test_booking_index_filters_by_status_with_correct_operator_precedence()
+    {
+        // Cancel the existing booking
+        $this->booking->update(['status' => 'cancelled']);
+
+        // Create a new active scheduled booking
+        $newSlot = TeacherSlot::create([
+            'teacher_id' => $this->teacher->id,
+            'slot_date' => now()->addDays(3)->toDateString(),
+            'start_time' => '12:00:00',
+            'end_time' => '13:00:00',
+            'status' => 'booked',
+        ]);
+
+        $scheduledBooking = Booking::create([
+            'student_id' => $this->student->id,
+            'teacher_id' => $this->teacher->id,
+            'booked_by_id' => $this->student->id,
+            'teacher_slot_id' => $newSlot->id,
+            'booking_date' => now()->addDays(3)->toDateString(),
+            'session_price' => 100,
+            'net_paid' => 100,
+            'agora_channel' => 'test-precedence-channel',
+            'status' => 'scheduled',
+        ]);
+
+        // Filter only scheduled bookings
+        $response = $this->actingAs($this->student)
+            ->getJson('/api/v1/bookings?status=scheduled');
+
+        $response->assertStatus(200)
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.data.0.id', $scheduledBooking->id)
+            ->assertJsonPath('data.data.0.status', 'scheduled');
     }
 }

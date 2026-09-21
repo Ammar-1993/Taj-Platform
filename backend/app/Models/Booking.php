@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * @property int $id
@@ -68,6 +69,42 @@ class Booking extends Model
             'completed_at' => 'datetime',
             'metadata' => 'array',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(function (Booking $booking) {
+            self::clearBookingCaches($booking);
+        });
+
+        static::deleted(function (Booking $booking) {
+            self::clearBookingCaches($booking);
+        });
+    }
+
+    public static function clearBookingCaches(Booking $booking): void
+    {
+        if (Cache::supportsTags()) {
+            $tags = ['parent_dashboard', 'bookings'];
+            if ($booking->student_id) {
+                $tags[] = "student_{$booking->student_id}";
+            }
+            if ($booking->teacher_id) {
+                $tags[] = "teacher_{$booking->teacher_id}";
+            }
+            if ($booking->booked_by_id) {
+                $tags[] = "parent_{$booking->booked_by_id}";
+            }
+            Cache::tags($tags)->flush();
+        } else {
+            $parentId = $booking->booked_by_id;
+            if (! $parentId && $booking->student_id) {
+                $parentId = User::where('id', $booking->student_id)->value('parent_id');
+            }
+            if ($parentId) {
+                Cache::forget("parent_dashboard:{$parentId}:page:1");
+            }
+        }
     }
 
     public function student(): BelongsTo

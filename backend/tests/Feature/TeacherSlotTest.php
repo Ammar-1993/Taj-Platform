@@ -20,7 +20,7 @@ class TeacherSlotTest extends TestCase
     {
         parent::setUp();
         Role::firstOrCreate(['name' => 'teacher']);
-        
+
         $this->teacher = User::factory()->create();
         $this->teacher->assignRole('teacher');
 
@@ -126,5 +126,27 @@ class TeacherSlotTest extends TestCase
             ->deleteJson("/api/v1/teacher/slots/{$slot->id}");
 
         $response->assertStatus(403);
+    }
+
+    public function test_teacher_slots_are_cached_and_invalidated_on_mutation()
+    {
+        $slotDate = now()->addDays(5)->toDateString();
+
+        // 1. First fetch (empty slots for this date)
+        $res1 = $this->actingAs($this->teacher)->getJson('/api/v1/teacher/slots');
+        $res1->assertStatus(200);
+        $this->assertArrayNotHasKey($slotDate, $res1->json('data'));
+
+        // 2. Create slot (triggers TeacherSlot::booted() cache invalidation)
+        $this->actingAs($this->teacher)->postJson('/api/v1/teacher/slots', [
+            'slot_date' => $slotDate,
+            'start_time' => '16:00',
+            'end_time' => '17:00',
+        ])->assertStatus(201);
+
+        // 3. Second fetch must immediately reflect the new slot
+        $res2 = $this->actingAs($this->teacher)->getJson('/api/v1/teacher/slots');
+        $res2->assertStatus(200);
+        $this->assertArrayHasKey($slotDate.' 00:00:00', $res2->json('data'));
     }
 }

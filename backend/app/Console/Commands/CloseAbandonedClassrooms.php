@@ -10,11 +10,12 @@ use Illuminate\Support\Carbon;
 class CloseAbandonedClassrooms extends Command
 {
     protected $signature = 'classrooms:close-abandoned';
+
     protected $description = 'يبحث عن الحصص العالقة في in_progress بدون نبضة حياة حديثة ويغلقها تلقائياً';
 
     public function handle(BookingService $bookingService): int
     {
-        $staleCutoff  = Carbon::now()->subMinutes(10);
+        $staleCutoff = Carbon::now()->subMinutes(10);
         $legacyCutoff = Carbon::now()->subMinutes(20);
 
         $abandoned = Booking::where('status', 'in_progress')
@@ -22,7 +23,7 @@ class CloseAbandonedClassrooms extends Command
                 $query->where('last_heartbeat_at', '<', $staleCutoff)
                     ->orWhere(function ($q) use ($legacyCutoff) {
                         $q->whereNull('last_heartbeat_at')
-                          ->where('teacher_joined_at', '<', $legacyCutoff);
+                            ->where('teacher_joined_at', '<', $legacyCutoff);
                     });
             })
             ->get();
@@ -33,6 +34,7 @@ class CloseAbandonedClassrooms extends Command
         }
 
         $this->info("انتهى الفحص. عدد الحصص المُغلقة: {$abandoned->count()}");
+
         return self::SUCCESS;
     }
 }

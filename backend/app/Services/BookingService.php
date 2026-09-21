@@ -9,13 +9,14 @@ use App\Models\PromoCode;
 use App\Models\TeacherSlot;
 use App\Models\User;
 use App\Notifications\NewBookingNotification;
-use App\Services\WhiteboardService;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class BookingService
 {
     protected WalletService $walletService;
+
     protected WhiteboardService $whiteboardService;
 
     public function __construct(WalletService $walletService, WhiteboardService $whiteboardService)
@@ -192,15 +193,16 @@ class BookingService
      */
     private function clearClassroomCacheTokens(Booking $booking): void
     {
-        \Illuminate\Support\Facades\Cache::forget("agora_token_{$booking->id}_{$booking->teacher_id}");
-        \Illuminate\Support\Facades\Cache::forget("agora_token_{$booking->id}_{$booking->student_id}");
-        \Illuminate\Support\Facades\Cache::forget("agora_token_{$booking->id}_screen");
-        \Illuminate\Support\Facades\Cache::forget("agora_rtm_token_{$booking->id}_{$booking->teacher_id}");
-        \Illuminate\Support\Facades\Cache::forget("agora_rtm_token_{$booking->id}_{$booking->student_id}");
+        app(AgoraService::class)->invalidateTokens(
+            $booking->agora_channel ?? '',
+            $booking->teacher_id,
+            $booking->student_id,
+            $booking->id
+        );
 
         if ($booking->whiteboard_room_uuid) {
-            \Illuminate\Support\Facades\Cache::forget("whiteboard_token_{$booking->whiteboard_room_uuid}_admin");
-            \Illuminate\Support\Facades\Cache::forget("whiteboard_token_{$booking->whiteboard_room_uuid}_reader");
+            Cache::forget("whiteboard_token_{$booking->whiteboard_room_uuid}_admin");
+            Cache::forget("whiteboard_token_{$booking->whiteboard_room_uuid}_reader");
         }
     }
 

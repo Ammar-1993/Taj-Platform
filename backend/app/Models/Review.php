@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
 
 class Review extends Model
 {
@@ -15,6 +16,25 @@ class Review extends Model
             'is_published' => 'boolean',
             'rating' => 'integer',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(function (Review $review) {
+            self::clearReviewCache($review->teacher_id);
+        });
+
+        static::deleted(function (Review $review) {
+            self::clearReviewCache($review->teacher_id);
+        });
+    }
+
+    public static function clearReviewCache(int $teacherId): void
+    {
+        if (Cache::supportsTags()) {
+            Cache::tags(["teacher_{$teacherId}", 'reviews'])->flush();
+            Cache::tags(['teachers', 'discovery'])->flush();
+        }
     }
 
     public function booking(): BelongsTo

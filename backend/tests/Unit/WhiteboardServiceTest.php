@@ -27,7 +27,7 @@ class WhiteboardServiceTest extends TestCase
         parent::setUp();
         config(['services.whiteboard.sdk_token' => 'NETLESSSDK_YWs9xxxxxxxxxxxxtest']);
         config(['services.whiteboard.region' => 'sg']);
-        $this->service = new WhiteboardService();
+        $this->service = new WhiteboardService;
     }
 
     // ─── createRoom ────────────────────────────────────────────────────────────
@@ -95,8 +95,8 @@ class WhiteboardServiceTest extends TestCase
     #[Test]
     public function test_get_room_token_uses_cache_when_available(): void
     {
-        $uuid     = 'cached-room-uuid';
-        $role     = 'admin';
+        $uuid = 'cached-room-uuid';
+        $role = 'admin';
         $cacheKey = "whiteboard_token_{$uuid}_{$role}";
 
         Cache::put($cacheKey, 'cached-token-value', now()->addHour());
@@ -112,8 +112,8 @@ class WhiteboardServiceTest extends TestCase
     #[Test]
     public function test_get_room_token_fetches_from_api_on_cache_miss(): void
     {
-        $uuid     = 'fresh-room-uuid';
-        $role     = 'reader';
+        $uuid = 'fresh-room-uuid';
+        $role = 'reader';
         $cacheKey = "whiteboard_token_{$uuid}_{$role}";
 
         Cache::forget($cacheKey);
@@ -134,8 +134,8 @@ class WhiteboardServiceTest extends TestCase
         $this->expectException(Exception::class);
         $this->expectExceptionMessageMatches('/فشل الحصول على توكن/u');
 
-        $uuid     = 'failing-room-uuid';
-        $role     = 'admin';
+        $uuid = 'failing-room-uuid';
+        $role = 'admin';
         $cacheKey = "whiteboard_token_{$uuid}_{$role}";
         Cache::forget($cacheKey);
 
@@ -151,8 +151,8 @@ class WhiteboardServiceTest extends TestCase
     #[Test]
     public function test_refresh_room_token_bypasses_cache_and_updates_it(): void
     {
-        $uuid     = 'refresh-room-uuid';
-        $role     = 'admin';
+        $uuid = 'refresh-room-uuid';
+        $role = 'admin';
         $cacheKey = "whiteboard_token_{$uuid}_{$role}";
 
         Cache::put($cacheKey, 'old-token', now()->addHour());
