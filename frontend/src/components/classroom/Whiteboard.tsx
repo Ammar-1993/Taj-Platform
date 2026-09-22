@@ -66,6 +66,7 @@ const STROKE_COLORS = [
 ];
 
 const STROKE_WIDTHS = [2, 4, 8, 14];
+const JOIN_ROOM_TIMEOUT_MS = 15000;
 
 const TOOL_HOTKEYS: Record<string, string> = {
     p: 'pencil',
@@ -251,7 +252,14 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 const cleanRoomUuid  = String(rUuid).split('#')[0].trim();
                 const cleanFreshToken = String(freshToken).split('#')[0].trim();
 
-                const roomInstance = await sdkRef.current.joinRoom({
+                let rejoinTimeoutId: NodeJS.Timeout;
+                const rejoinTimeoutPromise = new Promise<never>((_, reject) => {
+                    rejoinTimeoutId = setTimeout(() => {
+                        reject(new Error('استغرق تجديد الاتصال بالسبورة وقتاً أطول من المتوقع.'));
+                    }, JOIN_ROOM_TIMEOUT_MS);
+                });
+
+                const joinPromise = sdkRef.current.joinRoom({
                     uuid:                           cleanRoomUuid,
                     roomToken:                      cleanFreshToken,
                     uid:                            rUid,
@@ -264,6 +272,10 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     disablePencilWrittingLimitFrequency: true,
                     // تفعيل القلم الجديد (بالنعومة والتدرج) مع إلغاء التخزين المؤقت
                     disableNewPencil: true,
+                });
+
+                const roomInstance = await Promise.race([joinPromise, rejoinTimeoutPromise]).finally(() => {
+                    clearTimeout(rejoinTimeoutId);
                 });
 
                 roomRef.current = roomInstance;
@@ -393,7 +405,15 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         const joinRoom = async () => {
             try {
                 if (!sdk || !whiteboardRef.current) return;
-                const roomInstance = await sdk.joinRoom({
+
+                let joinTimeoutId: NodeJS.Timeout;
+                const joinTimeoutPromise = new Promise<never>((_, reject) => {
+                    joinTimeoutId = setTimeout(() => {
+                        reject(new Error('استغرق الاتصال بالسبورة وقتاً أطول من المتوقع، يرجى التحقق من اتصال الإنترنت وإعادة المحاولة.'));
+                    }, JOIN_ROOM_TIMEOUT_MS);
+                });
+
+                const joinPromise = sdk.joinRoom({
                     uuid:          cleanRoomUuid,
                     roomToken:     cleanRoomToken,
                     uid:           rUid,
@@ -426,6 +446,10 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     // يمنع SDK من اعتراض كل pointer event للبحث عن صور،
                     // مما يقلل التأخير قبل بدء كل ضربة خاصة على اللمس.
                     disableEraseImage: true,
+                });
+
+                const roomInstance = await Promise.race([joinPromise, joinTimeoutPromise]).finally(() => {
+                    clearTimeout(joinTimeoutId);
                 });
 
                 roomRef.current = roomInstance;
