@@ -256,3 +256,47 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - **Booking Filter Query**: ~15ms → < 1.5ms (~90% faster via `idx_bookings_booked_by_status_date`).
   - **MySQL Read Load**: ~68% reduction in peak read queries.
   - **Backend Test Suite**: Updated to 83 passed tests (248 assertions), 100% green.
+
+## 📖 Session Log & Recent Updates (Sep 22, 2026)
+
+### 1. Root Cause Analysis: Local Platform Launch Latency & Cascading Failures
+- **Context:** Following the launch of the local Docker stack, high latency (1s–40s request delays) and sporadic HTTP 500 errors were reported across the platform.
+- **Root Cause Diagnosis (Multi-Layered Audit):**
+  1. **Next.js SSR Network Disconnect (`ECONNREFUSED 127.0.0.1:8000`):**
+     - `frontend/src/lib/server-api.ts` used `process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL`.
+     - In `docker-compose.yml`, `nextjs` service lacked `INTERNAL_API_URL`. Next.js defaulted to `NEXT_PUBLIC_API_URL` (`http://localhost:8000/api/v1`), attempting to connect to itself inside the container, failing with `connect ECONNREFUSED 127.0.0.1:8000` on every Server Component fetch (`/`, `/teachers/[id]`). SSR returned empty arrays, forcing the client browser to re-fetch all data and doubling frontend latency.
+  2. **Cache Key Collision & Fatal `TypeError` in `DiscoveryController@teacherSlots`:**
+     - `TeacherSlotController@index` stored an `Illuminate\Database\Eloquent\Collection` under `"teacher:{$id}:slots:YYYY-MM-DD"`.
+     - `DiscoveryController@teacherSlots` stored an associative array `['teacher_name' => ..., 'data' => ...]` under the identical key `"teacher:{$id}:slots:YYYY-MM-DD"`.
+     - When a teacher loaded their schedule, the key was populated with a `Collection`. When any user visited `/api/v1/discovery/teachers/{id}/slots`, `DiscoveryController` retrieved the collection and passed it to `array_merge(['status' => 'success'], $payload)`, crashing with `TypeError: array_merge(): Argument #2 must be of type array, Illuminate\Database\Eloquent\Collection given` (HTTP 500).
+  3. **Head-of-Line Blocking on Single-Worker PHP CLI Server:**
+     - `backend/docker/8.3/Dockerfile` runs `php artisan serve` (`php -S`).
+     - `# PHP_CLI_SERVER_WORKERS=4` was commented out in `backend/.env` and omitted from `docker-compose.yml`. PHP was running as a single-threaded process.
+     - When Sentry synchronously reported errors over the internet, or when long-running operations ran, the single worker was 100% blocked, forcing all parallel requests (heartbeats, auth checks, static assets) to queue up and take seconds.
+  4. **Unprocessed Queue Backlog in Redis (30 Blocked Jobs):**
+     - `QUEUE_CONNECTION=redis` was configured, but `docker-compose.yml` had no background queue worker service.
+     - 30 `ProvisionVirtualClassroom` jobs were stalled in Redis `queues:default`. Classrooms were never pre-provisioned, forcing `ClassroomController@getAccessDetails` to provision rooms synchronously over the internet on user join, freezing the server for 5+ seconds.
+  5. **Next.js Memory Bloat & Excessive Dev Tracing:**
+     - Container memory reached 3.7 GiB due to unconstrained V8 heap and un-optimized barrel icon imports (`lucide-react`).
+     - Sentry client and server configurations had `tracesSampleRate: 1.0` in dev, recording and transmitting 100% of traces and console logs.
+
+### 2. Architectural Resolutions & Performance Optimizations
+- **Backend Cache Isolation ([`TeacherSlotController.php`](file:///home/ammar/code/taj-platform/backend/app/Http/Controllers/Api/TeacherSlotController.php), [`DiscoveryController.php`](file:///home/ammar/code/taj-platform/backend/app/Http/Controllers/Api/DiscoveryController.php), [`TeacherSlot.php`](file:///home/ammar/code/taj-platform/backend/app/Models/TeacherSlot.php)):**
+  - Separated cache keys: `"teacher_schedule:{$user->id}:slots:{$today}"` for the teacher dashboard vs `"discovery:teacher:{$teacherId}:slots:{$today}"` for the public catalog.
+  - Added a defensive type guard in `DiscoveryController@teacherSlots` (`if (!is_array($payload)) $payload = $queryCallback();`).
+  - Added regression test `test_teacher_slots_and_discovery_slots_do_not_collide_in_cache` in [`DiscoveryTest.php`](file:///home/ammar/code/taj-platform/backend/tests/Feature/DiscoveryTest.php).
+- **Concurrency & Queue Architecture ([`docker-compose.yml`](file:///home/ammar/code/taj-platform/docker-compose.yml)):**
+  - Added `PHP_CLI_SERVER_WORKERS: 4` to `laravel.test.environment` and uncommented in `backend/.env`. Verified 4 concurrent PHP worker processes in `docker top`.
+  - Added dedicated `queue` worker service in `docker-compose.yml` running `php artisan queue:work redis`, immediately draining and processing the 30-job backlog.
+  - Added `INTERNAL_API_URL: http://laravel.test/api/v1` to `nextjs.environment`, enabling immediate direct SSR communication over the Docker bridge network.
+  - Added `NODE_OPTIONS: "--max-old-space-size=2048"` to cap Next.js container memory.
+- **Frontend Resilience & Import Optimization ([`server-api.ts`](file:///home/ammar/code/taj-platform/frontend/src/lib/server-api.ts), [`next.config.mjs`](file:///home/ammar/code/taj-platform/frontend/next.config.mjs), [`sentry.server.config.ts`](file:///home/ammar/code/taj-platform/frontend/sentry.server.config.ts), [`instrumentation-client.ts`](file:///home/ammar/code/taj-platform/frontend/src/instrumentation-client.ts)):**
+  - Wrapped server-side `fetch` calls in `AbortSignal.timeout(10000)` to prevent hanging SSR.
+  - Configured `experimental: { optimizePackageImports: ['lucide-react'] }` in `next.config.mjs`.
+  - Optimized dev Sentry sampling (`tracesSampleRate: 0.05`, replays disabled in dev unless explicitly requested via `NEXT_PUBLIC_ENABLE_SENTRY_DEV`).
+- **Verification Results:**
+  - Backend Test Suite: **84 passed (259 assertions)** with 0 failures.
+  - Frontend Test Suite: **28 passed (5 suites)** with 0 failures.
+  - Pint Linter: **171 files passed**.
+  - SSR Latency: Home page SSR responds in **~87ms**; `/teachers/2` responds in **~400ms**; `ECONNREFUSED` completely eliminated.
+

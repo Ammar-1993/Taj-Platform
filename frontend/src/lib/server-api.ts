@@ -12,6 +12,7 @@ const BASE_API_URL =
 export async function getCachedSubjects(): Promise<ApiResponse<Subject[]>> {
   try {
     const res = await fetch(`${BASE_API_URL}/discovery/subjects`, {
+      signal: AbortSignal.timeout(10000),
       next: {
         revalidate: 3600, // 1 hour edge cache
         tags: ["catalog", "subjects"],
@@ -53,6 +54,7 @@ export async function getCachedTeachers(params?: {
     const url = `${BASE_API_URL}/discovery/teachers${queryString ? `?${queryString}` : ""}`;
 
     const res = await fetch(url, {
+      signal: AbortSignal.timeout(10000),
       next: {
         revalidate: 600, // 10 minutes edge cache
         tags: ["catalog", "teachers"],
@@ -102,6 +104,7 @@ export async function getCachedTeacherSlots(
     const res = await fetch(
       `${BASE_API_URL}/discovery/teachers/${teacherId}/slots`,
       {
+        signal: AbortSignal.timeout(10000),
         next: {
           revalidate: 300, // 5 minutes edge cache
           tags: ["slots", `teacher_${teacherId}`],

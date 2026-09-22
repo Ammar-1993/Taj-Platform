@@ -43,6 +43,9 @@ const nextConfig = {
   // تم الإبقاء على transpilePackages لضمان ترجمة المكتبة.
   // ==========================================
   transpilePackages: ['agora-react-uikit', 'agora-rtc-sdk-ng'], // إجبار السيرفر على ترجمة المكتبة بشكل صحيح
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
 
   images: {
     domains: ['ui-avatars.com', 'localhost', '127.0.0.1'],

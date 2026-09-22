@@ -36,8 +36,11 @@ class TeacherSlot extends Model
     {
         if (Cache::supportsTags()) {
             Cache::tags(["teacher_{$teacherId}", 'slots'])->flush();
+            Cache::tags(["teacher_{$teacherId}", 'teacher_slots'])->flush();
             Cache::tags(['teachers', 'discovery'])->flush();
         } else {
+            Cache::forget("discovery:teacher:{$teacherId}:slots:".now()->toDateString());
+            Cache::forget("teacher_schedule:{$teacherId}:slots:".now()->toDateString());
             Cache::forget("teacher:{$teacherId}:slots:".now()->toDateString());
         }
     }

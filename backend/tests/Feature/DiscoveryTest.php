@@ -194,4 +194,28 @@ class DiscoveryTest extends TestCase
         $res2 = $this->getJson('/api/v1/discovery/teachers');
         $res2->assertStatus(200)->assertJsonCount(0, 'data.data');
     }
+
+    public function test_teacher_slots_and_discovery_slots_do_not_collide_in_cache(): void
+    {
+        $teacher = User::role('teacher')->first();
+
+        // 1. Teacher views their slots in private dashboard (populates teacher schedule cache)
+        $privateRes = $this->actingAs($teacher, 'sanctum')->getJson('/api/v1/teacher/slots');
+        $privateRes->assertStatus(200)
+            ->assertJsonStructure(['status', 'data']);
+
+        // 2. Student or visitor views the teacher's slots via discovery (must not collide with private cache)
+        $publicRes = $this->getJson("/api/v1/discovery/teachers/{$teacher->id}/slots");
+        $publicRes->assertStatus(200)
+            ->assertJsonStructure(['status', 'teacher_name', 'teacher', 'data']);
+
+        $this->assertEquals($teacher->name, $publicRes->json('teacher_name'));
+
+        // 3. Subsequence calls to both endpoints should continue to succeed
+        $privateRes2 = $this->actingAs($teacher, 'sanctum')->getJson('/api/v1/teacher/slots');
+        $privateRes2->assertStatus(200);
+
+        $publicRes2 = $this->getJson("/api/v1/discovery/teachers/{$teacher->id}/slots");
+        $publicRes2->assertStatus(200);
+    }
 }

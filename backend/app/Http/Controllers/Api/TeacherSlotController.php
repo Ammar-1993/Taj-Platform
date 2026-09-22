@@ -17,8 +17,8 @@ class TeacherSlotController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $cacheKey = "teacher:{$user->id}:slots:".now()->toDateString();
-        $tags = ["teacher_{$user->id}", 'slots'];
+        $cacheKey = "teacher_schedule:{$user->id}:slots:".now()->toDateString();
+        $tags = ["teacher_{$user->id}", 'teacher_slots'];
 
         $fetchSlots = function () use ($user) {
             return TeacherSlot::where('teacher_id', $user->id)

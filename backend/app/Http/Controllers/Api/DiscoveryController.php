@@ -142,7 +142,7 @@ class DiscoveryController extends Controller
     public function teacherSlots(int $teacherId): JsonResponse
     {
         $today = now()->toDateString();
-        $cacheKey = "teacher:{$teacherId}:slots:{$today}";
+        $cacheKey = "discovery:teacher:{$teacherId}:slots:{$today}";
 
         $queryCallback = function () use ($teacherId, $today) {
             $teacher = User::role('teacher')
@@ -166,8 +166,12 @@ class DiscoveryController extends Controller
         };
 
         $payload = Cache::supportsTags()
-            ? Cache::tags(["teacher_{$teacherId}", 'slots'])->remember($cacheKey, now()->addMinutes(15), $queryCallback)
+            ? Cache::tags(["teacher_{$teacherId}", 'slots', 'discovery'])->remember($cacheKey, now()->addMinutes(15), $queryCallback)
             : Cache::remember($cacheKey, now()->addMinutes(15), $queryCallback);
+
+        if (! is_array($payload)) {
+            $payload = $queryCallback();
+        }
 
         return response()->json(array_merge(['status' => 'success'], $payload));
     }
