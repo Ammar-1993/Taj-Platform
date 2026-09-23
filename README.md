@@ -359,7 +359,7 @@ sequenceDiagram
     FE->>API: GET /api/v1/bookings/{id}/classroom
     API->>DB: Atomically set teacher_joined_at = now(), status = in_progress
     API->>Redis: Fetch pre-generated tokens (RTC, RTM, Screen, Whiteboard Admin)
-    Note over API,Redis: Sub-millisecond Cache Hit (< 1ms)
+    Note over API,Redis: Sub-millisecond Cache Hit (under 1ms)
     API-->>FE: 200 OK (agora_channel, uid, tokens, whiteboard payload)
 
     par Real-Time Media Initialization
@@ -381,7 +381,7 @@ sequenceDiagram
     Note over Teacher,Agora: ── 3. Dedicated Screen Sharing & Mid-Session Token Refresh ──
     Teacher->>FE: Toggle "Share Screen"
     FE->>Agora: Publish screen capture on dedicated UID (teacherUid + 1,000,000,000)
-    Note over FE,Agora: Dual-stream enabled (480p low / 1080p high); isolated from webcam track
+    Note over FE,Agora: Dual-stream enabled (480p low / 1080p high) - isolated from webcam track
     Agora-->>Student: Receive dedicated screen sharing track
 
     opt Mid-Session Silent Token Renewal (Expiry Callback)
@@ -401,7 +401,7 @@ sequenceDiagram
         API->>DB: WalletService::processTransaction(teacher, +80%, 'class_earnings')
     end
     API-->>FE: 200 OK (Wallet balance credited immediately)
-    Teacher->>FE: Submit Bank Payout Request (Amount >= 50 SAR, Bank Name, IBAN)
+    Teacher->>FE: Submit Bank Payout Request (Amount min 50 SAR, Bank Name, IBAN)
     FE->>API: POST /api/v1/wallet/payouts {amount, bank_name, iban}
     API->>DB: Withhold amount & INSERT payout_requests (status: pending)
     API-->>FE: 201 Created (Payout request logged for Admin wire transfer audit)
