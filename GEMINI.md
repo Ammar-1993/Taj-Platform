@@ -300,3 +300,24 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - Pint Linter: **171 files passed**.
   - SSR Latency: Home page SSR responds in **~87ms**; `/teachers/2` responds in **~400ms**; `ECONNREFUSED` completely eliminated.
 
+## 📖 Session Log & Recent Updates (Sep 24, 2026)
+
+### 1. Interactive Whiteboard Connection Timeout & Region Synchronization Remediation
+- **Context & Problem:** When teachers or students clicked the "السبورة التفاعلية" (Interactive Whiteboard) icon in the virtual classroom, they observed `"جاري تحميل السبورة..."` followed after 15 seconds by a fatal error: `"حدث خطأ في السبورة: فشل الانضمام للغرفة: استغرق الاتصال بالسبورة وقتاً أطول من المتوقع، يرجى التحقق من اتصال الإنترنت وإعادة المحاولة."`
+- **Root Cause Analysis:**
+  1. **Region Desynchronization & EU Fallback:** The backend created Netless rooms in Singapore (`region: 'sg'`), but the frontend hardcoded `WHITEBOARD_REGION` fallback to `'eu'` in [`Whiteboard.tsx`](file:///home/ammar/code/taj-platform/frontend/src/components/classroom/Whiteboard.tsx) and ignored `data.whiteboard_region` returned by the API in [`page.tsx`](file:///home/ammar/code/taj-platform/frontend/src/app/classroom/%5Bid%5D/page.tsx). Connecting to EU gateways for rooms provisioned in Singapore resulted in hanging cross-region WebSocket handshakes.
+  2. **Strict 15s Timeout Window:** High latency (MENA to Singapore RTT 180–280ms) + DNS lookup + TLS 1.3 handshake + WebSocket upgrade + scene state snapshot frequently exceeded 15 seconds on mobile or standard broadband connections.
+  3. **Content Security Policy (CSP):** Missing asset domains (`*.whiteboard.rtelink.com`, `*.sd-rtn.com`) in `img-src` in [`next.config.mjs`](file:///home/ammar/code/taj-platform/frontend/next.config.mjs).
+  4. **Disruptive Full Page Reload:** The error overlay only provided `window.location.reload()`, which killed active Agora video and audio tracks for the classroom session.
+- **Implemented Remediation:**
+  - **Dynamic Region Propagation:** Updated [`ClassroomController@getWhiteboardStatus`](file:///home/ammar/code/taj-platform/backend/app/Http/Controllers/Api/ClassroomController.php) to return `whiteboard_region`, and updated [`page.tsx`](file:///home/ammar/code/taj-platform/frontend/src/app/classroom/%5Bid%5D/page.tsx) to store `whiteboardRegion` in state and forward it dynamically to `<Whiteboard region={...} />`.
+  - **Safe Region Fallback:** Updated [`Whiteboard.tsx`](file:///home/ammar/code/taj-platform/frontend/src/components/classroom/Whiteboard.tsx) to fall back safely to `'sg'` (Singapore) instead of `'eu'`, and kept `initProps` synced on prop mutations.
+  - **Resilient 30s Timeout & Auto-Retry:** Increased `JOIN_ROOM_TIMEOUT_MS` from 15s to 30s. Added automatic single retry with a 1.5s backoff before throwing the fatal error screen. Added unmount safety checks to prevent memory leaks and orphaned room bindings.
+  - **Non-Disruptive Whiteboard Reconnection:** Added an "إعادة محاولة الاتصال بالسبورة" button (`handleRetryJoin`) that cleanly cleans up and re-invokes the join logic in-place without triggering a browser reload or disconnecting the Agora call. Preserved secondary "تحديث الصفحة بالكامل" button.
+  - **CSP Whitelisting:** Added `https://*.whiteboard.rtelink.com` and `https://*.sd-rtn.com` to `img-src` in [`next.config.mjs`](file:///home/ammar/code/taj-platform/frontend/next.config.mjs).
+- **Verification Results:**
+  - **Backend Tests:** **84 passed (259 assertions)** with 0 failures (`php artisan test`).
+  - **Frontend Tests:** **30 passed (5 suites)** with 0 failures (`npm run test`), adding 2 new unit tests for region fallback and retry UI.
+  - **Code Quality:** `laravel/pint` passed on all 171 files; `npm run lint` passed with 0 warnings.
+  - **Production Build:** `npm run build` compiled cleanly (26/26 routes).
+

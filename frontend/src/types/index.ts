@@ -235,4 +235,5 @@ export interface WhiteboardStatusResponse {
     room_uuid: string;
     room_token: string;
   } | null;
+  whiteboard_region?: string;
 }

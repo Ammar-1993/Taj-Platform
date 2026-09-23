@@ -7,7 +7,7 @@ const cspDirectives = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://*.agora.io https://*.sd-rtn.com https://*.sentry.io https://*.netless.link https://*.whiteboard.agora.io https://*.whiteboard.sd-rtn.com https://*.whiteboard.rtelink.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "img-src 'self' blob: data: https://ui-avatars.com https://*.agora.io https://*.google.com https://*.gstatic.com https://*.netless.link https://*.whiteboard.agora.io",
+  "img-src 'self' blob: data: https://ui-avatars.com https://*.agora.io https://*.google.com https://*.gstatic.com https://*.netless.link https://*.whiteboard.agora.io https://*.whiteboard.rtelink.com https://*.sd-rtn.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "connect-src 'self' http://localhost:8000 http://127.0.0.1:8000 https://api.taj-edu.online https://www.google.com/recaptcha/ https://*.agora.io https://*.sd-rtn.com https://*.whiteboard.sd-rtn.com https://*.netless.link https://*.whiteboard.agora.io https://*.whiteboard.rtelink.com https://*.rtelink.com https://rest-argus-ad.agoralab.co https://*.sentry.io https://*.ingest.sentry.io wss://*.agora.io wss://*.sd-rtn.com wss://*.whiteboard.sd-rtn.com wss://*.netless.link wss://*.whiteboard.agora.io wss://*.whiteboard.rtelink.com wss://*.rtelink.com https://www.gstatic.com/generate_204 https://clients3.google.com/generate_204",
   "frame-src 'self' https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://*.moyasar.com",

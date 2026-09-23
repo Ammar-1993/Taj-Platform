@@ -77,6 +77,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     room_token: string;
   } | null>(null);
   const [whiteboardPending, setWhiteboardPending] = useState(false);
+  const [whiteboardRegion, setWhiteboardRegion] = useState<string>(WHITEBOARD_REGION || "sg");
   const [uid, setUid] = useState<number>(0);
   const [userRole, setUserRole] = useState<"host" | "audience">("audience");
 
@@ -148,6 +149,10 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
           setScreenToken(data.screen_token);
         }
 
+        if (data.whiteboard_region) {
+          setWhiteboardRegion(data.whiteboard_region);
+        }
+
         if (data.whiteboard?.room_uuid && data.whiteboard?.room_token) {
           setWhiteboardData(data.whiteboard);
           setWhiteboardPending(false);
@@ -179,6 +184,9 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
 
           if (res.status === 'ready' && res.whiteboard?.room_uuid && res.whiteboard?.room_token) {
             setWhiteboardData(res.whiteboard);
+            if (res.whiteboard_region) {
+              setWhiteboardRegion(res.whiteboard_region);
+            }
             setWhiteboardPending(false);
           }
           // 'pending' → keep polling; 'error' → also keep polling (transient server error)
@@ -652,7 +660,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                   uid={uid.toString()}
                   isTeacher={!!isTeacher}
                   bookingId={params.id}
-                  region={WHITEBOARD_REGION}
+                  region={whiteboardRegion || WHITEBOARD_REGION || "sg"}
                   agoraChannel={channelName}
                   rtmToken={rtmToken}
                   isAbsoluteFocusMode={absoluteFocusMode}

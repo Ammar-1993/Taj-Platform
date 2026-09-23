@@ -153,4 +153,48 @@ describe('Whiteboard', () => {
     });
   });
 
+  it('defaults to sg region when no region is specified', async () => {
+    const { WhiteWebSdk } = jest.requireMock('white-web-sdk');
+    render(
+      <Whiteboard
+        appIdentifier="app"
+        roomUuid="room"
+        roomToken="token"
+        uid="user"
+        isTeacher={true}
+        bookingId="1"
+      />
+    );
+
+    expect(WhiteWebSdk).toHaveBeenCalledWith(
+      expect.objectContaining({
+        region: 'sg',
+      })
+    );
+  });
+
+  it('renders retry button and allows retrying when room joining fails', async () => {
+    const { WhiteWebSdk } = jest.requireMock('white-web-sdk');
+    const mockJoinRoom = jest.fn().mockRejectedValue(new Error('Connection error'));
+    (WhiteWebSdk as jest.Mock).mockImplementationOnce(() => ({
+      joinRoom: mockJoinRoom,
+    }));
+
+    render(
+      <Whiteboard
+        appIdentifier="app"
+        roomUuid="room"
+        roomToken="token"
+        uid="user"
+        isTeacher={true}
+        bookingId="1"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('حدث خطأ في السبورة')).toBeInTheDocument();
+      expect(screen.getByText('إعادة محاولة الاتصال بالسبورة')).toBeInTheDocument();
+      expect(screen.getByText('تحديث الصفحة بالكامل')).toBeInTheDocument();
+    }, { timeout: 3500 });
+  });
 });

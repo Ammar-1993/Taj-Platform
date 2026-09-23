@@ -66,7 +66,7 @@ const STROKE_COLORS = [
 ];
 
 const STROKE_WIDTHS = [2, 4, 8, 14];
-const JOIN_ROOM_TIMEOUT_MS = 15000;
+const JOIN_ROOM_TIMEOUT_MS = 30000;
 
 const TOOL_HOTKEYS: Record<string, string> = {
     p: 'pencil',
@@ -119,13 +119,22 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     const roomRef       = useRef<Room | null>(null);
     const sdkRef        = useRef<WhiteWebSdk | null>(null);
 
-    // Freeze init props so the effect only runs once (Netless rooms cannot be
-    // cleanly rejoined inside the same effect cycle)
+    // Keep init props current for SDK and reconnects
     const initProps = useRef({ appIdentifier, roomUuid, roomToken, uid, isTeacher, region, bookingId });
+    useEffect(() => {
+        initProps.current = { appIdentifier, roomUuid, roomToken, uid, isTeacher, region, bookingId };
+    }, [appIdentifier, roomUuid, roomToken, uid, isTeacher, region, bookingId]);
 
     // ── UI State ──────────────────────────────────────────────────────────────
     const [loading, setLoading]               = useState(true);
     const [error, setError]                   = useState<string | null>(null);
+    const [retryTrigger, setRetryTrigger]     = useState(0);
+
+    const handleRetryJoin = useCallback(() => {
+        setError(null);
+        setLoading(true);
+        setRetryTrigger(prev => prev + 1);
+    }, []);
     const [activeTool, setActiveTool]         = useState('pencil');
     const [strokeColor, setStrokeColor]       = useState('#000000');
     const [strokeWidth, setStrokeWidth]       = useState(4);
@@ -380,7 +389,8 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         const cleanRoomUuid   = String(rUuid).split('#')[0].trim();
         const cleanRoomToken  = String(rToken).split('#')[0].trim();
         const supportedRegions = ['sg', 'us-sv', 'eu', 'cn-hz', 'in-mum'];
-        const finalRegion     = supportedRegions.includes(rRegion.toLowerCase()) ? rRegion.toLowerCase() : 'eu';
+        const safeRegion      = (rRegion || 'sg').toLowerCase();
+        const finalRegion     = supportedRegions.includes(safeRegion) ? safeRegion : 'sg';
 
         if (!cleanAppId || !cleanRoomUuid || !cleanRoomToken) {
             setError('بيانات الغرفة غير مكتملة.');
@@ -402,9 +412,12 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
             return;
         }
 
+        let unmounted = false;
+        let attempt = 0;
+
         const joinRoom = async () => {
             try {
-                if (!sdk || !whiteboardRef.current) return;
+                if (!sdk || !whiteboardRef.current || unmounted) return;
 
                 let joinTimeoutId: NodeJS.Timeout;
                 const joinTimeoutPromise = new Promise<never>((_, reject) => {
@@ -451,6 +464,12 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 const roomInstance = await Promise.race([joinPromise, joinTimeoutPromise]).finally(() => {
                     clearTimeout(joinTimeoutId);
                 });
+
+                if (unmounted) {
+                    try { roomInstance.bindHtmlElement(null); } catch {}
+                    roomInstance.disconnect().catch(() => {});
+                    return;
+                }
 
                 roomRef.current = roomInstance;
                 roomInstance.bindHtmlElement(whiteboardRef.current);
@@ -542,6 +561,20 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 setLoading(false);
                 setError(null);
             } catch (joinError: unknown) {
+                if (unmounted) return;
+
+                // Auto-retry once after 1.5s if it was an initial timeout or network hiccup
+                if (attempt < 1) {
+                    attempt++;
+                    console.warn(`[Whiteboard] Join attempt ${attempt} failed, retrying automatically in 1.5s...`, joinError);
+                    setTimeout(() => {
+                        if (!unmounted) {
+                            joinRoom();
+                        }
+                    }, 1500);
+                    return;
+                }
+
                 Sentry.captureException(joinError, {
                     tags:  { component: "Whiteboard", action: "join_failed" },
                     extra: {
@@ -558,6 +591,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
         joinRoom();
 
         return () => {
+            unmounted = true;
             if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
             if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
             if (roomRef.current) {
@@ -570,7 +604,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
             }
             sdkRef.current = null;
         };
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [retryTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Tool application ──────────────────────────────────────────────────────
     const applyTool = useCallback((tool: string, color?: string, width?: number) => {
@@ -754,12 +788,21 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     <div className="bg-red-100 p-3 rounded-full mb-4"><Trash2 className="w-8 h-8 text-red-600" /></div>
                     <h3 className="text-red-800 font-bold text-lg mb-2">حدث خطأ في السبورة</h3>
                     <p className="text-red-600 mb-4 max-w-xs">{error}</p>
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="bg-red-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-red-700 transition"
-                    >
-                        إعادة تحميل الصفحة
-                    </button>
+                    <div className="flex flex-wrap items-center justify-center gap-3">
+                        <button
+                            onClick={handleRetryJoin}
+                            className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition flex items-center gap-2 shadow-sm"
+                        >
+                            <RefreshCw className="w-4 h-4" />
+                            إعادة محاولة الاتصال بالسبورة
+                        </button>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="bg-slate-200 text-slate-700 px-4 py-2.5 rounded-lg font-semibold hover:bg-slate-300 transition text-sm"
+                        >
+                            تحديث الصفحة بالكامل
+                        </button>
+                    </div>
                 </div>
             )}
 

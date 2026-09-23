@@ -257,6 +257,7 @@ class ClassroomController extends Controller
                     'room_uuid' => $whiteboardRoomUuid,
                     'room_token' => $whiteboardToken,
                 ],
+                'whiteboard_region' => config('services.whiteboard.region', 'sg'),
             ]);
         } catch (\Exception $e) {
             Log::error("getWhiteboardStatus: Failed to generate token for booking #{$bookingId}: ".$e->getMessage());
