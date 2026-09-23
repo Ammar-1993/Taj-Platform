@@ -51,93 +51,129 @@
 
 The platform operates on a high-performance decoupled monorepo architecture engineered for sub-second page loads, real-time media isolation, and financial integrity:
 
-1. **Hybrid Frontend Layer**: Next.js 14 App Router utilizes **Edge React Server Components (RSC)** with Stale-While-Revalidate (SWR) caching for instant public catalog rendering, while delegating interactive state and real-time media SDKs to the client browser.
-2. **Direct-to-Cloud Media (Zero Server Load)**: The virtual classroom (HD video, adaptive screen sharing, and interactive whiteboard) connects **directly, browser-to-provider**, through Agora and Netless — keeping the API server 100% free of heavy media traffic.
-3. **Async Queue & Token Pre-Generation**: A Redis queue worker pre-provisions virtual classrooms and pre-generates Agora RTC/RTM tokens in background jobs, achieving instantaneous classroom access (< 1ms cache hits).
-4. **Multi-Tier Persistence & Caching**: MySQL 8.0 manages ACID ledger transactions with composite indexes, paired with a Redis caching layer utilizing cache tags and automated Eloquent lifecycle invalidation.
+1. **Edge-Driven Presentation Layer**: Next.js 14 App Router on Vercel combines **Edge React Server Components (RSC)** with SWR caching (`revalidate: 60s`) for instant catalog rendering and dynamic OpenGraph SEO, alongside rich client-side state (TanStack Query) for authenticated interactive workflows.
+2. **Direct-to-Cloud Real-Time Media (Zero Server Load)**: The virtual classroom (adaptive HD video, isolated screen sharing, and interactive Netless whiteboard) connects **directly, browser-to-cloud**, via Agora SD-RTN and Netless CDN — keeping the backend API 100% free of heavy media traffic and CPU load.
+3. **Async Queue & WebRTC Token Pre-Provisioning**: A background Redis queue worker (`ProvisionVirtualClassroom`) pre-provisions whiteboard rooms and pre-generates Agora RTC/RTM tokens ahead of time, ensuring `< 1ms` instantaneous cold-join cache hits.
+4. **ACID Financial Ledger & Escrow Economy**: MySQL 8.0 handles overdraft-proof wallet transactions and slot bookings with row-level locks (`lockForUpdate()`) and composite indexing (`idx_bookings_booked_by_status_date`), safely holding funds in escrow until lesson completion (80% teacher / 20% platform revenue split).
+5. **Multi-Tier Tagged Invalidation & Cloud Security**: Redis 7 cache tags with automated Eloquent lifecycle hooks (`saved`, `deleted`), Moyasar HMAC-signed webhooks, Google reCAPTCHA v3 bot protection, and full-stack Sentry APM observability.
 
 ```mermaid
 flowchart TD
     %% Custom Styling for High Contrast and Maximum Readability
-    classDef client fill:#EFF6FF,stroke:#2563EB,stroke-width:2.5px,color:#1E3A8A,font-size:15px,font-weight:bold;
-    classDef media fill:#F0FDF4,stroke:#16A34A,stroke-width:2.5px,color:#14532D,font-size:15px,font-weight:bold;
-    classDef backend fill:#FEF2F2,stroke:#DC2626,stroke-width:2.5px,color:#7F1D1D,font-size:15px,font-weight:bold;
-    classDef data fill:#FAF5FF,stroke:#9333EA,stroke-width:2.5px,color:#581C87,font-size:15px,font-weight:bold;
-    classDef cloud fill:#FFFBEB,stroke:#D97706,stroke-width:2.5px,color:#78350F,font-size:15px,font-weight:bold;
+    classDef client fill:#EFF6FF,stroke:#2563EB,stroke-width:2.5px,color:#1E3A8A,font-size:14px,font-weight:bold;
+    classDef edge fill:#ECFEFF,stroke:#0891B2,stroke-width:2.5px,color:#164E63,font-size:14px,font-weight:bold;
+    classDef media fill:#F0FDF4,stroke:#16A34A,stroke-width:2.5px,color:#14532D,font-size:14px,font-weight:bold;
+    classDef backend fill:#FEF2F2,stroke:#DC2626,stroke-width:2.5px,color:#7F1D1D,font-size:14px,font-weight:bold;
+    classDef data fill:#FAF5FF,stroke:#9333EA,stroke-width:2.5px,color:#581C87,font-size:14px,font-weight:bold;
+    classDef cloud fill:#FFFBEB,stroke:#D97706,stroke-width:2.5px,color:#78350F,font-size:14px,font-weight:bold;
 
-    subgraph Tier1 ["1. Client & Presentation Layer (Next.js 14)"]
+    subgraph Tier0 ["👥 Platform Actors & Personas"]
         direction LR
-        USERS["👥 Platform Users (Students, Teachers, Parents)"]
-        FE["⚡ Next.js 14 App Router (RSC & Browser Client)"]
+        STUDENTS["👨‍🎓 Students"]
+        TEACHERS["👨‍🏫 Teachers"]
+        PARENTS["👨‍👩‍👧 Parents"]
+        ADMINS["👑 Platform Admins"]
     end
 
-    subgraph Tier2 ["2. Live Classroom — Direct Media (Zero Server Load)"]
-        direction LR
-        RTC["📹 Agora RTC (HD Video & Screen)"]
-        RTM["💬 Agora RTM (Signaling & Sync)"]
-        WB["🖊️ Netless Whiteboard (Canvas)"]
+    subgraph Tier1 ["1. Client & Presentation Layer (Next.js 14 App Router on Vercel)"]
+        direction TB
+        subgraph FE_Vercel ["Vercel Edge & Client Architecture"]
+            direction LR
+            RSC["⚡ Edge React Server Components (RSC)<br/>• SWR Catalog Cache (revalidate: 60s)<br/>• Dynamic OpenGraph & SEO SSR<br/>• /api/revalidate On-Demand Purge"]
+            CLIENT_UI["💻 Client-Side Application (React 18)<br/>• TanStack Query Server State<br/>• RTL-First Arabic UI (Tailwind CSS)<br/>• Role Guards & Wallet Dashboards"]
+            CLIENT_MEDIA["🎛️ In-Browser Real-Time Engines<br/>• agora-rtc-sdk-ng (Video/Audio/Screen)<br/>• agora-rtm-sdk (State & Signaling)<br/>• white-web-sdk (Netless Canvas)"]
+        end
     end
 
-    subgraph Tier3 ["3. Backend Application Core (Laravel 12)"]
+    subgraph Tier2 ["2. Live Classroom — Direct Media Cloud (Zero Server Load)"]
         direction LR
-        API["🔌 Laravel 12 REST API"]
-        ADMIN["👑 FilamentPHP v3 Admin"]
-        QUEUE["⚡ Redis Queue Worker"]
+        AGORA_RTC["📹 Agora SD-RTN RTC<br/>• Adaptive 720p/120p Simulcast<br/>• Dual Stream & Audio Priority<br/>• Dedicated Screen Share Stream"]
+        AGORA_RTM["💬 Agora RTM Cloud<br/>• Whiteboard Sync & Toggles<br/>• Peer Signaling & Presence"]
+        NETLESS_WB["🖊️ Netless Whiteboard Cloud<br/>• Real-Time Stroke/Cursor Sync<br/>• Follower Mode & Undo/Redo"]
     end
 
-    subgraph Tier4 ["4. Persistence, Caching & Cloud Infrastructure"]
-        direction LR
-        DB[("🗄️ MySQL 8.0 (ACID Ledger)")]
-        REDIS[("⚡ Redis (Cache, Tags & Queue)")]
-        PAY["💳 Moyasar (Escrow)"]
-        MON["🛰️ Sentry (APM)"]
+    subgraph Tier3 ["3. Backend Core & Admin (DigitalOcean VPS / Docker Cluster)"]
+        direction TB
+        NGINX["🛡️ Nginx Reverse Proxy (SSL / Alpine)<br/>• Security Headers / Strict CSP / Rate Limiting"]
+        subgraph DockerCluster ["Docker Compose Service Topology"]
+            direction LR
+            API["🔌 Laravel 12 REST API (taj_admin_web)<br/>• Sanctum RBAC Token Auth<br/>• AgoraService & WhiteboardService<br/>• BookingService (Race-Condition-Safe)<br/>• WalletService (True Escrow Ledger)"]
+            FILAMENT["👑 FilamentPHP v3 Admin Panel<br/>• Teacher KYC & Degree Verification<br/>• Dispute Resolution & Platform Payouts"]
+            QUEUE["⚙️ Queue Worker (taj_queue_worker)<br/>• ProvisionVirtualClassroom Job<br/>• Background Token Pre-Generation<br/>• Exponential Backoff & Failure Alerting"]
+        end
     end
 
-    %% User Interaction
-    USERS -->|Interact / Browse| FE
-    USERS -.->|Admin Portal| ADMIN
+    subgraph Tier4 ["4. Data Persistence & In-Memory Caching Tier"]
+        direction LR
+        MYSQL[("🗄️ MySQL 8.0 InnoDB (ACID Ledger)<br/>• Composite Index: idx_bookings_booked_by_status_date<br/>• Row-Level Locks: lockForUpdate()<br/>• Wallets, Ledger, KYC Documents")]
+        REDIS[("⚡ Redis 7 In-Memory Engine (taj_redis)<br/>• Tagged Caching: discovery, parent_dashboard<br/>• Token Pre-Cache: TTL 110m (agora:rtc / rtm)<br/>• Queue Broker & Atomic Distributed Locks")]
+    end
 
-    %% Direct Media Streams (Browser to Cloud)
-    FE <-->|Direct Video & Screen Feed| RTC
-    FE <-->|Direct RTM State Signals| RTM
-    FE <-->|Direct Drawing Sync| WB
+    subgraph Tier5 ["5. External SaaS & Cloud Integrations"]
+        direction LR
+        MOYASAR["💳 Moyasar Payment Gateway<br/>• Saudi Mada, Visa, Apple Pay<br/>• Signed Webhooks (HMAC-SHA256)<br/>• Idempotent Escrow Top-Up"]
+        RECAPTCHA["🤖 Google reCAPTCHA v3<br/>• Invisible Bot Score Verification"]
+        SENTRY["🛰️ Sentry Full-Stack APM<br/>• Frontend Replay & Source Maps<br/>• Backend Tracing & Livewire Filters"]
+    end
 
-    %% API Communication
-    FE -->|REST API & Edge SWR| API
+    %% Actor Connections
+    STUDENTS & TEACHERS & PARENTS -->|Browse Catalog & SSR| RSC
+    STUDENTS & TEACHERS & PARENTS -->|Interactive Dashboards & Booking| CLIENT_UI
+    ADMINS -->|Direct Admin Login| NGINX
 
-    %% Core Data & Caching Operations
-    API -->|ACID Transactions| DB
-    ADMIN -->|Audit & KYC Verification| DB
-    API <-->|Tagged Cache & Agora Tokens| REDIS
-    ADMIN <-->|Cached Dashboard Stats| REDIS
-    API -->|Dispatch Jobs| REDIS
-    REDIS -->|Process Provisioning Jobs| QUEUE
-    QUEUE -->|Pre-generate Tokens| REDIS
-    QUEUE -->|Provision Rooms| WB
+    %% Frontend to Backend API
+    CLIENT_UI -->|JSON REST API & Sanctum Tokens| NGINX
+    RSC -->|Parallel Server-Side Prefetch| NGINX
+    NGINX --> API
+    NGINX --> FILAMENT
+
+    %% Zero-Load Direct Media (Browser to Cloud)
+    CLIENT_MEDIA <-->|Direct WebRTC Audio/Video/Screen UDP| AGORA_RTC
+    CLIENT_MEDIA <-->|Direct Signaling & Sync WebSockets| AGORA_RTM
+    CLIENT_MEDIA <-->|Direct Real-Time Drawing Sync| NETLESS_WB
+
+    %% Backend to Persistence
+    API -->|ACID Transactions & Row Locks| MYSQL
+    FILAMENT -->|KYC Review & Ledger Audits| MYSQL
+    API <-->|Tagged Cache Hits & Token Fetch| REDIS
+    API -->|Dispatch Provisioning Jobs| REDIS
+
+    %% Queue Processing & Pre-generation
+    REDIS -->|Consume Provisioning Jobs| QUEUE
+    QUEUE -->|Pre-compute Agora RTC/RTM Tokens| REDIS
+    QUEUE -->|REST API: Provision Room UUID| NETLESS_WB
+    QUEUE -->|Persist Whiteboard UUID| MYSQL
+
+    %% Cache Invalidation
+    MYSQL -.->|Model Booted Hooks: saved / deleted| REDIS
+    API -.->|Secret Purge Request| RSC
 
     %% Cloud Integrations
-    API <-->|Signed Webhooks & Payouts| PAY
-    API -.->|Error Tracing| MON
-    FE -.->|Exception & Session Replay| MON
+    MOYASAR -->|Signed Webhook: wallet_topup| API
+    API -->|Verify Payments & Payouts| MOYASAR
+    API -->|Score Assessment| RECAPTCHA
+    API -.->|Trace & Exception Logs| SENTRY
+    CLIENT_UI -.->|Session Replay & Telemetry| SENTRY
 
-    %% Class Bindings
-    class USERS,FE client;
-    class RTC,RTM,WB media;
-    class API,ADMIN,QUEUE backend;
-    class DB,REDIS data;
-    class PAY,MON cloud;
+    %% Styling Classes
+    class STUDENTS,TEACHERS,PARENTS,ADMINS client;
+    class RSC,CLIENT_UI,CLIENT_MEDIA edge;
+    class AGORA_RTC,AGORA_RTM,NETLESS_WB media;
+    class NGINX,API,FILAMENT,QUEUE backend;
+    class MYSQL,REDIS data;
+    class MOYASAR,RECAPTCHA,SENTRY cloud;
 ```
 
 ### 📋 Architecture & Data Flow Key
 
-| Layer / Stream | Primary Technology | Architectural Role & Purpose |
+| Layer / Tier | Primary Technologies | Architectural Role & Implementation Details |
 | :--- | :--- | :--- |
-| **Client & Edge** | Next.js 14 App Router (Vercel) | Hybrid rendering: Edge React Server Components (RSC) with SWR for catalog pages, paired with client-side React Query state for authenticated user interactions. |
-| **Live Classroom** | Agora RTC + Agora RTM + Netless | **Direct browser-to-provider streaming**: High-definition video, adaptive low-bandwidth simulcast, and whiteboard sync connect directly to cloud CDNs, imposing zero media I/O on the backend server. |
-| **Application Core** | Laravel 12 + Sanctum + Spatie | Stateless REST API, role-based authorization (RBAC), and automated escrow calculations (80% teacher / 20% platform revenue split). |
-| **Background Queue** | Laravel Queue Worker + Redis | Asynchronous virtual classroom provisioning (`ProvisionVirtualClassroom`), pre-computing Agora RTC/RTM tokens and Netless room UUIDs ahead of session start. |
-| **Persistence & Cache**| MySQL 8.0 + Redis | Two-tier architecture: InnoDB ACID ledger with composite indexes for bookings and wallets, alongside Tagged Redis Caching for catalog, schedule, and dashboard data. |
-| **Cloud Services** | Moyasar + Sentry + reCAPTCHA | Seamless Saudi Mada/Visa escrow payments, full-stack APM tracing with source maps, and bot protection on registration forms. |
+| **0. Actors & Roles** | RBAC (Student, Teacher, Parent, Admin) | Distinct personas partitioned by Spatie RBAC, accessing tailored functional portals and localized Arabic interfaces. |
+| **1. Client & Presentation** | Next.js 14 App Router (Vercel) | Hybrid Edge architecture: React Server Components (RSC) pre-render public catalogs with 60s SWR caching; Client Components manage TanStack Query state, Arabic RTL layouts, and in-browser WebRTC engines. |
+| **2. Real-Time Media Cloud** | Agora SD-RTN + Netless Cloud | **Direct browser-to-cloud streams (Zero Server Load)**: Real-time 720p/120p simulcast video, independent screen sharing channel (`UID + 1_000_000_000`), WebSocket signaling, and collaborative vector whiteboard canvas. |
+| **3. Backend Application Core** | Laravel 12 + Filament v3 (Docker) | Production container cluster (`taj_admin_web`, `taj_queue_worker`) running PHP 8.3 Alpine behind an Nginx reverse proxy. Encapsulates business logic, KYC auditing, automated 80/20 revenue splitting, and async queue orchestration. |
+| **4. Persistence & Caching** | MySQL 8.0 (InnoDB) + Redis 7 | InnoDB ACID financial ledger with composite indexing (`idx_bookings_booked_by_status_date`) and row locks (`lockForUpdate()`), paired with Tagged Redis Caching (`Cache::tags()`) and automated Eloquent lifecycle invalidation. |
+| **5. Cloud SaaS Integrations** | Moyasar + reCAPTCHA + Sentry | Saudi-compliant payment escrow with HMAC-SHA256 signed webhooks, Google reCAPTCHA v3 bot protection, and full-stack Sentry APM with automated production source maps. |
 
 ---
 
