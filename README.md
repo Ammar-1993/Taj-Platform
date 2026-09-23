@@ -39,6 +39,7 @@
 4. [🆕 What's New](#-whats-new)
 5. [✨ Key Features](#-key-features)
 6. [🎓 Functional Requirements by Role](#-functional-requirements-by-role)
+   - [🔄 Student Discovery, Autonomous Booking & Classroom Attendance Sequence](#-student-discovery-autonomous-booking--classroom-attendance-sequence)
    - [🔄 Parent Account Governance, Escrow Funding & Supervision Sequence](#-parent-account-governance-escrow-funding--supervision-sequence)
    - [🔄 Teacher Lifecycle, Classroom Hosting & Settlement Sequence](#-teacher-lifecycle-classroom-hosting--earnings-settlement-sequence)
    - [🔄 Admin Super-User Governance & Operations Sequence](#-admin-super-user-governance--operations-sequence)
@@ -292,6 +293,113 @@ Recent additions that take the platform beyond a basic booking-and-video app:
 - Book a session directly from a teacher's live calendar, paid instantly from wallet balance.
 - Join a live classroom with video, audio, screen sharing, and the interactive whiteboard — no external app required.
 - Rate and review the teacher after each completed session.
+
+#### 🔄 Student Discovery, Autonomous Booking & Classroom Attendance Sequence
+
+The sequence diagram below illustrates the end-to-end operational journey of a Student on Taj Educational Platform: High-speed Next.js Edge Server Component discovery, race-condition-safe autonomous slot booking with escrow wallet deduction, sub-millisecond classroom entry with Agora WebRTC and Netless whiteboard follower synchronization, independent screen share reception, and mandatory post-session atomic review submission.
+
+```mermaid
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'fontFamily': 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    'fontSize': '13px',
+    'primaryTextColor': '#F8FAFC',
+    'lineColor': '#64748B',
+    'actorBkg': '#1E293B',
+    'actorBorder': '#475569',
+    'actorTextColor': '#F8FAFC',
+    'signalColor': '#64748B',
+    'signalTextColor': '#F8FAFC',
+    'noteBkgColor': '#1E293B',
+    'noteBorderColor': '#475569',
+    'noteTextColor': '#F8FAFC',
+    'activationBkgColor': '#334155',
+    'activationBorderColor': '#64748B'
+  }
+}}%%
+sequenceDiagram
+    autonumber
+    actor Student as 👨‍🎓 Student
+    participant FE as 💻 Next.js Client App (Edge RSC)
+    participant API as 🔌 Laravel REST API
+    participant DB as 🗄️ MySQL (InnoDB Ledger)
+    participant Redis as ⚡ Redis (Tags & Tokens)
+    participant Agora as 📹 Agora SD-RTN / RTM
+    participant Netless as 🖊️ Netless Whiteboard
+    actor Teacher as 👨‍🏫 Teacher
+
+    Note over Student,Redis: ── 1. Edge Catalog Discovery & Real-Time Slot Exploration ──
+    Student->>FE: Browse Teachers by Subject & Grade (/discovery/teachers)
+    FE->>Redis: Next.js Edge Server Component (SWR Cache revalidate: 60s)
+    Note over FE,Redis: Sub-second Server-Rendered HTML (Zero initial client waterfall)
+    Student->>FE: Open Teacher Profile & Select Date
+    FE->>API: GET /api/v1/discovery/teachers/{id}/slots
+    API->>Redis: Cache::tags(['teacher_slots'])->remember(15m TTL)
+    API-->>FE: 200 OK (Available bookable slots)
+
+    Note over Student,Teacher: ── 2. Autonomous Escrow Booking & Race-Condition Safe Lock ──
+    Student->>FE: Click "Book Slot" (Apply Promo Code optional)
+    FE->>API: POST /api/v1/bookings {teacher_slot_id, promo_code}
+    critical Atomic Database Transaction (Pessimistic Locking)
+        API->>DB: SELECT slot FROM teacher_slots FOR UPDATE
+        API->>DB: Check slot.status is available
+        API->>DB: Validate student wallet balance covers net_paid
+        API->>DB: WalletService::processTransaction(student, -net_paid, 'withdrawal')
+        API->>DB: INSERT INTO bookings (student_id, teacher_id, net_paid, status: 'scheduled')
+        API->>DB: UPDATE teacher_slots SET status = 'booked'
+    end
+    API->>Redis: Queue::dispatch(ProvisionVirtualClassroom)
+    API->>Teacher: Dispatch NewBookingNotification & BookingCreated event
+    API->>Redis: Invalidate Cache::tags(['teacher_slots', 'teachers'])
+    API-->>FE: 201 Created (Booking confirmed and slot locked)
+
+    Note over Student,Netless: ── 3. Live Classroom Entry & Follower Whiteboard Sync ──
+    Note over Redis,API: Pre-provisioned Agora RTC/RTM tokens & Netless room cached (110m TTL)
+    Student->>FE: Click "Enter Classroom" (/classroom/[id])
+    FE->>API: GET /api/v1/bookings/{id}/classroom
+    API->>DB: Atomically set student_joined_at = now()
+    API->>Redis: Fetch pre-generated student tokens (RTC, RTM, Netless Reader Token)
+    Note over API,Redis: Sub-millisecond Cache Hit (under 1ms)
+    API-->>FE: 200 OK (agora_channel, uid, tokens, whiteboard reader payload)
+
+    par Real-Time Media Initialization
+        FE->>Agora: Join RTC Channel as Host (Adaptive video & mic)
+        Agora-->>Teacher: Stream student audio & webcam feed
+    and Netless Follower Mode Whiteboard
+        FE->>Netless: Join Whiteboard as Reader (roomInstance.setViewMode(Follower))
+        Netless-->>FE: Synchronize teacher drawing strokes (disableSerialization = true for observer)
+    and Real-Time Signaling & Visibility Sync
+        FE->>Agora: Connect RTM Channel (Listen for 'whiteboard_toggle')
+        Agora-->>FE: Teacher toggles whiteboard -> Auto-flip visibility
+    end
+
+    loop Every 30 Seconds
+        FE->>API: POST /api/v1/bookings/{id}/heartbeat (last_heartbeat_at = now())
+        API-->>FE: 200 OK
+    end
+
+    opt Receive Teacher Screen Share
+        Agora-->>FE: Teacher publishes on screen UID (teacherUid + 1,000,000,000)
+        FE-->>Student: Display high-resolution screen share in independent canvas
+    end
+
+    Note over Student,DB: ── 4. Session Conclusion & Atomic Teacher Rating Update ──
+    Teacher->>API: PATCH /api/v1/bookings/{id}/complete (status: 'completed')
+    FE-->>Student: Prompt "Rate your experience with Teacher"
+    Student->>FE: Submit Rating (1-5 Stars) & Feedback Comment
+    FE->>API: POST /api/v1/reviews {booking_id, rating: 5, comment: 'ممتاز جداً'}
+    critical Atomic Review & Rating Calculation (Row Locking)
+        API->>DB: Verify booking completed and user is authorized student
+        API->>DB: INSERT INTO reviews (booking_id, student_id, teacher_id, rating: 5)
+        API->>DB: SELECT profile FROM teacher_profiles FOR UPDATE
+        API->>DB: Recalculate average_rating and increment reviews_count
+    end
+    API->>Redis: Invalidate Cache::tags(['teachers', 'discovery'])
+    API-->>FE: 200 OK (Review recorded and teacher public rating updated)
+```
+
+---
 
 ### 👨‍👩‍👧‍👦 Parent Features
 
