@@ -304,6 +304,107 @@ Recent additions that take the platform beyond a basic booking-and-video app:
 - Host the virtual classroom: video, screen sharing, and full whiteboard drawing control.
 - Automatically receive 80% of each session's payment directly into their wallet upon marking it complete, with the option to request payouts to a bank account.
 
+#### 🔄 Teacher Lifecycle, Classroom Hosting & Earnings Settlement Sequence
+
+The sequence diagram below illustrates the end-to-end operational lifecycle of a Teacher on Taj Educational Platform: KYC profile verification, availability slot management, sub-millisecond virtual classroom entry via pre-generated WebRTC and Netless tokens, independent screen sharing, mid-session silent token renewal, atomic 80% escrow earnings release, and bank payout requests.
+
+```mermaid
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'fontFamily': 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    'fontSize': '13px',
+    'primaryTextColor': '#F8FAFC',
+    'lineColor': '#64748B',
+    'actorBkg': '#1E293B',
+    'actorBorder': '#475569',
+    'actorTextColor': '#F8FAFC',
+    'signalColor': '#64748B',
+    'signalTextColor': '#F8FAFC',
+    'noteBkgColor': '#1E293B',
+    'noteBorderColor': '#475569',
+    'noteTextColor': '#F8FAFC',
+    'activationBkgColor': '#334155',
+    'activationBorderColor': '#64748B'
+  }
+}}%%
+sequenceDiagram
+    autonumber
+    actor Teacher as 👨‍🏫 Teacher
+    participant FE as 💻 Next.js Client App
+    participant API as 🔌 Laravel REST API
+    participant DB as 🗄️ MySQL (InnoDB Ledger)
+    participant Redis as ⚡ Redis (Tokens & Cache)
+    participant Agora as 📹 Agora SD-RTN / RTM
+    participant Netless as 🖊️ Netless Whiteboard
+    actor Student as 👨‍🎓 Student
+
+    Note over Teacher,API: ── 1. KYC Profile Submission & Availability Scheduling ──
+    Teacher->>FE: Complete Profile (Bio, Subject, National ID, Degree)
+    FE->>API: POST /api/v1/profile/teacher (Multipart Form)
+    API->>DB: UPDATE teacher_profiles (is_verified = false, docs saved)
+    Note over API,DB: Awaits Admin Verification via Filament Dashboard
+    API-->>FE: 200 OK (Under Review)
+    Teacher->>FE: Publish Available Slots (Date & Time Window)
+    FE->>API: POST /api/v1/teacher/slots {slot_date, start_time, end_time}
+    API->>DB: Check Overlaps & INSERT teacher_slots (status: available)
+    API->>Redis: Invalidate Cache::tags(['teacher_slots', 'teacher_{id}'])
+    API-->>FE: 201 Created (Slots live on public booking calendar)
+
+    Note over Teacher,Student: ── 2. Live Classroom Entry & Zero-Latency Media Connect ──
+    Note over Redis,API: Booking confirmed & provisioned in advance by ProvisionVirtualClassroom job
+    Teacher->>FE: Click "Join Classroom" (/classroom/[id])
+    FE->>API: GET /api/v1/bookings/{id}/classroom
+    API->>DB: Atomically set teacher_joined_at = now(), status = in_progress
+    API->>Redis: Fetch pre-generated tokens (RTC, RTM, Screen, Whiteboard Admin)
+    Note over API,Redis: Sub-millisecond Cache Hit (< 1ms)
+    API-->>FE: 200 OK (agora_channel, uid, tokens, whiteboard payload)
+
+    par Real-Time Media Initialization
+        FE->>Agora: Join RTC Channel as Host (Adaptive 720p/120p video & mic)
+        Agora-->>Student: Low-latency audio & video stream
+    and Whiteboard Canvas Initialization
+        FE->>Netless: Join Whiteboard as Admin (disableSerialization = false)
+        Netless-->>Student: Synchronize live drawing strokes & cursor
+    and RTM Signaling & State Sync
+        FE->>Agora: Connect RTM Channel (Broadcast 'whiteboard_toggle')
+        Agora-->>Student: Synchronize UI state & canvas visibility
+    end
+
+    loop Every 30 Seconds
+        FE->>API: POST /api/v1/bookings/{id}/heartbeat (last_heartbeat_at = now())
+        API-->>FE: 200 OK
+    end
+
+    Note over Teacher,Agora: ── 3. Dedicated Screen Sharing & Mid-Session Token Refresh ──
+    Teacher->>FE: Toggle "Share Screen"
+    FE->>Agora: Publish screen capture on dedicated UID (teacherUid + 1,000,000,000)
+    Note over FE,Agora: Dual-stream enabled (480p low / 1080p high); isolated from webcam track
+    Agora-->>Student: Receive dedicated screen sharing track
+
+    opt Mid-Session Silent Token Renewal (Expiry Callback)
+        FE->>API: GET /api/v1/bookings/{id}/refresh-token
+        API->>Redis: AgoraService::refreshTokens(channel, uid, isTeacher: true)
+        API-->>FE: 200 OK (fresh RTC & Screen tokens)
+        FE->>Agora: client.renewToken(token) & screenClient.renewToken(screenToken)
+    end
+
+    Note over Teacher,DB: ── 4. Session Completion, 80% Revenue Release & Payout ──
+    Teacher->>FE: Click "Complete Lesson"
+    FE->>API: PATCH /api/v1/bookings/{id}/complete
+    critical Atomic Database Transaction (Pessimistic Locking)
+        API->>DB: SELECT booking FOR UPDATE
+        API->>DB: UPDATE bookings SET status = 'completed', completed_at = now()
+        Note over API: Calculate 80% teacher revenue / 20% platform commission
+        API->>DB: WalletService::processTransaction(teacher, +80%, 'class_earnings')
+    end
+    API-->>FE: 200 OK (Wallet balance credited immediately)
+    Teacher->>FE: Submit Bank Payout Request (Amount >= 50 SAR, Bank Name, IBAN)
+    FE->>API: POST /api/v1/wallet/payouts {amount, bank_name, iban}
+    API->>DB: Withhold amount & INSERT payout_requests (status: pending)
+    API-->>FE: 201 Created (Payout request logged for Admin wire transfer audit)
+```
+
 ### 🛡️ Admin (Super User) Features
 
 - Review and verify (or reject) teacher KYC applications.
