@@ -39,6 +39,7 @@
 4. [🆕 What's New](#-whats-new)
 5. [✨ Key Features](#-key-features)
 6. [🎓 Functional Requirements by Role](#-functional-requirements-by-role)
+   - [🔄 Parent Account Governance, Escrow Funding & Supervision Sequence](#-parent-account-governance-escrow-funding--supervision-sequence)
    - [🔄 Teacher Lifecycle, Classroom Hosting & Settlement Sequence](#-teacher-lifecycle-classroom-hosting--earnings-settlement-sequence)
    - [🔄 Admin Super-User Governance & Operations Sequence](#-admin-super-user-governance--operations-sequence)
 7. [🛠️ Technology Stack](#️-technology-stack)
@@ -298,6 +299,117 @@ Recent additions that take the platform beyond a basic booking-and-video app:
 - Top up the family wallet via Moyasar and allocate spending allowances per child.
 - Grant or revoke a child's ability to book and pay for sessions independently.
 - Monitor a child's schedule, attendance, and the reviews they've left.
+
+#### 🔄 Parent Account Governance, Escrow Funding & Supervision Sequence
+
+The sequence diagram below illustrates the end-to-end operational workflows executed by a Parent on Taj Educational Platform: Child Sub-Account Provisioning & Permission Control, Moyasar Escrow Wallet Top-Up & Idempotent Crediting, Proxy Booking on Behalf of Children with Pessimistic Locking, High-Performance Dashboard Telemetry Caching, and 24-Hour Prior Cancellation with Automated Escrow Refunds.
+
+```mermaid
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'fontFamily': 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    'fontSize': '13px',
+    'primaryTextColor': '#F8FAFC',
+    'lineColor': '#64748B',
+    'actorBkg': '#1E293B',
+    'actorBorder': '#475569',
+    'actorTextColor': '#F8FAFC',
+    'signalColor': '#64748B',
+    'signalTextColor': '#F8FAFC',
+    'noteBkgColor': '#1E293B',
+    'noteBorderColor': '#475569',
+    'noteTextColor': '#F8FAFC',
+    'activationBkgColor': '#334155',
+    'activationBorderColor': '#64748B'
+  }
+}}%%
+sequenceDiagram
+    autonumber
+    actor Parent as 👨‍👩‍👧 Parent
+    participant FE as 💻 Next.js Client App
+    participant API as 🔌 Laravel REST API
+    participant Gateway as 💳 Moyasar Gateway
+    participant DB as 🗄️ MySQL (InnoDB Ledger)
+    participant Redis as ⚡ Redis (Tags & Cache)
+    actor Child as 👨‍🎓 Child (Student)
+    actor Teacher as 👨‍🏫 Teacher
+
+    Note over Parent,Child: ── 1. Child Sub-Account Provisioning & Permission Control ──
+    Parent->>FE: Add Child (Name, Email, Password, Grade Level)
+    FE->>API: POST /api/v1/parent/children {name, email, password, grade_level_id}
+    critical DB Transaction: Atomic Child Account Creation
+        API->>DB: INSERT INTO users (parent_id, role: student)
+        API->>DB: INSERT INTO wallets (user_id: child, balance: 0.00)
+        API->>DB: INSERT INTO student_profiles (grade_level_id, can_book_independently: false)
+    end
+    API->>Redis: Invalidate Cache::tags(['parent_dashboard', 'parent_{id}'])
+    API-->>FE: 201 Created (Child account linked and configured)
+    opt Toggle Autonomous Booking Permission
+        Parent->>FE: Toggle "Allow Independent Booking"
+        FE->>API: PATCH /api/v1/parent/children/{id}/toggle-permission
+        API->>DB: UPDATE student_profiles SET can_book_independently = true/false
+        API->>Redis: Invalidate Cache::tags(['parent_dashboard', 'parent_{id}'])
+        API-->>FE: 200 OK (Booking permission updated)
+    end
+
+    Note over Parent,Gateway: ── 2. Moyasar Wallet Top-Up & Idempotent Crediting ──
+    Parent->>FE: Enter Top-Up Amount (e.g. 500 SAR)
+    FE->>API: POST /api/v1/payments/create {amount: 500}
+    API->>Gateway: POST /v1/invoices {amount: 50000, metadata: {user_id, type: 'wallet_topup'}}
+    Gateway-->>API: 200 OK {invoice_id, checkout_url}
+    API-->>FE: Return checkout_url
+    Parent->>Gateway: Complete Payment (Mada / Visa 3D-Secure OTP)
+    Gateway->>API: Signed Webhook (HMAC-SHA256): payment_completed
+    critical Atomic Wallet Deposit (Idempotency Guard)
+        API->>DB: Check if invoice transaction already processed
+        API->>DB: UPDATE wallets SET balance = balance + 500 WHERE user_id = parent
+        API->>DB: INSERT INTO wallet_transactions (type: deposit, amount: 500)
+    end
+    API->>Redis: Invalidate Cache::tags(['parent_dashboard', 'parent_{id}'])
+    API-->>Gateway: 200 OK (Webhook Acknowledged)
+    FE->>API: POST /api/v1/payments/verify {id: invoice_id}
+    API-->>FE: 200 OK (Live parent balance updated)
+
+    Note over Parent,Teacher: ── 3. Proxy Booking & Escrow Deduction on Behalf of Child ──
+    Parent->>FE: Select Subject, Teacher & Slot for Child
+    FE->>API: POST /api/v1/bookings {teacher_slot_id, child_id, promo_code}
+    critical Atomic Slot Reservation & Escrow Deduction (Pessimistic Locking)
+        API->>DB: SELECT slot FROM teacher_slots FOR UPDATE
+        API->>DB: Verify parent wallet balance covers net_paid
+        API->>DB: WalletService::processTransaction(parent, -net_paid, 'withdrawal')
+        API->>DB: INSERT INTO bookings (student_id: child, booked_by_id: parent, status: 'scheduled')
+        API->>DB: UPDATE teacher_slots SET status = 'booked'
+    end
+    API->>Redis: Queue::dispatch(ProvisionVirtualClassroom)
+    API->>Teacher: Dispatch NewBookingNotification & BookingCreated event
+    API->>Redis: Invalidate Cache::tags(['teacher_slots', 'parent_dashboard', 'parent_{id}'])
+    API-->>FE: 201 Created (Booking confirmed with student assigned to child)
+
+    Note over Parent,DB: ── 4. Dashboard Telemetry & 24h Cancellation Refund ──
+    Parent->>FE: Open Parent Dashboard (/parent/dashboard)
+    FE->>API: GET /api/v1/parent/dashboard?page=1
+    API->>Redis: Fetch cached telemetry (Cache::tags(['parent_dashboard', 'parent_{id}']))
+    Note over API,Redis: Sub-20ms Tagged Cache Hit (Aggregated spending & children schedules)
+    API->>DB: Live read parent wallet balance (bypasses cache for real-time accuracy)
+    API-->>FE: 200 OK {total_spent, bookings, wallets, parent_balance}
+    opt 24-Hour Prior Cancellation & Escrow Refund
+        Parent->>FE: Click "Cancel Session"
+        FE->>API: PATCH /api/v1/bookings/{id}/cancel
+        API->>DB: Verify session start time is at least 24 hours in future
+        critical Atomic Cancellation & Escrow Refund
+            API->>DB: SELECT booking FOR UPDATE
+            API->>DB: UPDATE bookings SET status = 'cancelled'
+            API->>DB: UPDATE teacher_slots SET status = 'available'
+            API->>DB: WalletService::processTransaction(parent, +net_paid, 'refund')
+        end
+        API->>Redis: Invalidate Agora RTC/RTM & Netless room tokens
+        API->>Redis: Invalidate Cache::tags(['parent_dashboard', 'teacher_slots'])
+        API-->>FE: 200 OK (Full refund credited back to parent wallet)
+    end
+```
+
+---
 
 ### 👨‍🏫 Teacher Features
 
