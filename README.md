@@ -406,6 +406,7 @@ sequenceDiagram
     API->>DB: Withhold amount & INSERT payout_requests (status: pending)
     API-->>FE: 201 Created (Payout request logged for Admin wire transfer audit)
 ```
+---
 
 ### 🛡️ Admin (Super User) Features
 
