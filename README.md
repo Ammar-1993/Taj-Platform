@@ -59,13 +59,9 @@ The platform operates on a high-performance decoupled monorepo architecture engi
 
 ```mermaid
 flowchart TD
-    %% Custom Styling for High Contrast and Maximum Readability
-    classDef client fill:#EFF6FF,stroke:#2563EB,stroke-width:2.5px,color:#1E3A8A,font-size:14px,font-weight:bold;
-    classDef edge fill:#ECFEFF,stroke:#0891B2,stroke-width:2.5px,color:#164E63,font-size:14px,font-weight:bold;
-    classDef media fill:#F0FDF4,stroke:#16A34A,stroke-width:2.5px,color:#14532D,font-size:14px,font-weight:bold;
-    classDef backend fill:#FEF2F2,stroke:#DC2626,stroke-width:2.5px,color:#7F1D1D,font-size:14px,font-weight:bold;
-    classDef data fill:#FAF5FF,stroke:#9333EA,stroke-width:2.5px,color:#581C87,font-size:14px,font-weight:bold;
-    classDef cloud fill:#FFFBEB,stroke:#D97706,stroke-width:2.5px,color:#78350F,font-size:14px,font-weight:bold;
+    %% Elegant Uniform Solid-Slate Palette
+    classDef solid fill:#1E293B,stroke:#475569,stroke-width:2px,color:#FFFFFF,font-size:14px,font-weight:600;
+    linkStyle default stroke:#64748B,stroke-width:1.8px;
 
     subgraph Tier0 ["👥 Platform Actors & Personas"]
         direction LR
@@ -79,41 +75,41 @@ flowchart TD
         direction TB
         subgraph FE_Vercel ["Vercel Edge & Client Architecture"]
             direction LR
-            RSC["⚡ Edge React Server Components (RSC)<br/>• SWR Catalog Cache (revalidate: 60s)<br/>• Dynamic OpenGraph & SEO SSR<br/>• /api/revalidate On-Demand Purge"]
-            CLIENT_UI["💻 Client-Side Application (React 18)<br/>• TanStack Query Server State<br/>• RTL-First Arabic UI (Tailwind CSS)<br/>• Role Guards & Wallet Dashboards"]
-            CLIENT_MEDIA["🎛️ In-Browser Real-Time Engines<br/>• agora-rtc-sdk-ng (Video/Audio/Screen)<br/>• agora-rtm-sdk (State & Signaling)<br/>• white-web-sdk (Netless Canvas)"]
+            RSC["⚡ Next.js Edge RSC<br/>SWR Cache (60s) • SEO & OpenGraph • ISR Purge"]
+            CLIENT_UI["💻 Next.js Client Application<br/>TanStack Query • RTL Arabic UI • Role Guards"]
+            CLIENT_MEDIA["🎛️ In-Browser Media Engines<br/>Agora RTC/RTM SDKs • Netless Whiteboard SDK"]
         end
     end
 
     subgraph Tier2 ["2. Live Classroom — Direct Media Cloud (Zero Server Load)"]
         direction LR
-        AGORA_RTC["📹 Agora SD-RTN RTC<br/>• Adaptive 720p/120p Simulcast<br/>• Dual Stream & Audio Priority<br/>• Dedicated Screen Share Stream"]
-        AGORA_RTM["💬 Agora RTM Cloud<br/>• Whiteboard Sync & Toggles<br/>• Peer Signaling & Presence"]
-        NETLESS_WB["🖊️ Netless Whiteboard Cloud<br/>• Real-Time Stroke/Cursor Sync<br/>• Follower Mode & Undo/Redo"]
+        AGORA_RTC["📹 Agora SD-RTN RTC<br/>Adaptive HD/Simulcast • Isolated Screen Share"]
+        AGORA_RTM["💬 Agora RTM Cloud<br/>Real-Time State & Whiteboard Sync"]
+        NETLESS_WB["🖊️ Netless Whiteboard Cloud<br/>Collaborative Vector Canvas • Follower Mode"]
     end
 
     subgraph Tier3 ["3. Backend Core & Admin (DigitalOcean VPS / Docker Cluster)"]
         direction TB
-        NGINX["🛡️ Nginx Reverse Proxy (SSL / Alpine)<br/>• Security Headers / Strict CSP / Rate Limiting"]
+        NGINX["🛡️ Nginx Reverse Proxy<br/>SSL Termination • Strict CSP • Rate Limiting"]
         subgraph DockerCluster ["Docker Compose Service Topology"]
             direction LR
-            API["🔌 Laravel 12 REST API (taj_admin_web)<br/>• Sanctum RBAC Token Auth<br/>• AgoraService & WhiteboardService<br/>• BookingService (Race-Condition-Safe)<br/>• WalletService (True Escrow Ledger)"]
-            FILAMENT["👑 FilamentPHP v3 Admin Panel<br/>• Teacher KYC & Degree Verification<br/>• Dispute Resolution & Platform Payouts"]
-            QUEUE["⚙️ Queue Worker (taj_queue_worker)<br/>• ProvisionVirtualClassroom Job<br/>• Background Token Pre-Generation<br/>• Exponential Backoff & Failure Alerting"]
+            API["🔌 Laravel 12 REST API<br/>Sanctum RBAC • Service Layer • Escrow Ledger"]
+            FILAMENT["👑 FilamentPHP v3 Admin<br/>Teacher KYC Audit • Dispute Arbitration"]
+            QUEUE["⚙️ Redis Queue Worker<br/>Async Classroom Provisioning & Token Pre-Gen"]
         end
     end
 
     subgraph Tier4 ["4. Data Persistence & In-Memory Caching Tier"]
         direction LR
-        MYSQL[("🗄️ MySQL 8.0 InnoDB (ACID Ledger)<br/>• Composite Index: idx_bookings_booked_by_status_date<br/>• Row-Level Locks: lockForUpdate()<br/>• Wallets, Ledger, KYC Documents")]
-        REDIS[("⚡ Redis 7 In-Memory Engine (taj_redis)<br/>• Tagged Caching: discovery, parent_dashboard<br/>• Token Pre-Cache: TTL 110m (agora:rtc / rtm)<br/>• Queue Broker & Atomic Distributed Locks")]
+        MYSQL[("🗄️ MySQL 8.0 InnoDB<br/>ACID Financial Ledger • Composite Indexes")]
+        REDIS[("⚡ Redis 7 In-Memory<br/>Tagged Caching • Token Pre-Cache • Job Queue")]
     end
 
     subgraph Tier5 ["5. External SaaS & Cloud Integrations"]
         direction LR
-        MOYASAR["💳 Moyasar Payment Gateway<br/>• Saudi Mada, Visa, Apple Pay<br/>• Signed Webhooks (HMAC-SHA256)<br/>• Idempotent Escrow Top-Up"]
-        RECAPTCHA["🤖 Google reCAPTCHA v3<br/>• Invisible Bot Score Verification"]
-        SENTRY["🛰️ Sentry Full-Stack APM<br/>• Frontend Replay & Source Maps<br/>• Backend Tracing & Livewire Filters"]
+        MOYASAR["💳 Moyasar Payment Gateway<br/>Signed Webhook (HMAC-SHA256) • Mada / Visa"]
+        RECAPTCHA["🤖 Google reCAPTCHA v3<br/>Bot Risk Scoring & Fraud Prevention"]
+        SENTRY["🛰️ Sentry Full-Stack APM<br/>Real-Time Tracing • Session Replay"]
     end
 
     %% Actor Connections
@@ -155,13 +151,8 @@ flowchart TD
     API -.->|Trace & Exception Logs| SENTRY
     CLIENT_UI -.->|Session Replay & Telemetry| SENTRY
 
-    %% Styling Classes
-    class STUDENTS,TEACHERS,PARENTS,ADMINS client;
-    class RSC,CLIENT_UI,CLIENT_MEDIA edge;
-    class AGORA_RTC,AGORA_RTM,NETLESS_WB media;
-    class NGINX,API,FILAMENT,QUEUE backend;
-    class MYSQL,REDIS data;
-    class MOYASAR,RECAPTCHA,SENTRY cloud;
+    %% Apply Solid Class to All Nodes
+    class STUDENTS,TEACHERS,PARENTS,ADMINS,RSC,CLIENT_UI,CLIENT_MEDIA,AGORA_RTC,AGORA_RTM,NETLESS_WB,NGINX,API,FILAMENT,QUEUE,MYSQL,REDIS,MOYASAR,RECAPTCHA,SENTRY solid;
 ```
 
 ### 📋 Architecture & Data Flow Key
