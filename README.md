@@ -39,6 +39,8 @@
 4. [🆕 What's New](#-whats-new)
 5. [✨ Key Features](#-key-features)
 6. [🎓 Functional Requirements by Role](#-functional-requirements-by-role)
+   - [🔄 Teacher Lifecycle, Classroom Hosting & Settlement Sequence](#-teacher-lifecycle-classroom-hosting--earnings-settlement-sequence)
+   - [🔄 Admin Super-User Governance & Operations Sequence](#-admin-super-user-governance--operations-sequence)
 7. [🛠️ Technology Stack](#️-technology-stack)
 8. [📊 Project Stats](#-project-stats)
 9. [🚀 Getting Started](#-getting-started)
