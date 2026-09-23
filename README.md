@@ -312,6 +312,83 @@ Recent additions that take the platform beyond a basic booking-and-video app:
 - Manage the subject and grade-level catalog available across the platform.
 - Monitor system health and error rates via the integrated Sentry dashboard.
 
+#### 🔄 Admin Super-User Governance & Operations Sequence
+
+The sequence diagram below illustrates the administrative workflows executed by Platform Administrators through the FilamentPHP v3 dashboard: Teacher KYC Verification & Edge Catalog Propagation, Dispute Resolution & Atomic Escrow Refund Override, and Teacher Payout Reconciliation.
+
+```mermaid
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'fontFamily': 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    'fontSize': '13px',
+    'primaryTextColor': '#F8FAFC',
+    'lineColor': '#64748B',
+    'actorBkg': '#1E293B',
+    'actorBorder': '#475569',
+    'actorTextColor': '#F8FAFC',
+    'signalColor': '#64748B',
+    'signalTextColor': '#F8FAFC',
+    'noteBkgColor': '#1E293B',
+    'noteBorderColor': '#475569',
+    'noteTextColor': '#F8FAFC',
+    'activationBkgColor': '#334155',
+    'activationBorderColor': '#64748B'
+  }
+}}%%
+sequenceDiagram
+    autonumber
+    actor Admin as 👑 Admin (Super User)
+    participant Filament as 🖥️ Filament v3 Panel
+    participant Service as ⚙️ Backend Services
+    participant DB as 🗄️ MySQL (InnoDB Ledger)
+    participant Redis as ⚡ Redis (Tags & Cache)
+    participant Edge as 🌐 Next.js Edge (Vercel)
+    actor Teacher as 👨‍🏫 Teacher
+    actor Student as 👨‍🎓 Student
+
+    Note over Admin,Edge: ── 1. Teacher KYC Verification & Edge Catalog Propagation ──
+    Admin->>Filament: Inspect KYC application (National ID & Degree)
+    Admin->>Filament: Click "Approve Teacher" (is_verified = true)
+    Filament->>DB: UPDATE teacher_profiles SET is_verified = true
+    Note over DB,Redis: Eloquent booted() lifecycle hook triggers
+    DB->>Redis: Cache::tags(['teachers', 'discovery'])->flush()
+    Filament->>Edge: POST /api/revalidate {tag: 'teachers', secret: KEY}
+    Edge-->>Filament: 200 OK (Edge SWR Cache Purged)
+    Filament-->>Admin: Success: Teacher instantly live in public search catalog
+
+    Note over Admin,Student: ── 2. Dispute Resolution & Atomic Escrow Refund Override ──
+    Student->>Filament: Submit dispute / attendance grievance
+    Admin->>Filament: Open BookingResource -> Click "Force Cancel & Refund"
+    Filament->>Service: BookingService::cancelBooking(booking, adminUser)
+    critical Atomic Database Transaction (Pessimistic Locking)
+        Service->>DB: SELECT booking FOR UPDATE
+        Service->>DB: UPDATE bookings SET status = 'cancelled'
+        Service->>DB: UPDATE teacher_slots SET status = 'available'
+        Service->>DB: WalletService::processTransaction(payer, +net_paid, 'refund')
+    end
+    Service->>Redis: AgoraService::invalidateTokens(channel, teacher, student)
+    Service->>Redis: Invalidate Whiteboard Tokens (admin, reader)
+    Service->>Student: Dispatch Refund Notification & Update Balance
+    Service-->>Filament: Return Cancelled & Refunded Status
+    Filament-->>Admin: Alert: "Full refund processed & slot restored to available"
+
+    Note over Admin,Teacher: ── 3. Teacher Payout Audit & Settlement Reconciliation ──
+    Teacher->>Filament: Request bank withdrawal (from 80% earned balance)
+    Admin->>Filament: Review PayoutRequestResource (Verify IBAN)
+    alt Approved & Wire Transferred
+        Admin->>Filament: Click "Mark as Transferred"
+        Filament->>DB: UPDATE payout_requests SET status = 'transferred'
+        Filament->>Teacher: Dispatch PayoutProcessedNotification
+    else Rejected (Invalid IBAN / Non-Compliant)
+        Admin->>Filament: Click "Reject & Refund" (Enter reason)
+        Filament->>DB: UPDATE payout_requests SET status = 'rejected'
+        Filament->>DB: WalletService::processTransaction(teacher, +amount, 'deposit')
+        Filament->>Teacher: Dispatch Rejection Notification with Admin Reason
+    end
+    Filament-->>Admin: Payout lifecycle finalized & ledger balanced
+```
+
 ---
 
 ## 🛠️ Technology Stack
