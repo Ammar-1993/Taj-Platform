@@ -39,6 +39,7 @@
 4. [🆕 What's New](#-whats-new)
 5. [✨ Key Features](#-key-features)
 6. [🎓 Functional Requirements by Role](#-functional-requirements-by-role)
+   - [🔄 Universal Authentication, Financial Ledger & Support Sequence](#-universal-authentication-financial-ledger--support-sequence)
    - [🔄 Student Discovery, Autonomous Booking & Classroom Attendance Sequence](#-student-discovery-autonomous-booking--classroom-attendance-sequence)
    - [🔄 Parent Account Governance, Escrow Funding & Supervision Sequence](#-parent-account-governance-escrow-funding--supervision-sequence)
    - [🔄 Teacher Lifecycle, Classroom Hosting & Settlement Sequence](#-teacher-lifecycle-classroom-hosting--earnings-settlement-sequence)
@@ -286,6 +287,90 @@ Recent additions that take the platform beyond a basic booking-and-video app:
 - Role-aware dashboards summarizing schedules, wallet balance, and notifications.
 - Full transaction history for every wallet movement (top-ups, deductions, earnings, refunds).
 - Native RTL Arabic interface throughout.
+
+#### 🔄 Universal Authentication, Financial Ledger & Support Sequence
+
+The sequence diagram below illustrates the shared core operational workflows executed across all authenticated personas (Students, Parents, and Teachers) on Taj Educational Platform: Throttled Laravel Sanctum Token Authentication, Role-Aware Session Hydration & Real-Time RTL UI State, Centralized Wallet Ledger & Transaction History, Real-Time Notification Polling & Read Mutation, Customer Support Ticketing, and Secure Token Revocation on Logout.
+
+```mermaid
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'fontFamily': 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    'fontSize': '13px',
+    'primaryTextColor': '#F8FAFC',
+    'lineColor': '#64748B',
+    'actorBkg': '#1E293B',
+    'actorBorder': '#475569',
+    'actorTextColor': '#F8FAFC',
+    'signalColor': '#64748B',
+    'signalTextColor': '#F8FAFC',
+    'noteBkgColor': '#1E293B',
+    'noteBorderColor': '#475569',
+    'noteTextColor': '#F8FAFC',
+    'activationBkgColor': '#334155',
+    'activationBorderColor': '#64748B'
+  }
+}}%%
+sequenceDiagram
+    autonumber
+    actor User as 👤 Platform User (Any Role)
+    participant FE as 💻 Next.js Client App (RTL Arabic)
+    participant API as 🔌 Laravel REST API
+    participant DB as 🗄️ MySQL (InnoDB Ledger)
+    participant Redis as ⚡ Redis (Rate Limit & Cache)
+    participant Support as 🎧 Support & Notifications
+
+    Note over User,Redis: ── 1. Throttled Authentication & Sanctum Token Issuance ──
+    User->>FE: Enter Credentials (Email & Password)
+    FE->>API: POST /api/v1/auth/login {email, password}
+    API->>Redis: Check Rate Limiter (throttle:login)
+    alt Exceeded 5 Failed Attempts
+        API-->>FE: 429 Too Many Requests (Lockout for 60 seconds)
+    else Valid Credentials
+        API->>DB: SELECT user FROM users WHERE email = ?
+        API->>DB: Hash::check(password, user.password)
+        API->>DB: UPDATE users SET last_login_at = now(), last_login_ip = ip
+        API->>DB: INSERT INTO personal_access_tokens (Sanctum Token)
+        API-->>FE: 200 OK {token, user: {id, name, roles, wallet}}
+        FE->>FE: Store token in secure storage and set Axios Authorization header
+    end
+
+    Note over User,DB: ── 2. Session Hydration & Universal Financial Ledger ──
+    FE->>API: GET /api/v1/auth/me (Bearer Token)
+    API->>DB: Eager load user roles, permissions and role profiles
+    API-->>FE: 200 OK (Hydrate client role state and Arabic RTL UI)
+    User->>FE: Open Wallet Screen (/wallet)
+    FE->>API: GET /api/v1/wallet?type=&page=1
+    API->>DB: SELECT balance FROM wallets WHERE user_id = user.id
+    API->>DB: SELECT transactions FROM wallet_transactions WHERE wallet_id = ? ORDER BY created_at DESC
+    API-->>FE: 200 OK {balance, transactions: [deposits, withdrawals, earnings, refunds]}
+
+    Note over User,Support: ── 3. Notification Polling & Read Status Mutation ──
+    Note over Support,DB: System events (bookings, payouts, escrow) dispatch Database Notifications
+    FE->>API: GET /api/v1/notifications (Unread alerts)
+    API->>DB: SELECT notifications WHERE notifiable_id = user.id AND read_at IS NULL
+    API-->>FE: 200 OK (Unread notification count and badge list)
+    User->>FE: Click on notification item
+    FE->>API: POST /api/v1/notifications/{id}/read
+    API->>DB: UPDATE notifications SET read_at = now() WHERE id = ?
+    API-->>FE: 200 OK {status: 'success'}
+
+    Note over User,DB: ── 4. Customer Support Ticketing & Secure Session Termination ──
+    opt Submit Customer Support Ticket
+        User->>FE: Fill Support Request (Subject, Description, optional booking_id)
+        FE->>API: POST /api/v1/support-tickets {subject, description, booking_id}
+        API->>DB: INSERT INTO support_tickets (user_id, status: 'open')
+        API-->>FE: 201 Created (Ticket submitted for support team investigation)
+    end
+    User->>FE: Click "Logout"
+    FE->>API: POST /api/v1/auth/logout
+    API->>DB: DELETE FROM personal_access_tokens WHERE id = currentAccessToken.id
+    API-->>FE: 200 OK (Session invalidated successfully)
+    FE->>FE: Purge local storage and reset TanStack Query cache
+```
+
+---
 
 ### 👨‍🎓 Student Features
 
