@@ -63,118 +63,43 @@ The platform operates on a high-performance decoupled monorepo architecture engi
 5. **Multi-Tier Tagged Invalidation & Cloud Security**: Redis 7 cache tags with automated Eloquent lifecycle hooks (`saved`, `deleted`), Moyasar HMAC-signed webhooks, Google reCAPTCHA v3 bot protection, and full-stack Sentry APM observability.
 
 ```mermaid
-%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'fontFamily': 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    'fontSize': '15px',
-    'primaryTextColor': '#F8FAFC',
-    'lineColor': '#64748B',
-    'edgeLabelBackground': '#0F172A'
-  },
-  'flowchart': {
-    'nodeSpacing': 60,
-    'rankSpacing': 70,
-    'curve': 'basis',
-    'padding': 20
-  }
-}}%%
-flowchart TD
-    %% Elegant Solid Styling with Soft Easy-on-the-Eyes Contrast
-    classDef solid fill:#1E293B,stroke:#475569,stroke-width:1.5px,color:#F8FAFC,font-size:14px,font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif,rx:8px,ry:8px;
-    classDef actor fill:#0F172A,stroke:#64748B,stroke-width:1.5px,color:#F8FAFC,font-size:14px,font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif,rx:8px,ry:8px;
-    linkStyle default stroke:#64748B,stroke-width:1.8px;
+graph LR
+    FE[Next.js Frontend]
 
-    subgraph Tier0 ["👥 Platform Users & Roles"]
-        direction LR
-        STUDENTS["👨‍🎓 Students"]
-        TEACHERS["👨‍🏫 Teachers"]
-        PARENTS["👨‍👩‍👧 Parents"]
-        ADMINS["👑 Platform Administrators"]
+    subgraph Live["🎓 Live Classroom — Direct Connections"]
+        RTC[Agora RTC]
+        RTM[Agora RTM]
+        WB[Netless Whiteboard]
     end
 
-    subgraph Tier1 ["1. Client & Presentation Tier (Next.js 14 App Router on Vercel)"]
-        direction TB
-        RSC["⚡ Next.js Edge Server Components (RSC)<br/>Pre-Rendered Public Catalog • SWR Cache (60s) • Dynamic SEO"]
-        CLIENT_UI["💻 Next.js Client Application (React 18)<br/>TanStack Query Server State • RTL Arabic UI • Role Guards"]
-        CLIENT_MEDIA["🎛️ In-Browser Real-Time Media Engines<br/>Agora RTC/RTM SDKs • Netless Whiteboard Canvas SDK"]
+    subgraph BE["⚙️ Laravel Backend"]
+        API[REST API v1]
+        ADMIN[Filament Admin]
+        QUEUE[Queue Worker]
     end
 
-    subgraph Tier2 ["2. Live Classroom — Direct Media Cloud (Zero Server Load)"]
-        direction LR
-        AGORA_RTC["📹 Agora SD-RTN RTC<br/>Adaptive HD/Simulcast • Isolated Screen Share"]
-        AGORA_RTM["💬 Agora RTM Cloud<br/>Real-Time State & Whiteboard Sync"]
-        NETLESS_WB["🖊️ Netless Whiteboard Cloud<br/>Collaborative Vector Canvas • Follower Mode"]
-    end
+    DB[(MySQL)]
+    REDIS[(Redis)]
+    PAY[Moyasar]
+    MON[Sentry]
 
-    subgraph Tier3 ["3. Backend Core & Admin (DigitalOcean VPS / Docker Cluster)"]
-        direction TB
-        NGINX["🛡️ Nginx Reverse Proxy<br/>SSL Termination • Strict CSP • Rate Limiting"]
-        subgraph DockerServices ["Docker Container Services"]
-            direction LR
-            API["🔌 Laravel 12 REST API (taj_admin_web)<br/>Sanctum RBAC • Service Layer • Escrow Ledger"]
-            FILAMENT["👑 FilamentPHP v3 Admin Panel<br/>Teacher KYC Audit • Dispute Arbitration"]
-            QUEUE["⚙️ Redis Queue Worker (taj_queue_worker)<br/>Async Classroom Provisioning • Token Pre-Gen"]
-        end
-    end
-
-    subgraph Tier4 ["4. Data Persistence & In-Memory Caching Tier"]
-        direction LR
-        MYSQL[("🗄️ MySQL 8.0 InnoDB<br/>ACID Financial Ledger • Composite Indexes")]
-        REDIS[("⚡ Redis 7 In-Memory Engine<br/>Tagged Caching • Token Pre-Cache • Job Queue")]
-    end
-
-    subgraph Tier5 ["5. External SaaS & Cloud Integrations"]
-        direction LR
-        MOYASAR["💳 Moyasar Payment Gateway<br/>Signed Webhook (HMAC-SHA256) • Mada / Visa"]
-        RECAPTCHA["🤖 Google reCAPTCHA v3<br/>Bot Risk Scoring & Fraud Mitigation"]
-        SENTRY["🛰️ Sentry Full-Stack APM<br/>Real-Time Performance Tracing • Session Replay"]
-    end
-
-    %% Actor Connections (Clean Flow)
-    STUDENTS & PARENTS -->|Browse Catalog & Discover| RSC
-    STUDENTS & TEACHERS & PARENTS -->|Interactive Dashboards & Booking| CLIENT_UI
-    CLIENT_UI -->|Mount Classroom Session| CLIENT_MEDIA
-    ADMINS -->|Administrative Management| NGINX
-
-    %% Frontend to Backend API
-    CLIENT_UI -->|REST API & Sanctum Tokens| NGINX
-    RSC -->|Parallel Server-Side Prefetch| NGINX
-    NGINX --> API
-    NGINX --> FILAMENT
-
-    %% Direct Media Streams (Zero Server Load)
-    CLIENT_MEDIA <-->|Direct WebRTC Audio/Video/Screen UDP| AGORA_RTC
-    CLIENT_MEDIA <-->|Direct Signaling & Sync WebSockets| AGORA_RTM
-    CLIENT_MEDIA <-->|Direct Vector Drawing Sync| NETLESS_WB
-
-    %% Backend to Persistence
-    API -->|ACID Transactions & Row Locks| MYSQL
-    FILAMENT -->|KYC Verification & Ledger Audit| MYSQL
-    API <-->|Tagged Cache Hits & Token Fetch| REDIS
-    API -->|Dispatch Provisioning Jobs| REDIS
-
-    %% Queue Processing & Pre-generation
-    REDIS -->|Consume Provisioning Jobs| QUEUE
-    QUEUE -->|Pre-compute Agora RTC/RTM Tokens| REDIS
-    QUEUE -->|REST API: Provision Room UUID| NETLESS_WB
-    QUEUE -->|Persist Whiteboard UUID| MYSQL
-
-    %% Cache Invalidation
-    MYSQL -.->|Model Booted Hooks: saved / deleted| REDIS
-    API -.->|On-Demand ISR Revalidation| RSC
-
-    %% Cloud Integrations
-    MOYASAR -->|Signed Webhook: wallet_topup| API
-    API -->|Verify Payments & Payouts| MOYASAR
-    API -->|Risk Assessment| RECAPTCHA
-    API -.->|Trace & Exception Telemetry| SENTRY
-    CLIENT_UI -.->|Session Replay & APM| SENTRY
-
-    %% Styling Classes
-    class STUDENTS,TEACHERS,PARENTS,ADMINS actor;
-    class RSC,CLIENT_UI,CLIENT_MEDIA,AGORA_RTC,AGORA_RTM,NETLESS_WB,NGINX,API,FILAMENT,QUEUE,MYSQL,REDIS,MOYASAR,RECAPTCHA,SENTRY solid;
+    FE -->|REST| API
+    FE <--> RTC
+    FE <--> RTM
+    FE <--> WB
+    API --> DB
+    API --> REDIS
+    ADMIN --> DB
+    API --> QUEUE
+    QUEUE -->|Redis| REDIS
+    QUEUE --> WB
+    QUEUE --> DB
+    API <--> PAY
+    API -.-> MON
+    FE -.-> MON
+    QUEUE -.-> MON
 ```
+
 
 ### 📋 Architecture & Data Flow Key
 
