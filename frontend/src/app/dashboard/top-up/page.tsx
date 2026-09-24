@@ -7,7 +7,7 @@ import PageHeader from '@/components/ui/PageHeader';
 import { showApiError } from '@/hooks/useApiError';
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { CheckCircle2, Leaf, Star, Zap, Rocket, ShieldCheck, Loader2 } from "lucide-react";
+import { CheckCircle2, Leaf, Star, Zap, Rocket, ShieldCheck, Loader2, CreditCard } from "lucide-react";
 import RedirectCountdown from "@/components/ui/RedirectCountdown";
 import { cn } from "@/lib/utils";
 
@@ -57,6 +57,7 @@ export default function TopUpPage() {
                     subtitle="أضف رصيداً لتتمكن من حجز الحصص لأبنائك بسهولة."
                     backHref="/dashboard"
                     backLabel="العودة للوحة التحكم"
+                    icon={<CreditCard className="w-6 h-6" />}
                 />
 
                 <Card className="animate-fade-in-up-delay border-white/50 bg-white/90 backdrop-blur-md rounded-[2.5rem]">

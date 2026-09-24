@@ -21,6 +21,7 @@ import {
   Fingerprint,
   Camera,
   Upload,
+  Settings,
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
@@ -207,6 +208,7 @@ export default function SettingsPage() {
           subtitle="إدارة معلومات حسابك الشخصية وتفضيلات الخصوصية."
           backHref="/dashboard"
           backLabel="العودة للوحة التحكم"
+          icon={<Settings className="w-6 h-6" />}
         />
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>

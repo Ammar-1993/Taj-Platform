@@ -110,6 +110,7 @@ export default function SupportPage() {
           subtitle="نحن هنا لمساعدتك. ارفع تذكرة وسنقوم بحل مشكلتك في أسرع وقت."
           backHref="/dashboard"
           backLabel="العودة للوحة التحكم"
+          icon={<Headphones className="w-6 h-6" />}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

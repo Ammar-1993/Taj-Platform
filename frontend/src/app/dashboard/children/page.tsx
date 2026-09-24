@@ -127,6 +127,7 @@ export default function ChildrenManagementPage() {
                     subtitle="أضف حسابات أبنائك لتتمكن من حجز الحصص لهم ومتابعة تقدمهم."
                     backHref="/dashboard"
                     backLabel="العودة للوحة التحكم"
+                    icon={<Users className="w-6 h-6" />}
                     actions={
                         <Button
                             onClick={() => setShowForm(!showForm)}

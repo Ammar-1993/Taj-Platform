@@ -106,6 +106,7 @@ export default function TeacherProfilePage() {
                     subtitle="أكمل بياناتك وارفع مستنداتك للبدء في استقبال الطلاب والتدريس."
                     backHref="/dashboard"
                     backLabel="العودة للوحة التحكم"
+                    icon={<ShieldCheck className="w-6 h-6" />}
                 />
 
                 {/* شريط حالة التوثيق */}

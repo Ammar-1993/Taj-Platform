@@ -125,6 +125,7 @@ export default function TeacherSchedulePage() {
           subtitle="أضف أوقات فراغك ليتمكن الطلاب من حجز حصصهم معك بسهولة."
           backHref="/dashboard"
           backLabel="العودة للوحة التحكم"
+          icon={<CalendarDays className="w-6 h-6" />}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
