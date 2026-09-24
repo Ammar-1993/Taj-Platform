@@ -64,41 +64,61 @@ The platform operates on a high-performance decoupled monorepo architecture engi
 
 ```mermaid
 graph LR
-    FE[Next.js Frontend]
+    %% Presentation Tier
+    FE["💻 Next.js 14 Frontend<br/>(Edge RSC / Client UI)"]
 
-    subgraph Live["🎓 Live Classroom — Direct Connections"]
-        RTC[Agora RTC]
-        RTM[Agora RTM]
-        WB[Netless Whiteboard]
+    %% Real-Time Media Cloud (Zero Server Load)
+    subgraph Live["🎓 Live Classroom — Direct Media Cloud (Zero Server Load)"]
+        RTC["📹 Agora RTC<br/>(Audio / Video / Screen)"]
+        RTM["💬 Agora RTM<br/>(Signaling & State Sync)"]
+        WB["🖊️ Netless Whiteboard<br/>(Interactive Vector Canvas)"]
     end
 
-    subgraph BE["⚙️ Laravel Backend"]
-        API[REST API v1]
-        ADMIN[Filament Admin]
-        QUEUE[Queue Worker]
+    %% Backend Tier
+    subgraph BE["⚙️ Laravel 12 Backend Core"]
+        API["🔌 REST API v1<br/>(Sanctum RBAC & Escrow Core)"]
+        ADMIN["👑 Filament Admin<br/>(KYC Audit & Dispute Center)"]
+        QUEUE["⚙️ Queue Worker<br/>(Classroom Pre-Provisioning)"]
     end
 
-    DB[(MySQL)]
-    REDIS[(Redis)]
-    PAY[Moyasar]
-    MON[Sentry]
+    %% Persistence & In-Memory Tier
+    DB[("🗄️ MySQL 8.0<br/>(InnoDB ACID Ledger)")]
+    REDIS[("⚡ Redis 7<br/>(Queue Bus, Tags & Token Cache)")]
 
-    FE -->|REST| API
-    FE <--> RTC
-    FE <--> RTM
-    FE <--> WB
-    API --> DB
-    API --> REDIS
-    ADMIN --> DB
-    API --> QUEUE
-    QUEUE -->|Redis| REDIS
-    QUEUE --> WB
-    QUEUE --> DB
-    API <--> PAY
-    API -.-> MON
-    FE -.-> MON
-    QUEUE -.-> MON
+    %% External SaaS
+    PAY["💳 Moyasar<br/>(Payment Gateway)"]
+    MON["🛰️ Sentry<br/>(Full-Stack APM)"]
+
+    %% Frontend to Backend (API & Credentials)
+    FE <-->|REST API & Token Handshake| API
+
+    %% Frontend Direct Media Connections (Zero Server Load)
+    FE <-->|WebRTC Media Streams| RTC
+    FE <-->|WebSocket Signaling| RTM
+    FE <-->|WebSocket Vector Sync| WB
+
+    %% Backend Core to Persistence & Cache
+    API -->|ACID Transactions & Row Locks| DB
+    ADMIN -->|KYC Audits & Payouts| DB
+    API <-->|Tagged Cache Hits & Token Fetch| REDIS
+
+    %% Asynchronous Queue Bus & Provisioning Pipeline
+    API -->|Dispatch Provisioning Jobs| REDIS
+    REDIS -->|Poll & Consume Jobs| QUEUE
+    QUEUE -->|Pre-Cache Agora & WB Tokens| REDIS
+    QUEUE -->|REST API: Provision Room UUID| WB
+    QUEUE -->|Persist Room UUID| DB
+
+    %% Payments & Webhooks
+    API -->|Initiate Charges| PAY
+    PAY -->|Signed Webhook HMAC-SHA256| API
+
+    %% Full-Stack Telemetry & Monitoring
+    FE -.->|Client Errors & Replay| MON
+    API -.->|API Traces & Exceptions| MON
+    QUEUE -.->|Worker Job Performance Spans| MON
 ```
+
 
 
 ### 📋 Architecture & Data Flow Key
