@@ -273,4 +273,37 @@ describe('Whiteboard', () => {
       expect(screen.queryByTitle('قلم (P)')).not.toBeInTheDocument();
     });
   });
+
+  it('synchronizes Absolute Focus Mode from teacher to student and updates viewport', async () => {
+    const mockOnToggleFocusMode = jest.fn();
+
+    render(
+      <Whiteboard
+        appIdentifier="app"
+        roomUuid="room"
+        roomToken="token"
+        uid="teacher-1"
+        isTeacher={true}
+        bookingId="1"
+        showWhiteboard={true}
+        isAbsoluteFocusMode={false}
+        onToggleFocusMode={mockOnToggleFocusMode}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTitle('وضع التركيز المطلق')).toBeInTheDocument();
+    });
+
+    const focusBtn = screen.getByTitle('وضع التركيز المطلق');
+    act(() => {
+      focusBtn.click();
+    });
+
+    expect(mockOnToggleFocusMode).toHaveBeenCalledWith(true);
+    expect(mockSendCustomMessage).toHaveBeenCalledWith({
+      type: 'focus_mode_toggle',
+      focus: true,
+    });
+  });
 });

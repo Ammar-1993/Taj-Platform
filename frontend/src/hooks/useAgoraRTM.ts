@@ -14,7 +14,12 @@ export type WhiteboardToggleMessage = {
     show: boolean;
 };
 
-export type RTMMessage = CursorMessage | WhiteboardToggleMessage;
+export type FocusModeToggleMessage = {
+    type: "focus_mode_toggle";
+    focus: boolean;
+};
+
+export type RTMMessage = CursorMessage | WhiteboardToggleMessage | FocusModeToggleMessage;
 
 type UseAgoraRTMOptions = {
     appId: string;

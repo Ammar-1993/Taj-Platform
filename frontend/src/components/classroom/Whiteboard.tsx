@@ -38,7 +38,8 @@ interface WhiteboardProps {
     agoraChannel?: string;
     rtmToken?: string | null;
     isAbsoluteFocusMode?: boolean;
-    onToggleFocusMode?: () => void;
+    onToggleFocusMode?: (targetState?: boolean) => void;
+    onRemoteFocusModeToggle?: (focus: boolean) => void;
     onInteract?: () => void;
     showWhiteboard?: boolean;
     onRemoteToggle?: (show: boolean) => void;
@@ -98,6 +99,45 @@ function detectDeviceType(): DeviceType {
         : DeviceType.Desktop;
 }
 
+interface LockableScreenOrientation {
+    lock?: (orientation: string) => Promise<void>;
+    unlock?: () => void;
+}
+
+interface CustomScreen {
+    orientation?: LockableScreenOrientation;
+}
+
+async function lockLandscapeOrientation(): Promise<void> {
+    if (typeof window === 'undefined') return;
+    try {
+        if (window.innerWidth < 768 && document.documentElement.requestFullscreen) {
+            await document.documentElement.requestFullscreen();
+            const screenObj = window.screen as unknown as CustomScreen;
+            if (screenObj?.orientation && typeof screenObj.orientation.lock === 'function') {
+                await screenObj.orientation.lock('landscape').catch(() => {});
+            }
+        }
+    } catch {
+        // Fullscreen or orientation lock may fail due to browser security restrictions
+    }
+}
+
+async function unlockScreenOrientation(): Promise<void> {
+    if (typeof window === 'undefined') return;
+    try {
+        if (document.fullscreenElement) {
+            const screenObj = window.screen as unknown as CustomScreen;
+            if (screenObj?.orientation && typeof screenObj.orientation.unlock === 'function') {
+                screenObj.orientation.unlock();
+            }
+            await document.exitFullscreen().catch(() => {});
+        }
+    } catch {
+        // Exit fullscreen may fail if not active or permitted
+    }
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
@@ -112,6 +152,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     rtmToken,
     isAbsoluteFocusMode,
     onToggleFocusMode,
+    onRemoteFocusModeToggle,
     onInteract,
     showWhiteboard,
     onRemoteToggle
@@ -121,10 +162,32 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     const sdkRef        = useRef<WhiteWebSdk | null>(null);
 
     // Keep init props current for SDK and reconnects
-    const initProps = useRef({ appIdentifier, roomUuid, roomToken, uid, isTeacher, region, bookingId });
-    useEffect(() => {
-        initProps.current = { appIdentifier, roomUuid, roomToken, uid, isTeacher, region, bookingId };
-    }, [appIdentifier, roomUuid, roomToken, uid, isTeacher, region, bookingId]);
+    const initProps = useRef({
+        appIdentifier,
+        roomUuid,
+        roomToken,
+        uid,
+        isTeacher,
+        region,
+        bookingId,
+        showWhiteboard,
+        isAbsoluteFocusMode,
+        onRemoteToggle,
+        onRemoteFocusModeToggle,
+    });
+    initProps.current = {
+        appIdentifier,
+        roomUuid,
+        roomToken,
+        uid,
+        isTeacher,
+        region,
+        bookingId,
+        showWhiteboard,
+        isAbsoluteFocusMode,
+        onRemoteToggle,
+        onRemoteFocusModeToggle,
+    };
 
     // ── UI State ──────────────────────────────────────────────────────────────
     const [loading, setLoading]               = useState(true);
@@ -179,8 +242,29 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     console.error("[Whiteboard] Error setting follower mode on RTM toggle:", e);
                 }
             }
+        } else if (msg.type === "focus_mode_toggle" && !isTeacher) {
+            if (onRemoteFocusModeToggle) {
+                onRemoteFocusModeToggle(msg.focus);
+            }
+            if (msg.focus && onRemoteToggle) {
+                onRemoteToggle(true);
+            }
+            if (msg.focus) {
+                void lockLandscapeOrientation();
+                if (roomRef.current) {
+                    try {
+                        roomRef.current.refreshViewSize();
+                        roomRef.current.setViewMode(ViewMode.Follower);
+                        roomRef.current.disableDeviceInputs = true;
+                    } catch (e) {
+                        console.error("[Whiteboard] Error setting follower mode on focus mode toggle:", e);
+                    }
+                }
+            } else {
+                void unlockScreenOrientation();
+            }
         }
-    }, [isTeacher, onRemoteToggle]);
+    }, [isTeacher, onRemoteToggle, onRemoteFocusModeToggle]);
 
     const handleMemberLeft = useCallback((senderUid: string) => {
         setRemoteCursors(prev => {
@@ -336,9 +420,26 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                 if (!rIsTeacher) {
                     roomInstance.setViewMode(ViewMode.Follower);
                     const currentGlobalState = roomInstance.state.globalState as Record<string, unknown> | undefined;
-                    if (currentGlobalState && typeof currentGlobalState.isWhiteboardOpen === 'boolean') {
-                        if (onRemoteToggle && currentGlobalState.isWhiteboardOpen !== showWhiteboard) {
-                            onRemoteToggle(currentGlobalState.isWhiteboardOpen);
+                    if (currentGlobalState) {
+                        const {
+                            onRemoteToggle: cbOnRemoteToggle,
+                            onRemoteFocusModeToggle: cbOnRemoteFocusModeToggle,
+                            showWhiteboard: cbShowWhiteboard,
+                            isAbsoluteFocusMode: cbIsAbsoluteFocusMode,
+                        } = initProps.current;
+
+                        if (typeof currentGlobalState.isWhiteboardOpen === 'boolean') {
+                            if (cbOnRemoteToggle && currentGlobalState.isWhiteboardOpen !== cbShowWhiteboard) {
+                                cbOnRemoteToggle(currentGlobalState.isWhiteboardOpen);
+                            }
+                        }
+                        if (typeof currentGlobalState.isAbsoluteFocusMode === 'boolean') {
+                            if (cbOnRemoteFocusModeToggle && currentGlobalState.isAbsoluteFocusMode !== cbIsAbsoluteFocusMode) {
+                                cbOnRemoteFocusModeToggle(currentGlobalState.isAbsoluteFocusMode);
+                            }
+                            if (currentGlobalState.isAbsoluteFocusMode && cbOnRemoteToggle) {
+                                cbOnRemoteToggle(true);
+                            }
                         }
                     }
                 } else {
@@ -354,9 +455,17 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     roomInstance.callbacks.on('onCanUndoStepsUpdate', (steps: number) => setUndoSteps(steps));
                     roomInstance.callbacks.on('onCanRedoStepsUpdate', (steps: number) => setRedoSteps(steps));
 
-                    if (showWhiteboard !== undefined) {
+                    const {
+                        showWhiteboard: currentShowWhiteboard,
+                        isAbsoluteFocusMode: currentIsAbsoluteFocusMode,
+                    } = initProps.current;
+
+                    if (currentShowWhiteboard !== undefined || currentIsAbsoluteFocusMode !== undefined) {
                         try {
-                            roomInstance.setGlobalState({ isWhiteboardOpen: showWhiteboard });
+                            roomInstance.setGlobalState({
+                                isWhiteboardOpen: (currentIsAbsoluteFocusMode ? true : currentShowWhiteboard) ?? false,
+                                isAbsoluteFocusMode: currentIsAbsoluteFocusMode ?? false,
+                            });
                         } catch (e) {
                             console.error("[Whiteboard] Error syncing globalState on reconnect:", e);
                         }
@@ -365,18 +474,46 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
 
                 // Re-register state listener
                 roomInstance.callbacks.on('onRoomStateChanged', (state: WhiteboardRoomState) => {
-                    if (!rIsTeacher && state.globalState && typeof (state.globalState as any).isWhiteboardOpen === 'boolean') {
-                        const isOpen = (state.globalState as any).isWhiteboardOpen;
-                        if (onRemoteToggle) {
-                            onRemoteToggle(isOpen);
+                    if (!rIsTeacher && state.globalState) {
+                        const globalState = state.globalState as Record<string, unknown>;
+                        const {
+                            onRemoteToggle: cbOnRemoteToggle,
+                            onRemoteFocusModeToggle: cbOnRemoteFocusModeToggle,
+                        } = initProps.current;
+
+                        if (typeof globalState.isWhiteboardOpen === 'boolean') {
+                            const isOpen = globalState.isWhiteboardOpen;
+                            if (cbOnRemoteToggle) {
+                                cbOnRemoteToggle(isOpen);
+                            }
+                            if (isOpen && roomRef.current) {
+                                try {
+                                    roomRef.current.refreshViewSize();
+                                    roomRef.current.setViewMode(ViewMode.Follower);
+                                    roomRef.current.disableDeviceInputs = true;
+                                } catch (e) {
+                                    console.error("[Whiteboard] Error updating follower mode on roomStateChanged:", e);
+                                }
+                            }
                         }
-                        if (isOpen && roomRef.current) {
-                            try {
-                                roomRef.current.refreshViewSize();
-                                roomRef.current.setViewMode(ViewMode.Follower);
-                                roomRef.current.disableDeviceInputs = true;
-                            } catch (e) {
-                                console.error("[Whiteboard] Error updating follower mode on roomStateChanged:", e);
+
+                        if (typeof globalState.isAbsoluteFocusMode === 'boolean') {
+                            const isFocus = globalState.isAbsoluteFocusMode;
+                            if (cbOnRemoteFocusModeToggle) {
+                                cbOnRemoteFocusModeToggle(isFocus);
+                            }
+                            if (isFocus) {
+                                if (cbOnRemoteToggle) cbOnRemoteToggle(true);
+                                void lockLandscapeOrientation();
+                                if (roomRef.current) {
+                                    try {
+                                        roomRef.current.refreshViewSize();
+                                        roomRef.current.setViewMode(ViewMode.Follower);
+                                        roomRef.current.disableDeviceInputs = true;
+                                    } catch {}
+                                }
+                            } else {
+                                void unlockScreenOrientation();
                             }
                         }
                     }
@@ -384,7 +521,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     if (state.sceneState) {
                         setPageState(prev => {
                             const next = { current: state.sceneState!.index, total: state.sceneState!.scenes.length };
-                            if (!isTeacher && prev.current !== next.current) {
+                            if (!rIsTeacher && prev.current !== next.current) {
                                 setPageFlash(true);
                                 setTimeout(() => setPageFlash(false), 800);
                             }
@@ -442,7 +579,7 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
             isRefreshingTokenRef.current = false;
             setIsReconnecting(false);
         }
-    }, [isTeacher]);
+    }, []);
 
     // ── Main join effect ──────────────────────────────────────────────────────
     useEffect(() => {
@@ -559,9 +696,12 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     roomInstance.callbacks.on('onCanUndoStepsUpdate', (steps: number) => setUndoSteps(steps));
                     roomInstance.callbacks.on('onCanRedoStepsUpdate', (steps: number) => setRedoSteps(steps));
 
-                    if (showWhiteboard !== undefined) {
+                    if (showWhiteboard !== undefined || isAbsoluteFocusMode !== undefined) {
                         try {
-                            roomInstance.setGlobalState({ isWhiteboardOpen: showWhiteboard });
+                            roomInstance.setGlobalState({
+                                isWhiteboardOpen: (isAbsoluteFocusMode ? true : showWhiteboard) ?? false,
+                                isAbsoluteFocusMode: isAbsoluteFocusMode ?? false,
+                            });
                         } catch (e) {
                             console.error("[Whiteboard] Error syncing initial globalState:", e);
                         }
@@ -570,27 +710,72 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     // 2.3: Students always follow the teacher's viewport
                     roomInstance.setViewMode(ViewMode.Follower);
                     const currentGlobalState = roomInstance.state.globalState as Record<string, unknown> | undefined;
-                    if (currentGlobalState && typeof currentGlobalState.isWhiteboardOpen === 'boolean') {
-                        if (onRemoteToggle && currentGlobalState.isWhiteboardOpen !== showWhiteboard) {
-                            onRemoteToggle(currentGlobalState.isWhiteboardOpen);
+                    if (currentGlobalState) {
+                        const {
+                            onRemoteToggle: cbOnRemoteToggle,
+                            onRemoteFocusModeToggle: cbOnRemoteFocusModeToggle,
+                            showWhiteboard: cbShowWhiteboard,
+                            isAbsoluteFocusMode: cbIsAbsoluteFocusMode,
+                        } = initProps.current;
+
+                        if (typeof currentGlobalState.isWhiteboardOpen === 'boolean') {
+                            if (cbOnRemoteToggle && currentGlobalState.isWhiteboardOpen !== cbShowWhiteboard) {
+                                cbOnRemoteToggle(currentGlobalState.isWhiteboardOpen);
+                            }
+                        }
+                        if (typeof currentGlobalState.isAbsoluteFocusMode === 'boolean') {
+                            if (cbOnRemoteFocusModeToggle && currentGlobalState.isAbsoluteFocusMode !== cbIsAbsoluteFocusMode) {
+                                cbOnRemoteFocusModeToggle(currentGlobalState.isAbsoluteFocusMode);
+                            }
+                            if (currentGlobalState.isAbsoluteFocusMode && cbOnRemoteToggle) {
+                                cbOnRemoteToggle(true);
+                            }
                         }
                     }
                 }
 
                 // ── Room state listener (page sync & global whiteboard open sync) ──
                 roomInstance.callbacks.on('onRoomStateChanged', (state: WhiteboardRoomState) => {
-                    if (!rIsTeacher && state.globalState && typeof (state.globalState as any).isWhiteboardOpen === 'boolean') {
-                        const isOpen = (state.globalState as any).isWhiteboardOpen;
-                        if (onRemoteToggle) {
-                            onRemoteToggle(isOpen);
+                    if (!rIsTeacher && state.globalState) {
+                        const globalState = state.globalState as Record<string, unknown>;
+                        const {
+                            onRemoteToggle: cbOnRemoteToggle,
+                            onRemoteFocusModeToggle: cbOnRemoteFocusModeToggle,
+                        } = initProps.current;
+
+                        if (typeof globalState.isWhiteboardOpen === 'boolean') {
+                            const isOpen = globalState.isWhiteboardOpen;
+                            if (cbOnRemoteToggle) {
+                                cbOnRemoteToggle(isOpen);
+                            }
+                            if (isOpen && roomRef.current) {
+                                try {
+                                    roomRef.current.refreshViewSize();
+                                    roomRef.current.setViewMode(ViewMode.Follower);
+                                    roomRef.current.disableDeviceInputs = true;
+                                } catch (e) {
+                                    console.error("[Whiteboard] Error updating follower mode on roomStateChanged:", e);
+                                }
+                            }
                         }
-                        if (isOpen && roomRef.current) {
-                            try {
-                                roomRef.current.refreshViewSize();
-                                roomRef.current.setViewMode(ViewMode.Follower);
-                                roomRef.current.disableDeviceInputs = true;
-                            } catch (e) {
-                                console.error("[Whiteboard] Error updating follower mode on roomStateChanged:", e);
+
+                        if (typeof globalState.isAbsoluteFocusMode === 'boolean') {
+                            const isFocus = globalState.isAbsoluteFocusMode;
+                            if (cbOnRemoteFocusModeToggle) {
+                                cbOnRemoteFocusModeToggle(isFocus);
+                            }
+                            if (isFocus) {
+                                if (cbOnRemoteToggle) cbOnRemoteToggle(true);
+                                void lockLandscapeOrientation();
+                                if (roomRef.current) {
+                                    try {
+                                        roomRef.current.refreshViewSize();
+                                        roomRef.current.setViewMode(ViewMode.Follower);
+                                        roomRef.current.disableDeviceInputs = true;
+                                    } catch {}
+                                }
+                            } else {
+                                void unlockScreenOrientation();
                             }
                         }
                     }
@@ -833,41 +1018,42 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
     // events with `touch-none` — Netless handles them internally via DeviceType.Touch.
     const isTouchDevice = deviceTypeState === DeviceType.Touch;
 
-    const handleToggleFocusMode = useCallback(async () => {
+    const handleToggleFocusMode = useCallback(() => {
         if (!onToggleFocusMode) return;
         
         const willBeAbsolute = !isAbsoluteFocusMode;
-        onToggleFocusMode();
+        onToggleFocusMode(willBeAbsolute);
+
+        // When teacher toggles focus mode on, ensure local whiteboard is open
+        if (isTeacher && willBeAbsolute && onRemoteToggle && !showWhiteboard) {
+            onRemoteToggle(true);
+        }
 
         if (willBeAbsolute) {
-            // Auto-expand horizontally on small screens
-            if (window.innerWidth < 768 && document.documentElement.requestFullscreen) {
-                try {
-                    await document.documentElement.requestFullscreen();
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const orientation = (window.screen as any)?.orientation;
-                    if (orientation && typeof orientation.lock === 'function') {
-                        await orientation.lock("landscape").catch(() => {});
-                    }
-                } catch (err) {
-                    console.warn("Fullscreen or orientation lock failed:", err);
-                }
-            }
+            void lockLandscapeOrientation();
         } else {
-            if (document.fullscreenElement) {
+            void unlockScreenOrientation();
+        }
+
+        // If teacher, synchronize focus mode to all students via Netless GlobalState & Agora RTM
+        if (isTeacher) {
+            if (roomRef.current && roomRef.current.isWritable) {
                 try {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const orientation = (window.screen as any)?.orientation;
-                    if (orientation && typeof orientation.unlock === 'function') {
-                        orientation.unlock();
-                    }
-                    await document.exitFullscreen().catch(() => {});
-                } catch (err) {
-                    console.warn("Exit fullscreen failed:", err);
+                    roomRef.current.setGlobalState({
+                        isWhiteboardOpen: willBeAbsolute ? true : (showWhiteboard ?? false),
+                        isAbsoluteFocusMode: willBeAbsolute,
+                    });
+                } catch (e) {
+                    console.error("[Whiteboard] Failed to sync focus mode in globalState:", e);
                 }
             }
+
+            if (willBeAbsolute && !showWhiteboard) {
+                sendCustomMessage({ type: 'whiteboard_toggle', show: true });
+            }
+            sendCustomMessage({ type: 'focus_mode_toggle', focus: willBeAbsolute });
         }
-    }, [isAbsoluteFocusMode, onToggleFocusMode]);
+    }, [isAbsoluteFocusMode, onToggleFocusMode, isTeacher, onRemoteToggle, showWhiteboard, sendCustomMessage]);
 
     // ─── Render ───────────────────────────────────────────────────────────────
     return (

@@ -664,7 +664,31 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                   agoraChannel={channelName}
                   rtmToken={rtmToken}
                   isAbsoluteFocusMode={absoluteFocusMode}
-                  onToggleFocusMode={() => setAbsoluteFocusMode(!absoluteFocusMode)}
+                  onToggleFocusMode={(targetState?: boolean) => {
+                    setAbsoluteFocusMode((prev) => {
+                      const next = typeof targetState === "boolean" ? targetState : !prev;
+                      if (next) {
+                        setShowWhiteboard(true);
+                      }
+                      return next;
+                    });
+                  }}
+                  onRemoteFocusModeToggle={(isFocus) => {
+                    setAbsoluteFocusMode(isFocus);
+                    if (isFocus) {
+                      setShowWhiteboard(true);
+                      toast.success("قام المعلم بتفعيل وضع التركيز المطلق 🎯", {
+                        id: "focus-mode-toggle",
+                        duration: 3500,
+                        icon: "🎯",
+                      });
+                    } else {
+                      toast("تم إنهاء وضع التركيز المطلق", {
+                        id: "focus-mode-toggle",
+                        duration: 2500,
+                      });
+                    }
+                  }}
                   showWhiteboard={showWhiteboard}
                   onRemoteToggle={(isOpen) => {
                     setShowWhiteboard(isOpen);
