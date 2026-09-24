@@ -61,9 +61,7 @@ export default function TopUpPage() {
         try {
             const response = await paymentService.createSession(amount);
 
-            const checkoutUrl = response?.checkout_url 
-                             || response?.data?.checkout_url 
-                             || response?.data?.data?.checkout_url;
+            const checkoutUrl = response?.data?.checkout_url;
 
             if (checkoutUrl) {
                 window.location.href = checkoutUrl;

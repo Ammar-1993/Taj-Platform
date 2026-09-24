@@ -196,30 +196,24 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
               </div>
 
               {/* Actions (Hidden for Parent) */}
-              {!isParent && (
-                (booking.status === "scheduled" || booking.status === "in_progress") ? (
-                  <div className="flex gap-2 pt-1 items-center">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => router.push(`/classroom/${booking.id}`)}
-                      className="flex-1 bg-brand-50 border-brand-100 text-brand-700 hover:bg-brand-100 hover:text-brand-800 h-9 whitespace-nowrap"
-                    >
-                      دخول الفصل <Video className="w-3.5 h-3.5 mr-2" />
-                    </Button>
-                    
-                    <BookingDropdown
-                      booking={booking}
-                      isTeacher={isTeacher}
-                      onCancelClick={onCancelClick}
-                      onCompleteClick={onCompleteClick}
-                    />
-                  </div>
-                ) : (
-                  <div className="pt-1 text-center">
-                    <span className="text-text-muted text-lg font-bold block">-</span>
-                  </div>
-                )
+              {!isParent && (booking.status === "scheduled" || booking.status === "in_progress") && (
+                <div className="flex gap-2 pt-1 items-center">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => router.push(`/classroom/${booking.id}`)}
+                    className="flex-1 bg-brand-50 border-brand-100 text-brand-700 hover:bg-brand-100 hover:text-brand-800 h-9 whitespace-nowrap"
+                  >
+                    دخول الفصل <Video className="w-3.5 h-3.5 mr-2" />
+                  </Button>
+                  
+                  <BookingDropdown
+                    booking={booking}
+                    isTeacher={isTeacher}
+                    onCancelClick={onCancelClick}
+                    onCompleteClick={onCompleteClick}
+                  />
+                </div>
               )}
             </div>
           </div>
@@ -320,8 +314,8 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 {/* Actions (Hidden for Parent) */}
                 {!isParent && (
                   <td className="px-2 py-4 whitespace-nowrap align-middle">
-                    <div className="flex gap-2 justify-end items-center">
-                      {(booking.status === "scheduled" || booking.status === "in_progress") ? (
+                    <div className="flex gap-2 justify-end items-center min-h-[36px]">
+                      {(booking.status === "scheduled" || booking.status === "in_progress") && (
                         <>
                           <Button
                             size="sm"
@@ -339,8 +333,6 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                             onCompleteClick={onCompleteClick}
                           />
                         </>
-                      ) : (
-                        <span className="text-text-muted text-lg font-bold block">-</span>
                       )}
                     </div>
                   </td>
