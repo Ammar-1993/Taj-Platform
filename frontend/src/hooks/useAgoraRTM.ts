@@ -37,6 +37,8 @@ export function useAgoraRTM({
 }: UseAgoraRTMOptions) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const clientRef = useRef<any>(null);
+    const isConnectedRef = useRef(false);
+    const pendingMessagesRef = useRef<RTMMessage[]>([]);
 
     // Using a ref for the callback so the effect doesn't re-run on every render
     const onMessageReceivedRef = useRef(onMessageReceived);
@@ -90,7 +92,18 @@ export function useAgoraRTM({
                 await client.login({ token: token ?? undefined });
                 // Subscribe to the channel to receive messages AND presence events
                 await client.subscribe(channel, { withMessage: true, withPresence: true });
+                isConnectedRef.current = true;
                 console.log("[RTM] Connected and subscribed to channel:", channel);
+
+                // Flush pending messages queued while connecting
+                while (pendingMessagesRef.current.length > 0) {
+                    const nextMsg = pendingMessagesRef.current.shift();
+                    if (nextMsg && clientRef.current) {
+                        clientRef.current.publish(channel, JSON.stringify(nextMsg)).catch((e: unknown) => {
+                            console.error("[RTM] Failed to flush queued message:", e);
+                        });
+                    }
+                }
             } catch (error) {
                 console.error("[RTM] Connection failed:", error);
             }
@@ -99,6 +112,8 @@ export function useAgoraRTM({
         connect();
 
         return () => {
+            isConnectedRef.current = false;
+            pendingMessagesRef.current = [];
             const cleanup = async () => {
                 clientRef.current = null; // Prevent publishes during teardown
                 try {
@@ -114,7 +129,7 @@ export function useAgoraRTM({
 
     const sendCursorPosition = useCallback(
         (msg: Omit<CursorMessage, "type">) => {
-            if (!enabled || !clientRef.current) return;
+            if (!enabled || !clientRef.current || !isConnectedRef.current) return;
             const payload = JSON.stringify({ type: "cursor", ...msg });
             
             clientRef.current.publish(channel, payload).catch((e: unknown) => {
@@ -126,12 +141,15 @@ export function useAgoraRTM({
 
     const sendCustomMessage = useCallback(
         (msg: RTMMessage) => {
-            if (!enabled || !clientRef.current) return;
-            const payload = JSON.stringify(msg);
-            
-            clientRef.current.publish(channel, payload).catch((e: unknown) => {
-                console.error("[RTM] Publish failed:", e);
-            });
+            if (!enabled) return;
+            if (clientRef.current && isConnectedRef.current) {
+                const payload = JSON.stringify(msg);
+                clientRef.current.publish(channel, payload).catch((e: unknown) => {
+                    console.error("[RTM] Publish failed:", e);
+                });
+            } else {
+                pendingMessagesRef.current.push(msg);
+            }
         },
         [enabled, channel]
     );

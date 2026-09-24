@@ -666,7 +666,21 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                   isAbsoluteFocusMode={absoluteFocusMode}
                   onToggleFocusMode={() => setAbsoluteFocusMode(!absoluteFocusMode)}
                   showWhiteboard={showWhiteboard}
-                  onRemoteToggle={setShowWhiteboard}
+                  onRemoteToggle={(isOpen) => {
+                    setShowWhiteboard(isOpen);
+                    if (isOpen) {
+                      toast.success("قام المعلم بفتح السبورة التفاعلية (وضع المتابعة)", {
+                        id: "whiteboard-toggle",
+                        duration: 3500,
+                        icon: "📋",
+                      });
+                    } else {
+                      toast("أغلق المعلم السبورة التفاعلية", {
+                        id: "whiteboard-toggle",
+                        duration: 2500,
+                      });
+                    }
+                  }}
                   onInteract={() => {
                     // Force UI to hide immediately on whiteboard interaction
                     if (!absoluteFocusMode) {

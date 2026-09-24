@@ -24,6 +24,7 @@ interface SceneState {
 
 interface WhiteboardRoomState {
     sceneState?: SceneState;
+    globalState?: Record<string, unknown>;
 }
 
 interface WhiteboardProps {
@@ -169,6 +170,15 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
             if (onRemoteToggle) {
                 onRemoteToggle(msg.show);
             }
+            if (roomRef.current && msg.show) {
+                try {
+                    roomRef.current.refreshViewSize();
+                    roomRef.current.setViewMode(ViewMode.Follower);
+                    roomRef.current.disableDeviceInputs = true;
+                } catch (e) {
+                    console.error("[Whiteboard] Error setting follower mode on RTM toggle:", e);
+                }
+            }
         }
     }, [isTeacher, onRemoteToggle]);
 
@@ -194,8 +204,40 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
 
     const lastLocalShowRef = useRef(showWhiteboard);
     useEffect(() => {
-        if (isTeacher && showWhiteboard !== undefined && showWhiteboard !== lastLocalShowRef.current) {
+        if (showWhiteboard === undefined) return;
+
+        // When whiteboard is visible, ensure canvas dimensions are updated and student follows teacher
+        if (showWhiteboard && roomRef.current) {
+            try {
+                roomRef.current.refreshViewSize();
+            } catch (e) {
+                console.error("[Whiteboard] Error refreshing view size:", e);
+            }
+
+            if (!isTeacher) {
+                try {
+                    roomRef.current.setViewMode(ViewMode.Follower);
+                    roomRef.current.disableDeviceInputs = true;
+                } catch (e) {
+                    console.error("[Whiteboard] Error setting Follower view mode:", e);
+                }
+            }
+        }
+
+        // If teacher changed the toggle, synchronize via Netless GlobalState & Agora RTM
+        if (isTeacher && showWhiteboard !== lastLocalShowRef.current) {
             lastLocalShowRef.current = showWhiteboard;
+
+            // 1. Sync through Netless room globalState (persistent WebSocket room state)
+            if (roomRef.current && roomRef.current.isWritable) {
+                try {
+                    roomRef.current.setGlobalState({ isWhiteboardOpen: showWhiteboard });
+                } catch (e) {
+                    console.error("[Whiteboard] Failed to sync globalState:", e);
+                }
+            }
+
+            // 2. Broadcast through Agora RTM (real-time channel broadcast)
             sendCustomMessage({ type: 'whiteboard_toggle', show: showWhiteboard });
         }
     }, [showWhiteboard, isTeacher, sendCustomMessage]);
@@ -293,6 +335,12 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
 
                 if (!rIsTeacher) {
                     roomInstance.setViewMode(ViewMode.Follower);
+                    const currentGlobalState = roomInstance.state.globalState as Record<string, unknown> | undefined;
+                    if (currentGlobalState && typeof currentGlobalState.isWhiteboardOpen === 'boolean') {
+                        if (onRemoteToggle && currentGlobalState.isWhiteboardOpen !== showWhiteboard) {
+                            onRemoteToggle(currentGlobalState.isWhiteboardOpen);
+                        }
+                    }
                 } else {
                     // Re-apply tool state after reconnect so the teacher's
                     // active tool/color/width are restored automatically.
@@ -305,10 +353,34 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     roomInstance.disableSerialization = false;
                     roomInstance.callbacks.on('onCanUndoStepsUpdate', (steps: number) => setUndoSteps(steps));
                     roomInstance.callbacks.on('onCanRedoStepsUpdate', (steps: number) => setRedoSteps(steps));
+
+                    if (showWhiteboard !== undefined) {
+                        try {
+                            roomInstance.setGlobalState({ isWhiteboardOpen: showWhiteboard });
+                        } catch (e) {
+                            console.error("[Whiteboard] Error syncing globalState on reconnect:", e);
+                        }
+                    }
                 }
 
                 // Re-register state listener
                 roomInstance.callbacks.on('onRoomStateChanged', (state: WhiteboardRoomState) => {
+                    if (!rIsTeacher && state.globalState && typeof (state.globalState as any).isWhiteboardOpen === 'boolean') {
+                        const isOpen = (state.globalState as any).isWhiteboardOpen;
+                        if (onRemoteToggle) {
+                            onRemoteToggle(isOpen);
+                        }
+                        if (isOpen && roomRef.current) {
+                            try {
+                                roomRef.current.refreshViewSize();
+                                roomRef.current.setViewMode(ViewMode.Follower);
+                                roomRef.current.disableDeviceInputs = true;
+                            } catch (e) {
+                                console.error("[Whiteboard] Error updating follower mode on roomStateChanged:", e);
+                            }
+                        }
+                    }
+
                     if (state.sceneState) {
                         setPageState(prev => {
                             const next = { current: state.sceneState!.index, total: state.sceneState!.scenes.length };
@@ -486,13 +558,43 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
                     roomInstance.disableSerialization = false;
                     roomInstance.callbacks.on('onCanUndoStepsUpdate', (steps: number) => setUndoSteps(steps));
                     roomInstance.callbacks.on('onCanRedoStepsUpdate', (steps: number) => setRedoSteps(steps));
+
+                    if (showWhiteboard !== undefined) {
+                        try {
+                            roomInstance.setGlobalState({ isWhiteboardOpen: showWhiteboard });
+                        } catch (e) {
+                            console.error("[Whiteboard] Error syncing initial globalState:", e);
+                        }
+                    }
                 } else {
                     // 2.3: Students always follow the teacher's viewport
                     roomInstance.setViewMode(ViewMode.Follower);
+                    const currentGlobalState = roomInstance.state.globalState as Record<string, unknown> | undefined;
+                    if (currentGlobalState && typeof currentGlobalState.isWhiteboardOpen === 'boolean') {
+                        if (onRemoteToggle && currentGlobalState.isWhiteboardOpen !== showWhiteboard) {
+                            onRemoteToggle(currentGlobalState.isWhiteboardOpen);
+                        }
+                    }
                 }
 
-                // ── Page state sync ───────────────────────────────────────────
+                // ── Room state listener (page sync & global whiteboard open sync) ──
                 roomInstance.callbacks.on('onRoomStateChanged', (state: WhiteboardRoomState) => {
+                    if (!rIsTeacher && state.globalState && typeof (state.globalState as any).isWhiteboardOpen === 'boolean') {
+                        const isOpen = (state.globalState as any).isWhiteboardOpen;
+                        if (onRemoteToggle) {
+                            onRemoteToggle(isOpen);
+                        }
+                        if (isOpen && roomRef.current) {
+                            try {
+                                roomRef.current.refreshViewSize();
+                                roomRef.current.setViewMode(ViewMode.Follower);
+                                roomRef.current.disableDeviceInputs = true;
+                            } catch (e) {
+                                console.error("[Whiteboard] Error updating follower mode on roomStateChanged:", e);
+                            }
+                        }
+                    }
+
                     if (state.sceneState) {
                         setPageState(prev => {
                             const next = {

@@ -4,9 +4,13 @@ import Whiteboard from '../Whiteboard';
 
 
 const mockSendCursorPosition = jest.fn();
+const mockSendCustomMessage = jest.fn();
 
 jest.mock('@/hooks/useAgoraRTM', () => ({
-  useAgoraRTM: () => ({ sendCursorPosition: mockSendCursorPosition }),
+  useAgoraRTM: () => ({
+    sendCursorPosition: mockSendCursorPosition,
+    sendCustomMessage: mockSendCustomMessage,
+  }),
 }));
 
 jest.mock('@/services/api', () => ({
@@ -22,7 +26,7 @@ jest.mock('@sentry/nextjs', () => ({
 
 jest.mock('white-web-sdk', () => {
   class MockRoom {
-    state: { sceneState: { index: number; scenes: Record<string, unknown>[]; scenePath: string } };
+    state: { sceneState: { index: number; scenes: Record<string, unknown>[]; scenePath: string }; globalState?: Record<string, unknown> };
     phase: string;
     bindHtmlElement: jest.Mock;
     callbacks: { on: jest.Mock };
@@ -37,9 +41,12 @@ jest.mock('white-web-sdk', () => {
     undo: jest.Mock;
     redo: jest.Mock;
     disableDeviceInputs: boolean;
+    setGlobalState: jest.Mock;
+    refreshViewSize: jest.Mock;
+    isWritable: boolean;
 
     constructor() {
-      this.state = { sceneState: { index: 0, scenes: [{}], scenePath: '/init' } };
+      this.state = { sceneState: { index: 0, scenes: [{}], scenePath: '/init' }, globalState: {} };
       this.phase = 'connected';
       this.bindHtmlElement = jest.fn();
       this.callbacks = { on: jest.fn((event: string, callback: (...args: unknown[]) => void) => {
@@ -49,16 +56,16 @@ jest.mock('white-web-sdk', () => {
       this.setScenePath = jest.fn((path: string) => {
         const nextIndex = Number(path.replace(/^\//, ''));
         this.state.sceneState.index = Number.isNaN(nextIndex) ? 0 : nextIndex;
-        this.listeners.onRoomStateChanged?.({ sceneState: this.state.sceneState });
+        this.listeners.onRoomStateChanged?.({ sceneState: this.state.sceneState, globalState: this.state.globalState });
       });
       this.setSceneIndex = jest.fn((index: number) => {
         this.state.sceneState.index = index;
-        this.listeners.onRoomStateChanged?.({ sceneState: this.state.sceneState });
+        this.listeners.onRoomStateChanged?.({ sceneState: this.state.sceneState, globalState: this.state.globalState });
       });
       this.putScenes = jest.fn((_path: string, scenes: Record<string, unknown>[], newIndex: number) => {
         this.state.sceneState.scenes = [...this.state.sceneState.scenes, ...scenes];
         this.state.sceneState.index = newIndex;
-        this.listeners.onRoomStateChanged?.({ sceneState: this.state.sceneState });
+        this.listeners.onRoomStateChanged?.({ sceneState: this.state.sceneState, globalState: this.state.globalState });
       });
       this.cleanCurrentScene = jest.fn();
       this.disconnect = jest.fn().mockResolvedValue(undefined);
@@ -67,6 +74,12 @@ jest.mock('white-web-sdk', () => {
       this.undo = jest.fn();
       this.redo = jest.fn();
       this.disableDeviceInputs = false;
+      this.setGlobalState = jest.fn((patch) => {
+        this.state.globalState = { ...this.state.globalState, ...patch };
+        return this.state.globalState;
+      });
+      this.refreshViewSize = jest.fn();
+      this.isWritable = true;
     }
   }
 
@@ -200,5 +213,64 @@ describe('Whiteboard', () => {
       expect(screen.getByText('إعادة محاولة الاتصال بالسبورة')).toBeInTheDocument();
       expect(screen.getByText('تحديث الصفحة بالكامل')).toBeInTheDocument();
     }, { timeout: 3500 });
+  });
+
+  it('synchronizes whiteboard toggle from teacher via globalState and Agora RTM', async () => {
+    const { rerender } = render(
+      <Whiteboard
+        appIdentifier="app"
+        roomUuid="room"
+        roomToken="token"
+        uid="teacher-1"
+        isTeacher={true}
+        bookingId="1"
+        showWhiteboard={false}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTitle('قلم (P)')).toBeInTheDocument();
+    });
+
+    // Teacher opens whiteboard
+    rerender(
+      <Whiteboard
+        appIdentifier="app"
+        roomUuid="room"
+        roomToken="token"
+        uid="teacher-1"
+        isTeacher={true}
+        bookingId="1"
+        showWhiteboard={true}
+      />
+    );
+
+    await waitFor(() => {
+      expect(mockSendCustomMessage).toHaveBeenCalledWith({
+        type: 'whiteboard_toggle',
+        show: true,
+      });
+    });
+  });
+
+  it('automatically triggers onRemoteToggle for student and enters Follower mode', async () => {
+    const mockOnRemoteToggle = jest.fn();
+
+    render(
+      <Whiteboard
+        appIdentifier="app"
+        roomUuid="room"
+        roomToken="token"
+        uid="student-1"
+        isTeacher={false}
+        bookingId="1"
+        showWhiteboard={false}
+        onRemoteToggle={mockOnRemoteToggle}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByTitle('قلم (P)')).not.toBeInTheDocument();
+    });
   });
 });
