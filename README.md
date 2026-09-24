@@ -67,7 +67,7 @@ The platform operates on a high-performance decoupled monorepo architecture engi
   'theme': 'base',
   'themeVariables': {
     'fontFamily': 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    'fontSize': '14px',
+    'fontSize': '15px',
     'primaryTextColor': '#F8FAFC',
     'lineColor': '#64748B',
     'edgeLabelBackground': '#0F172A'
@@ -297,7 +297,7 @@ The sequence diagram below illustrates the shared core operational workflows exe
   'theme': 'base',
   'themeVariables': {
     'fontFamily': 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    'fontSize': '13px',
+    'fontSize': '15px',
     'primaryTextColor': '#F8FAFC',
     'lineColor': '#64748B',
     'actorBkg': '#1E293B',
@@ -388,7 +388,7 @@ The sequence diagram below illustrates the end-to-end operational journey of a S
   'theme': 'base',
   'themeVariables': {
     'fontFamily': 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    'fontSize': '13px',
+    'fontSize': '15px',
     'primaryTextColor': '#F8FAFC',
     'lineColor': '#64748B',
     'actorBkg': '#1E293B',
@@ -502,7 +502,7 @@ The sequence diagram below illustrates the end-to-end operational workflows exec
   'theme': 'base',
   'themeVariables': {
     'fontFamily': 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    'fontSize': '13px',
+    'fontSize': '15px',
     'primaryTextColor': '#F8FAFC',
     'lineColor': '#64748B',
     'actorBkg': '#1E293B',
@@ -620,7 +620,7 @@ The sequence diagram below illustrates the end-to-end operational lifecycle of a
   'theme': 'base',
   'themeVariables': {
     'fontFamily': 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    'fontSize': '13px',
+    'fontSize': '15px',
     'primaryTextColor': '#F8FAFC',
     'lineColor': '#64748B',
     'actorBkg': '#1E293B',
@@ -730,7 +730,7 @@ The sequence diagram below illustrates the administrative workflows executed by 
   'theme': 'base',
   'themeVariables': {
     'fontFamily': 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    'fontSize': '13px',
+    'fontSize': '15px',
     'primaryTextColor': '#F8FAFC',
     'lineColor': '#64748B',
     'actorBkg': '#1E293B',
