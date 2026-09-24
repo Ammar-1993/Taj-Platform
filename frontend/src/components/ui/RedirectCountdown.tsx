@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, X } from "lucide-react";
 
@@ -30,15 +30,13 @@ export default function RedirectCountdown({
   const router = useRouter();
   const [remaining, setRemaining] = useState(seconds);
   const [cancelled, setCancelled] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const navigate = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
+    setCancelled(true);
     router.push(href);
   };
 
   const cancel = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
     setCancelled(true);
     onCancel?.();
   };
@@ -46,21 +44,19 @@ export default function RedirectCountdown({
   useEffect(() => {
     if (cancelled) return;
 
-    timerRef.current = setInterval(() => {
-      setRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current!);
-          router.push(href);
-          return 0;
-        }
-        return prev - 1;
-      });
+    if (remaining <= 0) {
+      router.push(href);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setRemaining((prev) => prev - 1);
     }, 1000);
 
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      clearTimeout(timer);
     };
-  }, [href, router, cancelled]);
+  }, [remaining, cancelled, href, router]);
 
   if (cancelled) return null;
 

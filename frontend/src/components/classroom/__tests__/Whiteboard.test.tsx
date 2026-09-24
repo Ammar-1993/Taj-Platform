@@ -171,6 +171,10 @@ describe('Whiteboard', () => {
         region: 'sg',
       })
     );
+
+    await waitFor(() => {
+      expect(screen.getByTitle('قلم (P)')).toBeInTheDocument();
+    });
   });
 
   it('renders retry button and allows retrying when room joining fails', async () => {
