@@ -65,6 +65,7 @@ export function generateMetadata(): Metadata {
 }
 
 import { ViewTransitions } from "@/components/providers/ViewTransitions";
+import React19CompatProvider from "@/components/providers/React19CompatProvider";
 
 export default function RootLayout({
   children,
@@ -73,10 +74,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl" className={`${cairo.variable} ${mono.variable}`} suppressHydrationWarning>
-      <body className={cairo.className}>
+      <body className={cairo.className} suppressHydrationWarning>
         <ReactQueryProvider>
           <AuthProvider>
             <ViewTransitions>
+              {/* Client-only side-effect: polyfills ReactDOM.render for white-web-sdk (React 19 compat) */}
+              <React19CompatProvider />
               <ToastProvider />
               {children}
             </ViewTransitions>

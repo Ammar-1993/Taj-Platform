@@ -42,7 +42,7 @@ const nextConfig = {
   // بناءً على تحذير Next.js، حيث سيتم إيقاف دعمه مستقبلاً.
   // تم الإبقاء على transpilePackages لضمان ترجمة المكتبة.
   // ==========================================
-  transpilePackages: ['agora-react-uikit', 'agora-rtc-sdk-ng'], // إجبار السيرفر على ترجمة المكتبة بشكل صحيح
+  transpilePackages: ['agora-rtc-sdk-ng'], // إجبار السيرفر على ترجمة المكتبة بشكل صحيح
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
@@ -64,6 +64,56 @@ const nextConfig = {
         headers: securityHeaders,
       },
     ];
+  },
+
+  webpack(config, { isServer, webpack: wp }) {
+    if (!isServer) {
+      // ── Agora RTM SDK: console.error Noise Filter ──────────────────────────
+      // The RTM SDK captures a direct reference to console.error at module-load
+      // time: genErrorLogger = (...) => loggerGenerator(..., console.error, ...)
+      // This means ANY global console.error patch applied after the module loads
+      // is completely bypassed — the SDK always calls the original.
+      //
+      // webpack BannerPlugin injects code at the very TOP of the chunk that
+      // contains agora-rtm-sdk, BEFORE the SDK's own module-level code runs.
+      // At that exact moment, console.error is overridden with our filter, so
+      // when genErrorLogger captures `console.error`, it captures our filtered
+      // version. This is the ONLY reliable interception point.
+      //
+      // Errors filtered (all dev-only noise, already handled gracefully):
+      //   -10015 : RTM service not enabled on this App ID
+      //   -10023 : Login cancelled during unmount / navigation
+      config.plugins.push(
+        new wp.BannerPlugin({
+          banner: `
+(function() {
+  if (typeof window !== 'undefined' && typeof console !== 'undefined') {
+    var _ce = console.error;
+    console.error = function() {
+      var msg = typeof arguments[0] === 'string' ? arguments[0] : String(arguments[0] || '');
+      // Suppress Agora RTM internal noise — handled gracefully in useAgoraRTM.ts
+      if (msg.indexOf('RTM:ERROR') !== -1 && (
+        msg.indexOf('-10015') !== -1 ||
+        msg.indexOf('-10023') !== -1 ||
+        msg.indexOf('NOT_ENABLE_RTM') !== -1 ||
+        msg.indexOf('login failed') !== -1 ||
+        msg.indexOf('canceled by user') !== -1
+      )) { return; }
+      // Suppress white-web-sdk internal bug: assertRoomIsConnected() fires during
+      // the 'disconnecting' phase transition — a known SDK defect, safe to ignore.
+      if (msg.indexOf('you can only call it when room is connected') !== -1 &&
+          msg.indexOf('disconnecting') !== -1) { return; }
+      return _ce.apply(console, arguments);
+    };
+  }
+})();`,
+          test: /agora-rtm-sdk/,
+          raw: true,
+          entryOnly: false,
+        })
+      );
+    }
+    return config;
   },
 };
 

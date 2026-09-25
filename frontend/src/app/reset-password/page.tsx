@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import DecorativeBackground from "@/components/layout/DecorativeBackground";
-import { Lock, Mail } from "lucide-react";
+import { Lock, Mail, Loader2 } from "lucide-react";
 import ErrorBanner from "@/components/ui/ErrorBanner";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -11,16 +12,10 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { authService } from "@/services/api";
 import { getApiErrorMessage } from "@/hooks/useApiError";
 
-interface ResetPasswordPageProps {
-  searchParams: {
-    token?: string;
-    email?: string;
-  };
-}
-
-export default function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
-  const [email, setEmail] = useState(searchParams.email || "");
-  const [token, setToken] = useState(searchParams.token || "");
+function ResetPasswordForm() {
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState(searchParams.get("email") || "");
+  const [token, setToken] = useState(searchParams.get("token") || "");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [error, setError] = useState("");
@@ -30,9 +25,9 @@ export default function ResetPasswordPage({ searchParams }: ResetPasswordPagePro
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    setEmail(searchParams.email || "");
-    setToken(searchParams.token || "");
-  }, [searchParams.email, searchParams.token]);
+    setEmail(searchParams.get("email") || "");
+    setToken(searchParams.get("token") || "");
+  }, [searchParams]);
 
   const validatePassword = () => {
     if (!password) {
@@ -226,5 +221,19 @@ export default function ResetPasswordPage({ searchParams }: ResetPasswordPagePro
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-900">
+          <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+        </div>
+      }
+    >
+      <ResetPasswordForm />
+    </Suspense>
   );
 }

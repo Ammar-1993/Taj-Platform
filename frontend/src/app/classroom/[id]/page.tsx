@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { bookingService } from "@/services/api";
 import { useQueryClient } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
@@ -63,10 +63,18 @@ const Whiteboard = dynamic(() => import("@/components/classroom/Whiteboard"), {
   ),
 });
 
-export default function ClassroomPage({ params }: { params: { id: string } }) {
+interface ClassroomPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default function ClassroomPage({ params: _params }: ClassroomPageProps) {
+  void _params;
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const routeParams = useParams();
   const queryClient = useQueryClient();
+
+  const bookingId = (routeParams?.id as string) || "";
 
   const [channelName, setChannelName] = useState("");
   const [agoraToken, setAgoraToken] = useState<string | null>(null);
@@ -130,7 +138,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     const fetchAccess = async () => {
       try {
-        const res = await bookingService.getClassroomAccess(Number(params.id));
+        const res = await bookingService.getClassroomAccess(Number(bookingId));
         const data = res.data;
 
         setChannelName(data.channel_name);
@@ -168,8 +176,8 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
       }
     };
 
-    if (user) fetchAccess();
-  }, [params.id, user]);
+    if (user && bookingId) fetchAccess();
+  }, [bookingId, user]);
 
   // 🔄 Polling for Whiteboard Data if pending
   // Uses the lightweight /whiteboard-status endpoint (no DB side effects,
@@ -177,10 +185,10 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    if (whiteboardPending && !whiteboardData && !loading && !error) {
+    if (whiteboardPending && !whiteboardData && !loading && !error && bookingId) {
       interval = setInterval(async () => {
         try {
-          const res = await bookingService.getWhiteboardStatus(Number(params.id));
+          const res = await bookingService.getWhiteboardStatus(Number(bookingId));
 
           if (res.status === 'ready' && res.whiteboard?.room_uuid && res.whiteboard?.room_token) {
             setWhiteboardData(res.whiteboard);
@@ -199,14 +207,14 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [whiteboardPending, whiteboardData, loading, error, params.id]);
+  }, [whiteboardPending, whiteboardData, loading, error, bookingId]);
 
   // ── Heartbeat: تُرسَل كل 30 ثانية أثناء الحصة لتفادي إغلاقها تلقائياً كـ"مهجورة" ──
   useEffect(() => {
-      if (!inCall) return;
+      if (!inCall || !bookingId) return;
 
       const sendHeartbeat = () => {
-          bookingService.sendHeartbeat(Number(params.id)).catch(() => {
+          bookingService.sendHeartbeat(Number(bookingId)).catch(() => {
               // فشل صامت — انقطاع نبضة واحدة مقبول ضمن فترة السماح في الباك إند
           });
       };
@@ -215,7 +223,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
       const interval = setInterval(sendHeartbeat, 30000);
 
       return () => clearInterval(interval);
-  }, [inCall, params.id]);
+  }, [inCall, bookingId]);
 
   // ── 4.5: Graceful Cleanup on Browser Close ────────────────────────────────
   useEffect(() => {
@@ -251,7 +259,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
     setShowEndConfirm(false);
     setIsEnding(true);
     try {
-      await bookingService.complete(Number(params.id));
+      await bookingService.complete(Number(bookingId));
 
       // Invalidate queries to refresh dashboard and wallet data
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
@@ -587,7 +595,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
               {isTeacher ? "لوحة تحكم المعلم" : "الفصل الافتراضي"}
             </h1>
             <p className="text-[10px] md:text-xs text-slate-300 font-medium opacity-80 mt-0.5">
-              حصة رقم #{params.id}
+              حصة رقم #{bookingId}
             </p>
           </div>
         </div>
@@ -659,7 +667,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
                   roomToken={whiteboardData.room_token}
                   uid={uid.toString()}
                   isTeacher={!!isTeacher}
-                  bookingId={params.id}
+                  bookingId={bookingId}
                   region={whiteboardRegion || WHITEBOARD_REGION || "sg"}
                   agoraChannel={channelName}
                   rtmToken={rtmToken}
@@ -734,7 +742,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
              *  • true  → draggable floating widget (camera feeds only) */}
             <FloatingVideoWidget focusMode={showWhiteboard || isSharing || isRemoteSharing} hidden={showWhiteboard}>
               <AgoraCall
-                bookingId={params.id}
+                bookingId={bookingId}
                 rtcProps={rtcProps}
                 isCameraEnabled={isCameraEnabled}
                 isMicEnabled={isMicEnabled}

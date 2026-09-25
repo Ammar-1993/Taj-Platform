@@ -5,13 +5,14 @@ import type { Metadata } from "next";
 export const revalidate = 300; // 5 minutes ISR revalidation
 
 interface TeacherPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function generateMetadata({
   params,
 }: TeacherPageProps): Promise<Metadata> {
-  const slotsData = await getCachedTeacherSlots(Number(params.id));
+  const { id } = await params;
+  const slotsData = await getCachedTeacherSlots(Number(id));
   const teacherName = slotsData?.teacher_name || "معلم معتمد";
   const subjectName = slotsData?.teacher?.teacher_profile?.subject?.name;
 
@@ -26,11 +27,12 @@ export async function generateMetadata({
 }
 
 export default async function TeacherPage({ params }: TeacherPageProps) {
-  const initialSlots = await getCachedTeacherSlots(Number(params.id));
+  const { id } = await params;
+  const initialSlots = await getCachedTeacherSlots(Number(id));
 
   return (
     <TeacherProfileClient
-      teacherId={params.id}
+      teacherId={id}
       initialSlots={initialSlots}
     />
   );

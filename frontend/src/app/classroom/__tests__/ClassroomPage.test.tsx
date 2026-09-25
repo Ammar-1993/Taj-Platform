@@ -34,6 +34,7 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({
     replace: mockRouterReplace,
   }),
+  useParams: () => ({ id: '123' }),
 }));
 
 jest.mock('@/context/AuthContext', () => ({
@@ -88,6 +89,8 @@ jest.mock('react-hot-toast', () => ({
 }));
 
 // ─── Test Data ────────────────────────────────────────────────────────────────
+
+const defaultParams = Promise.resolve({ id: '123' });
 
 const STUDENT_USER = {
   id: 1,
@@ -158,7 +161,7 @@ describe('ClassroomPage', () => {
       });
       (bookingService.getClassroomAccess as jest.Mock).mockReturnValue(new Promise(() => {}));
 
-      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={defaultParams} />);
 
       expect(screen.getByText(/جاري تجهيز الفصل الافتراضي/i)).toBeInTheDocument();
     });
@@ -171,7 +174,7 @@ describe('ClassroomPage', () => {
       // وعد معلّق — الطلب لم ينته بعد
       (bookingService.getClassroomAccess as jest.Mock).mockReturnValue(new Promise(() => {}));
 
-      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={defaultParams} />);
 
       expect(screen.getByText(/جاري تجهيز الفصل الافتراضي/i)).toBeInTheDocument();
     });
@@ -189,7 +192,7 @@ describe('ClassroomPage', () => {
         new Error('Unauthorized')
       );
 
-      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={defaultParams} />);
 
       await waitFor(() => {
         expect(
@@ -205,7 +208,7 @@ describe('ClassroomPage', () => {
       });
       (bookingService.getClassroomAccess as jest.Mock).mockRejectedValue(new Error('403'));
 
-      renderWithClient(<ClassroomPage params={{ id: '456' }} />);
+      renderWithClient(<ClassroomPage params={Promise.resolve({ id: '456' })} />);
 
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /العودة للوحة التحكم/i })).toBeInTheDocument();
@@ -225,7 +228,7 @@ describe('ClassroomPage', () => {
         loading: false, // Auth انتهت، لكن لا يوجد مستخدم
       });
 
-      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={defaultParams} />);
 
       await waitFor(() => {
         expect(mockRouterReplace).toHaveBeenCalledWith('/login');
@@ -245,7 +248,7 @@ describe('ClassroomPage', () => {
         CLASSROOM_ACCESS_SUCCESS
       );
 
-      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={defaultParams} />);
 
       await waitFor(() => {
         expect(screen.getByTestId('lobby-preview')).toBeInTheDocument();
@@ -262,7 +265,7 @@ describe('ClassroomPage', () => {
         CLASSROOM_ACCESS_SUCCESS
       );
 
-      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={defaultParams} />);
 
       await waitFor(() => {
         expect(screen.getByTestId('lobby-preview')).toBeInTheDocument();
@@ -291,7 +294,7 @@ describe('ClassroomPage', () => {
         whiteboard: null,
       });
 
-      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={defaultParams} />);
 
       // انتظر انتهاء الجلب الأولي
       await waitFor(() => {
@@ -329,7 +332,7 @@ describe('ClassroomPage', () => {
         },
       });
 
-      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={defaultParams} />);
 
       await waitFor(() => {
         expect(screen.getByTestId('lobby-preview')).toBeInTheDocument();
@@ -373,7 +376,7 @@ describe('ClassroomPage', () => {
         CLASSROOM_ACCESS_SUCCESS
       );
 
-      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={defaultParams} />);
 
       // انتظر ظهور الـ Lobby
       await waitFor(() => {
@@ -405,7 +408,7 @@ describe('ClassroomPage', () => {
         },
       });
 
-      renderWithClient(<ClassroomPage params={{ id: '123' }} />);
+      renderWithClient(<ClassroomPage params={defaultParams} />);
 
       await waitFor(() => {
         expect(bookingService.getClassroomAccess).toHaveBeenCalledWith(123);

@@ -31,7 +31,7 @@ type AgoraCallProps = {
   lobbyMediaStream?: MediaStream | null;
   /** When provided, screen content is rendered into this external div instead of
    *  AgoraCall's internal screen-share layout, enabling Focus Mode in page.tsx. */
-  externalScreenRef?: React.RefObject<HTMLDivElement>;
+  externalScreenRef?: React.RefObject<HTMLDivElement | null>;
   /** Fires true when a remote screen-share starts, false when it stops. */
   onScreenShareActive?: (active: boolean) => void;
   /**
@@ -309,9 +309,10 @@ const AgoraCall = React.memo(({
                         const je = joinErr as { message?: string; code?: string };
                         const isAbort =
                             je?.message?.includes("OPERATION_ABORTED") || je?.code === "OPERATION_ABORTED" ||
-                            je?.message?.includes("WS_ABORT")           || je?.code === "WS_ABORT";
+                            je?.message?.includes("WS_ABORT")           || je?.code === "WS_ABORT" ||
+                            je?.message?.includes("Client already left");
 
-                        // Never retry an abort — the component is unmounting, retrying would leak a connection.
+                        // Never retry an abort or left client — the component is unmounting, retrying would leak a connection.
                         if (isAbort || !isMounted) throw joinErr;
 
                         if (attempt < MAX_JOIN_ATTEMPTS) {
@@ -411,14 +412,15 @@ const AgoraCall = React.memo(({
                     if (isMounted) setIsJoined(true);
                 }
             } catch (err) {
-                // Ignore OPERATION_ABORTED which happens in React Strict Mode 
-                // when the component unmounts before join() finishes.
+                // Ignore OPERATION_ABORTED and Client already left which happen in React Strict Mode 
+                // or Fast Refresh when the component unmounts before join() finishes.
                 const e = err as { message?: string; code?: string };
                 if (
                     e?.message?.includes("OPERATION_ABORTED") || e?.code === "OPERATION_ABORTED" ||
-                    e?.message?.includes("WS_ABORT")           || e?.code === "WS_ABORT"
+                    e?.message?.includes("WS_ABORT")           || e?.code === "WS_ABORT" ||
+                    e?.message?.includes("Client already left")
                 ) {
-                    console.warn("[AgoraCall] Join aborted — component unmounted during WebSocket connection.");
+                    console.warn("[AgoraCall] Join aborted — component unmounted or client left during connection.");
                 } else {
                     console.error("Agora Init Error:", err);
                     Sentry.captureException(err, { extra: { context: "Agora Init Error" } });
@@ -439,6 +441,7 @@ const AgoraCall = React.memo(({
             if (aTrack) aTrack.close();
             void client.leave().catch(() => {});
             client.removeAllListeners();
+            clientRef.current = null;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [client, retryKey]);
@@ -470,6 +473,7 @@ const AgoraCall = React.memo(({
 
     // ── 3.2: Mic toggle — hardware release ──────────────────────────────────
     useEffect(() => {
+        // Guard 1: React state check — basic early-exit
         if (!isJoined) return;
 
         const toggleMic = async () => {
@@ -480,9 +484,25 @@ const AgoraCall = React.memo(({
             } else {
                 if (localAudioTrack) {
                     try {
+                        // Guard 2: SDK-level connection state check.
+                        // `isJoined` (React state) becomes true the instant setIsJoined() is called,
+                        // but the Agora client's internal state machine may still be in CONNECTING.
+                        // In that narrow window, client.unpublish() throws "haven't joined yet".
+                        // client.connectionState reflects the TRUE SDK state, so we wait for CONNECTED.
+                        if (client.connectionState !== "CONNECTED") {
+                            console.warn("[AgoraCall] toggleMic: skipping unpublish — client not yet CONNECTED (state:", client.connectionState, ")");
+                            return;
+                        }
                         await client.unpublish(localAudioTrack);
                         localAudioTrack.close();
                     } catch (e) {
+                        const err = e as { message?: string; code?: string };
+                        // "haven't joined yet" is a transient race — not a real error.
+                        // The mic will naturally be excluded from any subsequent publish.
+                        if (err?.message?.includes("haven't joined") || err?.code === "NOT_IN_CHANNEL") {
+                            console.warn("[AgoraCall] toggleMic: unpublish skipped (client not fully joined yet)");
+                            return;
+                        }
                         console.error("Failed to close audio track", e);
                         Sentry.captureException(e, { extra: { context: "Failed to close audio track" } });
                     }

@@ -59,8 +59,12 @@ export function useAgoraRTM({
 
         let client;
         try {
-            // Initialize RTM v2 Client
-            client = new AgoraRTM.RTM(appId, String(uid));
+            // Initialize RTM v2 Client.
+            // logLevel "none" (or 4) completely disables the SDK's internal logger, preventing
+            // it from calling console.error() directly — which Next.js dev mode would
+            // intercept and show as a red overlay even if we handle the error gracefully.
+            // All meaningful errors are already caught and logged via our own catch blocks.
+            client = new AgoraRTM.RTM(appId, String(uid), { logLevel: "none" });
             clientRef.current = client;
         } catch (error) {
             console.error("[RTM] Initialization failed (check NEXT_PUBLIC_AGORA_APP_ID):", error);
@@ -92,9 +96,18 @@ export function useAgoraRTM({
             }
         });
 
+        let isCancelled = false;
+        let isLoggedIn = false;
+
         const connect = async () => {
             try {
                 await client.login({ token: token ?? undefined });
+                if (isCancelled) {
+                    try { await client.logout(); } catch {}
+                    return;
+                }
+                isLoggedIn = true;
+
                 // Subscribe to the channel to receive messages AND presence events
                 await client.subscribe(channel, { withMessage: true, withPresence: true });
                 isConnectedRef.current = true;
@@ -109,23 +122,37 @@ export function useAgoraRTM({
                         });
                     }
                 }
-            } catch (error) {
-                console.error("[RTM] Connection failed:", error);
+            } catch (error: unknown) {
+                if (isCancelled) return; // Ignore expected cancellation during unmount
+
+                const errStr = error instanceof Error ? error.message : String(error || "");
+                if (errStr.includes("-10023") || errStr.includes("canceled by user")) {
+                    // Login was cancelled during unmount or transition, safe to ignore
+                    return;
+                }
+                if (errStr.includes("-10015") || errStr.includes("NOT_ENABLE_RTM")) {
+                    console.warn("[RTM] Real-time messaging (RTM) is not enabled on this Agora App ID. Cursor sync disabled.");
+                    return;
+                }
+                console.warn("[RTM] Connection attempt failed:", error);
             }
         };
 
         connect();
 
         return () => {
+            isCancelled = true;
             isConnectedRef.current = false;
             pendingMessagesRef.current = [];
             const cleanup = async () => {
                 clientRef.current = null; // Prevent publishes during teardown
                 try {
-                    await client.unsubscribe(channel);
-                    await client.logout();
-                } catch (e) {
-                    console.error("[RTM] Cleanup error:", e);
+                    if (isLoggedIn) {
+                        await client.unsubscribe(channel).catch(() => {});
+                        await client.logout().catch(() => {});
+                    }
+                } catch {
+                    // Safe cleanup ignore
                 }
             };
             cleanup();

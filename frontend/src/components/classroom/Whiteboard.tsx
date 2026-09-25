@@ -1,5 +1,6 @@
 "use client";
 
+import "@/lib/react19-legacy-compat";
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { WhiteWebSdk, Room, DeviceType, ViewMode, ApplianceNames, RoomPhase } from "white-web-sdk";
 import {
@@ -882,12 +883,20 @@ const Whiteboard: React.FC<WhiteboardProps> = React.memo(({
             if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
             if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
             if (roomRef.current) {
+                const room = roomRef.current;
+                roomRef.current = null; // Null out ref immediately to prevent any re-entrant calls
                 try {
-                    // Unbind to prevent internal pointer/mouse events from firing after disconnect begins
-                    roomRef.current.bindHtmlElement(null);
-                } catch { /* ignore */ }
-                roomRef.current.disconnect().catch(() => {/* ignore disconnect errors on unmount */});
-                roomRef.current = null;
+                    // Step 1: Detach DOM listeners BEFORE disconnecting.
+                    // This prevents internal pointer/keyboard events from firing
+                    // while the room transitions through the 'disconnecting' phase.
+                    room.bindHtmlElement(null);
+                } catch { /* ignore — room may already be disconnecting */ }
+                // Step 2: Disconnect asynchronously, ignoring all teardown errors.
+                // white-web-sdk has an internal bug where refreshSyncOperations()
+                // fires during phase transition to 'disconnecting' and calls
+                // assertRoomIsConnected() — which throws because the room is no
+                // longer connected. This is expected and safe to ignore.
+                room.disconnect().catch(() => { /* expected during unmount */ });
             }
             sdkRef.current = null;
         };
