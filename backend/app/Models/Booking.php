@@ -54,6 +54,7 @@ class Booking extends Model
         'completed_at',
         'status',
         'whiteboard_room_uuid',
+        'metadata',
     ];
 
     protected function casts(): array

@@ -118,19 +118,36 @@ class BookingService
     /**
      * إنهاء الحصة وتحويل الأرباح للمعلم (80% للمعلم)
      */
-    public function completeBooking(Booking $booking): Booking
+    public function completeBooking(Booking $booking, ?User $actor = null, ?string $note = null): Booking
     {
-        return DB::transaction(function () use ($booking) {
+        return DB::transaction(function () use ($booking, $actor, $note) {
             $booking = Booking::where('id', $booking->id)->lockForUpdate()->firstOrFail();
 
             if ($booking->status === 'completed') {
                 throw new Exception('تم إغلاق هذه الحصة مسبقاً.');
             }
 
-            $booking->update([
+            if (in_array($booking->status, ['cancelled', 'refunded'])) {
+                throw new Exception('لا يمكن إكمال هذه الحصة لأنها ملغاة.');
+            }
+
+            $updateData = [
                 'status' => 'completed',
                 'completed_at' => now(),
-            ]);
+            ];
+
+            if ($note || $actor) {
+                $metadata = $booking->metadata ?? [];
+                if ($note) {
+                    $metadata['admin_completion_note'] = $note;
+                }
+                if ($actor) {
+                    $metadata['completed_by_id'] = $actor->id;
+                }
+                $updateData['metadata'] = $metadata;
+            }
+
+            $booking->update($updateData);
 
             // توزيع الأرباح: 80% تذهب لمحفظة المعلم، و20% تظل في حساب المنصة (لا تضاف لمحفظة أحد)
             $teacherShare = $booking->net_paid * 0.80;
@@ -152,20 +169,36 @@ class BookingService
     /**
      * إلغاء الحجز واسترجاع الأموال (Refund)
      */
-    public function cancelBooking(Booking $booking, User $canceller): Booking
+    public function cancelBooking(Booking $booking, User $canceller, ?string $reason = null): Booking
     {
-        return DB::transaction(function () use ($booking) {
+        return DB::transaction(function () use ($booking, $canceller, $reason) {
             $booking = Booking::where('id', $booking->id)->lockForUpdate()->firstOrFail();
 
-            if (! in_array($booking->status, ['scheduled', 'in_progress'])) {
+            if (! in_array($booking->status, ['scheduled', 'in_progress', 'abandoned'])) {
                 throw new Exception('لا يمكن إلغاء هذه الحصة في حالتها الحالية.');
             }
 
+            if ($booking->status === 'abandoned' && ! $canceller->hasRole('admin')) {
+                throw new Exception('هذه الحصة معلقة لدى الإدارة ولا يمكن إلغاؤها إلا من قبل المشرف.');
+            }
+
+            $updateData = ['status' => 'cancelled'];
+
+            if ($reason || $canceller) {
+                $metadata = $booking->metadata ?? [];
+                if ($reason) {
+                    $metadata['cancellation_reason'] = $reason;
+                }
+                $metadata['cancelled_by_id'] = $canceller->id;
+                $metadata['cancelled_at'] = now()->toIso8601String();
+                $updateData['metadata'] = $metadata;
+            }
+
             // 1. تغيير حالة الحجز
-            $booking->update(['status' => 'cancelled']);
+            $booking->update($updateData);
 
             // 2. إعادة الموعد ليكون متاحاً لطلاب آخرين
-            $booking->teacherSlot->update(['status' => 'available']);
+            $booking->teacherSlot?->update(['status' => 'available']);
 
             // 3. استرجاع المبلغ لممول الحصة (الطالب أو ولي الأمر) 💰
             $payer = User::find($booking->booked_by_id);

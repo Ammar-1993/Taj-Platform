@@ -29,7 +29,9 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->brandName('منصة تاج')
+            ->brandName('منصة تاج التعليمية')
+            ->brandLogo(fn () => view('filament.components.brand-logo'))
+            ->brandLogoHeight('2.25rem')
             ->path('admin')
             ->login(CustomLogin::class)
             ->userMenuItems([
@@ -53,17 +55,6 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 fn (): HtmlString => new HtmlString('<link rel="stylesheet" href="'.asset('css/filament-custom.css').'">')
-            )
-            ->renderHook(
-                PanelsRenderHook::TOPBAR_START,
-                fn (): HtmlString => new HtmlString('
-                    <div class="flex items-center gap-2 px-2 group cursor-default">
-                        <svg class="w-8 h-8 text-primary-600 transition-transform group-hover:scale-110" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
-                        </svg>
-                        <span class="text-xl font-black tracking-tight text-gray-800 dark:text-gray-100 hidden sm:block">منصة تاج</span>
-                    </div>
-                ')
             )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')

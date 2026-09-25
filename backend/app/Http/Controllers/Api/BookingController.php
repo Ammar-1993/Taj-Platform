@@ -102,6 +102,13 @@ class BookingController extends Controller
             return response()->json(['message' => 'غير مصرح لك بإنهاء هذه الحصة'], 403);
         }
 
+        if ($booking->status === 'abandoned') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'هذه الحصة معلقة لدى الإدارة للمراجعة ولا يمكن إكمالها.',
+            ], 400);
+        }
+
         try {
             $completedBooking = $this->bookingService->completeBooking($booking);
 
@@ -133,6 +140,13 @@ class BookingController extends Controller
         // ── التحقق من الهوية: المعلم أو الطالب أو ولي الأمر الذي دفع ──
         if (! $isTeacher && ! $isStudent && ! $isBookingParent) {
             return response()->json(['message' => 'غير مصرح لك بإلغاء هذه الحصة.'], 403);
+        }
+
+        if ($booking->status === 'abandoned') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'هذه الحصة معلقة لدى الإدارة للمراجعة ولا يمكن إلغاؤها.',
+            ], 400);
         }
 
         // ── قيد الـ 24 ساعة: ينطبق فقط على الطلاب وأولياء الأمور ──

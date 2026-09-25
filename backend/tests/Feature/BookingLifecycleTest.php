@@ -152,4 +152,28 @@ class BookingLifecycleTest extends TestCase
             ->assertJsonPath('data.data.0.id', $scheduledBooking->id)
             ->assertJsonPath('data.data.0.status', 'scheduled');
     }
+
+    public function test_teacher_cannot_complete_abandoned_booking_via_api()
+    {
+        $this->booking->update(['status' => 'abandoned']);
+
+        $response = $this->actingAs($this->teacher)
+            ->patchJson("/api/v1/bookings/{$this->booking->id}/complete");
+
+        $response->assertStatus(400)
+            ->assertJsonPath('status', 'error')
+            ->assertJsonPath('message', 'هذه الحصة معلقة لدى الإدارة للمراجعة ولا يمكن إكمالها.');
+    }
+
+    public function test_user_cannot_cancel_abandoned_booking_via_api()
+    {
+        $this->booking->update(['status' => 'abandoned']);
+
+        $response = $this->actingAs($this->teacher)
+            ->patchJson("/api/v1/bookings/{$this->booking->id}/cancel");
+
+        $response->assertStatus(400)
+            ->assertJsonPath('status', 'error')
+            ->assertJsonPath('message', 'هذه الحصة معلقة لدى الإدارة للمراجعة ولا يمكن إلغاؤها.');
+    }
 }

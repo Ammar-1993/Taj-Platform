@@ -3,13 +3,18 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
+use App\Models\Booking;
+use App\Models\PayoutRequest;
 use App\Models\User;
 use Filament\Actions\StaticAction;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\TextEntry\TextEntrySize;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\FontFamily;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -148,18 +153,144 @@ class UserResource extends Resource
                         ->label('المحفظة')
                         ->icon('heroicon-o-wallet')
                         ->color('info')
-                        ->modalHeading(fn (User $record) => 'محفظة '.$record->name)
+                        ->modalHeading(fn (User $record) => 'محفظة: '.$record->name)
+                        ->modalWidth('4xl')
                         ->infolist([
-                            TextEntry::make('wallet.balance')
-                                ->label('الرصيد المتاح')
-                                ->formatStateUsing(fn ($state) => number_format((float) $state, 2).' SAR')
-                                ->size(TextEntrySize::Large)
-                                ->weight('bold')
-                                ->color('success'),
-                            TextEntry::make('wallet.pending_balance')
-                                ->label('الرصيد المعلق')
-                                ->formatStateUsing(fn ($state) => number_format((float) $state, 2).' SAR')
-                                ->color('warning'),
+                            Section::make('الملخص المالي للمحفظة')
+                                ->schema([
+                                    TextEntry::make('wallet.balance')
+                                        ->label('الرصيد المتاح')
+                                        ->formatStateUsing(fn ($state) => number_format((float) ($state ?? 0), 2).' SAR')
+                                        ->size(TextEntrySize::Large)
+                                        ->weight('bold')
+                                        ->color('success')
+                                        ->icon('heroicon-o-check-circle'),
+
+                                    TextEntry::make('pending_amount')
+                                        ->label('المبالغ المعلقة')
+                                        ->state(function (User $record): string {
+                                            $amount = $record->hasRole('teacher')
+                                                ? PayoutRequest::where('user_id', $record->id)->where('status', 'pending')->sum('amount')
+                                                : Booking::where('booked_by_id', $record->id)->whereIn('status', ['scheduled', 'in_progress'])->sum('net_paid');
+
+                                            return number_format((float) $amount, 2).' SAR';
+                                        })
+                                        ->color('warning')
+                                        ->icon('heroicon-o-clock'),
+
+                                    TextEntry::make('total_in')
+                                        ->label(fn (User $record) => $record->hasRole('teacher') ? 'إجمالي أرباح الحصص' : 'إجمالي المبالغ المشحونة')
+                                        ->state(fn (User $record): string => number_format((float) ($record->wallet?->transactions()->whereIn('type', ['deposit', 'class_earnings'])->sum('amount') ?? 0), 2).' SAR')
+                                        ->color('info')
+                                        ->icon('heroicon-o-arrow-trending-up'),
+
+                                    TextEntry::make('total_out')
+                                        ->label(fn (User $record) => $record->hasRole('teacher') ? 'إجمالي الأرباح المسحوبة' : 'إجمالي المدفوع للحصص')
+                                        ->state(fn (User $record): string => number_format((float) ($record->wallet?->transactions()->whereIn('type', ['withdrawal', 'payment'])->sum('amount') ?? 0), 2).' SAR')
+                                        ->color('danger')
+                                        ->icon('heroicon-o-arrow-trending-down'),
+                                ])
+                                ->columns(['sm' => 1, 'md' => 2, 'lg' => 4]),
+
+                            Section::make('سجل العمليات المالية الأخيرة')
+                                ->description('عرض أحدث العمليات والتحويلات المسجلة في المحفظة.')
+                                ->schema([
+                                    RepeatableEntry::make('wallet_transactions')
+                                        ->label('')
+                                        ->state(fn (User $record) => $record->wallet?->transactions()->latest()->take(15)->get() ?? [])
+                                        ->placeholder('لا توجد عمليات مالية مسجلة في هذه المحفظة حتى الآن.')
+                                        ->schema([
+                                            TextEntry::make('type')
+                                                ->label('نوع العملية')
+                                                ->state(fn ($record) => $record?->type)
+                                                ->badge()
+                                                ->color(fn (?string $state): string => match ($state) {
+                                                    'deposit' => 'success',
+                                                    'class_earnings' => 'primary',
+                                                    'refund' => 'info',
+                                                    'payment' => 'danger',
+                                                    'withdrawal' => 'gray',
+                                                    default => 'gray',
+                                                })
+                                                ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                                    'deposit' => 'شحن محفظة',
+                                                    'class_earnings' => 'أرباح حصة',
+                                                    'refund' => 'استرجاع مالي',
+                                                    'payment' => 'دفع حجز',
+                                                    'withdrawal' => 'سحب أرباح',
+                                                    default => $state ?? '—',
+                                                }),
+                                            TextEntry::make('amount')
+                                                ->label('المبلغ')
+                                                ->state(fn ($record) => $record?->amount)
+                                                ->weight('bold')
+                                                ->color(fn ($record) => in_array($record?->type, ['deposit', 'class_earnings', 'refund']) ? 'success' : 'danger')
+                                                ->formatStateUsing(fn ($state, $record) => (in_array($record?->type, ['deposit', 'class_earnings', 'refund']) ? '+' : '-').number_format((float) ($state ?? 0), 2).' SAR'),
+                                            TextEntry::make('description')
+                                                ->label('البيان / الوصف')
+                                                ->state(fn ($record) => $record?->description ?? '—')
+                                                ->weight('medium'),
+                                            TextEntry::make('created_at')
+                                                ->label('التاريخ والوقت')
+                                                ->state(fn ($record) => $record?->created_at)
+                                                ->dateTime('Y-m-d h:i A')
+                                                ->color('gray'),
+                                        ])
+                                        ->columns(['sm' => 1, 'md' => 4]),
+                                ])
+                                ->collapsible(),
+
+                            Section::make('طلبات سحب الأرباح البنكية')
+                                ->description('طلبات التحويل لحساب المعلم البنكي.')
+                                ->schema([
+                                    RepeatableEntry::make('payout_requests')
+                                        ->label('')
+                                        ->state(fn (User $record) => PayoutRequest::where('user_id', $record->id)->latest()->take(10)->get() ?? [])
+                                        ->placeholder('لا توجد طلبات سحب أرباح مسجلة لهذا المعلم.')
+                                        ->schema([
+                                            TextEntry::make('amount')
+                                                ->label('المبلغ')
+                                                ->state(fn ($record) => $record?->amount)
+                                                ->weight('bold')
+                                                ->formatStateUsing(fn ($state) => number_format((float) ($state ?? 0), 2).' SAR'),
+                                            TextEntry::make('bank_name')
+                                                ->label('اسم البنك')
+                                                ->state(fn ($record) => $record?->bank_name ?? '—'),
+                                            TextEntry::make('iban')
+                                                ->label('رقم الآيبان (IBAN)')
+                                                ->state(fn ($record) => $record?->iban)
+                                                ->copyable()
+                                                ->copyMessage('تم نسخ الآيبان')
+                                                ->fontFamily(FontFamily::Mono),
+                                            TextEntry::make('status')
+                                                ->label('حالة الطلب')
+                                                ->state(fn ($record) => $record?->status)
+                                                ->badge()
+                                                ->color(fn (?string $state): string => match ($state) {
+                                                    'pending' => 'warning',
+                                                    'approved' => 'info',
+                                                    'transferred' => 'success',
+                                                    'rejected' => 'danger',
+                                                    default => 'gray',
+                                                })
+                                                ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                                    'pending' => 'قيد الانتظار',
+                                                    'approved' => 'معتمد',
+                                                    'transferred' => 'تم التحويل',
+                                                    'rejected' => 'مرفوض',
+                                                    default => $state ?? '—',
+                                                }),
+                                            TextEntry::make('created_at')
+                                                ->label('تاريخ الطلب')
+                                                ->state(fn ($record) => $record?->created_at)
+                                                ->dateTime('Y-m-d h:i A')
+                                                ->color('gray'),
+                                        ])
+                                        ->columns(['sm' => 1, 'md' => 5]),
+                                ])
+                                ->collapsible()
+                                ->collapsed()
+                                ->visible(fn (User $record): bool => $record->hasRole('teacher') || PayoutRequest::where('user_id', $record->id)->exists()),
                         ])
                         ->modalSubmitAction(false)
                         ->modalCancelAction(fn (StaticAction $action) => $action->label('إغلاق')),
