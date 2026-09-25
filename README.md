@@ -13,9 +13,10 @@
   </p>
 
   <p>
-    <a href="#"><img src="https://img.shields.io/badge/Release-v2.0.0-emerald?style=for-the-badge&logo=git&logoColor=white" alt="Release v2.0.0" /></a>
+    <a href="#"><img src="https://img.shields.io/badge/Release-v2.1.0-emerald?style=for-the-badge&logo=git&logoColor=white" alt="Release v2.1.0" /></a>
     <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-12.0-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 12" /></a>
-    <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-14.2-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 14" /></a>
+    <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-15.3-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 15" /></a>
+    <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19.3-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" /></a>
     <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" /></a>
     <a href="https://filamentphp.com"><img src="https://img.shields.io/badge/Filament_V3-EAB308?style=for-the-badge&logo=filament&logoColor=white" alt="Filament" /></a>
     <a href="https://www.agora.io"><img src="https://img.shields.io/badge/Agora-RTC%20%2F%20RTM-099DFD?style=for-the-badge&logo=agora&logoColor=white" alt="Agora" /></a>
@@ -56,18 +57,18 @@
 
 The platform operates on a high-performance decoupled monorepo architecture engineered for sub-second page loads, real-time media isolation, and financial integrity:
 
-1. **Edge-Driven Presentation Layer**: Next.js 14 App Router on Vercel combines **Edge React Server Components (RSC)** with multi-tier SWR caching (300s–600s with on-demand tag revalidation) for instant catalog rendering and dynamic OpenGraph SEO, alongside rich client-side state (TanStack Query) for authenticated interactive workflows.
+1. **Edge-Driven Presentation Layer**: Next.js 15 App Router & React 19 on Vercel combines **Edge React Server Components (RSC)** with multi-tier SWR caching (300s–600s with on-demand tag revalidation) for instant catalog rendering and dynamic OpenGraph SEO, alongside rich client-side state (TanStack Query) for authenticated interactive workflows.
 2. **Direct-to-Cloud Real-Time Media (Zero Server Load)**: The virtual classroom (adaptive HD video, isolated screen sharing, and interactive Netless whiteboard) connects **directly, browser-to-cloud**, via Agora SD-RTN and Netless CDN — keeping the backend API 100% free of heavy media traffic and CPU load.
 3. **Async Queue & WebRTC Token Pre-Provisioning**: A background Redis queue worker (`ProvisionVirtualClassroom`) pre-provisions whiteboard rooms and pre-generates Agora RTC/RTM tokens ahead of time, ensuring `< 1ms` instantaneous cold-join cache hits.
 4. **ACID Financial Ledger & Escrow Economy**: MySQL 8.0 handles overdraft-proof wallet transactions and slot bookings with row-level locks (`lockForUpdate()`) and composite indexing (`idx_bookings_booked_by_status_date`), safely holding funds in escrow until lesson completion (80% teacher / 20% platform revenue split).
-5. **Administrative Governance & Operations**: A fully localized FilamentPHP v3 dashboard empowers platform administrators to audit teacher KYC credentials (national ID & degrees), adjudicate session disputes, and reconcile automated bank payouts.
+5. **Administrative Governance & Operations**: A fully localized FilamentPHP v3 dashboard empowers platform administrators to audit teacher KYC credentials (national ID & degrees), adjudicate session disputes, resolve abandoned bookings, and reconcile automated bank payouts.
 6. **Multi-Tier Tagged Invalidation & Cloud Security**: Redis 7 cache tags with automated Eloquent lifecycle hooks (`saved`, `deleted`), Moyasar HMAC-signed webhooks, Google reCAPTCHA v3 bot protection, and full-stack Sentry APM observability.
 
 
 ```mermaid
 graph LR
     %% Presentation Tier
-    FE["💻 Next.js 14 Frontend<br/>(Edge RSC / Client UI)"]
+    FE["💻 Next.js 15 Frontend<br/>(React 19 / Edge RSC / Client UI)"]
 
     %% Real-Time Media Cloud (Zero Server Load)
     subgraph Live["🎓 Live Classroom — Direct Media Cloud (Zero Server Load)"]
@@ -128,7 +129,7 @@ graph LR
 | Layer / Tier | Primary Technologies | Architectural Role & Implementation Details |
 | :--- | :--- | :--- |
 | **0. Actors & Roles** | RBAC (Student, Teacher, Parent, Admin) | Distinct personas partitioned by Spatie RBAC, accessing tailored functional portals and localized Arabic interfaces. |
-| **1. Client & Presentation** | Next.js 14 App Router (Vercel) | Hybrid Edge architecture: React Server Components (RSC) pre-render public catalogs with 60s SWR caching; Client Components manage TanStack Query state, Arabic RTL layouts, and in-browser WebRTC engines. |
+| **1. Client & Presentation** | Next.js 15 App Router & React 19 (Vercel) | Hybrid Edge architecture: React Server Components (RSC) pre-render public catalogs with 60s SWR caching; Client Components manage TanStack Query state, Arabic RTL layouts, and in-browser WebRTC engines. |
 | **2. Real-Time Media Cloud** | Agora SD-RTN + Netless Cloud | **Direct browser-to-cloud streams (Zero Server Load)**: Real-time 720p/120p simulcast video, independent screen sharing channel (`UID + 1_000_000_000`), WebSocket signaling, and collaborative vector whiteboard canvas. |
 | **3. Backend Application Core** | Laravel 12 + Filament v3 (Docker) | Production container cluster (`taj_admin_web`, `taj_queue_worker`) running PHP 8.3 Alpine behind an Nginx reverse proxy. Encapsulates business logic, KYC auditing, automated 80/20 revenue splitting, and async queue orchestration. |
 | **4. Persistence & Caching** | MySQL 8.0 (InnoDB) + Redis 7 | InnoDB ACID financial ledger with composite indexing (`idx_bookings_booked_by_status_date`) and row locks (`lockForUpdate()`), paired with Tagged Redis Caching (`Cache::tags()`) and automated Eloquent lifecycle invalidation. |
@@ -157,7 +158,7 @@ A comprehensive architectural overhaul transitioned Taj Educational Platform fro
 
 ### 🔍 Architectural Drivers Behind the Performance Gains
 
-1. **Next.js 14 Hybrid RSC & Edge SWR Caching:**
+1. **Next.js 15 & React 19 Hybrid RSC & Edge SWR Caching:**
    - Public pages (`/discovery/teachers`, `/`, etc.) were converted from client-side dynamic fetches to Edge React Server Components with `stale-while-revalidate` caching (`next: { revalidate: 60, tags: ['teachers'] }`).
    - HTML with full teacher profiles and catalog data is served instantly from the edge CDN, eliminating client loading spinners and waterfall network requests.
    - Dynamic OpenGraph and Twitter card metadata are now generated server-side for search engine crawlers and social sharing.
@@ -187,6 +188,14 @@ A comprehensive architectural overhaul transitioned Taj Educational Platform fro
 ---
 
 ## 🆕 What's New
+
+### 🚀 Release v2.1.0 — Next.js 15.3, React 19 Modernization & Administrative Governance
+- **⚡ Next.js 15.3.9 & React 19.3.0 Major Upgrade** — Upgraded the entire frontend framework from Next.js 14 to Next.js 15.3.9 with React 19.3.0, leveraging React 19 compiler optimizations, modern client hooks, and stricter hydration validations.
+- **🛡️ Custom React 19 Legacy Compatibility Shim for Whiteboard** — Engineered an architectural bridge ([`react19-legacy-compat.ts`](frontend/src/lib/react19-legacy-compat.ts) & [`React19CompatProvider.tsx`](frontend/src/components/providers/React19CompatProvider.tsx)) bridging `ReactDOM.render` to `createRoot` and deferring `unmountComponentAtNode` using `setTimeout(0)` to satisfy React 19's render-cycle invariants for `white-web-sdk`.
+- **🔄 Async Request APIs Migration** — Upgraded all dynamic App Router routes ([`classroom/[id]`](frontend/src/app/classroom/[id]/page.tsx), [`teachers/[id]`](frontend/src/app/teachers/[id]/page.tsx), and [`reset-password`](frontend/src/app/reset-password/page.tsx)) to natively resolve `params: Promise<{ id: string }>` via `await` and `<Suspense>`.
+- **🔇 Webpack BannerPlugin Noise Filter for Agora RTM** — Injected a module-level pre-evaluation filter in Webpack ([`next.config.mjs`](frontend/next.config.mjs)) to suppress expected dev-only noise codes (`-10015`, `-10023`, `assertRoomIsConnected`) before third-party SDK loggers capture `console.error`.
+- **👑 Administrative Governance & Escrow Resolution** — Added Filament admin actions to resolve abandoned sessions (with instant escrow release to teachers or full wallet refunds to students/parents), unified resource actions into an ergonomic vertical-ellipsis `ActionGroup`, enhanced the User Wallet modal with comprehensive financial metrics, and integrated the royal crown brand logo.
+- **🧪 100% Automated Test Suites Green** — Full test coverage with **89 backend tests (268 assertions)** via PHPUnit and **33 frontend tests across 5 suites** via Jest (100% passing).
 
 ### 🚀 Release v2.0.0 — Major Architecture & Performance Overhaul
 - **⚡ Next.js 14 Hybrid RSC Architecture & Edge SWR** — Migrated public discovery and teacher catalog pages from pure client-side rendering to React Server Components with parallel edge pre-fetching (`stale-while-revalidate`), dropping FCP/LCP under 500ms and enabling dynamic OpenGraph SEO metadata previews.
@@ -757,16 +766,16 @@ sequenceDiagram
 > **Payments:** Moyasar Payment Gateway (SAR)
 > **Async Processing:** Laravel Queues backed by **Redis** (Predis client)
 > **Monitoring:** Sentry (`sentry/sentry-laravel`)
-> **Testing:** PHPUnit via `php artisan test` — **83 tests, 248 assertions**
+> **Testing:** PHPUnit via `php artisan test` — **89 tests, 268 assertions**
 
 ### Frontend (`/frontend`)
 
-> **Core:** Next.js 14.2 (App Router) • React 18 • TypeScript 5 (strict mode)
+> **Core:** Next.js 15.3 (App Router) • React 19.3 • TypeScript 5 (strict mode)
 > **Styling & UI:** Tailwind CSS 3.4 • Lucide React icons
-> **Live Classroom:** `agora-rtc-sdk-ng` (video/audio/screen share) • `agora-rtm-sdk` (cursor & event sync) • `white-web-sdk` (interactive whiteboard)
+> **Live Classroom:** `agora-rtc-sdk-ng` (video/audio/screen share) • `agora-rtm-sdk` (cursor & event sync) • `white-web-sdk` (interactive whiteboard with React 19 compatibility shim)
 > **Data & State:** TanStack Query (React Query) • Axios
 > **Monitoring:** `@sentry/nextjs` with Source Maps
-> **Testing:** Jest + React Testing Library — **28 tests across 5 test suites**
+> **Testing:** Jest + React Testing Library — **33 tests across 5 test suites**
 
 ---
 
@@ -783,8 +792,8 @@ sequenceDiagram
 | **🛰️ Monitoring**         | Sentry — full-stack (backend + frontend) with Source Maps        |
 | **🌍 Localization**       | 100% Arabic (RTL-native interface)                               |
 | **🛡️ Security**           | Sanctum tokens + Spatie RBAC + rate limiting                     |
-| **🧪 Backend Tests**      | 83 tests · 248 assertions (PHPUnit)                              |
-| **🧪 Frontend Tests**     | 28 tests · 5 suites (Jest + React Testing Library)               |
+| **🧪 Backend Tests**      | 89 tests · 268 assertions (PHPUnit)                              |
+| **🧪 Frontend Tests**     | 33 tests · 5 suites (Jest + React Testing Library)               |
 | **📦 Deployment**         | Backend → DigitalOcean VPS / Render · Frontend → Vercel          |
 
 ---
@@ -948,7 +957,7 @@ npm run test
 npm run test:watch
 ```
 
-**Current results:** `28 tests · 5 test suites` — all passing ✅
+**Current results:** `33 tests · 5 test suites` — all passing ✅
 
 The suite covers:
 
