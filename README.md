@@ -921,7 +921,7 @@ cd backend
 php artisan test
 ```
 
-**Current results:** `69 tests · 190 assertions` — all passing ✅
+**Current results:** `89 tests · 190 assertions` — all passing ✅
 
 The suite covers:
 
