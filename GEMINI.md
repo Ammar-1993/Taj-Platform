@@ -321,3 +321,23 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - **Code Quality:** `laravel/pint` passed on all 171 files; `npm run lint` passed with 0 warnings.
   - **Production Build:** `npm run build` compiled cleanly (26/26 routes).
 
+## 📖 Session Log & Recent Updates (Sep 25, 2026)
+
+### 1. Frontend Major Upgrade: Next.js 15.3.9 & React 19.3.0
+- **Context:** The frontend framework was upgraded from Next.js 14.2 to Next.js 15.3.9 with React 19.3.0 as Phase 1 of the platform modernization roadmap.
+- **Root Cause & Technical Challenges:**
+  1. **Removal of `ReactDOM.render`:** React 19 completely removed legacy APIs (`ReactDOM.render` and `ReactDOM.unmountComponentAtNode`), which caused `white-web-sdk` to crash upon initialization.
+  2. **React 19 Render-Cycle Invariant:** React 19 strictly forbids synchronous `root.unmount()` inside the active render cycle. `white-web-sdk` triggered this during element binding (`bindHtmlElement` -> `putState` -> `_P.set`).
+  3. **Async Request APIs in Next.js 15:** Dynamic route parameters (`params`) and search parameters are now Promises in Next.js 15.
+- **Architectural Resolution:**
+  - **React 19 Legacy Compatibility Shim ([`react19-legacy-compat.ts`](file:///home/ammar/code/taj-platform/frontend/src/lib/react19-legacy-compat.ts) & [`React19CompatProvider.tsx`](file:///home/ammar/code/taj-platform/frontend/src/components/providers/React19CompatProvider.tsx)):** Implemented a runtime shim bridging `ReactDOM.render` to `createRoot` and deferring `unmountComponentAtNode` using `setTimeout(0)` to escape the synchronous render flush. Injected via a zero-overhead Client Component provider into [`layout.tsx`](file:///home/ammar/code/taj-platform/frontend/src/app/layout.tsx).
+  - **Async Route Params Migration:** Migrated dynamic routes ([`classroom/[id]/page.tsx`](file:///home/ammar/code/taj-platform/frontend/src/app/classroom/%5Bid%5D/page.tsx), [`teachers/[id]/page.tsx`](file:///home/ammar/code/taj-platform/frontend/src/app/teachers/%5Bid%5D/page.tsx)) to `params: Promise<{ id: string }>` with `await params`, and wrapped [`reset-password/page.tsx`](file:///home/ammar/code/taj-platform/frontend/src/app/reset-password/page.tsx) in `<Suspense>` with `useSearchParams`.
+  - **Agora RTM SDK Noise Suppression ([`next.config.mjs`](file:///home/ammar/code/taj-platform/frontend/next.config.mjs)):** Injected a Webpack `BannerPlugin` at module compilation time to filter expected dev noise (`-10015`, `-10023`, `assertRoomIsConnected`).
+  - **Cleanup:** Completely removed deprecated `agora-react-uikit` dependency.
+- **Verification Results:**
+  - **Type Safety:** `npx tsc --noEmit` passed with 0 errors.
+  - **Test Suite:** **33 passed (5 suites)** with 0 failures (`npm test`).
+  - **Production Build:** `npm run build` completed successfully (Exit Code 0).
+  - **Deployment:** Committed (`9e7dcd2`) and pushed directly to `origin/main` for automatic production deployment on Vercel.
+
+
