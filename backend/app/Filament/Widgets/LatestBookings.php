@@ -40,6 +40,7 @@ class LatestBookings extends BaseWidget
                         'in_progress' => 'warning',
                         'completed' => 'success',
                         'cancelled', 'refunded' => 'danger',
+                        'abandoned' => 'gray',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
@@ -48,6 +49,7 @@ class LatestBookings extends BaseWidget
                         'completed' => 'مكتمل',
                         'cancelled' => 'ملغي',
                         'refunded' => 'مسترجع',
+                        'abandoned' => 'مهجورة',
                         default => $state,
                     }),
                 Tables\Columns\TextColumn::make('created_at')

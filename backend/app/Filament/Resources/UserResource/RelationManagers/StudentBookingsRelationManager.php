@@ -47,6 +47,7 @@ class StudentBookingsRelationManager extends RelationManager
                         'in_progress' => 'warning',
                         'completed' => 'success',
                         'cancelled', 'refunded' => 'danger',
+                        'abandoned' => 'gray',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
@@ -55,6 +56,7 @@ class StudentBookingsRelationManager extends RelationManager
                         'completed' => 'مكتمل',
                         'cancelled' => 'ملغي',
                         'refunded' => 'مسترجع',
+                        'abandoned' => 'مهجورة',
                         default => $state,
                     }),
             ])
