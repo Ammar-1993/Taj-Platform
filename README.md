@@ -195,7 +195,7 @@ A comprehensive architectural overhaul transitioned Taj Educational Platform fro
 - **🔄 Async Request APIs Migration** — Upgraded all dynamic App Router routes ([`classroom/[id]`](frontend/src/app/classroom/[id]/page.tsx), [`teachers/[id]`](frontend/src/app/teachers/[id]/page.tsx), and [`reset-password`](frontend/src/app/reset-password/page.tsx)) to natively resolve `params: Promise<{ id: string }>` via `await` and `<Suspense>`.
 - **🔇 Webpack BannerPlugin Noise Filter for Agora RTM** — Injected a module-level pre-evaluation filter in Webpack ([`next.config.mjs`](frontend/next.config.mjs)) to suppress expected dev-only noise codes (`-10015`, `-10023`, `assertRoomIsConnected`) before third-party SDK loggers capture `console.error`.
 - **👑 Administrative Governance & Escrow Resolution** — Added Filament admin actions to resolve abandoned sessions (with instant escrow release to teachers or full wallet refunds to students/parents), unified resource actions into an ergonomic vertical-ellipsis `ActionGroup`, enhanced the User Wallet modal with comprehensive financial metrics, and integrated the royal crown brand logo.
-- **🧪 100% Automated Test Suites Green** — Full test coverage with **89 backend tests (268 assertions)** via PHPUnit and **33 frontend tests across 5 suites** via Jest (100% passing).
+- **🧪 100% Automated Test Suites Green** — Full test coverage with **89 backend tests (275 assertions)** via PHPUnit and **33 frontend tests across 5 suites** via Jest (100% passing).
 
 ### 🚀 Release v2.0.0 — Major Architecture & Performance Overhaul
 - **⚡ Next.js 14 Hybrid RSC Architecture & Edge SWR** — Migrated public discovery and teacher catalog pages from pure client-side rendering to React Server Components with parallel edge pre-fetching (`stale-while-revalidate`), dropping FCP/LCP under 500ms and enabling dynamic OpenGraph SEO metadata previews.
@@ -766,7 +766,7 @@ sequenceDiagram
 > **Payments:** Moyasar Payment Gateway (SAR)
 > **Async Processing:** Laravel Queues backed by **Redis** (Predis client)
 > **Monitoring:** Sentry (`sentry/sentry-laravel`)
-> **Testing:** PHPUnit via `php artisan test` — **89 tests, 268 assertions**
+> **Testing:** PHPUnit via `php artisan test` — **89 tests, 275 assertions**
 
 ### Frontend (`/frontend`)
 
@@ -792,7 +792,7 @@ sequenceDiagram
 | **🛰️ Monitoring**         | Sentry — full-stack (backend + frontend) with Source Maps        |
 | **🌍 Localization**       | 100% Arabic (RTL-native interface)                               |
 | **🛡️ Security**           | Sanctum tokens + Spatie RBAC + rate limiting                     |
-| **🧪 Backend Tests**      | 89 tests · 268 assertions (PHPUnit)                              |
+| **🧪 Backend Tests**      | 89 tests · 275 assertions (PHPUnit)                              |
 | **🧪 Frontend Tests**     | 33 tests · 5 suites (Jest + React Testing Library)               |
 | **📦 Deployment**         | Backend → DigitalOcean VPS / Render · Frontend → Vercel          |
 
@@ -832,6 +832,8 @@ Edit `backend/.env` and fill in:
 | `FRONTEND_URL` | Used for CORS and for building Moyasar payment redirect URLs |
 | `QUEUE_CONNECTION` | Set to `redis` for production-grade async job processing |
 | `REDIS_HOST` / `REDIS_PORT` | Redis server connection (defaults work with Docker Compose) |
+| `WHITEBOARD_REGION` | Netless whiteboard region (defaults to `sg` for MENA latency optimization) |
+| `RECAPTCHA_SECRET_KEY` | Google reCAPTCHA v3 secret key used on backend registration verification |
 | `SENTRY_LARAVEL_DSN` | Backend error/performance monitoring (optional) |
 | `ADMIN_ALERT_EMAIL` | Recipient for alerts when classroom provisioning fails after all retries (optional, but recommended) |
 
@@ -846,6 +848,7 @@ Edit `frontend/.env` and fill in:
 | Variable | Purpose |
 |---|---|
 | `NEXT_PUBLIC_API_URL` | Backend API base URL — **must include the `/api/v1` prefix**, e.g. `http://localhost:8000/api/v1` |
+| `INTERNAL_API_URL` | Internal backend API URL for Docker container SSR / Server Components, e.g. `http://laravel.test/api/v1` |
 | `NEXT_PUBLIC_AGORA_APP_ID` | Agora App ID for video/audio classrooms |
 | `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | Google reCAPTCHA site key used on auth forms |
 | `NEXT_PUBLIC_WHITEBOARD_APP_IDENTIFIER` | Netless App Identifier for the interactive whiteboard |
@@ -865,6 +868,7 @@ docker compose up -d --build
 > - 🗄️ **MySQL 8.0** — port `3307` on the host, mapped to `3306` inside the container (to avoid conflicts with any local MySQL install)
 > - 🔴 **Redis** — port `6390` on the host, mapped to `6379` inside the container
 > - 🐘 **Laravel API Server** — port `8000`
+> - ⚙️ **Laravel Queue Worker (`queue`)** — runs `php artisan queue:work redis` automatically in the background for classroom provisioning and event notifications
 > - ⚛️ **Next.js Client** — port `3000`. The `nextjs` container automatically runs `npm install --legacy-peer-deps && npm run dev` on every startup — **no manual `npm install` step is needed inside Docker.** The first `docker compose up` will take noticeably longer while dependencies install; subsequent restarts are fast.
 
 ### 5. Backend Setup & Seeding
@@ -883,7 +887,7 @@ php artisan key:generate
 php artisan migrate --seed
 ```
 
-> ⚠️ **Queue worker required:** classroom provisioning (whiteboard room creation and Agora/Netless token pre-generation) runs asynchronously through Laravel's queue system. Without a running worker, this background job will sit unprocessed. Run it inside the same container:
+> 💡 **Automated Queue Worker:** Classroom provisioning (whiteboard room creation and Agora/Netless token pre-generation) runs asynchronously through Laravel's queue system. Under Docker Compose, the dedicated `queue` worker container runs this automatically. If running the backend locally outside Docker, start a worker with:
 > ```bash
 > php artisan queue:work redis --sleep=3 --tries=5 --max-time=3600
 > ```
@@ -921,7 +925,7 @@ cd backend
 php artisan test
 ```
 
-**Current results:** `89 tests · 268 assertions` — all passing ✅
+**Current results:** `89 tests · 275 assertions` — all passing ✅
 
 The suite covers:
 
@@ -939,6 +943,7 @@ The suite covers:
 | `tests/Feature/SupportTicketTest.php` | Support ticket creation & messaging |
 | `tests/Feature/TeacherSlotTest.php` | Availability slot creation, update, deletion |
 | `tests/Feature/WalletServiceTest.php` | Wallet deposit, deduction, overdraft protection |
+| `tests/Unit/AgoraServiceTest.php` | Unit: Agora RTC, RTM & Screen token minting and atomic Redis caching |
 | `tests/Unit/BookingServiceUnitTest.php` | Unit: booking business rules |
 | `tests/Unit/PayoutServiceUnitTest.php` | Unit: payout calculation & commission split |
 | `tests/Unit/ReviewServiceUnitTest.php` | Unit: review validation logic |
@@ -971,7 +976,12 @@ The suite covers:
 
 ---
 
+## 👤 Author
+
 <div align="center">
-  <br />
-  <p>Developed By ❤️ <b>Engineer Ammar Al-Najjar</b></p>
+  <p>Developed with ❤️ by <b>Eng. Ammar Al-Najjar (م. عمار النجار)</b></p>
+  <p>
+    <a href="https://github.com/Ammar-1993"><img src="https://img.shields.io/badge/GitHub-Ammar--1993-181717?style=flat-square&logo=github" alt="GitHub Profile" /></a>
+    <a href="mailto:ammaralnggar@gmail.com"><img src="https://img.shields.io/badge/Email-ammaralnggar@gmail.com-D14836?style=flat-square&logo=gmail&logoColor=white" alt="Email" /></a>
+  </p>
 </div>
