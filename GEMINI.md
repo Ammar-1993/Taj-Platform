@@ -340,4 +340,15 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - **Production Build:** `npm run build` completed successfully (Exit Code 0).
   - **Deployment:** Committed (`9e7dcd2`) and pushed directly to `origin/main` for automatic production deployment on Vercel.
 
+## 📖 Session Log & Recent Updates (Sep 28, 2026)
+
+### 1. System Architecture Diagram Redesign & Documentation Modernization
+- **Context:** Modernized the top-level System Architecture diagram in [`README.md`](file:///home/ammar/code/taj-platform/README.md) to follow a high-clarity, dark-themed, tiered container architecture matching production infrastructure standards.
+- **Key Enhancements:**
+  - **Tiered Subgraph Layout:** Structured the Docker ecosystem into 3 distinct tiers: Presentation & API Gateway Tier (`taj-frontend`, `taj_admin_web`), Asynchronous Queue Tier (`taj_queue_worker`), and Distributed State & Storage Tier (`taj_mysql`, `taj_redis`).
+  - **Direct-to-Cloud Real-Time Isolation:** Modeled browser-to-cloud media streaming (Agora RTC/RTM + Netless Whiteboard) to clearly reflect zero-load isolation from the application API server.
+  - **Complete Ingress & Egress Data Flows:** Documented Sanctum JWT authentication, background pre-provisioning (`ProvisionVirtualClassroom`), tagged Redis caching, Moyasar escrow hold/release, reCAPTCHA v3 bot protection, and Sentry telemetry.
+  - **Synchronized Data Flow Key:** Updated the accompanying table in `README.md` to reflect exact container names, modern tech stack components (Next.js 15.3, React 19, Laravel 12, PHP 8.3), and port bindings.
+
+
 
