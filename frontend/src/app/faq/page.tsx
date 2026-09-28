@@ -9,7 +9,6 @@ import {
   Headphones,
   Home,
   Plus,
-  HelpCircle,
   Rocket,
   Target,
   Laptop,
@@ -168,8 +167,6 @@ export default function FAQPage() {
       })
       .filter((cat) => cat.faqs.length > 0);
   }, [faqCategories, activeCategory, searchQuery]);
-
-  const totalResults = filteredCategories.reduce((acc, cat) => acc + cat.faqs.length, 0);
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-slate-50/80 text-slate-900 p-4 sm:p-6 lg:p-8" dir="rtl">
