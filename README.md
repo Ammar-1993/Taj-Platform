@@ -68,16 +68,16 @@ The platform operates on a high-performance decoupled monorepo architecture engi
 ```mermaid
 graph TB
     %% External Actors
-    Student([👨‍🎓 Student & Parent<br/>Session Booking & Virtual Classroom])
-    Teacher([👩‍🏫 Verified Teacher<br/>Classroom Host & Teaching Studio])
-    Admin([🛡️ Platform Administrator<br/>Filament v3 Control Panel])
+    Student(["👨‍🎓 Student & Parent<br/>Session Booking & Virtual Classroom"])
+    Teacher(["👩‍🏫 Verified Teacher<br/>Classroom Host & Teaching Studio"])
+    Admin(["🛡️ Platform Administrator<br/>Filament v3 Control Panel"])
 
     %% External Cloud Services & Real-time Engines
-    AgoraRTC[📹 Agora RTC & RTM Cloud<br/><b>WebRTC Video & State Synchronization</b>]
-    NetlessWB[🎨 Netless Whiteboard Cloud<br/><b>Agora Fastboard Interactive Canvas</b>]
-    MoyasarAPI[💳 Moyasar Payment Gateway<br/><b>Mada, Visa, Apple Pay & Escrow Vault</b>]
-    RecaptchaAPI[🤖 Google reCAPTCHA v3<br/><b>Bot Mitigation & Risk Scoring</b>]
-    SentryTelemetry[📊 Sentry APM & Telemetry<br/><b>Error Tracking & Source Map Profiling</b>]
+    AgoraRTC["📹 Agora RTC & RTM Cloud<br/><b>WebRTC Video & State Synchronization</b>"]
+    NetlessWB["🎨 Netless Whiteboard Cloud<br/><b>Agora Fastboard Interactive Canvas</b>"]
+    MoyasarAPI["💳 Moyasar Payment Gateway<br/><b>Mada, Visa, Apple Pay & Escrow Vault</b>"]
+    RecaptchaAPI["🤖 Google reCAPTCHA v3<br/><b>Bot Mitigation & Risk Scoring</b>"]
+    SentryTelemetry["📊 Sentry APM & Telemetry<br/><b>Error Tracking & Source Map Profiling</b>"]
 
     %% Main Docker Container Ecosystem
     subgraph DockerNet ["🐳 Docker Container Ecosystem (taj-network / taj-net)"]
@@ -104,15 +104,15 @@ graph TB
     Admin -->|HTTPS / Admin Auth Session| Backend
 
     %% Direct Browser WebRTC & Interactive Canvas Streams
-    Frontend <==>|Low-Latency WebRTC A/V & Screen Share| AgoraRTC
-    Frontend <==>|WebSocket Real-Time Whiteboard & Follower Mode| NetlessWB
+    Frontend <-->|Low-Latency WebRTC A/V & Screen Share| AgoraRTC
+    Frontend <-->|WebSocket Real-Time Whiteboard & Follower Mode| NetlessWB
 
     %% Frontend to Backend API Ingress
     Frontend -->|REST API v1 + Sanctum Bearer Token| Backend
     Frontend -.->|Client reCAPTCHA Token| RecaptchaAPI
 
     %% Backend to External Third-Party Integrations
-    Backend -->|Verify Token Score (Secret Key)| RecaptchaAPI
+    Backend -->|Verify Token Score via Secret Key| RecaptchaAPI
     Backend -->|Hold / Capture / Release Escrow Funds| MoyasarAPI
     Backend -.->|Server Exceptions & Performance Traces| SentryTelemetry
     Frontend -.->|Client Errors & Session Replays| SentryTelemetry
@@ -120,10 +120,10 @@ graph TB
     %% Backend Core Data & State Access
     Backend <-->|PDO / Eloquent ORM / ACID Transactions| MySQL
     Backend <-->|Cache Tags, Rate Limits & Token Lookup| Redis
-    Backend -->|Dispatch Async Jobs (Queue Push)| Redis
+    Backend -->|Dispatch Async Provisioning Jobs| Redis
 
     %% Worker Consumption & Background Provisioning
-    Redis -->|Poll Background Tasks (BLPOP)| QueueWorker
+    Redis -->|Poll Background Jobs via BLPOP| QueueWorker
     QueueWorker -->|Update Booking & Provision State| MySQL
     QueueWorker -->|HMAC-SHA256 Token Pre-generation & Cache| Redis
 

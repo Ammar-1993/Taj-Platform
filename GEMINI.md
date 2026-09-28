@@ -349,6 +349,8 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - **Direct-to-Cloud Real-Time Isolation:** Modeled browser-to-cloud media streaming (Agora RTC/RTM + Netless Whiteboard) to clearly reflect zero-load isolation from the application API server.
   - **Complete Ingress & Egress Data Flows:** Documented Sanctum JWT authentication, background pre-provisioning (`ProvisionVirtualClassroom`), tagged Redis caching, Moyasar escrow hold/release, reCAPTCHA v3 bot protection, and Sentry telemetry.
   - **Synchronized Data Flow Key:** Updated the accompanying table in `README.md` to reflect exact container names, modern tech stack components (Next.js 15.3, React 19, Laravel 12, PHP 8.3), and port bindings.
+- **GitHub Mermaid Parser Compliance Fix:** Resolved a rich display render crash (`got 'PS'`) by eliminating raw parentheses in unquoted edge labels (`|Verify Token Score via Secret Key|`), replacing non-standard `<==>` with standard bidirectional `<-->` arrows, and quoting stadium/rectangle node labels (`(["..."])`) to ensure 100% compatibility across all Mermaid parsers.
+
 
 
 
