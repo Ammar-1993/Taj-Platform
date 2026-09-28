@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import DecorativeBackground from "@/components/layout/DecorativeBackground";
+import BrandEmblem from "@/components/ui/BrandEmblem";
 import { Mail, CheckCircle2 } from "lucide-react";
 import ErrorBanner from "@/components/ui/ErrorBanner";
 import { Input } from "@/components/ui/Input";
@@ -64,14 +65,8 @@ export default function ForgotPasswordPage() {
       <DecorativeBackground />
 
       <div className="w-full max-w-md animate-fade-in-up relative z-10">
-        <div className="text-center mb-6">
-          <Link
-            href="/"
-            className="inline-block mb-3 text-5xl hover:scale-110 transition-transform duration-300 drop-shadow-xl cursor-pointer"
-            title="العودة للصفحة الرئيسية"
-          >
-            👑
-          </Link>
+        <div className="text-center mb-8 flex flex-col items-center">
+          <BrandEmblem size="lg" className="mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
             استعادة كلمة المرور
           </h2>

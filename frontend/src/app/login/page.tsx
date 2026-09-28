@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import DecorativeBackground from "@/components/layout/DecorativeBackground";
-import { Mail, Lock, ArrowLeft } from "lucide-react";
+import BrandEmblem from "@/components/ui/BrandEmblem";
+import { Mail, Lock, ArrowLeft, ShieldCheck } from "lucide-react";
 import ErrorBanner from "@/components/ui/ErrorBanner";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -53,7 +54,6 @@ export default function LoginPage() {
       await login(token, user);
       router.push("/dashboard");
     } catch {
-      // Single error channel: inline banner only — no toast duplicate
       setError("بيانات الدخول غير صحيحة، يرجى المحاولة مرة أخرى.");
     } finally {
       setIsLoading(false);
@@ -61,113 +61,129 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center py-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-slate-50">
+    <div className="min-h-screen flex flex-col items-center justify-center py-10 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-slate-50/80">
       
+      {/* خلفية جمالية محيطية وشبكة نقطية */}
       <DecorativeBackground />
 
       <div className="w-full max-w-md animate-fade-in-up relative z-10">
         
-        {/* الهيدر */}
-        <div className="text-center mb-6">
-          {/* الشعار قابل للنقر ويوجه للصفحة الرئيسية */}
-          <Link
-            href="/"
-            className="inline-block mb-3 text-5xl hover:scale-110 transition-transform duration-300 drop-shadow-xl cursor-pointer"
-            title="العودة للصفحة الرئيسية"
-          >
-            👑
-          </Link>
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+        {/* الترويسة والشعار الملكي */}
+        <div className="text-center mb-8 flex flex-col items-center">
+          <BrandEmblem size="lg" className="mb-4" />
+          
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-bold bg-indigo-50/90 text-indigo-700 border border-indigo-100 shadow-sm mb-2.5">
+            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+            <span>بوابة الدخول الموحدة</span>
+          </div>
+
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
             مرحباً بعودتك!
-          </h2>
-          <p className="mt-1.5 text-gray-500 text-sm font-medium">
+          </h1>
+          <p className="mt-1.5 text-slate-500 text-sm font-medium">
             سجل دخولك لمتابعة رحلتك التعليمية في منصة تاج
           </p>
         </div>
 
-        {/* صندوق تسجيل الدخول (Glassmorphism) */}
-        <Card variant="glass">
+        {/* بطاقة تسجيل الدخول الفاخرة (Glassmorphism Card) */}
+        <Card variant="glass" className="border border-white/80 shadow-2xl shadow-indigo-500/10 rounded-3xl overflow-hidden backdrop-blur-2xl bg-white/85 ring-1 ring-slate-900/5">
+          {/* خط التدرج الملكي في أعلى البطاقة */}
+          <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 via-blue-600 to-purple-600" />
+          
           <CardContent className="p-6 sm:p-8">
             <form className="space-y-5" onSubmit={handleSubmit} noValidate>
             
-            {error && <ErrorBanner message={error} />}
+              {error && <ErrorBanner message={error} />}
 
-            <div className="space-y-4">
-              
-              {/* حقل البريد الإلكتروني */}
-              <Input
-                label="البريد الإلكتروني"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (emailError) setEmailError("");
-                }}
-                onBlur={validateEmail}
-                error={emailError}
-                placeholder="name@taj.com"
-                dir="ltr"
-                icon={<Mail className="w-4 h-4" />}
-              />
+              <div className="space-y-4">
+                
+                {/* حقل البريد الإلكتروني */}
+                <Input
+                  label="البريد الإلكتروني"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) setEmailError("");
+                  }}
+                  onBlur={validateEmail}
+                  error={emailError}
+                  placeholder="name@taj.com"
+                  dir="ltr"
+                  icon={<Mail className="w-4 h-4" />}
+                />
 
-              {/* حقل كلمة المرور */}
-              <Input
-                label="كلمة المرور"
-                labelAction={
-                  <Link
-                    href="/forgot-password"
-                    className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
-                  >
-                    نسيت كلمة المرور؟
-                  </Link>
-                }
-                type="password"
-                required
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (passwordError) setPasswordError("");
-                }}
-                onBlur={validatePassword}
-                error={passwordError}
-                placeholder="••••••••"
-                dir="ltr"
-                icon={<Lock className="w-4 h-4" />}
-              />
-            </div>
+                {/* حقل كلمة المرور */}
+                <Input
+                  label="كلمة المرور"
+                  labelAction={
+                    <Link
+                      href="/forgot-password"
+                      className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+                    >
+                      نسيت كلمة المرور؟
+                    </Link>
+                  }
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordError) setPasswordError("");
+                  }}
+                  onBlur={validatePassword}
+                  error={passwordError}
+                  placeholder="••••••••"
+                  dir="ltr"
+                  icon={<Lock className="w-4 h-4" />}
+                />
+              </div>
 
-            {/* زر الإرسال */}
-            <div className="pt-2">
-              <Button
-                type="submit"
-                isLoading={isLoading}
-                className="w-full group"
-              >
-                {!isLoading ? (
-                  <span className="flex items-center gap-2">
-                    تسجيل الدخول
-                    <ArrowLeft className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                  </span>
-                ) : (
-                  <span>جاري الدخول...</span>
-                )}
-              </Button>
-            </div>
-          </form>
+              {/* زر تسجيل الدخول الملكي */}
+              <div className="pt-2">
+                <Button
+                  type="submit"
+                  variant="gradient"
+                  size="lg"
+                  isLoading={isLoading}
+                  className="w-full text-base font-bold shadow-indigo-500/25 hover:shadow-indigo-500/40 rounded-2xl group"
+                >
+                  {!isLoading ? (
+                    <span className="flex items-center gap-2">
+                      تسجيل الدخول
+                      <ArrowLeft className="w-4 h-4 opacity-80 group-hover:opacity-100 group-hover:-translate-x-1 transition-transform" />
+                    </span>
+                  ) : (
+                    <span>جاري تسجيل الدخول...</span>
+                  )}
+                </Button>
+              </div>
+            </form>
           </CardContent>
         </Card>
 
-        {/* رابط إنشاء حساب جديد */}
-        <div className="mt-6 text-center bg-white/40 backdrop-blur-sm py-3 rounded-xl border border-white/50 shadow-sm">
-          <p className="text-gray-600 text-sm font-medium">
+        {/* كبسولة رابط إنشاء حساب جديد */}
+        <div className="mt-6 text-center bg-white/75 backdrop-blur-md py-3.5 px-6 rounded-2xl border border-white/80 shadow-sm transition-all hover:bg-white/90">
+          <p className="text-slate-600 text-sm font-medium">
             ليس لديك حساب؟{" "}
             <Link
               href="/register"
-              className="font-bold text-indigo-700 hover:text-indigo-900 transition-colors ml-1"
+              className="font-bold text-indigo-600 hover:text-indigo-800 transition-colors underline-offset-4 hover:underline mr-1"
             >
               أنشئ حساباً جديداً
             </Link>
+          </p>
+        </div>
+
+        {/* شارة الأمان وتشفير البيانات */}
+        <div className="mt-8 flex flex-col items-center gap-2 text-center select-none">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/60 border border-slate-200/70 shadow-sm text-xs font-semibold text-slate-500 backdrop-blur-sm">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <span>اتصال مشفر وآمن بتشفير 256-bit SSL</span>
+          </div>
+          <p className="text-[11px] text-slate-400 font-medium">
+            جميع الحقوق محفوظة &copy; {new Date().getFullYear()} منصة تاج التعليمية
           </p>
         </div>
         
