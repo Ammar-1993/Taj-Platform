@@ -29,3 +29,168 @@
     transform: translateY(-2px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
+
+/* ==========================================================================
+   Taj Platform — Luxury Royal Styling for Filament Auth / Login
+   ========================================================================== */
+
+/* Full Layout Ambient Canvas */
+.fi-simple-layout {
+    position: relative;
+    background-color: #f8fafc !important;
+    background-image: 
+        radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.12) 1px, transparent 0),
+        linear-gradient(135deg, rgba(238, 242, 255, 0.7) 0%, rgba(245, 243, 255, 0.6) 50%, rgba(254, 243, 199, 0.3) 100%) !important;
+    background-size: 24px 24px, 100% 100% !important;
+    overflow-x: hidden;
+}
+
+.fi-simple-layout::before {
+    content: '';
+    position: fixed;
+    top: -150px;
+    right: -150px;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.16) 0%, rgba(168, 85, 247, 0.08) 50%, transparent 70%);
+    filter: blur(60px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.fi-simple-layout::after {
+    content: '';
+    position: fixed;
+    bottom: -150px;
+    left: -150px;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, rgba(59, 130, 246, 0.08) 50%, transparent 70%);
+    filter: blur(70px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Dark Mode Ambient Canvas */
+.dark .fi-simple-layout {
+    background-color: #030712 !important;
+    background-image: 
+        radial-gradient(circle at 1px 1px, rgba(129, 140, 248, 0.08) 1px, transparent 0),
+        linear-gradient(180deg, #090d16 0%, #030712 100%) !important;
+}
+
+.dark .fi-simple-layout::before {
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, rgba(139, 92, 246, 0.1) 50%, transparent 70%);
+}
+
+.dark .fi-simple-layout::after {
+    background: radial-gradient(circle, rgba(217, 119, 6, 0.14) 0%, rgba(30, 58, 138, 0.12) 50%, transparent 70%);
+}
+
+/* Main Auth Glass Card */
+.fi-simple-main {
+    position: relative;
+    z-index: 10;
+    border-radius: 1.5rem !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.88) !important;
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    box-shadow: 
+        0 20px 40px -15px rgba(15, 23, 42, 0.07),
+        0 0 0 1px rgba(255, 255, 255, 0.8) inset !important;
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.dark .fi-simple-main {
+    background: rgba(15, 23, 42, 0.75) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset !important;
+}
+
+/* Logo Styling in Auth */
+.fi-simple-header .fi-logo {
+    margin-bottom: 1.25rem !important;
+}
+
+/* Auth Heading & Subheading Typography */
+.fi-simple-header-heading {
+    font-size: 1.625rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.025em !important;
+    color: #0f172a !important;
+}
+
+.dark .fi-simple-header-heading {
+    color: #f8fafc !important;
+}
+
+.fi-simple-header-subheading {
+    margin-top: 0.5rem !important;
+    font-size: 0.875rem !important;
+    color: #64748b !important;
+    font-weight: 500 !important;
+    line-height: 1.5 !important;
+}
+
+.dark .fi-simple-header-subheading {
+    color: #94a3b8 !important;
+}
+
+/* Auth Input Fields */
+.fi-simple-main .fi-input-wrp {
+    border-radius: 0.75rem !important;
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid #e2e8f0 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.fi-simple-main .fi-input-wrp:focus-within {
+    border-color: #4f46e5 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18), 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+}
+
+.dark .fi-simple-main .fi-input-wrp {
+    background-color: rgba(30, 41, 59, 0.7) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.dark .fi-simple-main .fi-input-wrp:focus-within {
+    border-color: #818cf8 !important;
+    background-color: rgba(30, 41, 59, 0.95) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
+}
+
+/* Auth Primary Submit Button */
+.fi-simple-main button[type="submit"],
+.fi-simple-main .fi-btn-color-primary {
+    border-radius: 0.75rem !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    background: linear-gradient(135deg, #1d4ed8 0%, #4338ca 55%, #6366f1 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 8px 16px -4px rgba(29, 78, 216, 0.35), 0 4px 6px -2px rgba(29, 78, 216, 0.2) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: pointer !important;
+}
+
+.fi-simple-main button[type="submit"]:hover,
+.fi-simple-main .fi-btn-color-primary:hover {
+    transform: translateY(-1.5px) !important;
+    box-shadow: 0 14px 24px -4px rgba(29, 78, 216, 0.45), 0 6px 8px -2px rgba(29, 78, 216, 0.3) !important;
+    filter: brightness(1.06) !important;
+}
+
+.fi-simple-main button[type="submit"]:active,
+.fi-simple-main .fi-btn-color-primary:active {
+    transform: translateY(0.5px) !important;
+    box-shadow: 0 4px 8px -2px rgba(29, 78, 216, 0.3) !important;
+}
+

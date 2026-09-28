@@ -6,6 +6,7 @@ use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Pages\Auth\Login as BaseLogin;
+use Illuminate\Contracts\Support\Htmlable;
 
 class CustomLogin extends BaseLogin
 {
@@ -38,5 +39,15 @@ class CustomLogin extends BaseLogin
             ->autocomplete('current-password')
             ->required()
             ->extraInputAttributes(['dir' => 'ltr', 'tabindex' => 2]);
+    }
+
+    public function getHeading(): string|Htmlable
+    {
+        return 'بوابة الإدارة والحوكمة';
+    }
+
+    public function getSubheading(): string|Htmlable|null
+    {
+        return 'تسجيل الدخول الآمن لمنظومة إدارة وحوكمة منصة تاج';
     }
 }
