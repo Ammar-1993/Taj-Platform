@@ -5,6 +5,7 @@ frontend/.env
 frontend/.next/
 .idea/
 .vscode/
+.agents/
 .env
 
 
