@@ -185,7 +185,7 @@ export default function FAQPage() {
             <span>مركز الدعم والمساعدة</span>
           </div>
           
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
             الأسئلة الشائعة
           </h1>
           <p className="text-slate-500 text-sm sm:text-base font-medium max-w-2xl mx-auto leading-relaxed">

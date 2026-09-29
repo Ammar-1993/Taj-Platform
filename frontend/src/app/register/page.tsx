@@ -22,9 +22,9 @@ export default function RegisterHubPage() {
           <span>انضمام جديد إلى منصة تاج</span>
         </div>
 
-        <h1 className="text-2xl sm:text-4xl font-black text-slate-900 mb-2.5 tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
           مرحباً بك في منصة تاج التعليمية
-        </h1>
+          </h1>
         <p className="text-sm sm:text-base text-slate-500 font-medium max-w-xl">
           اختر نوع الحساب الذي ترغب في إنشائه لنقوم بتوجيهك للمسار الصحيح المخصص لتجربتك
         </p>
