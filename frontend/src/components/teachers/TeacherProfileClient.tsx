@@ -221,7 +221,7 @@ export default function TeacherProfileClient({
                   </span>
                 </div>
 
-                <div className="flex items-center gap-3 overflow-x-auto pb-3 pt-1 scrollbar-none select-none">
+                <div className="flex items-center gap-3 overflow-x-auto pb-3 pt-1 scrollbar-hide select-none">
                   {Object.keys(slots).map((date) => {
                     const isSelected = activeDate === date;
                     const count = (slots[date] || []).length;

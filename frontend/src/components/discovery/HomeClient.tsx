@@ -253,7 +253,7 @@ export default function HomeClient({
 
           {/* أشرطة التصفية السريعة للمواد (Quick Subject Pills) */}
           {subjects.length > 0 && (
-            <div className="flex items-center gap-2 overflow-x-auto pt-1 pb-1 scrollbar-none select-none text-xs">
+            <div className="flex items-center gap-2 overflow-x-auto pt-1 pb-1 scrollbar-hide select-none text-xs">
               <button
                 onClick={() => setSubjectId("")}
                 className={`px-3.5 py-1.5 rounded-full font-bold whitespace-nowrap transition-all duration-200 ${

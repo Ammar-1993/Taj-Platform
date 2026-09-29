@@ -222,12 +222,12 @@ export default function FAQPage() {
         </div>
 
         {/* 🏷️ أشرطة تبويب التصنيفات السريعة (Category Filter Pills) */}
-        <div className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-2 scrollbar-none select-none">
+        <div className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto sm:overflow-x-visible pb-2 pt-1 px-1 scrollbar-hide select-none">
           <button
             onClick={() => setActiveCategory("all")}
-            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-300 ${
+            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 ${
               activeCategory === "all"
-                ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-500/25 scale-105"
+                ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-500/25 ring-2 ring-indigo-500/20"
                 : "bg-white/80 backdrop-blur-md text-slate-600 hover:bg-white hover:text-indigo-600 border border-slate-200/60"
             }`}
           >
@@ -238,9 +238,9 @@ export default function FAQPage() {
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-300 flex items-center gap-1.5 ${
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 ${
                 activeCategory === cat.id
-                  ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-500/25 scale-105"
+                  ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-500/25 ring-2 ring-indigo-500/20"
                   : "bg-white/80 backdrop-blur-md text-slate-600 hover:bg-white hover:text-indigo-600 border border-slate-200/60"
               }`}
             >

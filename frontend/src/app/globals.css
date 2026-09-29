@@ -95,11 +95,14 @@
     font-family: var(--font-mono), ui-monospace, monospace;
   }
 
-  /* Scrollbar: hidden only where explicitly needed via .scrollbar-hide */
-  .scrollbar-hide {
+  /* Scrollbar: hidden only where explicitly needed via .scrollbar-hide or .scrollbar-none */
+  .scrollbar-hide,
+  .scrollbar-none {
     scrollbar-width: none;
+    -ms-overflow-style: none;
   }
-  .scrollbar-hide::-webkit-scrollbar {
+  .scrollbar-hide::-webkit-scrollbar,
+  .scrollbar-none::-webkit-scrollbar {
     display: none;
   }
 }
