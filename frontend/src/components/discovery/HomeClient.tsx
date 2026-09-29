@@ -340,7 +340,9 @@ export default function HomeClient({
                             <h2 className="text-lg font-black text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
                               {teacher.name}
                             </h2>
-                            <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0" title="معلم موثق" />
+                            <span title="معلم موثق" className="inline-flex items-center">
+                              <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0" />
+                            </span>
                           </div>
 
                           <span className="inline-flex items-center gap-1.5 text-xs text-indigo-700 bg-indigo-50/90 border border-indigo-100/80 px-2.5 py-0.5 rounded-full font-bold">
