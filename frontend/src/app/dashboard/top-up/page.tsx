@@ -118,7 +118,7 @@ export default function TopUpPage() {
                                         <div className="w-8 h-8 rounded-lg bg-white/60 flex items-center justify-center shadow-sm">
                                             <Wallet className="w-5 h-5 text-indigo-600" />
                                         </div>
-                                        <h3 className="text-slate-500 text-xs font-black uppercase tracking-wider">
+                                         <h3 className="text-slate-800 text-xs sm:text-sm font-black tracking-tight">
                                             الرصيد الحالي في المحفظة
                                         </h3>
                                     </div>
