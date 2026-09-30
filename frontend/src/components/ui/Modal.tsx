@@ -17,6 +17,10 @@ interface ModalProps {
   children: React.ReactNode;
   /** Hides the × close button when true */
   hideCloseButton?: boolean;
+  /** Optional additional classes for dialog panel */
+  className?: string;
+  /** Optional additional classes for modal body container */
+  bodyClassName?: string;
 }
 
 const sizeMap = {
@@ -46,6 +50,8 @@ export default function Modal({
   size = "md",
   children,
   hideCloseButton = false,
+  className,
+  bodyClassName,
 }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -94,24 +100,25 @@ export default function Modal({
       aria-modal="true"
       aria-labelledby={title ? "modal-title" : undefined}
       className={cn(
-        // Reset browser default dialog styles
-        "m-auto rounded-3xl border border-gray-100 bg-white p-0 shadow-2xl",
+        // Reset browser default dialog styles & eliminate default browser scrollbar
+        "m-auto rounded-3xl border border-gray-100 bg-white p-0 shadow-2xl overflow-hidden",
         "backdrop:bg-black/60 backdrop:backdrop-blur-sm",
         // Entrance animation
         "open:animate-in open:fade-in open:zoom-in-95 open:duration-200",
         // Cap height — flex is on the inner div, NOT here (flex on dialog breaks m-auto centering)
-        "w-full max-h-[90vh]",
-        sizeMap[size]
+        "w-full max-h-[92vh]",
+        sizeMap[size],
+        className
       )}
     >
-      {/* Panel content — flex column so header is sticky, body scrolls */}
+      {/* Panel content — flex column so header is sticky, body scrolls if necessary */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="flex flex-col max-h-[90vh]"
+        className="flex flex-col max-h-[92vh] overflow-hidden"
       >
         {/* Header — pinned, never scrolls */}
         {(title || !hideCloseButton) && (
-          <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-6 py-5 shrink-0">
+          <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-6 py-4 sm:py-5 shrink-0">
             {title && (
               <h2
                 id="modal-title"
@@ -124,7 +131,7 @@ export default function Modal({
               <button
                 onClick={onClose}
                 aria-label="إغلاق"
-                className="mr-auto text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl p-1.5 transition-colors flex-shrink-0 flex items-center justify-center"
+                className="mr-auto text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl p-1.5 transition-colors flex-shrink-0 flex items-center justify-center cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -132,8 +139,10 @@ export default function Modal({
           </div>
         )}
 
-        {/* Body — grows to fill available height, scrolls with slim scrollbar */}
-        <div className="px-6 py-6 overflow-y-auto scrollbar-thin flex-1">{children}</div>
+        {/* Body — scrolls gracefully via scrollbar-hide without displaying ugly desktop scrollbar */}
+        <div className={cn("px-6 py-5 overflow-y-auto scrollbar-hide flex-1", bodyClassName)}>
+          {children}
+        </div>
       </div>
     </dialog>
   );

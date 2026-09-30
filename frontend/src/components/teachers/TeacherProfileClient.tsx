@@ -316,17 +316,19 @@ export default function TeacherProfileClient({
           }
         }}
         title={bookMutation.isSuccess ? "تم الحجز بنجاح!" : "تأكيد الحجز والدفع"}
+        size="md"
+        bodyClassName="p-4 sm:p-6"
       >
         {bookingModal.slot && (
-          <div className="space-y-6">
+          <div className="space-y-3.5 sm:space-y-4">
             {bookMutation.isSuccess ? (
-              <div className="py-6 text-center animate-success-scale">
-                <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-100 shadow-sm relative">
+              <div className="py-4 text-center animate-success-scale">
+                <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-100 shadow-sm relative">
                   <div className="absolute inset-0 bg-emerald-400/20 rounded-full animate-ping" />
-                  <CheckCircle2 className="w-12 h-12 text-emerald-500 relative z-10" />
+                  <CheckCircle2 className="w-10 h-10 text-emerald-500 relative z-10" />
                 </div>
-                <h3 className="text-2xl font-black text-slate-900 mb-2">تهانينا!</h3>
-                <p className="text-slate-500 text-sm max-w-[320px] mx-auto leading-relaxed font-bold">
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-1.5">تهانينا!</h3>
+                <p className="text-slate-500 text-xs sm:text-sm max-w-[320px] mx-auto leading-relaxed font-bold mb-3">
                   لقد أتممت حجز موعدك بنجاح. سنقوم بإرسال تنبيه وتأكيد لك قبل موعد الحصة.
                 </p>
                 <RedirectCountdown 
@@ -341,26 +343,37 @@ export default function TeacherProfileClient({
               </div>
             ) : (
               <>
-                <div className="bg-slate-50/80 rounded-2xl p-5 border border-slate-100 flex flex-col items-center justify-center gap-1.5 text-center">
-                  <span className="text-xs text-slate-400 font-bold">توقيت الحصة المختارة</span>
-                  <p className="text-lg font-black text-slate-900 flex items-center gap-3">
-                    <span className="text-indigo-600">{formatTime(roundToSlot(bookingModal.slot.start_time))}</span>
-                    <span className="text-slate-300 font-light">←</span>
-                    <span className="text-indigo-600">{formatTime(roundToSlot(bookingModal.slot.end_time))}</span>
-                  </p>
+                {/* بطاقة توقيت الحصة المدمجة الفاخرة */}
+                <div className="bg-gradient-to-r from-indigo-50/70 via-slate-50 to-blue-50/70 rounded-2xl p-3 sm:p-3.5 border border-indigo-100/80 flex items-center justify-between text-right">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-white shadow-sm border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[11px] text-slate-400 font-bold block leading-none mb-1">توقيت الحصة المختارة</span>
+                      <span className="text-xs font-semibold text-slate-600">مدة الحصة: 60 دقيقة</span>
+                    </div>
+                  </div>
+                  <div className="text-left font-black text-xs sm:text-sm text-indigo-700 bg-white/95 px-3 py-1.5 rounded-xl border border-indigo-100 shadow-sm" dir="ltr">
+                    <span>{formatTime(roundToSlot(bookingModal.slot.start_time))}</span>
+                    <span className="text-slate-300 font-light mx-1">→</span>
+                    <span>{formatTime(roundToSlot(bookingModal.slot.end_time))}</span>
+                  </div>
                 </div>
 
+                {/* اختيار الابن لولي الأمر */}
                 {isParent && (
-                  <div className="animate-fade-up">
-                    <label className="block text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1.5">
                       <Users className="w-4 h-4 text-indigo-600" />
                       <span>اختر الابن (إلزامي)</span>
                     </label>
                     <Select
                       value={selectedChildId}
                       onChange={(e) => setSelectedChildId(e.target.value)}
+                      className="h-11 bg-white/90 border-slate-200/90 rounded-xl text-xs sm:text-sm font-bold focus:border-indigo-400"
                     >
-                      <option value="">اضغط للاختيار</option>
+                      <option value="">اضغط للاختيار من قائمة الأبناء</option>
                       {children.map((child) => (
                         <option key={child.id} value={child.id}>{child.name}</option>
                       ))}
@@ -368,46 +381,50 @@ export default function TeacherProfileClient({
                   </div>
                 )}
 
-                <div className="animate-fade-up" style={{ animationDelay: '0.1s' }}>
-                  <label className="block text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
+                {/* كود الخصم */}
+                <div className="space-y-1.5">
+                  <label className="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1.5">
                     <Gift className="w-4 h-4 text-indigo-600" />
                     <span>كود الخصم (اختياري)</span>
                   </label>
                   <Input
                     type="text"
-                    placeholder="أدخل الكود هنا إن وجد"
+                    placeholder="أدخل الكود إن وجد (مثل: TAJ2026)"
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value)}
-                    className="w-full"
+                    className="h-11 bg-white/90 border-slate-200/90 rounded-xl text-xs sm:text-sm font-medium"
                     dir="ltr"
                   />
                 </div>
 
+                {/* إجمالي المبلغ */}
                 {sessionPrice && (
-                  <div className="flex items-center justify-between bg-indigo-50/80 border border-indigo-100 rounded-2xl px-5 py-4 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-                    <span className="text-sm font-bold text-indigo-800 flex items-center gap-2">
-                      <CircleDollarSign className="w-5 h-5 text-indigo-600" />
+                  <div className="flex items-center justify-between bg-indigo-50/80 border border-indigo-100 rounded-xl px-4 py-2.5">
+                    <span className="text-xs sm:text-sm font-bold text-indigo-800 flex items-center gap-1.5">
+                      <CircleDollarSign className="w-4 h-4 text-indigo-600" />
                       <span>إجمالي المبلغ</span>
                     </span>
                     <CurrencyDisplay 
                       amount={sessionPrice} 
-                      size="lg" 
+                      size="md" 
                       className="text-indigo-900 font-black"
                     />
                   </div>
                 )}
 
                 {/* شارة الضمان المالي في نافذة الحجز */}
-                <div className="text-xs text-slate-400 bg-slate-50 p-3 rounded-xl border border-slate-100 text-center leading-relaxed">
-                  🛡️ يظل المبلغ مجمداً بأمان في حساب الضمان ولا يُصرف للمعلم إلا بعد اكتمال الحصة بنجاح.
+                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50/90 border border-slate-200/70 text-slate-500 text-[11px] sm:text-xs leading-relaxed text-right">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>يظل المبلغ مجمداً بأمان في حساب الضمان (Escrow) ولا يُصرف للمعلم إلا بعد اكتمال الحصة بنجاح.</span>
                 </div>
 
-                <div className="flex gap-3 pt-3 animate-fade-up" style={{ animationDelay: '0.3s' }}>
+                {/* أزرار الإجراء */}
+                <div className="flex gap-3 pt-1">
                   <Button
                     variant="secondary"
                     onClick={() => setBookingModal({ isOpen: false, slot: null })}
                     disabled={bookMutation.isPending}
-                    className="flex-1 h-12 rounded-xl font-bold"
+                    className="flex-1 h-11 sm:h-12 rounded-xl font-bold text-xs sm:text-sm"
                   >
                     تراجع
                   </Button>
@@ -416,15 +433,15 @@ export default function TeacherProfileClient({
                     isLoading={bookMutation.isPending}
                     disabled={isParent && !selectedChildId}
                     onClick={() => {
-                        if (bookingModal.slot) {
-                            bookMutation.mutate({
-                                teacher_slot_id: bookingModal.slot.id,
-                                promo_code: promoCode,
-                                child_id: selectedChildId
-                            });
-                        }
+                      if (bookingModal.slot) {
+                        bookMutation.mutate({
+                          teacher_slot_id: bookingModal.slot.id,
+                          promo_code: promoCode,
+                          child_id: selectedChildId
+                        });
+                      }
                     }}
-                    className="flex-[2] h-12 shadow-lg shadow-indigo-500/20 rounded-xl font-bold text-sm sm:text-base"
+                    className="flex-[2] h-11 sm:h-12 shadow-lg shadow-indigo-500/20 rounded-xl font-bold text-xs sm:text-sm"
                   >
                     تأكيد الحجز والدفع
                   </Button>
