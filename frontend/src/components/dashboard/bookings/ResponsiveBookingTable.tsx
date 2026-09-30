@@ -221,8 +221,8 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
       </div>
 
       {/* ─── Desktop: Scrollable Table (>= md) ───────────────────────────── */}
-      <div className="hidden md:block w-full overflow-visible rounded-taj-lg">
-        <table className="min-w-full w-full text-sm text-right">
+      <div className="hidden md:block w-full overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent rounded-2xl">
+        <table className="min-w-[640px] w-full text-sm text-right">
           <thead>
             <tr className="bg-gradient-to-l from-surface-subtle to-surface-muted border-b border-border">
               <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right rounded-tr-taj-lg whitespace-nowrap">رقم الحجز</th>
