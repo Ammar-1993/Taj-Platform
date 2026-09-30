@@ -8,7 +8,6 @@ import PageHeader from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { Shield, Search } from "lucide-react";
-import toast from "react-hot-toast";
 import { ParentDashboard } from "@/components/dashboard/ParentDashboard";
 import { StudentTeacherDashboard } from "@/components/dashboard/StudentTeacherDashboard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
@@ -52,21 +51,19 @@ export default function DashboardPage() {
 
   const hasRefetched = useRef(false);
 
-  // Hydration fix: Refetch data if returning from a successful payment
+  // تحديث هادئ وفوري للرصيد وبيانات لوحة التحكم في الخلفية عند العودة من بوابة الدفع دون إزعاج المستخدم برسائل منبثقة مكررة
   useEffect(() => {
     if (hasRefetched.current) return;
 
     if (searchParams.get('payment') === 'success' || searchParams.get('status') === 'paid') {
       hasRefetched.current = true;
-      const tid = toast.loading('جاري تحديث رصيد المحفظة...');
       
-      // إعطاء فرصة بسيطة للقاعدة للتحديث ثم الجلب
+      // مزامنة صامتة للبيانات والمحفظة في الخلفية
       setTimeout(async () => {
         await refreshAll();
-        toast.success('تم تحديث البيانات', { id: tid });
-      }, 500);
+      }, 400);
 
-      // تنظيف الرابط
+      // تنظيف معلمات الرابط للحفاظ على نظافة الـ URL
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
     }
