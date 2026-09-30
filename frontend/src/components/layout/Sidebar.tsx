@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { LogOut, Menu } from "lucide-react";
 import { useNavLinks } from "@/hooks/useNavLinks";
+import { useSidebar } from "@/context/SidebarContext";
 
 import { cn } from "@/lib/utils";
 
@@ -15,8 +15,7 @@ export default function Sidebar() {
   
   const navLinks = useNavLinks();
   
-  // Default state is closed (true) to save screen real estate
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const { isCollapsed, toggleSidebar } = useSidebar();
 
   return (
     <aside className={cn(
@@ -29,7 +28,7 @@ export default function Sidebar() {
       )}>
         {!isCollapsed && <h2 className="text-2xl font-black text-brand-600 truncate tracking-tight">منصة تاج 👑</h2>}
         <button 
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={toggleSidebar}
           className={cn(
             "relative group text-slate-400 hover:text-brand-600 transition-all p-2 rounded-taj-md hover:bg-brand-50 flex-shrink-0 active:scale-90",
             isCollapsed && "bg-slate-50"

@@ -1,5 +1,6 @@
 import React from "react";
 import { Sidebar, AuthGuard, DecorativeBackground, MobileHeader } from "@/components/layout";
+import { SidebarProvider } from "@/context/SidebarContext";
 
 export default function DashboardLayout({
   children,
@@ -8,8 +9,9 @@ export default function DashboardLayout({
 }) {
   return (
     <AuthGuard>
-      <div className="flex min-h-screen bg-slate-50/50 relative overflow-hidden" dir="rtl">
-        <DecorativeBackground />
+      <SidebarProvider>
+        <div className="flex min-h-screen bg-slate-50/50 relative overflow-hidden" dir="rtl">
+          <DecorativeBackground />
         
         {/* Sidebar for Desktop */}
         <div className="hidden md:block sticky top-0 h-screen z-20">
@@ -26,6 +28,7 @@ export default function DashboardLayout({
           </main>
         </div>
       </div>
+      </SidebarProvider>
     </AuthGuard>
   );
 }

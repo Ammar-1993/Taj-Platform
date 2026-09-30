@@ -222,24 +222,24 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
 
       {/* ─── Desktop: Scrollable Table (>= md) ───────────────────────────── */}
       <div className="hidden md:block w-full overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent rounded-2xl">
-        <table className="min-w-[640px] w-full text-sm text-right">
+        <table className="min-w-[480px] w-full text-sm text-right">
           <thead>
             <tr className="bg-gradient-to-l from-surface-subtle to-surface-muted border-b border-border">
-              <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right rounded-tr-taj-lg whitespace-nowrap">رقم الحجز</th>
+              <th className="px-3 py-3 text-xs font-bold text-text-secondary text-right rounded-tr-taj-lg whitespace-nowrap">رقم الحجز</th>
               {isParent ? (
                 <>
-                  <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right">الابن</th>
-                  <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right">المعلم</th>
+                  <th className="px-3 py-3 text-xs font-bold text-text-secondary text-right whitespace-nowrap">الابن</th>
+                  <th className="px-3 py-3 text-xs font-bold text-text-secondary text-right whitespace-nowrap">المعلم</th>
                 </>
               ) : (
-                <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right">
+                <th className="px-3 py-3 text-xs font-bold text-text-secondary text-right">
                   {isTeacher ? "الطالب" : "المعلم"}
                 </th>
               )}
-              <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right">التاريخ والوقت</th>
-              <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right whitespace-nowrap">التكلفة</th>
-              <th className={`px-2 py-4 text-xs font-bold text-text-secondary text-right ${isParent ? 'rounded-tl-taj-lg' : ''}`}>الحالة</th>
-              {!isParent && <th className="px-2 py-4 text-xs font-bold text-text-secondary text-right rounded-tl-taj-lg">الإجراء</th>}
+              <th className="px-3 py-3 text-xs font-bold text-text-secondary text-right whitespace-nowrap">التاريخ والوقت</th>
+              <th className="px-3 py-3 text-xs font-bold text-text-secondary text-right whitespace-nowrap">التكلفة</th>
+              <th className={`px-3 py-3 text-xs font-bold text-text-secondary text-right whitespace-nowrap ${isParent ? 'rounded-tl-taj-lg' : ''}`}>الحالة</th>
+              {!isParent && <th className="px-3 py-3 text-xs font-bold text-text-secondary text-right rounded-tl-taj-lg whitespace-nowrap">الإجراء</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-subtle">
@@ -249,14 +249,14 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 className="hover:bg-brand-50/50 transition-all duration-200 group"
               >
                 {/* Booking ID */}
-                <td className="px-2 py-4 font-bold text-brand-600 whitespace-nowrap align-middle">
+                <td className="px-3 py-3 font-bold text-brand-600 whitespace-nowrap align-middle">
                   <div className="flex items-center h-full">#{booking.id}</div>
                 </td>
 
                 {/* Person(s) */}
                 {isParent ? (
                   <>
-                    <td className="px-2 py-4 whitespace-nowrap align-middle">
+                    <td className="px-3 py-3 whitespace-nowrap align-middle">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-sm flex items-center justify-center text-brand-600 font-bold text-[10px] shrink-0">
                           {booking.student?.name?.charAt(0) || "?"}
@@ -264,12 +264,12 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                         <span className="font-bold text-brand-700">{booking.student?.name}</span>
                       </div>
                     </td>
-                    <td className="px-2 py-4 font-bold text-text-primary whitespace-nowrap align-middle">
+                    <td className="px-3 py-3 font-bold text-text-primary whitespace-nowrap align-middle">
                       <div className="flex items-center h-full">{booking.teacher?.name}</div>
                     </td>
                   </>
                 ) : (
-                  <td className="px-2 py-4 whitespace-nowrap align-middle">
+                  <td className="px-3 py-3 whitespace-nowrap align-middle">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-md flex items-center justify-center text-brand-600 font-bold text-xs shrink-0">
                         {(isTeacher ? booking.student?.name : booking.teacher?.name)?.charAt(0) || "?"}
@@ -282,7 +282,7 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 )}
 
                 {/* Date + Time */}
-                <td className="px-2 py-4 whitespace-nowrap align-middle">
+                <td className="px-3 py-3 whitespace-nowrap align-middle">
                   <div className="flex flex-col justify-center">
                     <div className="font-bold text-text-primary">
                       {formatDate(booking.booking_date, "medium")}
@@ -294,7 +294,7 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 </td>
 
                 {/* Amount */}
-                <td className="px-2 py-4 whitespace-nowrap align-middle">
+                <td className="px-3 py-3 whitespace-nowrap align-middle">
                   <div className="flex items-center h-full">
                     <CurrencyDisplay 
                       amount={booking.net_paid} 
@@ -305,7 +305,7 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 </td>
 
                 {/* Status */}
-                <td className="px-2 py-4 whitespace-nowrap align-middle">
+                <td className="px-3 py-3 whitespace-nowrap align-middle">
                   <div className="flex items-center h-full">
                     <StatusBadge status={booking.status} />
                   </div>
