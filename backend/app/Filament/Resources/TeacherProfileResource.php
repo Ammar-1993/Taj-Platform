@@ -59,7 +59,7 @@ class TeacherProfileResource extends Resource
                         // 🟢 عرض الهوية مع إمكانية التحميل
                         Forms\Components\FileUpload::make('national_id_path')
                             ->label('صورة الهوية الوطنية')
-                            ->disk('public') // تأكد من أنه نفس الـ disk المستخدم في الرفع
+                            ->disk(config('filesystems.default', 'public'))
                             ->downloadable() // السماح للمدير بتحميلها لمراجعتها
                             ->openable() // فتحها في تاب جديد
                             ->disabled() // منع المدير من حذفها أو استبدالها
@@ -68,7 +68,7 @@ class TeacherProfileResource extends Resource
                         // 🟢 عرض الشهادة مع إمكانية التحميل
                         Forms\Components\FileUpload::make('degree_path')
                             ->label('الشهادة الجامعية / الأكاديمية')
-                            ->disk('public')
+                            ->disk(config('filesystems.default', 'public'))
                             ->downloadable()
                             ->openable()
                             ->disabled()

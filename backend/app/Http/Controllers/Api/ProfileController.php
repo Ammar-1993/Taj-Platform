@@ -55,22 +55,24 @@ class ProfileController extends Controller
         // نجعله false بمجرد التعديل/الرفع حتى توافق عليه الإدارة مجدداً
         $profile->is_verified = false;
 
+        $disk = config('filesystems.default', 'public');
+
         // معالجة رفع الهوية الوطنية بأمان
         if ($request->hasFile('national_id')) {
             // حذف الملف القديم إن وجد لتوفير مساحة التخزين
             if ($profile->national_id_path) {
-                Storage::disk('public')->delete($profile->national_id_path);
+                Storage::disk($disk)->delete($profile->national_id_path);
             }
             // حفظ الملف الجديد وإرجاع مساره
-            $profile->national_id_path = $request->file('national_id')->store('teacher_documents', 'public');
+            $profile->national_id_path = $request->file('national_id')->store('teacher_documents', $disk);
         }
 
         // معالجة رفع الشهادة
         if ($request->hasFile('degree')) {
             if ($profile->degree_path) {
-                Storage::disk('public')->delete($profile->degree_path);
+                Storage::disk($disk)->delete($profile->degree_path);
             }
-            $profile->degree_path = $request->file('degree')->store('teacher_documents', 'public');
+            $profile->degree_path = $request->file('degree')->store('teacher_documents', $disk);
         }
 
         $profile->save();

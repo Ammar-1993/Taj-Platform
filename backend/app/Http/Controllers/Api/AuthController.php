@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -218,8 +219,9 @@ class AuthController extends Controller
 
         // حفظ الصورة الشخصية إذا تم رفعها
         if ($request->hasFile('avatar')) {
-            $path = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar_url = '/storage/'.$path;
+            $disk = config('filesystems.default', 'public');
+            $path = $request->file('avatar')->store('avatars', $disk);
+            $user->avatar_url = Storage::disk($disk)->url($path);
         }
 
         $user->save();
