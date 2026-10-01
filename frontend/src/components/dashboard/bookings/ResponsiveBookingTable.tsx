@@ -43,10 +43,10 @@ function BookingDropdown({
         size="sm"
         variant="ghost"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-9 h-9 p-0 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-taj-md flex items-center justify-center shrink-0"
+        className="w-8 h-8 p-0 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl flex items-center justify-center shrink-0"
         title="خيارات إضافية"
       >
-        <MoreVertical className="w-5 h-5" />
+        <MoreVertical className="w-4 h-4" />
       </Button>
 
       {isOpen && (
@@ -232,7 +232,7 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                   <th className="px-3 py-3 text-xs font-bold text-text-secondary text-right whitespace-nowrap">المعلم</th>
                 </>
               ) : (
-                <th className="px-3 py-3 text-xs font-bold text-text-secondary text-right">
+                <th className="px-3 py-3 text-xs font-bold text-text-secondary text-right whitespace-nowrap">
                   {isTeacher ? "الطالب" : "المعلم"}
                 </th>
               )}
@@ -271,10 +271,10 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 ) : (
                   <td className="px-3 py-3 whitespace-nowrap align-middle">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-md flex items-center justify-center text-brand-600 font-bold text-xs shrink-0">
+                      <div className="w-8 h-8 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-md flex items-center justify-center text-brand-600 font-bold text-xs shrink-0">
                         {(isTeacher ? booking.student?.name : booking.teacher?.name)?.charAt(0) || "?"}
                       </div>
-                      <span className="font-bold text-text-primary">
+                      <span className="font-bold text-text-primary text-xs sm:text-sm">
                         {isTeacher ? booking.student?.name : booking.teacher?.name}
                       </span>
                     </div>
@@ -284,10 +284,10 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 {/* Date + Time */}
                 <td className="px-3 py-3 whitespace-nowrap align-middle">
                   <div className="flex flex-col justify-center">
-                    <div className="font-bold text-text-primary">
+                    <div className="font-bold text-text-primary text-xs sm:text-sm">
                       {formatDate(booking.booking_date, "medium")}
                     </div>
-                    <div className="text-xs text-text-muted mt-0.5">
+                    <div className="text-[11px] text-text-muted mt-0.5">
                       {formatTime(booking.teacher_slot?.start_time)}
                     </div>
                   </div>
@@ -299,7 +299,7 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                     <CurrencyDisplay 
                       amount={booking.net_paid} 
                       size="md" 
-                      className="text-text-primary font-bold"
+                      className="text-text-primary font-bold text-xs sm:text-sm"
                     />
                   </div>
                 </td>
@@ -313,17 +313,17 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
 
                 {/* Actions (Hidden for Parent) */}
                 {!isParent && (
-                  <td className="px-2 py-4 whitespace-nowrap align-middle">
-                    <div className="flex gap-2 justify-end items-center min-h-[36px]">
+                  <td className="px-3 py-3 whitespace-nowrap align-middle">
+                    <div className="flex gap-1.5 justify-end items-center min-h-[36px]">
                       {(booking.status === "scheduled" || booking.status === "in_progress") && (
                         <>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => router.push(`/classroom/${booking.id}`)}
-                            className="bg-brand-50 border-brand-100 text-brand-700 hover:bg-brand-100 hover:text-brand-800 h-9 whitespace-nowrap"
+                            className="bg-brand-50/90 border-brand-200/80 text-brand-700 hover:bg-brand-100 hover:text-brand-800 h-8 px-2.5 text-xs font-bold rounded-xl whitespace-nowrap shadow-2xs transition-all"
                           >
-                            دخول الفصل <Video className="w-3.5 h-3.5 mr-2" />
+                            دخول الفصل <Video className="w-3.5 h-3.5 mr-1.5" />
                           </Button>
                           
                           <BookingDropdown
