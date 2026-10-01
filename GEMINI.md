@@ -351,6 +351,17 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - **Synchronized Data Flow Key:** Updated the accompanying table in `README.md` to reflect exact container names, modern tech stack components (Next.js 15.3, React 19, Laravel 12, PHP 8.3), and port bindings.
 - **GitHub Mermaid Parser Compliance Fix:** Resolved a rich display render crash (`got 'PS'`) by eliminating raw parentheses in unquoted edge labels (`|Verify Token Score via Secret Key|`), replacing non-standard `<==>` with standard bidirectional `<-->` arrows, and quoting stadium/rectangle node labels (`(["..."])`) to ensure 100% compatibility across all Mermaid parsers.
 
+## 📖 Session Log & Recent Updates (Oct 2, 2026)
 
-
-
+### 1. Cloudflare R2 Object Storage Integration & Zero-Egress Cloud Assets Architecture
+- **Context:** Migrated file uploads and teacher KYC verification documents from ephemeral local container storage (`storage/app/public`) to **Cloudflare R2 Object Storage** (S3-compatible API with zero egress fees and global CDN edge distribution).
+- **Package Installation:** Installed `league/flysystem-aws-s3-v3` (^3.0) via Composer into Laravel 12 to provide native Flysystem S3 adapter support.
+- **Dynamic Filesystem Configuration:**
+  - Updated `backend/config/filesystems.php` and `.env.example` with `AWS_ENDPOINT`, `AWS_URL`, `AWS_DEFAULT_REGION=auto`, and `FILESYSTEM_DISK=s3`.
+  - Refactored [`AuthController.php`](file:///home/ammar/code/taj-platform/backend/app/Http/Controllers/Api/AuthController.php) to store profile avatars dynamically via `config('filesystems.default')` and persist the full public CDN URL into `avatar_url`, resolving broken image issues between Vercel and the backend.
+  - Refactored [`ProfileController.php`](file:///home/ammar/code/taj-platform/backend/app/Http/Controllers/Api/ProfileController.php) to store teacher national ID (`national_id_path`) and academic degrees (`degree_path`) into the configured default cloud disk with automatic old file deletion.
+  - Updated Filament Admin resource [`TeacherProfileResource.php`](file:///home/ammar/code/taj-platform/backend/app/Filament/Resources/TeacherProfileResource.php) to dynamically read documents using `config('filesystems.default')`.
+- **Testing & Isolation:**
+  - Added `<env name="FILESYSTEM_DISK" value="public"/>` to [`phpunit.xml`](file:///home/ammar/code/taj-platform/backend/phpunit.xml) ensuring test isolation without real external network I/O.
+  - Verified live upload, retrieval, and public CDN access through `curl` against `https://pub-1fceead7795d4023b09382ec33f52f2a.r2.dev/`.
+  - Entire backend test suite passing: **89 passed (275 assertions)**. Formatted via `laravel/pint`.
