@@ -170,13 +170,13 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-5 xl:gap-6 items-stretch">
+    <div className="flex flex-col lg:flex-row gap-4 xl:gap-6 items-stretch">
       {/* Middle Column: Dynamic adaptive width based on sidebar state */}
       <div className={cn(
         "w-full lg:shrink-0 space-y-6 transition-all duration-300 ease-in-out",
         isCollapsed 
-          ? "lg:w-[330px] xl:w-[360px] 2xl:w-[400px]" 
-          : "lg:w-[280px] xl:w-[310px] 2xl:w-[340px]"
+          ? "lg:w-[280px] xl:w-[340px] 2xl:w-[380px]" 
+          : "lg:w-[240px] xl:w-[285px] 2xl:w-[320px]"
       )}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6 lg:space-y-6 lg:gap-0 lg:sticky lg:top-24">
           {/* 💰 Parent Wallet Card — Ultra-Premium Glassmorphism */}
@@ -463,7 +463,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
 
       {/* Bookings Table — Unified with Student/Teacher Dashboard */}
       <div className="flex-1 min-w-0">
-        <Card variant="glass" className="h-full flex flex-col p-4 sm:p-6 lg:p-5 xl:p-6 border border-white/80 dark:border-white/10 shadow-[0_10px_35px_rgba(0,0,0,0.03)] rounded-[2rem]">
+        <Card variant="glass" className="h-full flex flex-col p-4 sm:p-5 lg:p-4 xl:p-6 border border-white/80 dark:border-white/10 shadow-[0_10px_35px_rgba(0,0,0,0.03)] rounded-[2rem]">
           <div className="flex flex-wrap justify-between items-center gap-3 mb-5 sm:mb-6">
             <h3 className="font-black text-lg sm:text-xl text-text-primary flex items-center gap-3">
               <span className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-2xs">

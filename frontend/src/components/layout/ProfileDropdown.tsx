@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { User, LogOut } from "lucide-react";
 
 interface ProfileDropdownProps {
@@ -63,14 +62,25 @@ export default function ProfileDropdown({
   // Resolve avatar URL — handles relative paths from the backend
   const resolvedImageUrl = (() => {
     if (!imageUrl || imgError) return null;
-    if (imageUrl.startsWith("http")) return imageUrl;
+    const trimmed = typeof imageUrl === "string" ? imageUrl.trim() : "";
+    if (
+      !trimmed ||
+      trimmed === "null" ||
+      trimmed === "undefined" ||
+      trimmed === "[object Object]"
+    ) {
+      return null;
+    }
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      return trimmed;
+    }
     const baseUrl =
       process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") ||
       "http://localhost:8000";
-    return `${baseUrl}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
+    return `${baseUrl}${trimmed.startsWith("/") ? "" : "/"}${trimmed}`;
   })();
 
-  const firstLetter = userName ? userName.charAt(0) : "؟";
+  const firstLetter = userName ? userName.trim().charAt(0) : "؟";
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -78,23 +88,21 @@ export default function ProfileDropdown({
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="h-10 w-10 rounded-full cursor-pointer overflow-hidden border-2 border-white/30 hover:border-white/60 shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 focus:ring-offset-transparent"
+        className="h-10 w-10 rounded-full cursor-pointer overflow-hidden border-2 border-white/40 hover:border-white/80 shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 focus:ring-offset-transparent relative bg-brand-700/60"
         aria-label="فتح قائمة الملف الشخصي"
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
-        {resolvedImageUrl ? (
-          <Image
+        {resolvedImageUrl && !imgError ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={resolvedImageUrl}
-            alt={userName}
-            width={40}
-            height={40}
+            alt=""
             className="object-cover w-full h-full"
-            unoptimized
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="w-full h-full bg-brand-600 flex items-center justify-center text-white font-semibold text-base">
+          <div className="w-full h-full bg-gradient-to-br from-indigo-500 via-brand-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm tracking-wide select-none shadow-inner">
             {firstLetter}
           </div>
         )}

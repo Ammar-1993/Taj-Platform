@@ -61,7 +61,7 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
 
         <div className={cn(
           "relative z-10 transition-all duration-300",
-          isCollapsed ? "p-6 sm:p-7 xl:p-8" : "p-5 sm:p-5 xl:p-6"
+          isCollapsed ? "p-5 sm:p-6 xl:p-8" : "p-4 sm:p-5 xl:p-6"
         )}>
           {/* Card Header */}
           <div className="flex items-center justify-between gap-2.5 mb-1">
@@ -126,7 +126,7 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
         {/* 📊 Recent Transactions — Refined Glass */}
         <Card className={cn(
           "animate-fade-up-2 bg-white/40 backdrop-blur-xl border border-white/70 shadow-[0_10px_30px_rgba(0,0,0,0.02)] rounded-[2rem] hover:shadow-[0_15px_35px_rgba(0,0,0,0.05)] transition-all duration-500",
-          isCollapsed ? "p-6" : "p-5"
+          isCollapsed ? "p-5 sm:p-6" : "p-4 sm:p-5"
         )}>
           <div className="flex items-center justify-between mb-4 sm:mb-5">
             <h3 className="text-xs sm:text-sm font-black text-slate-800 flex items-center gap-2.5">
@@ -197,7 +197,7 @@ export const WalletWidget: React.FC<WalletWidgetProps> = ({ wallet, isTeacher })
         {/* 🛟 Help Center Card — Royal Luxury */}
         <Card className={cn(
           "animate-fade-up-3 bg-gradient-to-br from-indigo-50/70 via-blue-50/50 to-white/80 backdrop-blur-xl border border-blue-100/70 shadow-[0_10px_30px_rgba(59,130,246,0.05)] rounded-[2rem] relative overflow-hidden group hover:shadow-[0_15px_35px_rgba(59,130,246,0.1)] transition-all duration-500",
-          isCollapsed ? "p-6" : "p-5"
+          isCollapsed ? "p-5 sm:p-6" : "p-4 sm:p-5"
         )}>
           <div className="absolute -right-8 -bottom-8 text-blue-200/40 opacity-30 group-hover:scale-125 group-hover:rotate-12 transition-transform duration-1000 ease-out pointer-events-none">
             <LifeBuoy size={140} strokeWidth={1} />

@@ -82,13 +82,13 @@ export const StudentTeacherDashboard: React.FC<
 
   return (
     <>
-      <div className="flex flex-col lg:flex-row gap-5 xl:gap-6 items-stretch">
+      <div className="flex flex-col lg:flex-row gap-4 xl:gap-6 items-stretch">
         {/* ============ SIDEBAR / WALLET COLUMN ============ */}
         <div className={cn(
           "w-full lg:shrink-0 space-y-6 transition-all duration-300 ease-in-out",
           isCollapsed 
-            ? "lg:w-[325px] xl:w-[355px] 2xl:w-[390px]" 
-            : "lg:w-[275px] xl:w-[305px] 2xl:w-[335px]"
+            ? "lg:w-[280px] xl:w-[340px] 2xl:w-[380px]" 
+            : "lg:w-[240px] xl:w-[285px] 2xl:w-[320px]"
         )}>
           {loading ? (
             <div className="space-y-6 lg:sticky lg:top-24">
@@ -109,7 +109,7 @@ export const StudentTeacherDashboard: React.FC<
         </div>
 
         {/* ============ MAIN CONTENT ============ */}
-        <Card variant="glass" className="flex-1 min-w-0 h-full flex flex-col p-4 sm:p-6 lg:p-5 xl:p-6 border border-white/80 dark:border-white/10 shadow-[0_10px_35px_rgba(0,0,0,0.03)] rounded-[2rem]">
+        <Card variant="glass" className="flex-1 min-w-0 h-full flex flex-col p-4 sm:p-5 lg:p-4 xl:p-6 border border-white/80 dark:border-white/10 shadow-[0_10px_35px_rgba(0,0,0,0.03)] rounded-[2rem]">
           <div className="flex flex-wrap justify-between items-center gap-3 mb-5 sm:mb-6">
             <h3 className="font-black text-lg sm:text-xl text-text-primary flex items-center gap-3">
               <span className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-2xs">

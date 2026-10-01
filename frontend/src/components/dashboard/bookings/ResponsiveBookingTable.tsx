@@ -43,10 +43,10 @@ function BookingDropdown({
         size="sm"
         variant="ghost"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-8 h-8 p-0 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl flex items-center justify-center shrink-0"
+        className="w-7 h-7 sm:w-8 sm:h-8 p-0 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0"
         title="خيارات إضافية"
       >
-        <MoreVertical className="w-4 h-4" />
+        <MoreVertical className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
       </Button>
 
       {isOpen && (
@@ -221,25 +221,25 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
       </div>
 
       {/* ─── Desktop: Scrollable Table (>= md) ───────────────────────────── */}
-      <div className="hidden md:block w-full overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent rounded-2xl">
-        <table className="min-w-[480px] w-full text-sm text-right">
+      <div className="hidden md:block w-full overflow-x-auto scrollbar-none md:hover:scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent rounded-2xl">
+        <table className="w-full text-sm text-right">
           <thead>
             <tr className="bg-gradient-to-l from-surface-subtle to-surface-muted border-b border-border">
-              <th className="px-3 py-3 text-xs font-bold text-text-secondary text-right rounded-tr-taj-lg whitespace-nowrap">رقم الحجز</th>
+              <th className="px-2 lg:px-2.5 xl:px-3 py-3 text-[11px] sm:text-xs font-bold text-text-secondary text-right rounded-tr-taj-lg whitespace-nowrap">رقم الحجز</th>
               {isParent ? (
                 <>
-                  <th className="px-3 py-3 text-xs font-bold text-text-secondary text-right whitespace-nowrap">الابن</th>
-                  <th className="px-3 py-3 text-xs font-bold text-text-secondary text-right whitespace-nowrap">المعلم</th>
+                  <th className="px-2 lg:px-2.5 xl:px-3 py-3 text-[11px] sm:text-xs font-bold text-text-secondary text-right whitespace-nowrap">الابن</th>
+                  <th className="px-2 lg:px-2.5 xl:px-3 py-3 text-[11px] sm:text-xs font-bold text-text-secondary text-right whitespace-nowrap">المعلم</th>
                 </>
               ) : (
-                <th className="px-3 py-3 text-xs font-bold text-text-secondary text-right whitespace-nowrap">
+                <th className="px-2 lg:px-2.5 xl:px-3 py-3 text-[11px] sm:text-xs font-bold text-text-secondary text-right whitespace-nowrap">
                   {isTeacher ? "الطالب" : "المعلم"}
                 </th>
               )}
-              <th className="px-3 py-3 text-xs font-bold text-text-secondary text-right whitespace-nowrap">التاريخ والوقت</th>
-              <th className="px-3 py-3 text-xs font-bold text-text-secondary text-right whitespace-nowrap">التكلفة</th>
-              <th className={`px-3 py-3 text-xs font-bold text-text-secondary text-right whitespace-nowrap ${isParent ? 'rounded-tl-taj-lg' : ''}`}>الحالة</th>
-              {!isParent && <th className="px-3 py-3 text-xs font-bold text-text-secondary text-right rounded-tl-taj-lg whitespace-nowrap">الإجراء</th>}
+              <th className="px-2 lg:px-2.5 xl:px-3 py-3 text-[11px] sm:text-xs font-bold text-text-secondary text-right whitespace-nowrap">التاريخ والوقت</th>
+              <th className="px-2 lg:px-2.5 xl:px-3 py-3 text-[11px] sm:text-xs font-bold text-text-secondary text-right whitespace-nowrap">التكلفة</th>
+              <th className={`px-2 lg:px-2.5 xl:px-3 py-3 text-[11px] sm:text-xs font-bold text-text-secondary text-right whitespace-nowrap ${isParent ? 'rounded-tl-taj-lg' : ''}`}>الحالة</th>
+              {!isParent && <th className="px-2 lg:px-2.5 xl:px-3 py-3 text-[11px] sm:text-xs font-bold text-text-secondary text-right rounded-tl-taj-lg whitespace-nowrap">الإجراء</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-subtle">
@@ -249,32 +249,36 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 className="hover:bg-brand-50/50 transition-all duration-200 group"
               >
                 {/* Booking ID */}
-                <td className="px-3 py-3 font-bold text-brand-600 whitespace-nowrap align-middle">
-                  <div className="flex items-center h-full">#{booking.id}</div>
+                <td className="px-2 lg:px-2.5 xl:px-3 py-2.5 sm:py-3 font-bold text-brand-600 whitespace-nowrap align-middle">
+                  <div className="flex items-center h-full text-xs sm:text-sm">#{booking.id}</div>
                 </td>
 
                 {/* Person(s) */}
                 {isParent ? (
                   <>
-                    <td className="px-3 py-3 whitespace-nowrap align-middle">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-sm flex items-center justify-center text-brand-600 font-bold text-[10px] shrink-0">
+                    <td className="px-2 lg:px-2.5 xl:px-3 py-2.5 sm:py-3 whitespace-nowrap align-middle">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-sm flex items-center justify-center text-brand-600 font-bold text-[10px] shrink-0">
                           {booking.student?.name?.charAt(0) || "?"}
                         </div>
-                        <span className="font-bold text-brand-700">{booking.student?.name}</span>
+                        <span className="font-bold text-brand-700 text-xs sm:text-sm max-w-[90px] lg:max-w-[110px] xl:max-w-none truncate" title={booking.student?.name}>
+                          {booking.student?.name}
+                        </span>
                       </div>
                     </td>
-                    <td className="px-3 py-3 font-bold text-text-primary whitespace-nowrap align-middle">
-                      <div className="flex items-center h-full">{booking.teacher?.name}</div>
+                    <td className="px-2 lg:px-2.5 xl:px-3 py-2.5 sm:py-3 font-bold text-text-primary whitespace-nowrap align-middle">
+                      <div className="flex items-center h-full text-xs sm:text-sm max-w-[90px] lg:max-w-[110px] xl:max-w-none truncate" title={booking.teacher?.name}>
+                        {booking.teacher?.name}
+                      </div>
                     </td>
                   </>
                 ) : (
-                  <td className="px-3 py-3 whitespace-nowrap align-middle">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-md flex items-center justify-center text-brand-600 font-bold text-xs shrink-0">
+                  <td className="px-2 lg:px-2.5 xl:px-3 py-2.5 sm:py-3 whitespace-nowrap align-middle">
+                    <div className="flex items-center gap-2 lg:gap-2.5 xl:gap-3">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-brand-100 to-purple-100 rounded-taj-md flex items-center justify-center text-brand-600 font-bold text-[11px] sm:text-xs shrink-0">
                         {(isTeacher ? booking.student?.name : booking.teacher?.name)?.charAt(0) || "?"}
                       </div>
-                      <span className="font-bold text-text-primary text-xs sm:text-sm">
+                      <span className="font-bold text-text-primary text-xs sm:text-sm max-w-[105px] lg:max-w-[125px] xl:max-w-none truncate" title={isTeacher ? booking.student?.name : booking.teacher?.name}>
                         {isTeacher ? booking.student?.name : booking.teacher?.name}
                       </span>
                     </div>
@@ -282,30 +286,30 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                 )}
 
                 {/* Date + Time */}
-                <td className="px-3 py-3 whitespace-nowrap align-middle">
+                <td className="px-2 lg:px-2.5 xl:px-3 py-2.5 sm:py-3 whitespace-nowrap align-middle">
                   <div className="flex flex-col justify-center">
                     <div className="font-bold text-text-primary text-xs sm:text-sm">
                       {formatDate(booking.booking_date, "medium")}
                     </div>
-                    <div className="text-[11px] text-text-muted mt-0.5">
+                    <div className="text-[10px] sm:text-[11px] text-text-muted mt-0.5">
                       {formatTime(booking.teacher_slot?.start_time)}
                     </div>
                   </div>
                 </td>
 
                 {/* Amount */}
-                <td className="px-3 py-3 whitespace-nowrap align-middle">
+                <td className="px-2 lg:px-2.5 xl:px-3 py-2.5 sm:py-3 whitespace-nowrap align-middle">
                   <div className="flex items-center h-full">
                     <CurrencyDisplay 
                       amount={booking.net_paid} 
-                      size="md" 
+                      size="sm" 
                       className="text-text-primary font-bold text-xs sm:text-sm"
                     />
                   </div>
                 </td>
 
                 {/* Status */}
-                <td className="px-3 py-3 whitespace-nowrap align-middle">
+                <td className="px-2 lg:px-2.5 xl:px-3 py-2.5 sm:py-3 whitespace-nowrap align-middle">
                   <div className="flex items-center h-full">
                     <StatusBadge status={booking.status} />
                   </div>
@@ -313,17 +317,17 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
 
                 {/* Actions (Hidden for Parent) */}
                 {!isParent && (
-                  <td className="px-3 py-3 whitespace-nowrap align-middle">
-                    <div className="flex gap-1.5 justify-end items-center min-h-[36px]">
+                  <td className="px-2 lg:px-2.5 xl:px-3 py-2.5 sm:py-3 whitespace-nowrap align-middle">
+                    <div className="flex gap-1 sm:gap-1.5 justify-end items-center min-h-[36px]">
                       {(booking.status === "scheduled" || booking.status === "in_progress") && (
                         <>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => router.push(`/classroom/${booking.id}`)}
-                            className="bg-brand-50/90 border-brand-200/80 text-brand-700 hover:bg-brand-100 hover:text-brand-800 h-8 px-2.5 text-xs font-bold rounded-xl whitespace-nowrap shadow-2xs transition-all"
+                            className="bg-brand-50/90 border-brand-200/80 text-brand-700 hover:bg-brand-100 hover:text-brand-800 h-7 sm:h-8 px-2 sm:px-2.5 text-[11px] sm:text-xs font-bold rounded-lg sm:rounded-xl whitespace-nowrap shadow-2xs transition-all gap-1"
                           >
-                            دخول الفصل <Video className="w-3.5 h-3.5 mr-1.5" />
+                            دخول الفصل <Video className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
                           </Button>
                           
                           <BookingDropdown
