@@ -11,7 +11,6 @@ use App\Models\PayoutRequest;
 use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Spatie\Permission\Models\Role;
 
@@ -31,23 +30,6 @@ class DashboardStats extends BaseWidget
             ];
         });
 
-        $dailySums = Cache::remember('dashboard_daily_completed_sums', now()->addMinutes(5), function () {
-            return Booking::where('status', 'completed')
-                ->whereBetween('booking_date', [
-                    Carbon::now()->subDays(6)->startOfDay(),
-                    Carbon::now()->endOfDay(),
-                ])
-                ->selectRaw('DATE(booking_date) as day, SUM(net_paid) as total')
-                ->groupBy('day')
-                ->pluck('total', 'day');
-        });
-
-        $platformSparkline = collect(range(6, 0))->map(function ($daysAgo) use ($dailySums) {
-            $day = Carbon::now()->subDays($daysAgo)->toDateString();
-
-            return (float) ($dailySums[$day] ?? 0) * 0.20;
-        })->toArray();
-
         return [
             Stat::make('إجمالي الطلاب', number_format($statsData['student_count']))
                 ->description('الطلاب المسجلين في المنصة')
@@ -65,7 +47,6 @@ class DashboardStats extends BaseWidget
                 ->description('صافي عمولة المنصة المحققة')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('success')
-                ->chart($platformSparkline)
                 ->url(BookingResource::getUrl('index', ['tableFilters' => ['status' => ['value' => 'completed']]])),
 
             Stat::make('طلبات سحب معلقة', number_format($statsData['pending_payouts']))
