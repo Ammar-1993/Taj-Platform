@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -50,6 +51,14 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     // 🎨 تخصيص أيقونة المستخدم في القائمة العلوية
     public function getFilamentAvatarUrl(): ?string
     {
+        if ($this->avatar_url) {
+            if (str_starts_with($this->avatar_url, 'http://') || str_starts_with($this->avatar_url, 'https://')) {
+                return $this->avatar_url;
+            }
+
+            return Storage::disk(config('filesystems.default', 'public'))->url($this->avatar_url);
+        }
+
         $name = urlencode($this->name);
 
         return "https://ui-avatars.com/api/?name={$name}&color=ffffff&background=1D4ED8&bold=true&rounded=true";

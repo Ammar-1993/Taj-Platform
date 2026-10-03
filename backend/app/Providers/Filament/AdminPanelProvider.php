@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Auth\CustomLogin;
+use App\Filament\Auth\CustomProfile;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -34,6 +35,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogoHeight('2.25rem')
             ->path('admin')
             ->login(CustomLogin::class)
+            ->profile(CustomProfile::class)
             ->userMenuItems([
                 'profile' => MenuItem::make()->label('إعدادات الحساب')->icon('heroicon-o-user-circle'),
                 'logout' => MenuItem::make()->label('تسجيل الخروج')->icon('heroicon-o-arrow-right-on-rectangle'),
