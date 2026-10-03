@@ -56,24 +56,9 @@ class TeacherProfileResource extends Resource
                 Forms\Components\Section::make('المستندات المرفقة (للمراجعة)')
                     ->description('يرجى التحقق من صحة المستندات قبل توثيق الحساب.')
                     ->schema([
-                        // 🟢 عرض الهوية مع إمكانية التحميل
-                        Forms\Components\FileUpload::make('national_id_path')
-                            ->label('صورة الهوية الوطنية')
-                            ->disk(config('filesystems.default', 'public'))
-                            ->downloadable() // السماح للمدير بتحميلها لمراجعتها
-                            ->openable() // فتحها في تاب جديد
-                            ->disabled() // منع المدير من حذفها أو استبدالها
-                            ->columnSpan(1),
-
-                        // 🟢 عرض الشهادة مع إمكانية التحميل
-                        Forms\Components\FileUpload::make('degree_path')
-                            ->label('الشهادة الجامعية / الأكاديمية')
-                            ->disk(config('filesystems.default', 'public'))
-                            ->downloadable()
-                            ->openable()
-                            ->disabled()
-                            ->columnSpan(1),
-                    ])->columns(['sm' => 1, 'md' => 2]),
+                        Forms\Components\View::make('filament.components.teacher-verification-documents')
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 
