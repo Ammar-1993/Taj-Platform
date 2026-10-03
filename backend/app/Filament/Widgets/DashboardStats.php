@@ -16,12 +16,10 @@ use Illuminate\Support\Facades\Cache;
 
 class DashboardStats extends BaseWidget
 {
-    // ترتيب الودجت في الصفحة (رقم 1 في الأعلى)
     protected static ?int $sort = 1;
 
     protected function getStats(): array
     {
-        // حساب إحصائيات لوحة التحكم وتخزينها مؤقتاً لتخفيف الحمل عن قاعدة البيانات
         $statsData = Cache::remember('filament_dashboard_stats', now()->addMinutes(5), function () {
             return [
                 'student_count' => User::role('student')->count(),
@@ -31,7 +29,6 @@ class DashboardStats extends BaseWidget
             ];
         });
 
-        // بيانات النمو لأرباح المنصة آخر 7 أيام
         $dailySums = Cache::remember('dashboard_daily_completed_sums', now()->addMinutes(5), function () {
             return Booking::where('status', 'completed')
                 ->whereBetween('booking_date', [
@@ -51,28 +48,28 @@ class DashboardStats extends BaseWidget
 
         return [
             Stat::make('إجمالي الطلاب', number_format($statsData['student_count']))
-                ->description('الطلاب المسجلين • عرض القائمة ↗')
+                ->description('الطلاب المسجلين في المنصة')
                 ->descriptionIcon('heroicon-m-users')
                 ->color('primary')
                 ->url(UserResource::getUrl('index', ['tableFilters' => ['role' => ['value' => 'student']]])),
 
             Stat::make('المعلمين المعتمدين', number_format($statsData['teacher_count']))
-                ->description('جاهزون لتقديم الحصص • إدارة المعلمين ↗')
+                ->description('جاهزون لتقديم الحصص')
                 ->descriptionIcon('heroicon-m-academic-cap')
                 ->color('info')
                 ->url(TeacherProfileResource::getUrl('index')),
 
-            Stat::make('أرباح المنصة الصافية', number_format($statsData['total_revenue'], 2).' SAR')
-                ->description('نمو أرباح المنصة (20%) • سجل الحصص ↗')
+            Stat::make('أرباح المنصة (20%)', number_format($statsData['total_revenue'], 2).' SAR')
+                ->description('صافي عمولة المنصة المحققة')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('success')
                 ->chart($platformSparkline)
                 ->url(BookingResource::getUrl('index', ['tableFilters' => ['status' => ['value' => 'completed']]])),
 
             Stat::make('طلبات سحب معلقة', number_format($statsData['pending_payouts']))
-                ->description($statsData['pending_payouts'] > 0 ? 'تتطلب مراجعة الإدارة • مراجعة الطلبات ↗' : 'لا توجد طلبات معلقة ✅')
-                ->descriptionIcon('heroicon-m-clock')
-                ->color($statsData['pending_payouts'] > 0 ? 'warning' : 'gray')
+                ->description($statsData['pending_payouts'] > 0 ? 'بانتظار مراجعة الإدارة' : 'لا توجد طلبات معلقة')
+                ->descriptionIcon($statsData['pending_payouts'] > 0 ? 'heroicon-m-clock' : 'heroicon-m-check-circle')
+                ->color($statsData['pending_payouts'] > 0 ? 'warning' : 'success')
                 ->url(PayoutRequestResource::getUrl('index', ['tableFilters' => ['status' => ['value' => 'pending']]])),
         ];
     }

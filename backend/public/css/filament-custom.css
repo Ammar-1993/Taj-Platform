@@ -140,6 +140,42 @@ a.fi-wi-stats-overview-stat,
     background-color: rgba(30, 41, 59, 0.6) !important;
 }
 
+/* Align top banner widgets to same height */
+.fi-account-widget .fi-section-content,
+.fi-info-widget .fi-section-content {
+    padding-top: 0.875rem !important;
+    padding-bottom: 0.875rem !important;
+}
+
+/* Remove awkward outer section padding on custom widgets */
+.fi-account-widget .fi-section,
+.fi-info-widget .fi-section {
+    border-radius: 1rem !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+}
+
+.dark .fi-account-widget .fi-section,
+.dark .fi-info-widget .fi-section {
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: rgba(15, 23, 42, 0.8) !important;
+}
+
+/* Empty state table — compact padding */
+.fi-ta-empty-state {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+}
+
+/* Ensure stat card labels truncate gracefully */
+.fi-wi-stats-overview-stat-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+
 /* ==========================================================================
    Taj Platform — Luxury Royal Styling for Filament Auth / Login
    ========================================================================== */

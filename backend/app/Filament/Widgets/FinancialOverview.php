@@ -15,21 +15,14 @@ use Illuminate\Support\Facades\Cache;
 
 class FinancialOverview extends BaseWidget
 {
-    // ترتيب الودجت: الصف الثالث بعد الرسم البياني
     protected static ?int $sort = 3;
 
     protected function getStats(): array
     {
-        // 1. إجمالي المبيعات (الحصص المكتملة فقط)
         $totalSales = Booking::where('status', 'completed')->sum('net_paid');
-
-        // 2. إجمالي الالتزامات (أموال المعلمين والطلاب الموجودة في المحافظ حالياً)
         $totalWalletsBalance = Wallet::sum('balance');
-
-        // 3. إجمالي طلبات السحب المعلقة التي تحتاج موافقة
         $pendingPayouts = PayoutRequest::where('status', 'pending')->sum('amount');
 
-        // إنشاء بيانات الرسم البياني الجانبي (Sparkline) لآخر 7 أيام
         $dailySums = Cache::remember('dashboard_daily_completed_sums', now()->addMinutes(5), function () {
             return Booking::where('status', 'completed')
                 ->whereBetween('booking_date', [
@@ -48,26 +41,23 @@ class FinancialOverview extends BaseWidget
         })->toArray();
 
         return [
-            Stat::make('إجمالي المبيعات (الحصص المكتملة)', number_format($totalSales, 2).' SAR')
-                ->description('إجمالي المقبوضات للحصص المنجزة • عرض الحجوزات ↗')
+            Stat::make('إجمالي المبيعات', number_format($totalSales, 2).' SAR')
+                ->description('إيرادات الحصص المكتملة')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('success')
                 ->chart($salesSparkline)
                 ->url(BookingResource::getUrl('index', ['tableFilters' => ['status' => ['value' => 'completed']]])),
 
-            Stat::make('إجمالي أرصدة المحافظ (التزامات)', number_format($totalWalletsBalance, 2).' SAR')
-                ->description('مجموع الأموال المتاحة في المحافظ • كشف الحسابات ↗')
+            Stat::make('أرصدة المحافظ', number_format($totalWalletsBalance, 2).' SAR')
+                ->description('إجمالي أرصدة المستخدمين')
                 ->descriptionIcon('heroicon-m-wallet')
                 ->color('info')
                 ->url(WalletResource::getUrl('index')),
 
             Stat::make('طلبات السحب المعلقة', number_format($pendingPayouts, 2).' SAR')
-                ->description($pendingPayouts > 0 ? 'مبالغ تنتظر التحويل البنكي • إدارة السحوبات ↗' : 'لا توجد مبالغ معلقة ✅')
-                ->descriptionIcon('heroicon-m-clock')
-                ->color($pendingPayouts > 0 ? 'warning' : 'gray')
-                ->extraAttributes([
-                    'class' => $pendingPayouts > 0 ? 'animate-pulse' : '',
-                ])
+                ->description($pendingPayouts > 0 ? 'بانتظار التحويل البنكي' : 'لا توجد مبالغ معلقة')
+                ->descriptionIcon($pendingPayouts > 0 ? 'heroicon-m-clock' : 'heroicon-m-check-circle')
+                ->color($pendingPayouts > 0 ? 'warning' : 'success')
                 ->url(PayoutRequestResource::getUrl('index', ['tableFilters' => ['status' => ['value' => 'pending']]])),
         ];
     }
