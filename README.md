@@ -13,12 +13,13 @@
   </p>
 
   <p>
-    <a href="#"><img src="https://img.shields.io/badge/Release-v2.1.0-emerald?style=for-the-badge&logo=git&logoColor=white" alt="Release v2.1.0" /></a>
+    <a href="#"><img src="https://img.shields.io/badge/Release-v2.2.0-emerald?style=for-the-badge&logo=git&logoColor=white" alt="Release v2.2.0" /></a>
     <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-12.0-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 12" /></a>
     <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-15.3-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 15" /></a>
     <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19.3-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" /></a>
     <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" /></a>
     <a href="https://filamentphp.com"><img src="https://img.shields.io/badge/Filament_V3-EAB308?style=for-the-badge&logo=filament&logoColor=white" alt="Filament" /></a>
+    <a href="https://www.cloudflare.com"><img src="https://img.shields.io/badge/Cloudflare-R2_Storage-F38020?style=for-the-badge&logo=cloudflare&logoColor=white" alt="Cloudflare R2" /></a>
     <a href="https://www.agora.io"><img src="https://img.shields.io/badge/Agora-RTC%20%2F%20RTM-099DFD?style=for-the-badge&logo=agora&logoColor=white" alt="Agora" /></a>
     <a href="https://www.netless.link"><img src="https://img.shields.io/badge/Netless-Whiteboard-6C47FF?style=for-the-badge" alt="Netless Whiteboard" /></a>
     <a href="https://sentry.io"><img src="https://img.shields.io/badge/Sentry-Monitoring-362D59?style=for-the-badge&logo=sentry&logoColor=white" alt="Sentry" /></a>
@@ -61,8 +62,9 @@ The platform operates on a high-performance decoupled monorepo architecture engi
 2. **Direct-to-Cloud Real-Time Media (Zero Server Load)**: The virtual classroom (adaptive HD video, isolated screen sharing, and interactive Netless whiteboard) connects **directly, browser-to-cloud**, via Agora SD-RTN and Netless CDN — keeping the backend API 100% free of heavy media traffic and CPU load.
 3. **Async Queue & WebRTC Token Pre-Provisioning**: A background Redis queue worker (`ProvisionVirtualClassroom`) pre-provisions whiteboard rooms and pre-generates Agora RTC/RTM tokens ahead of time, ensuring `< 1ms` instantaneous cold-join cache hits.
 4. **ACID Financial Ledger & Escrow Economy**: MySQL 8.0 handles overdraft-proof wallet transactions and slot bookings with row-level locks (`lockForUpdate()`) and composite indexing (`idx_bookings_booked_by_status_date`), safely holding funds in escrow until lesson completion (80% teacher / 20% platform revenue split).
-5. **Administrative Governance & Operations**: A fully localized FilamentPHP v3 dashboard empowers platform administrators to audit teacher KYC credentials (national ID & degrees), adjudicate session disputes, resolve abandoned bookings, and reconcile automated bank payouts.
-6. **Multi-Tier Tagged Invalidation & Cloud Security**: Redis 7 cache tags with automated Eloquent lifecycle hooks (`saved`, `deleted`), Moyasar HMAC-signed webhooks, Google reCAPTCHA v3 bot protection, and full-stack Sentry APM observability.
+5. **Zero-Egress Cloud Object Storage & Edge Asset CDN**: Cloudflare R2 Object Storage (via S3-compatible API & `league/flysystem-aws-s3-v3`) hosts and streams all user profile avatars and teacher KYC verification credentials (national ID & degrees) through Cloudflare's global edge network with zero egress bandwidth fees, completely eliminating local disk coupling and enabling horizontal container scalability.
+6. **Administrative Governance & Operations**: A fully localized FilamentPHP v3 dashboard empowers platform administrators with dynamic avatar customization, teacher KYC audits (national ID & degrees), dispute adjudication, abandoned booking resolution, and automated bank payout reconciliation.
+7. **Multi-Tier Tagged Invalidation & Cloud Security**: Redis 7 cache tags with automated Eloquent lifecycle hooks (`saved`, `deleted`), Moyasar HMAC-signed webhooks, Google reCAPTCHA v3 bot protection, and full-stack Sentry APM observability.
 
 
 ```mermaid
@@ -75,6 +77,7 @@ graph TB
     %% External Cloud Services & Real-time Engines
     AgoraRTC["📹 Agora RTC & RTM Cloud<br/><b>WebRTC Video & State Synchronization</b>"]
     NetlessWB["🎨 Netless Whiteboard Cloud<br/><b>Agora Fastboard Interactive Canvas</b>"]
+    CloudflareR2["☁️ Cloudflare R2 Storage<br/><b>Zero-Egress Object Store & Edge CDN</b>"]
     MoyasarAPI["💳 Moyasar Payment Gateway<br/><b>Mada, Visa, Apple Pay & Escrow Vault</b>"]
     RecaptchaAPI["🤖 Google reCAPTCHA v3<br/><b>Bot Mitigation & Risk Scoring</b>"]
     SentryTelemetry["📊 Sentry APM & Telemetry<br/><b>Error Tracking & Source Map Profiling</b>"]
@@ -106,6 +109,7 @@ graph TB
     %% Direct Browser WebRTC & Interactive Canvas Streams
     Frontend <-->|Low-Latency WebRTC A/V & Screen Share| AgoraRTC
     Frontend <-->|WebSocket Real-Time Whiteboard & Follower Mode| NetlessWB
+    Frontend <-->|Direct Image Retrieval & Edge CDN Avatars| CloudflareR2
 
     %% Frontend to Backend API Ingress
     Frontend -->|REST API v1 + Sanctum Bearer Token| Backend
@@ -114,6 +118,8 @@ graph TB
     %% Backend to External Third-Party Integrations
     Backend -->|Verify Token Score via Secret Key| RecaptchaAPI
     Backend -->|Hold / Capture / Release Escrow Funds| MoyasarAPI
+    Backend -->|Stream Avatars & KYC Uploads via S3 API| CloudflareR2
+    Backend <-->|Fetch KYC Credentials for Admin Verification| CloudflareR2
     Backend -.->|Server Exceptions & Performance Traces| SentryTelemetry
     Frontend -.->|Client Errors & Session Replays| SentryTelemetry
 
@@ -134,6 +140,7 @@ graph TB
     classDef redis fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#f8fafc;
     classDef mysql fill:#042f2e,stroke:#14b8a6,stroke-width:2px,color:#f8fafc;
     classDef external fill:#18181b,stroke:#a1a1aa,stroke-width:1px,stroke-dasharray: 4 4,color:#f8fafc;
+    classDef cloudflare fill:#2e1065,stroke:#f97316,stroke-width:2px,color:#f8fafc;
     classDef media fill:#022c22,stroke:#10b981,stroke-width:2px,color:#f8fafc;
 
     class Student,Teacher,Admin client;
@@ -142,6 +149,7 @@ graph TB
     class Redis redis;
     class MySQL mysql;
     class MoyasarAPI,RecaptchaAPI,SentryTelemetry external;
+    class CloudflareR2 cloudflare;
     class AgoraRTC,NetlessWB media;
 ```
 
@@ -155,6 +163,7 @@ graph TB
 | **1. Presentation & API Gateway Tier** | Next.js 15.3 App Router (React 19) & Laravel 12 API / Filament v3 | Hybrid Edge architecture with React Server Components (RSC) and SWR caching on the frontend (`taj-frontend`); REST API v1 with Sanctum Bearer tokens and administrative KYC/dispute dashboard on the backend (`taj_admin_web`). |
 | **2. Asynchronous Queue & Background Worker Tier** | Laravel Queue Worker (`taj_queue_worker` / Redis) | Dedicated background CLI daemon executing `ProvisionVirtualClassroom` to pre-generate Agora RTC/RTM tokens and whiteboard rooms ahead of time, plus processing escrow releases and refund dispatches. |
 | **3. Distributed State, Caching & Database Tier** | MySQL 8.0 (`taj_mysql`) & Redis 7 (`taj_redis`) | InnoDB ACID financial ledger with composite indexing (`idx_bookings_booked_by_status_date`) and pessimistic row locking (`lockForUpdate()`), paired with tagged Redis caching (`Cache::tags()`) and sub-millisecond pre-signed token retrieval. |
+| **Cloud Object Storage (Zero Egress)** | Cloudflare R2 Storage (`league/flysystem-aws-s3-v3`) | S3-compatible cloud bucket storing user profile avatars and teacher KYC documents (national ID & degrees) with direct CDN distribution, Livewire local staging, and zero bandwidth egress fees. |
 | **Real-Time Media Cloud (Zero Server Load)** | Agora SD-RTN (RTC/RTM) & Netless Cloud | **Direct browser-to-cloud streams**: Real-time 720p/120p simulcast video, independent screen sharing channel (`UID + 1_000_000_000`), WebSocket signaling, and collaborative vector whiteboard canvas. |
 | **Cloud SaaS & Security Integrations** | Moyasar + Google reCAPTCHA v3 + Sentry | Saudi-compliant payment escrow with HMAC-SHA256 signed webhooks, Google reCAPTCHA v3 bot protection, and full-stack Sentry APM with automated production source maps. |
 
@@ -176,8 +185,8 @@ A comprehensive architectural overhaul transitioned Taj Educational Platform fro
 | **Teacher Discovery Catalog** | Direct MySQL queries on each search | **Multi-tier Redis tagged cache** (`10m – 24h` TTL) | **🚀 ~85% reduction** in response time |
 | **Booking Filter Execution Time** | `~15ms` (Full table scan on `booked_by_id`) | **`< 1.5ms`** (`idx_bookings_booked_by_status_date`) | **🚀 ~90% faster** query execution |
 | **Database Read Load at Peak** | 100% direct database queries on catalog/schedule | **~68% reduction** in MySQL read queries | **🛡️ High resilience** against DB connection pool exhaustion |
-| **Backend Test Coverage** | 69 passed (190 assertions) | **83 passed (248 assertions)** | **📈 +20% tests, +30% assertions** (100% passing) |
-| **Frontend Test Coverage** | 28 passed across 5 suites | **28 passed across 5 suites** | **✅ 100% passing test suite** |
+| **Backend Test Coverage** | 69 passed (190 assertions) | **94 passed (283 assertions)** | **📈 +36% tests, +49% assertions** (100% passing) |
+| **Frontend Test Coverage** | 28 passed across 5 suites | **33 passed across 5 suites** | **📈 +18% tests** (100% passing test suite) |
 
 ### 🔍 Architectural Drivers Behind the Performance Gains
 
@@ -211,6 +220,13 @@ A comprehensive architectural overhaul transitioned Taj Educational Platform fro
 ---
 
 ## 🆕 What's New
+
+### 🚀 Release v2.2.0 — Cloudflare R2 Cloud Storage, Dynamic Admin Avatar & Luxury Dashboard Polish
+- **☁️ Cloudflare R2 Object Storage Integration** — Migrated user avatars, teacher national IDs, and academic certificates from local container storage to Cloudflare R2 via `league/flysystem-aws-s3-v3`, achieving S3-compatible zero-egress cloud storage and high-speed CDN delivery across MENA.
+- **👑 Dynamic Admin Avatar & Profile Management** — Implemented dedicated administrative profile management (`/admin/profile`) allowing platform administrators to upload, preview, and update their personal avatars stored directly in Cloudflare R2, with automatic fallback to UI-Avatars.
+- **💎 Modern Luxury Dashboard UI/UX** — Upgraded Filament admin dashboard widgets (`DashboardStats`, `FinancialOverview`, `LatestBookings`) with modern glassmorphism styling (`backdrop-filter: blur(12px)`), clickable deep-linking filters, clean minimalist descriptions, aligned widget heights, and eliminated visual clutter and redundant text.
+- **🛡️ Livewire Staging & Security Hardening** — Configured Livewire temporary file upload staging to local disk before streaming to R2, whitelisted `blob:` worker sources and `*.cloudflarestorage.com` / `*.r2.dev` across production Nginx CSP and Next.js `remotePatterns`.
+- **🧪 100% Automated Test Suite Green** — Expanded test coverage to **94 passing backend tests (283 assertions)** via PHPUnit and **33 passing frontend tests across 5 suites** via Jest (100% passing).
 
 ### 🚀 Release v2.1.0 — Next.js 15.3, React 19 Modernization & Administrative Governance
 - **⚡ Next.js 15.3.9 & React 19.3.0 Major Upgrade** — Upgraded the entire frontend framework from Next.js 14 to Next.js 15.3.9 with React 19.3.0, leveraging React 19 compiler optimizations, modern client hooks, and stricter hydration validations.
@@ -246,13 +262,14 @@ Recent additions that take the platform beyond a basic booking-and-video app:
 - 📹 **Live HD Video Tutoring** — Low-latency audio/video sessions via Agora RTC, with automatic token renewal mid-session.
 - 🖊️ **Real-Time Interactive Whiteboard** — Synchronized drawing, shapes, and text between teacher and student powered by Netless; teacher controls drawing tools, students follow in real time.
 - 🖥️ **Dedicated Screen Sharing** — Independent media channel so screen shares stay smooth regardless of camera bandwidth.
+- ☁️ **Cloudflare R2 Object Storage** — S3-compatible cloud storage for user profile avatars and sensitive teacher KYC verification documents with zero egress bandwidth fees and high-speed edge CDN delivery.
 - 📅 **Race-Condition-Safe Booking** — Atomic, transaction-locked slot booking that makes double-booking the same time slot impossible.
 - 💳 **Wallet-Based Economy** — A central wallet system for students, parents, and teachers, backed by an overdraft-proof transaction ledger.
 - 💰 **Automated Payouts & Revenue Share** — Sessions automatically split earnings between teacher and platform on completion; teachers can request payouts to their bank account.
 - 💵 **Moyasar Payment Integration** — Saudi-market payment gateway for wallet top-ups, with signed webhook verification and idempotent crediting.
 - 👨‍👩‍👧 **Parent-Managed Sub-Accounts** — Parents can link multiple children, fund their wallets, and toggle independent booking permissions per child.
 - ⭐ **Mandatory Review System** — Students are prompted to rate their teacher after every completed session.
-- 👑 **Custom Admin Panel** — A fully Arabic-localized FilamentPHP dashboard for KYC verification, dispute resolution, refunds, and platform-wide analytics.
+- 👑 **Custom Admin Panel & Profile Customization** — A fully Arabic-localized FilamentPHP dashboard with dynamic admin avatar uploads, KYC verification, dispute resolution, refunds, and platform-wide analytics.
 - 🌍 **100% Arabic, RTL-Native UI** — Every screen, label, and system notification is built RTL-first for the MENA region.
 - 🛰️ **Production-Grade Monitoring** — Sentry error tracking and performance tracing across both frontend and backend, with Source Maps for precise stack traces.
 
@@ -298,6 +315,7 @@ sequenceDiagram
     participant API as 🔌 Laravel REST API
     participant DB as 🗄️ MySQL (InnoDB Ledger)
     participant Redis as ⚡ Redis (Rate Limit & Cache)
+    participant Cloudflare as ☁️ Cloudflare R2 Storage
     participant Support as 🎧 Support & Notifications
 
     Note over User,Redis: ── 1. Throttled Authentication & Sanctum Token Issuance ──
@@ -315,10 +333,19 @@ sequenceDiagram
         FE->>FE: Store token in secure storage and set Axios Authorization header
     end
 
-    Note over User,DB: ── 2. Session Hydration & Universal Financial Ledger ──
+    Note over User,Cloudflare: ── 2. Session Hydration & Cloud-Hosted Avatar Storage ──
     FE->>API: GET /api/v1/auth/me (Bearer Token)
     API->>DB: Eager load user roles, permissions and role profiles
     API-->>FE: 200 OK (Hydrate client role state and Arabic RTL UI)
+    opt Profile Avatar Upload & Edge CDN Delivery
+        User->>FE: Select New Profile Avatar (Image File)
+        FE->>API: POST /api/v1/profile/avatar (Multipart Form)
+        API->>Cloudflare: Stream image to Cloudflare R2 Bucket (avatars/{hash}.webp)
+        Cloudflare-->>API: 200 OK (Public Edge CDN URL)
+        API->>DB: UPDATE users SET avatar_url = r2_public_url
+        API-->>FE: 200 OK {avatar_url}
+        FE-->>User: Instant Profile Avatar Display via Edge CDN
+    end
     User->>FE: Open Wallet Screen (/wallet)
     FE->>API: GET /api/v1/wallet?type=&page=1
     API->>DB: SELECT balance FROM wallets WHERE user_id = user.id
@@ -619,6 +646,7 @@ sequenceDiagram
     actor Teacher as 👨‍🏫 Teacher
     participant FE as 💻 Next.js Client App
     participant API as 🔌 Laravel REST API
+    participant Cloudflare as ☁️ Cloudflare R2 Storage
     participant DB as 🗄️ MySQL (InnoDB Ledger)
     participant Redis as ⚡ Redis (Tokens & Cache)
     participant Agora as 📹 Agora SD-RTN / RTM
@@ -628,6 +656,8 @@ sequenceDiagram
     Note over Teacher,API: ── 1. KYC Profile Submission & Availability Scheduling ──
     Teacher->>FE: Complete Profile (Bio, Subject, National ID, Degree)
     FE->>API: POST /api/v1/profile/teacher (Multipart Form)
+    API->>Cloudflare: Stream Documents to Cloudflare R2 Bucket (kyc-documents/{id})
+    Cloudflare-->>API: 200 OK (S3 Keys & Direct CDN Links)
     API->>DB: UPDATE teacher_profiles (is_verified = false, docs saved)
     Note over API,DB: Awaits Admin Verification via Filament Dashboard
     API-->>FE: 200 OK (Under Review)
@@ -728,6 +758,7 @@ sequenceDiagram
     autonumber
     actor Admin as 👑 Admin (Super User)
     participant Filament as 🖥️ Filament v3 Panel
+    participant Cloudflare as ☁️ Cloudflare R2 Storage
     participant Service as ⚙️ Backend Services
     participant DB as 🗄️ MySQL (InnoDB Ledger)
     participant Redis as ⚡ Redis (Tags & Cache)
@@ -737,6 +768,8 @@ sequenceDiagram
 
     Note over Admin,Edge: ── 1. Teacher KYC Verification & Edge Catalog Propagation ──
     Admin->>Filament: Inspect KYC application (National ID & Degree)
+    Filament->>Cloudflare: Fetch Verified Documents via CDN URL (TeacherProfileResource)
+    Cloudflare-->>Filament: Stream High-Resolution KYC Document Cards
     Admin->>Filament: Click "Approve Teacher" (is_verified = true)
     Filament->>DB: UPDATE teacher_profiles SET is_verified = true
     Note over DB,Redis: Eloquent booted() lifecycle hook triggers
@@ -775,6 +808,16 @@ sequenceDiagram
         Filament->>Teacher: Dispatch Rejection Notification with Admin Reason
     end
     Filament-->>Admin: Payout lifecycle finalized & ledger balanced
+
+    Note over Admin,Cloudflare: ── 4. Admin Profile Management & Dynamic Cloud Avatar ──
+    opt Admin Profile & Avatar Customization
+        Admin->>Filament: Access Profile Page (/admin/profile) & Select Image
+        Filament->>Filament: Stage Upload via Local Temporary Disk (livewire.disk)
+        Filament->>Cloudflare: Stream Image to Cloudflare R2 Bucket (avatars/{hash}.jpg)
+        Cloudflare-->>Filament: 200 OK (Public Edge CDN URL)
+        Filament->>DB: UPDATE users SET avatar_url = cdn_url WHERE id = admin.id
+        Filament-->>Admin: Dynamic Avatar Live Across Admin Header & Welcome Widgets
+    end
 ```
 
 ---
@@ -785,11 +828,12 @@ sequenceDiagram
 
 > **Core:** Laravel 12.0 • PHP 8.3 • MySQL 8.0
 > **Admin & Security:** Filament V3 • Laravel Sanctum • Spatie Permission
+> **Cloud Storage:** Cloudflare R2 Object Storage (`league/flysystem-aws-s3-v3`)
 > **Real-Time & Media:** Agora RTC/RTM Token Generation • Netless Whiteboard REST API
 > **Payments:** Moyasar Payment Gateway (SAR)
 > **Async Processing:** Laravel Queues backed by **Redis** (Predis client)
 > **Monitoring:** Sentry (`sentry/sentry-laravel`)
-> **Testing:** PHPUnit via `php artisan test` — **89 tests, 275 assertions**
+> **Testing:** PHPUnit via `php artisan test` — **94 tests, 283 assertions**
 
 ### Frontend (`/frontend`)
 
@@ -808,6 +852,7 @@ sequenceDiagram
 | :------------------------ | :--------------------------------------------------------------- |
 | **🚀 Architecture**       | Monorepo (Next.js frontend + Laravel REST API)                   |
 | **🔐 Role Support**       | Admin, Teacher, Student, Parent                                  |
+| **☁️ Cloud Storage**     | Cloudflare R2 (S3 API) — zero egress fees & edge CDN             |
 | **📡 Video/Audio**        | Agora RTC — adaptive bitrate, simulcast-enabled                  |
 | **🖊️ Whiteboard**         | Netless `white-web-sdk` — real-time collaborative                |
 | **💳 Payments**           | Moyasar (SAR, Saudi market) with webhook verification            |
@@ -815,7 +860,7 @@ sequenceDiagram
 | **🛰️ Monitoring**         | Sentry — full-stack (backend + frontend) with Source Maps        |
 | **🌍 Localization**       | 100% Arabic (RTL-native interface)                               |
 | **🛡️ Security**           | Sanctum tokens + Spatie RBAC + rate limiting                     |
-| **🧪 Backend Tests**      | 89 tests · 275 assertions (PHPUnit)                              |
+| **🧪 Backend Tests**      | 94 tests · 283 assertions (PHPUnit)                              |
 | **🧪 Frontend Tests**     | 33 tests · 5 suites (Jest + React Testing Library)               |
 | **📦 Deployment**         | Backend → DigitalOcean VPS / Render · Frontend → Vercel          |
 
@@ -849,6 +894,12 @@ Edit `backend/.env` and fill in:
 | Variable | Purpose |
 |---|---|
 | `DB_DATABASE` / `DB_USERNAME` / `DB_PASSWORD` | Database connection credentials |
+| `FILESYSTEM_DISK` | Default storage driver (`s3` for Cloudflare R2 in production, `public` for local) |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Cloudflare R2 S3-compatible API access token credentials |
+| `AWS_DEFAULT_REGION` | Cloudflare R2 region (`auto`) |
+| `AWS_BUCKET` | Cloudflare R2 bucket name (`taj-platform`) |
+| `AWS_ENDPOINT` | Cloudflare R2 S3 API endpoint (`https://<account_id>.r2.cloudflarestorage.com`) |
+| `AWS_URL` | Public CDN URL for Cloudflare R2 bucket (`https://<bucket-domain>.r2.dev`) |
 | `AGORA_APP_ID` / `AGORA_APP_CERTIFICATE` | Agora credentials used to generate RTC/RTM tokens for the classroom |
 | `WHITEBOARD_SDK_TOKEN` | Netless SDK token used to create whiteboard rooms and mint room tokens |
 | `MOYASAR_PUBLISHABLE_KEY` / `MOYASAR_SECRET_KEY` / `MOYASAR_WEBHOOK_SECRET` | Moyasar payment gateway credentials and webhook signature verification |
@@ -948,13 +999,14 @@ cd backend
 php artisan test
 ```
 
-**Current results:** `89 tests · 275 assertions` — all passing ✅
+**Current results:** `94 tests · 283 assertions` — all passing ✅
 
 The suite covers:
 
 | Test File | Area |
 |---|---|
 | `tests/Feature/Auth/` | Registration, login, Sanctum token issuance |
+| `tests/Feature/AdminProfileTest.php` | Dynamic admin avatar resolution, storage URL generation & fallback |
 | `tests/Feature/BookingLifecycleTest.php` | Full booking → session → completion → payout flow |
 | `tests/Feature/BookingServiceTest.php` | Race-condition-safe slot reservation |
 | `tests/Feature/ClassroomAccessTest.php` | Token generation, classroom join, Agora token refresh |
