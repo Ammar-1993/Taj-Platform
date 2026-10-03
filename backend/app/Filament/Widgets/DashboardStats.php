@@ -13,6 +13,7 @@ use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Spatie\Permission\Models\Role;
 
 class DashboardStats extends BaseWidget
 {
@@ -26,6 +27,7 @@ class DashboardStats extends BaseWidget
                 'teacher_count' => User::role('teacher')->count(),
                 'total_revenue' => (float) (Booking::where('status', 'completed')->sum('net_paid') * 0.20),
                 'pending_payouts' => PayoutRequest::where('status', 'pending')->count(),
+                'student_role_id' => Role::where('name', 'student')->value('id'),
             ];
         });
 
@@ -51,7 +53,7 @@ class DashboardStats extends BaseWidget
                 ->description('الطلاب المسجلين في المنصة')
                 ->descriptionIcon('heroicon-m-users')
                 ->color('primary')
-                ->url(UserResource::getUrl('index', ['tableFilters' => ['role' => ['value' => 'student']]])),
+                ->url(UserResource::getUrl('index', ['tableFilters' => ['role' => ['value' => (string) $statsData['student_role_id']]]])),
 
             Stat::make('المعلمين المعتمدين', number_format($statsData['teacher_count']))
                 ->description('جاهزون لتقديم الحصص')
