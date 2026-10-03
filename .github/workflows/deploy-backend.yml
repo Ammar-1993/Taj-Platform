@@ -66,7 +66,9 @@ jobs:
 
             echo "📥 [1/6] سحب آخر التحديثات من GitHub..."
             cd /opt/taj-platform
-            GIT_SSH_COMMAND="ssh -i /root/.ssh/taj_deploy -o StrictHostKeyChecking=no" git pull origin main
+            git restore . || true
+            GIT_SSH_COMMAND="ssh -i /root/.ssh/taj_deploy -o StrictHostKeyChecking=no" git fetch origin main
+            git reset --hard origin/main
 
             echo "🔨 [2/6] بناء صورة Docker الجديدة (بنية Alpine الخفيفة)..."
             # إزالة التحديد لبناء كل ما يلزم في الملف المحدث
