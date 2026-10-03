@@ -20,14 +20,124 @@
     text-align: left !important;
 }
 
-/* Custom shadow improvements for widgets */
+/* ==========================================================================
+   Taj Platform — Modern Luxury Dashboard & Widgets Styling
+   ========================================================================== */
+
+/* Modern Stat Overview Cards */
 .fi-wi-stats-overview-stat {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    position: relative;
+    border-radius: 1rem !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    overflow: hidden;
 }
+
 .fi-wi-stats-overview-stat:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-3px) !important;
+    border-color: rgba(29, 78, 216, 0.4) !important;
+    box-shadow: 0 12px 24px -6px rgba(29, 78, 216, 0.12), 0 4px 8px -2px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Clickable Stat Cards */
+.fi-wi-stats-overview-stat a,
+a.fi-wi-stats-overview-stat,
+.fi-wi-stats-overview-stat[role="button"] {
+    cursor: pointer !important;
+}
+
+.fi-wi-stats-overview-stat a:hover {
+    text-decoration: none !important;
+}
+
+/* Dark Mode Stat Cards */
+.dark .fi-wi-stats-overview-stat {
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: rgba(15, 23, 42, 0.75) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4) !important;
+}
+
+.dark .fi-wi-stats-overview-stat:hover {
+    border-color: rgba(99, 102, 241, 0.5) !important;
+    box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.6), 0 0 15px -3px rgba(99, 102, 241, 0.2) !important;
+}
+
+/* Stat Label & Value Styling */
+.fi-wi-stats-overview-stat-label {
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+}
+
+.dark .fi-wi-stats-overview-stat-label {
+    color: #94a3b8 !important;
+}
+
+.fi-wi-stats-overview-stat-value {
+    font-size: 1.625rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.02em !important;
+    color: #0f172a !important;
+}
+
+.dark .fi-wi-stats-overview-stat-value {
+    color: #f8fafc !important;
+}
+
+/* Stat Card Description Link Indicator */
+.fi-wi-stats-overview-stat-description {
+    font-weight: 500 !important;
+    font-size: 0.8125rem !important;
+    transition: color 0.2s ease !important;
+}
+
+.fi-wi-stats-overview-stat:hover .fi-wi-stats-overview-stat-description {
+    color: #1d4ed8 !important;
+}
+
+.dark .fi-wi-stats-overview-stat:hover .fi-wi-stats-overview-stat-description {
+    color: #818cf8 !important;
+}
+
+/* Dashboard Chart & Table Widgets Styling */
+.fi-wi-chart,
+.fi-wi-table {
+    border-radius: 1rem !important;
+    overflow: hidden;
+}
+
+.fi-wi-chart .fi-section,
+.fi-wi-table .fi-section {
+    border-radius: 1rem !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+}
+
+.dark .fi-wi-chart .fi-section,
+.dark .fi-wi-table .fi-section {
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: rgba(15, 23, 42, 0.75) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Table Row Clickable Hover Effect */
+.fi-ta-row {
+    transition: background-color 0.15s ease-in-out !important;
+}
+
+.fi-ta-row:hover {
+    background-color: rgba(241, 245, 249, 0.7) !important;
+}
+
+.dark .fi-ta-row:hover {
+    background-color: rgba(30, 41, 59, 0.6) !important;
 }
 
 /* ==========================================================================

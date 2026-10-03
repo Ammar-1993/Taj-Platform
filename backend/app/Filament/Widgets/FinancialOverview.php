@@ -2,6 +2,9 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Resources\BookingResource;
+use App\Filament\Resources\PayoutRequestResource;
+use App\Filament\Resources\WalletResource;
 use App\Models\Booking;
 use App\Models\PayoutRequest;
 use App\Models\Wallet;
@@ -46,23 +49,26 @@ class FinancialOverview extends BaseWidget
 
         return [
             Stat::make('إجمالي المبيعات (الحصص المكتملة)', number_format($totalSales, 2).' SAR')
-                ->description('إجمالي المقبوضات للحصص المنجزة')
+                ->description('إجمالي المقبوضات للحصص المنجزة • عرض الحجوزات ↗')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('success')
-                ->chart($salesSparkline), // بيانت ديناميكية 100%
+                ->chart($salesSparkline)
+                ->url(BookingResource::getUrl('index', ['tableFilters' => ['status' => ['value' => 'completed']]])),
 
             Stat::make('إجمالي أرصدة المحافظ (التزامات)', number_format($totalWalletsBalance, 2).' SAR')
-                ->description('مجموع الأموال المتاحة حالياً في محافظ المستخدمين')
+                ->description('مجموع الأموال المتاحة في المحافظ • كشف الحسابات ↗')
                 ->descriptionIcon('heroicon-m-wallet')
-                ->color('info'),
+                ->color('info')
+                ->url(WalletResource::getUrl('index')),
 
             Stat::make('طلبات السحب المعلقة', number_format($pendingPayouts, 2).' SAR')
-                ->description('مبالغ تنتظر المراجعة والتحويل البنكي')
+                ->description($pendingPayouts > 0 ? 'مبالغ تنتظر التحويل البنكي • إدارة السحوبات ↗' : 'لا توجد مبالغ معلقة ✅')
                 ->descriptionIcon('heroicon-m-clock')
-                ->color('warning')
+                ->color($pendingPayouts > 0 ? 'warning' : 'gray')
                 ->extraAttributes([
                     'class' => $pendingPayouts > 0 ? 'animate-pulse' : '',
-                ]),
+                ])
+                ->url(PayoutRequestResource::getUrl('index', ['tableFilters' => ['status' => ['value' => 'pending']]])),
         ];
     }
 }

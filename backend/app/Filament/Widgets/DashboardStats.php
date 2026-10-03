@@ -2,6 +2,10 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Resources\BookingResource;
+use App\Filament\Resources\PayoutRequestResource;
+use App\Filament\Resources\TeacherProfileResource;
+use App\Filament\Resources\UserResource;
 use App\Models\Booking;
 use App\Models\PayoutRequest;
 use App\Models\User;
@@ -12,12 +16,12 @@ use Illuminate\Support\Facades\Cache;
 
 class DashboardStats extends BaseWidget
 {
-    // ترتيب الودجت في الصفحة (رقم 1 يعني في الأعلى)
+    // ترتيب الودجت في الصفحة (رقم 1 في الأعلى)
     protected static ?int $sort = 1;
 
     protected function getStats(): array
     {
-        // حساب إحصائيات لوحة التحكم وتخزينها مؤقتاً لتخفيف الحمل عن MySQL
+        // حساب إحصائيات لوحة التحكم وتخزينها مؤقتاً لتخفيف الحمل عن قاعدة البيانات
         $statsData = Cache::remember('filament_dashboard_stats', now()->addMinutes(5), function () {
             return [
                 'student_count' => User::role('student')->count(),
@@ -27,7 +31,7 @@ class DashboardStats extends BaseWidget
             ];
         });
 
-        // بيانات النمو لأرباح المنصة آخر 7 أيام لتزين واجهة الـ Widget
+        // بيانات النمو لأرباح المنصة آخر 7 أيام
         $dailySums = Cache::remember('dashboard_daily_completed_sums', now()->addMinutes(5), function () {
             return Booking::where('status', 'completed')
                 ->whereBetween('booking_date', [
@@ -46,26 +50,30 @@ class DashboardStats extends BaseWidget
         })->toArray();
 
         return [
-            Stat::make('إجمالي الطلاب', $statsData['student_count'])
-                ->description('عدد الطلاب المسجلين')
+            Stat::make('إجمالي الطلاب', number_format($statsData['student_count']))
+                ->description('الطلاب المسجلين • عرض القائمة ↗')
                 ->descriptionIcon('heroicon-m-users')
-                ->color('primary'), // Changed from Info to match primary Indigo palette
+                ->color('primary')
+                ->url(UserResource::getUrl('index', ['tableFilters' => ['role' => ['value' => 'student']]])),
 
-            Stat::make('المعلمين المعتمدين', $statsData['teacher_count'])
-                ->description('جاهزين لتقديم الحصص')
+            Stat::make('المعلمين المعتمدين', number_format($statsData['teacher_count']))
+                ->description('جاهزون لتقديم الحصص • إدارة المعلمين ↗')
                 ->descriptionIcon('heroicon-m-academic-cap')
-                ->color('primary'),
+                ->color('info')
+                ->url(TeacherProfileResource::getUrl('index')),
 
             Stat::make('أرباح المنصة الصافية', number_format($statsData['total_revenue'], 2).' SAR')
-                ->description('نمو أرباح المنصة الكلية (20%)')
+                ->description('نمو أرباح المنصة (20%) • سجل الحصص ↗')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('success')
-                ->chart($platformSparkline),
+                ->chart($platformSparkline)
+                ->url(BookingResource::getUrl('index', ['tableFilters' => ['status' => ['value' => 'completed']]])),
 
-            Stat::make('طلبات سحب معلقة', $statsData['pending_payouts'])
-                ->description('تتطلب مراجعة الإدارة')
+            Stat::make('طلبات سحب معلقة', number_format($statsData['pending_payouts']))
+                ->description($statsData['pending_payouts'] > 0 ? 'تتطلب مراجعة الإدارة • مراجعة الطلبات ↗' : 'لا توجد طلبات معلقة ✅')
                 ->descriptionIcon('heroicon-m-clock')
-                ->color('warning'),
+                ->color($statsData['pending_payouts'] > 0 ? 'warning' : 'gray')
+                ->url(PayoutRequestResource::getUrl('index', ['tableFilters' => ['status' => ['value' => 'pending']]])),
         ];
     }
 }

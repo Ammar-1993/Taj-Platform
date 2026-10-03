@@ -9,14 +9,15 @@ use Illuminate\Support\Facades\Cache;
 
 class RevenueChart extends ChartWidget
 {
-    protected static ?string $heading = 'تحليل إيرادات المنصة (آخر 7 أيام)';
+    protected static ?string $heading = 'تحليل إيرادات المنصة ومبيعات الحصص (آخر 7 أيام)';
+
+    protected static ?string $description = 'متابعة حركة المبيعات اليومية للحصص المنفذة بالريال السعودي';
 
     protected static ?int $sort = 2;
 
     protected int|string|array $columnSpan = 'full';
 
-    // Optional: Max height to keep it sleek
-    protected static ?string $maxHeight = '300px';
+    protected static ?string $maxHeight = '280px';
 
     protected function getData(): array
     {
@@ -38,22 +39,69 @@ class RevenueChart extends ChartWidget
             $date = Carbon::now()->subDays($i);
             $day = $date->toDateString();
 
-            $labels[] = $date->translatedFormat('D, d M');
+            $labels[] = $date->translatedFormat('D، d M');
             $data[] = (float) ($dailySums[$day] ?? 0);
         }
 
         return [
             'datasets' => [
                 [
-                    'label' => 'المبيعات اليومية (ريال سعودي)',
+                    'label' => 'المبيعات اليومية (SAR)',
                     'data' => $data,
-                    'fill' => 'start', // يعطي تأثير متدرج (Gradient) تحت الخط في الإصدار الثالث!
-                    'borderColor' => '#4f46e5', // Indigo-600 to match the theme
-                    'backgroundColor' => 'rgba(79, 70, 229, 0.2)',
-                    'tension' => 0.4, // انحناء سلس للخط
+                    'fill' => true,
+                    'borderColor' => '#1D4ED8',
+                    'backgroundColor' => 'rgba(29, 78, 216, 0.12)',
+                    'borderWidth' => 2.5,
+                    'pointBackgroundColor' => '#1D4ED8',
+                    'pointBorderColor' => '#ffffff',
+                    'pointHoverRadius' => 6,
+                    'pointRadius' => 4,
+                    'tension' => 0.4,
                 ],
             ],
             'labels' => $labels,
+        ];
+    }
+
+    protected function getOptions(): array
+    {
+        return [
+            'plugins' => [
+                'legend' => [
+                    'display' => true,
+                    'position' => 'top',
+                    'labels' => [
+                        'font' => [
+                            'family' => 'Cairo, sans-serif',
+                            'size' => 12,
+                            'weight' => '600',
+                        ],
+                    ],
+                ],
+            ],
+            'scales' => [
+                'y' => [
+                    'beginAtZero' => true,
+                    'grid' => [
+                        'color' => 'rgba(156, 163, 175, 0.12)',
+                    ],
+                    'ticks' => [
+                        'font' => [
+                            'family' => 'Cairo, sans-serif',
+                        ],
+                    ],
+                ],
+                'x' => [
+                    'grid' => [
+                        'display' => false,
+                    ],
+                    'ticks' => [
+                        'font' => [
+                            'family' => 'Cairo, sans-serif',
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
