@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ParentController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\SessionSummaryController;
 use App\Http\Controllers\Api\TeacherSlotController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\PayoutRequestController;
@@ -90,6 +91,13 @@ Route::prefix('v1')->group(function () {
         Route::get('/bookings/{id}/refresh-token', [ClassroomController::class, 'refreshToken']);
         Route::patch('/bookings/{id}/complete', [BookingController::class, 'complete']);
         Route::patch('/bookings/{id}/cancel', [BookingController::class, 'cancel']);
+
+        // 4.1 ملخصات الجلسات والاختبارات الذكية (AI Session Summaries & Quizzes)
+        Route::get('/bookings/{id}/summary', [SessionSummaryController::class, 'show']);
+        Route::post('/bookings/{id}/summary/generate', [SessionSummaryController::class, 'generate'])
+            ->middleware('throttle:5,1');
+        Route::post('/bookings/{id}/quiz/submit', [SessionSummaryController::class, 'submitQuiz'])
+            ->middleware('throttle:10,1');
 
         // 5. التقييمات (Reviews)
         Route::post('/reviews', [ReviewController::class, 'store']);
