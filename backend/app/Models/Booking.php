@@ -142,4 +142,14 @@ class Booking extends Model
     {
         return $this->hasMany(WalletTransaction::class);
     }
+
+    public function sessionSummary(): HasOne
+    {
+        return $this->hasOne(SessionSummary::class);
+    }
+
+    public function sessionQuiz(): HasOne
+    {
+        return $this->hasOne(SessionQuiz::class);
+    }
 }
