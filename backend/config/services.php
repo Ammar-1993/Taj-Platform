@@ -57,4 +57,11 @@ return [
         'region' => env('WHITEBOARD_REGION', 'sg'),
     ],
 
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+        'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+        'organization' => env('OPENAI_ORGANIZATION'),
+        'request_timeout' => env('OPENAI_REQUEST_TIMEOUT', 30),
+    ],
+
 ];

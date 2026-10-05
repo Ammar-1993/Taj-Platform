@@ -12,6 +12,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "league/flysystem-aws-s3-v3": "^3.0",
+        "openai-php/client": "^0.21.0",
         "peterujah/php-agora-tokens": "^1.1",
         "predis/predis": "^3.5",
         "sentry/sentry-laravel": "^4.26",

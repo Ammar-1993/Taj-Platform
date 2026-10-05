@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Events\BookingCreated;
+use App\Jobs\GenerateSessionSummaryJob;
 use App\Jobs\ProvisionVirtualClassroom;
 use App\Models\Booking;
 use App\Models\PromoCode;
@@ -12,6 +13,7 @@ use App\Notifications\NewBookingNotification;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class BookingService
 {
@@ -120,7 +122,7 @@ class BookingService
      */
     public function completeBooking(Booking $booking, ?User $actor = null, ?string $note = null): Booking
     {
-        return DB::transaction(function () use ($booking, $actor, $note) {
+        $completedBooking = DB::transaction(function () use ($booking, $actor, $note) {
             $booking = Booking::where('id', $booking->id)->lockForUpdate()->firstOrFail();
 
             if ($booking->status === 'completed') {
@@ -164,6 +166,15 @@ class BookingService
 
             return $booking;
         });
+
+        // 🚀 إطلاق مهمة توليد الملخص والاختبار الذكي في الخلفية بعد اكتمال الحصة
+        try {
+            GenerateSessionSummaryJob::dispatch($completedBooking);
+        } catch (\Throwable $e) {
+            Log::warning("Failed to dispatch GenerateSessionSummaryJob for booking #{$completedBooking->id}: ".$e->getMessage());
+        }
+
+        return $completedBooking;
     }
 
     /**
