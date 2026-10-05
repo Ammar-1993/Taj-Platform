@@ -1,5 +1,13 @@
 import api from "@/lib/axios";
-import { Booking, ApiResponse, PaginatedApiResponse, ClassroomAccess, WhiteboardStatusResponse } from "@/types";
+import {
+  Booking,
+  ApiResponse,
+  PaginatedApiResponse,
+  ClassroomAccess,
+  WhiteboardStatusResponse,
+  SessionSummaryResponse,
+  QuizSubmitResponse,
+} from "@/types";
 
 export const bookingService = {
   /**
@@ -75,4 +83,28 @@ export const bookingService = {
    * Send heartbeat during classroom session
    */
   sendHeartbeat: (bookingId: number) => api.post(`/bookings/${bookingId}/heartbeat`),
+
+  /**
+   * Get AI session summary and quiz
+   */
+  getSessionSummary: async (bookingId: number) => {
+    const res = await api.get<SessionSummaryResponse>(`/bookings/${bookingId}/summary`);
+    return res.data;
+  },
+
+  /**
+   * Trigger manual generation of session summary and quiz
+   */
+  generateSessionSummary: async (bookingId: number) => {
+    const res = await api.post<{ status: string; message: string }>(`/bookings/${bookingId}/summary/generate`);
+    return res.data;
+  },
+
+  /**
+   * Submit student answers for interactive quiz
+   */
+  submitQuiz: async (bookingId: number, answers: Record<string | number, number>) => {
+    const res = await api.post<QuizSubmitResponse>(`/bookings/${bookingId}/quiz/submit`, { answers });
+    return res.data;
+  },
 };

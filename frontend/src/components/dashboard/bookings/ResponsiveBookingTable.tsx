@@ -5,8 +5,9 @@ import { Booking } from "@/types";
 import { formatTime, formatDate } from "@/lib/formatters";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/Button";
-import { Video, XCircle, Coins, BookOpen, Rocket, MoreVertical } from "lucide-react";
+import { Video, XCircle, Coins, BookOpen, Rocket, MoreVertical, Sparkles } from "lucide-react";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
+import { SessionSummaryModal } from "@/components/dashboard/ai/SessionSummaryModal";
 
 // ─── Dropdown Component for Secondary Actions ──────────────────────────────────
 function BookingDropdown({
@@ -100,6 +101,7 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
   onCompleteClick,
 }) => {
   const router = useRouter();
+  const [selectedSummaryBookingId, setSelectedSummaryBookingId] = useState<number | null>(null);
 
   if (bookings.length === 0) {
     return (
@@ -213,6 +215,21 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                     onCancelClick={onCancelClick}
                     onCompleteClick={onCompleteClick}
                   />
+                </div>
+              )}
+
+              {/* AI Session Summary & Quiz Button (Mobile) */}
+              {booking.status === "completed" && (
+                <div className="pt-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setSelectedSummaryBookingId(booking.id)}
+                    className="w-full bg-gradient-to-r from-purple-50/80 via-brand-50/70 to-indigo-50/80 border-brand-200/90 text-brand-700 hover:text-brand-800 font-bold h-9 rounded-xl flex items-center justify-center gap-1.5 shadow-2xs"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-brand-600" />
+                    <span>الملخص والاختبار الذكي</span>
+                  </Button>
                 </div>
               )}
             </div>
@@ -338,6 +355,19 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
                           />
                         </>
                       )}
+
+                      {/* AI Session Summary & Quiz Button (Desktop) */}
+                      {booking.status === "completed" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedSummaryBookingId(booking.id)}
+                          className="bg-gradient-to-r from-purple-50/70 to-brand-50/70 border-brand-200/90 text-brand-700 hover:bg-brand-100 hover:text-brand-800 h-7 sm:h-8 px-2 sm:px-2.5 text-[11px] sm:text-xs font-bold rounded-lg sm:rounded-xl whitespace-nowrap shadow-2xs transition-all gap-1"
+                        >
+                          <span>الملخص والاختبار</span>
+                          <Sparkles className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-brand-600" />
+                        </Button>
+                      )}
                     </div>
                   </td>
                 )}
@@ -346,6 +376,14 @@ export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({
           </tbody>
         </table>
       </div>
+
+      {/* ─── AI Session Summary & Interactive Quiz Modal ─────────────────── */}
+      <SessionSummaryModal
+        bookingId={selectedSummaryBookingId}
+        isOpen={Boolean(selectedSummaryBookingId)}
+        onClose={() => setSelectedSummaryBookingId(null)}
+        isTeacher={isTeacher}
+      />
     </>
   );
 };

@@ -237,3 +237,65 @@ export interface WhiteboardStatusResponse {
   } | null;
   whiteboard_region?: string;
 }
+
+// ─── AI Session Summaries & Interactive Quizzes ─────────────────────────────
+export interface QuizQuestion {
+  id: number;
+  question: string;
+  options: string[];
+  correct_answer_index?: number;
+  explanation?: string;
+}
+
+export interface QuizResultItem {
+  id: number;
+  question: string;
+  options: string[];
+  chosen_answer_index: number | null;
+  correct_answer_index: number;
+  is_correct: boolean;
+  explanation: string;
+}
+
+export interface SessionQuiz {
+  id: number;
+  title: string;
+  total_questions: number;
+  score: number | null;
+  student_answers: Record<string, number> | null;
+  completed_at: string | null;
+  questions: QuizQuestion[];
+}
+
+export interface SessionSummary {
+  id: number;
+  status: 'pending' | 'completed' | 'failed';
+  content: string | null;
+  key_takeaways: string[];
+  model_used: string | null;
+  created_at: string;
+}
+
+export interface SessionSummaryResponse {
+  status: 'success' | 'pending' | 'failed' | 'error';
+  message?: string;
+  data?: {
+    status?: 'pending' | 'failed';
+    error?: string;
+    summary?: SessionSummary;
+    quiz?: SessionQuiz | null;
+  };
+}
+
+export interface QuizSubmitResponse {
+  status: string;
+  message: string;
+  data: {
+    score: number;
+    total_questions: number;
+    percentage: number;
+    completed_at: string;
+    results: QuizResultItem[];
+  };
+}
+
