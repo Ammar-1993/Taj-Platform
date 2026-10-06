@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Booking;
+use App\Models\User;
 use Exception;
 use OpenAI;
 use OpenAI\Contracts\ClientContract;
@@ -136,6 +137,102 @@ PROMPT;
             ];
         } catch (Exception $e) {
             throw new RuntimeException('OpenAI generation failed: '.$e->getMessage(), 0, $e);
+        }
+    }
+
+    /**
+     * Conduct an intelligent conversation with the Taj Support Assistant
+     * grounded in the platform's official FAQ and policy knowledge base.
+     *
+     * @param  array<int, array{role: string, content: string}>  $messages
+     * @return array{
+     *     reply: string,
+     *     needs_human_support: bool,
+     *     support_options: array{
+     *         whatsapp?: array{phone: string, link: string, label: string},
+     *         ticket?: array{link: string, label: string}
+     *     }|null,
+     *     suggested_questions: array<string>,
+     *     model_used: string,
+     *     tokens_used: int|null
+     * }
+     *
+     * @throws RuntimeException
+     */
+    public function chatWithSupportAssistant(array $messages, ?User $user = null): array
+    {
+        if ($this->client === null) {
+            throw new RuntimeException('OpenAI client is not configured. Missing OPENAI_API_KEY.');
+        }
+
+        $systemPrompt = SupportKnowledgeBase::getSystemPrompt($user);
+
+        // Sanitize and limit conversation history (keep last 8 turns)
+        $history = array_slice($messages, -8);
+        $chatMessages = [
+            ['role' => 'system', 'content' => $systemPrompt],
+        ];
+
+        foreach ($history as $msg) {
+            if (isset($msg['role'], $msg['content']) && in_array($msg['role'], ['user', 'assistant'], true)) {
+                $chatMessages[] = [
+                    'role' => $msg['role'],
+                    'content' => (string) $msg['content'],
+                ];
+            }
+        }
+
+        try {
+            $response = $this->client->chat()->create([
+                'model' => $this->model,
+                'response_format' => ['type' => 'json_object'],
+                'messages' => $chatMessages,
+                'temperature' => 0.3,
+                'max_tokens' => 1000,
+            ]);
+
+            $content = $response->choices[0]->message->content ?? '';
+            $data = json_decode($content, true);
+
+            if (! is_array($data) || ! isset($data['reply'])) {
+                $data = [
+                    'reply' => ! empty($content) ? $content : 'مرحباً بك! كيف يمكنني مساعدتك اليوم في منصة تاج التعليمية؟',
+                    'needs_human_support' => false,
+                    'support_options' => null,
+                    'suggested_questions' => [
+                        'كيف أبدأ بحجز أول حصة؟',
+                        'كيف أضمن حقي المالي في المنصة؟',
+                    ],
+                ];
+            }
+
+            $needsHuman = (bool) ($data['needs_human_support'] ?? false);
+            $supportOptions = null;
+
+            if ($needsHuman) {
+                $supportOptions = [
+                    'whatsapp' => [
+                        'phone' => SupportKnowledgeBase::SUPPORT_WHATSAPP_NUMBER,
+                        'link' => SupportKnowledgeBase::buildWhatsAppLink(),
+                        'label' => 'التحدث مع موظف الدعم عبر واتساب ('.SupportKnowledgeBase::SUPPORT_WHATSAPP_NUMBER.')',
+                    ],
+                    'ticket' => [
+                        'link' => SupportKnowledgeBase::SUPPORT_TICKET_PATH,
+                        'label' => 'فتح تذكرة دعم فني',
+                    ],
+                ];
+            }
+
+            return [
+                'reply' => $data['reply'] ?? '',
+                'needs_human_support' => $needsHuman,
+                'support_options' => $supportOptions,
+                'suggested_questions' => $data['suggested_questions'] ?? [],
+                'model_used' => $response->model ?? $this->model,
+                'tokens_used' => $response->usage?->totalTokens ?? null,
+            ];
+        } catch (Exception $e) {
+            throw new RuntimeException('Support assistant generation failed: '.$e->getMessage(), 0, $e);
         }
     }
 }
