@@ -299,3 +299,40 @@ export interface QuizSubmitResponse {
   };
 }
 
+// ─── Taj AI Support Assistant Types ─────────────────────────────────────────
+export interface SupportOptions {
+  whatsapp?: {
+    phone: string;
+    link: string;
+    label: string;
+  };
+  ticket?: {
+    link: string;
+    label: string;
+  };
+}
+
+export interface SupportChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+  needs_human_support?: boolean;
+  support_options?: SupportOptions | null;
+  suggested_questions?: string[];
+}
+
+export interface SupportChatApiResponse {
+  status: 'success' | 'unavailable' | 'error';
+  message?: string;
+  data: {
+    reply: string;
+    needs_human_support: boolean;
+    support_options?: SupportOptions | null;
+    suggested_questions?: string[];
+    model_used?: string;
+    tokens_used?: number | null;
+  };
+}
+
+
