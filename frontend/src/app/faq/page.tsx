@@ -347,17 +347,34 @@ export default function FAQPage() {
               </div>
               <h3 className="text-lg font-bold text-slate-800">لا توجد نتائج تطابق بحثك</h3>
               <p className="text-sm text-slate-500 max-w-sm mx-auto">
-                لم نجد أي سؤال يطابق عبارة &quot;{searchQuery}&quot;، يمكنك تجربة كلمة بحث أخرى أو التواصل معنا.
+                لم نجد أي سؤال يطابق عبارة &quot;{searchQuery}&quot;، يمكنك تجربة كلمة بحث أخرى أو سؤال المساعد الذكي مباشرة.
               </p>
-              <button
-                onClick={() => {
-                  setSearchQuery("");
-                  setActiveCategory("all");
-                }}
-                className="mt-2 text-xs font-bold text-indigo-600 hover:text-indigo-800 underline underline-offset-4"
-              >
-                عرض كافة الأسئلة
-              </button>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
+                <button
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      window.dispatchEvent(
+                        new CustomEvent("open-taj-support-chat", {
+                          detail: { initialQuestion: searchQuery },
+                        })
+                      );
+                    }
+                  }}
+                  className="px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-brand-500/20 active:scale-95 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>اسأل مساعد تاج الذكي عن &quot;{searchQuery}&quot;</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setActiveCategory("all");
+                  }}
+                  className="text-xs font-bold text-indigo-600 hover:text-indigo-800 underline underline-offset-4 px-3 py-1.5"
+                >
+                  عرض كافة الأسئلة
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -379,11 +396,24 @@ export default function FAQPage() {
             </div>
             
             <div className="relative z-10 flex flex-col sm:flex-row justify-center gap-3.5 pt-2">
+              {/* زر استدعاء مساعد تاج الذكي فوراً */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent("open-taj-support-chat"));
+                  }
+                }}
+                className="px-6 py-3.5 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white font-bold rounded-xl shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2.5 text-sm cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-amber-300 animate-spin-slow" />
+                <span>اسأل مساعد تاج الذكي 🤖</span>
+              </button>
               <Link
                 href={user ? "/dashboard/support" : "/login"}
-                className="px-6 py-3.5 bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2.5 text-sm"
+                className="px-6 py-3.5 bg-white border border-slate-200 text-slate-700 hover:text-brand-700 hover:border-brand-200 font-bold rounded-xl shadow-2xs hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2.5 text-sm"
               >
-                <Headphones className="w-4 h-4" />
+                <Headphones className="w-4 h-4 text-slate-500" />
                 <span>تواصل مع الدعم الفني</span>
               </Link>
               <Link

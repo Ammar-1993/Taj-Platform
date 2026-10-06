@@ -66,6 +66,7 @@ export function generateMetadata(): Metadata {
 
 import { ViewTransitions } from "@/components/providers/ViewTransitions";
 import React19CompatProvider from "@/components/providers/React19CompatProvider";
+import { TajSupportChatWidget } from "@/components/support/TajSupportChatWidget";
 
 export default function RootLayout({
   children,
@@ -82,6 +83,8 @@ export default function RootLayout({
               <React19CompatProvider />
               <ToastProvider />
               {children}
+              {/* 🤖 مساعد تاج الذكي للدعم الفني الفوري */}
+              <TajSupportChatWidget />
             </ViewTransitions>
           </AuthProvider>
         </ReactQueryProvider>

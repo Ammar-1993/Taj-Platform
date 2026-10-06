@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Sparkles,
   X,
@@ -110,6 +111,7 @@ export const TajSupportChatWidget: React.FC = () => {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
+  const pathname = usePathname();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -264,6 +266,11 @@ export const TajSupportChatWidget: React.FC = () => {
       // Ignore
     }
   };
+
+  // Do not show the floating widget inside active classroom session to avoid overlapping Agora controls
+  if (pathname?.startsWith("/classroom")) {
+    return null;
+  }
 
   return (
     <>
