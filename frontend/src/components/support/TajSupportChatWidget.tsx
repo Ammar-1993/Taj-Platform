@@ -325,7 +325,8 @@ export const TajSupportChatWidget: React.FC = () => {
       {isOpen && (
         <div
           dir="rtl"
-          className="fixed bottom-22 start-4 sm:start-6 z-50 w-[calc(100vw-32px)] sm:w-[420px] h-[580px] max-h-[calc(100vh-120px)] bg-white/95 backdrop-blur-2xl rounded-3xl border border-white/80 shadow-2xl shadow-brand-900/20 flex flex-col overflow-hidden ring-1 ring-slate-900/10 animate-fade-in-up"
+          className="fixed bottom-[88px] sm:bottom-24 start-4 sm:start-6 z-[60] w-[calc(100vw-32px)] sm:w-[420px] h-[580px] max-h-[calc(100vh-120px)] bg-white/95 backdrop-blur-2xl rounded-3xl border border-white/80 shadow-2xl shadow-brand-900/20 flex flex-col overflow-hidden ring-1 ring-slate-900/10 animate-fade-in-up"
+          style={{ bottom: "88px" }}
         >
           {/* Top Decorative Gradient Line */}
           <div className="h-1.5 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 shrink-0" />
