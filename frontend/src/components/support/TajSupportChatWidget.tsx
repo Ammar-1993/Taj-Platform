@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -14,11 +14,10 @@ import {
   ExternalLink,
   Bot,
   User as UserIcon,
-  HelpCircle,
   ShieldCheck,
 } from "lucide-react";
 import { supportService } from "@/services/api/supportService";
-import { SupportChatMessage, SupportOptions } from "@/types";
+import { SupportChatMessage } from "@/types";
 
 // ─── SVG WhatsApp Icon ────────────────────────────────────────────────────────
 function WhatsAppIcon({ className = "w-4 h-4" }: { className?: string }) {
@@ -169,6 +168,76 @@ export const TajSupportChatWidget: React.FC = () => {
     }
   }, [isOpen]);
 
+  const handleSendMessage = useCallback(
+    async (textToSend?: string) => {
+      const text = (textToSend || inputValue).trim();
+      if (!text || isLoading) return;
+
+      const userMessage: SupportChatMessage = {
+        id: "msg-" + Date.now(),
+        role: "user",
+        content: text,
+        timestamp: new Date().toISOString(),
+      };
+
+      const updatedMessages = [...messages, userMessage];
+      setMessages(updatedMessages);
+      setInputValue("");
+      setIsLoading(true);
+
+      try {
+        // Prepare payload for backend (role & content only)
+        const payload = updatedMessages.map((m) => ({
+          role: m.role,
+          content: m.content,
+        }));
+
+        const res = await supportService.sendMessage(payload);
+
+        const botMessage: SupportChatMessage = {
+          id: "msg-" + Date.now() + "-reply",
+          role: "assistant",
+          content: res.data.reply,
+          timestamp: new Date().toISOString(),
+          needs_human_support: res.data.needs_human_support,
+          support_options: res.data.support_options,
+          suggested_questions: res.data.suggested_questions,
+        };
+
+        setMessages((prev) => [...prev, botMessage]);
+
+        if (!isOpen) {
+          setHasUnread(true);
+        }
+      } catch {
+        const fallbackErrorMessage: SupportChatMessage = {
+          id: "msg-" + Date.now() + "-err",
+          role: "assistant",
+          content:
+            "نعتذر منك، حدث خطأ مؤقت في الاتصال. يمكنك إعادة المحاولة أو التواصل المباشر مع موظف الدعم الفني.",
+          timestamp: new Date().toISOString(),
+          needs_human_support: true,
+          support_options: {
+            whatsapp: {
+              phone: "+967774344625",
+              link: "https://wa.me/967774344625?text=" + encodeURIComponent("مرحباً فريق دعم منصة تاج التعليمية، أحتاج لمساعدتكم."),
+              label: "التحدث مع موظف الدعم عبر واتساب (+967774344625)",
+            },
+            ticket: {
+              link: "/dashboard/support",
+              label: "فتح تذكرة دعم فني",
+            },
+          },
+        };
+
+        setMessages((prev) => [...prev, fallbackErrorMessage]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [inputValue, isLoading, messages, isOpen]
+  );
+
   // Listen for global custom event to open chat (e.g. from FAQ page button)
   useEffect(() => {
     const handleOpen = (e: Event) => {
@@ -181,74 +250,7 @@ export const TajSupportChatWidget: React.FC = () => {
 
     window.addEventListener("open-taj-support-chat", handleOpen);
     return () => window.removeEventListener("open-taj-support-chat", handleOpen);
-  }, [messages]);
-
-  const handleSendMessage = async (textToSend?: string) => {
-    const text = (textToSend || inputValue).trim();
-    if (!text || isLoading) return;
-
-    const userMessage: SupportChatMessage = {
-      id: "msg-" + Date.now(),
-      role: "user",
-      content: text,
-      timestamp: new Date().toISOString(),
-    };
-
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
-    setInputValue("");
-    setIsLoading(true);
-
-    try {
-      // Prepare payload for backend (role & content only)
-      const payload = updatedMessages.map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
-
-      const res = await supportService.sendMessage(payload);
-
-      const botMessage: SupportChatMessage = {
-        id: "msg-" + Date.now() + "-reply",
-        role: "assistant",
-        content: res.data.reply,
-        timestamp: new Date().toISOString(),
-        needs_human_support: res.data.needs_human_support,
-        support_options: res.data.support_options,
-        suggested_questions: res.data.suggested_questions,
-      };
-
-      setMessages((prev) => [...prev, botMessage]);
-
-      if (!isOpen) {
-        setHasUnread(true);
-      }
-    } catch {
-      const fallbackErrorMessage: SupportChatMessage = {
-        id: "msg-" + Date.now() + "-err",
-        role: "assistant",
-        content:
-          "نعتذر منك، حدث خطأ مؤقت في الاتصال. يمكنك إعادة المحاولة أو التواصل المباشر مع موظف الدعم الفني.",
-        timestamp: new Date().toISOString(),
-        needs_human_support: true,
-        support_options: {
-          whatsapp: {
-            phone: "+967774344625",
-            link: "https://wa.me/967774344625?text=" + encodeURIComponent("مرحباً فريق دعم منصة تاج التعليمية، أحتاج لمساعدتكم."),
-            label: "التحدث مع موظف الدعم عبر واتساب (+967774344625)",
-          },
-          ticket: {
-            link: "/dashboard/support",
-            label: "فتح تذكرة دعم فني",
-          },
-        },
-      };
-
-      setMessages((prev) => [...prev, fallbackErrorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [handleSendMessage]);
 
   const handleClearChat = () => {
     const defaultWelcome: SupportChatMessage = {
