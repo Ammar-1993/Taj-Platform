@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SessionSummaryController;
+use App\Http\Controllers\Api\SupportChatController;
 use App\Http\Controllers\Api\TeacherSlotController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\PayoutRequestController;
@@ -55,6 +56,10 @@ Route::prefix('v1')->group(function () {
         ]);
     });
     Route::post('/webhooks/payment', [PaymentController::class, 'webhook']);
+
+    // 4. مساعد تاج الذكي للدعم الفني (Taj AI Support Assistant)
+    Route::post('/support/chat', [SupportChatController::class, 'chat'])
+        ->middleware('throttle:15,1');
 
     // ==========================================
     // مسارات محمية (Protected Routes) - تتطلب Sanctum Token
