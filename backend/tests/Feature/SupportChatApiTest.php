@@ -123,6 +123,7 @@ class SupportChatApiTest extends TestCase
 
     public function test_returns_graceful_response_when_service_is_unconfigured(): void
     {
+        config(['services.openai.api_key' => '']);
         $this->app->instance(OpenAIService::class, new OpenAIService(null));
 
         $response = $this->postJson('/api/v1/support/chat', [

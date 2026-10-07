@@ -13,11 +13,12 @@
   </p>
 
   <p>
-    <a href="#"><img src="https://img.shields.io/badge/Release-v2.2.0-emerald?style=for-the-badge&logo=git&logoColor=white" alt="Release v2.2.0" /></a>
+    <a href="#"><img src="https://img.shields.io/badge/Release-v2.3.0-emerald?style=for-the-badge&logo=git&logoColor=white" alt="Release v2.3.0" /></a>
     <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-12.0-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 12" /></a>
     <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-15.3-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 15" /></a>
     <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19.3-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" /></a>
     <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" /></a>
+    <a href="https://openai.com"><img src="https://img.shields.io/badge/OpenAI-gpt--4o--mini-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI" /></a>
     <a href="https://filamentphp.com"><img src="https://img.shields.io/badge/Filament_V3-EAB308?style=for-the-badge&logo=filament&logoColor=white" alt="Filament" /></a>
     <a href="https://www.cloudflare.com"><img src="https://img.shields.io/badge/Cloudflare-R2_Storage-F38020?style=for-the-badge&logo=cloudflare&logoColor=white" alt="Cloudflare R2" /></a>
     <a href="https://www.agora.io"><img src="https://img.shields.io/badge/Agora-RTC%20%2F%20RTM-099DFD?style=for-the-badge&logo=agora&logoColor=white" alt="Agora" /></a>
@@ -65,6 +66,7 @@ The platform operates on a high-performance decoupled monorepo architecture engi
 5. **Zero-Egress Cloud Object Storage & Edge Asset CDN**: Cloudflare R2 Object Storage (via S3-compatible API & `league/flysystem-aws-s3-v3`) hosts and streams all user profile avatars and teacher KYC verification credentials (national ID & degrees) through Cloudflare's global edge network with zero egress bandwidth fees, completely eliminating local disk coupling and enabling horizontal container scalability.
 6. **Administrative Governance & Operations**: A fully localized FilamentPHP v3 dashboard empowers platform administrators with dynamic avatar customization, teacher KYC audits (national ID & degrees), dispute adjudication, abandoned booking resolution, and automated bank payout reconciliation.
 7. **Multi-Tier Tagged Invalidation & Cloud Security**: Redis 7 cache tags with automated Eloquent lifecycle hooks (`saved`, `deleted`), Moyasar HMAC-signed webhooks, Google reCAPTCHA v3 bot protection, and full-stack Sentry APM observability.
+8. **AI Guidance & Session Intelligence Engine**: OpenAI `gpt-4o-mini` integration with domain knowledge grounding ([`SupportKnowledgeBase`](backend/app/Services/SupportKnowledgeBase.php)), rate-limited REST API (`POST /api/v1/support/chat` with `throttle:15,1`), automated session summary generation, interactive quiz auto-grading, and dual human support escalation (WhatsApp `+967774344625` & Support Ticket `/dashboard/support`).
 
 
 ```mermaid
@@ -221,6 +223,13 @@ A comprehensive architectural overhaul transitioned Taj Educational Platform fro
 
 ## 🆕 What's New
 
+### 🚀 Release v2.3.0 — Taj AI Support Assistant, AI Session Summaries & Automated Quizzes
+- **🤖 Taj AI Support Assistant ("مساعد تاج الذكي")** — Engineered an interactive, 24/7 AI conversational support widget powered by OpenAI `gpt-4o-mini`, grounded in platform knowledge ([`SupportKnowledgeBase`](backend/app/Services/SupportKnowledgeBase.php)), rate-limited via `throttle:15,1` (`POST /api/v1/support/chat`), and styled with custom Markdown parsing and quick suggestion chips.
+- **🚨 Dual Human Support Escalation Mechanism** — Implemented automatic intent detection for complex refunds and official complaints, instantly presenting users with direct WhatsApp support (`+967774344625`) and internal ticket routing (`/dashboard/support`).
+- **📝 AI Session Summaries & Interactive Quizzes** — Integrated automated post-lesson AI session summary generation and auto-graded interactive quizzes ([`SessionSummaryController`](backend/app/Http/Controllers/Api/SessionSummaryController.php), [`SessionSummaryModal`](frontend/src/components/dashboard/ai/SessionSummaryModal.tsx), [`InteractiveQuiz`](frontend/src/components/dashboard/ai/InteractiveQuiz.tsx)).
+- **🛡️ Production Container & UI Positioning Resilience** — Resolved fixed drawer layout geometry (`bottom-[88px] sm:bottom-24 z-[60]`), added active classroom route guards (`/classroom/*`), and updated GitHub Actions CI/CD with `--force-recreate` to ensure container freshness on production deployments.
+- **🧪 100% Automated Test Suites Green** — Expanded test suite to **124 passing backend tests (400 assertions)** via PHPUnit and **40 passing frontend tests across 7 test suites** via Jest (100% passing).
+
 ### 🚀 Release v2.2.0 — Cloudflare R2 Cloud Storage, Dynamic Admin Avatar & Luxury Dashboard Polish
 - **☁️ Cloudflare R2 Object Storage Integration** — Migrated user avatars, teacher national IDs, and academic certificates from local container storage to Cloudflare R2 via `league/flysystem-aws-s3-v3`, achieving S3-compatible zero-egress cloud storage and high-speed CDN delivery across MENA.
 - **👑 Dynamic Admin Avatar & Profile Management** — Implemented dedicated administrative profile management (`/admin/profile`) allowing platform administrators to upload, preview, and update their personal avatars stored directly in Cloudflare R2, with automatic fallback to UI-Avatars.
@@ -270,6 +279,8 @@ Recent additions that take the platform beyond a basic booking-and-video app:
 - 👨‍👩‍👧 **Parent-Managed Sub-Accounts** — Parents can link multiple children, fund their wallets, and toggle independent booking permissions per child.
 - ⭐ **Mandatory Review System** — Students are prompted to rate their teacher after every completed session.
 - 👑 **Custom Admin Panel & Profile Customization** — A fully Arabic-localized FilamentPHP dashboard with dynamic admin avatar uploads, KYC verification, dispute resolution, refunds, and platform-wide analytics.
+- 🤖 **Taj AI Support Assistant ("مساعد تاج الذكي")** — Interactive 24/7 AI chatbot powered by OpenAI `gpt-4o-mini`, grounded in domain knowledge, with dual human support escalation (WhatsApp `+967774344625` & Support Ticket `/dashboard/support`).
+- 📝 **AI Session Summaries & Quizzes** — Automated post-lesson AI session summary generation and auto-graded interactive quizzes with role-tailored student/teacher view permissions.
 - 🌍 **100% Arabic, RTL-Native UI** — Every screen, label, and system notification is built RTL-first for the MENA region.
 - 🛰️ **Production-Grade Monitoring** — Sentry error tracking and performance tracing across both frontend and backend, with Source Maps for precise stack traces.
 
@@ -832,17 +843,18 @@ sequenceDiagram
 > **Real-Time & Media:** Agora RTC/RTM Token Generation • Netless Whiteboard REST API
 > **Payments:** Moyasar Payment Gateway (SAR)
 > **Async Processing:** Laravel Queues backed by **Redis** (Predis client)
+> **AI & Intelligence Engine:** OpenAI API (`gpt-4o-mini`) • `SupportKnowledgeBase` grounding engine
 > **Monitoring:** Sentry (`sentry/sentry-laravel`)
-> **Testing:** PHPUnit via `php artisan test` — **94 tests, 283 assertions**
+> **Testing:** PHPUnit via `php artisan test` — **124 tests, 400 assertions**
 
 ### Frontend (`/frontend`)
 
 > **Core:** Next.js 15.3 (App Router) • React 19.3 • TypeScript 5 (strict mode)
 > **Styling & UI:** Tailwind CSS 3.4 • Lucide React icons
 > **Live Classroom:** `agora-rtc-sdk-ng` (video/audio/screen share) • `agora-rtm-sdk` (cursor & event sync) • `white-web-sdk` (interactive whiteboard with React 19 compatibility shim)
-> **Data & State:** TanStack Query (React Query) • Axios
+> **AI Support & Data:** Taj AI Support Assistant widget • TanStack Query (React Query) • Axios
 > **Monitoring:** `@sentry/nextjs` with Source Maps
-> **Testing:** Jest + React Testing Library — **33 tests across 5 test suites**
+> **Testing:** Jest + React Testing Library — **40 tests across 7 test suites**
 
 ---
 
@@ -852,6 +864,7 @@ sequenceDiagram
 | :------------------------ | :--------------------------------------------------------------- |
 | **🚀 Architecture**       | Monorepo (Next.js frontend + Laravel REST API)                   |
 | **🔐 Role Support**       | Admin, Teacher, Student, Parent                                  |
+| **🤖 AI Capabilities**    | 24/7 AI Support Assistant + AI Session Summaries & Quizzes       |
 | **☁️ Cloud Storage**     | Cloudflare R2 (S3 API) — zero egress fees & edge CDN             |
 | **📡 Video/Audio**        | Agora RTC — adaptive bitrate, simulcast-enabled                  |
 | **🖊️ Whiteboard**         | Netless `white-web-sdk` — real-time collaborative                |
@@ -860,8 +873,8 @@ sequenceDiagram
 | **🛰️ Monitoring**         | Sentry — full-stack (backend + frontend) with Source Maps        |
 | **🌍 Localization**       | 100% Arabic (RTL-native interface)                               |
 | **🛡️ Security**           | Sanctum tokens + Spatie RBAC + rate limiting                     |
-| **🧪 Backend Tests**      | 94 tests · 283 assertions (PHPUnit)                              |
-| **🧪 Frontend Tests**     | 33 tests · 5 suites (Jest + React Testing Library)               |
+| **🧪 Backend Tests**      | 124 tests · 400 assertions (PHPUnit)                             |
+| **🧪 Frontend Tests**     | 40 tests · 7 suites (Jest + React Testing Library)               |
 | **📦 Deployment**         | Backend → DigitalOcean VPS / Render · Frontend → Vercel          |
 
 ---
@@ -908,6 +921,7 @@ Edit `backend/.env` and fill in:
 | `REDIS_HOST` / `REDIS_PORT` | Redis server connection (defaults work with Docker Compose) |
 | `WHITEBOARD_REGION` | Netless whiteboard region (defaults to `sg` for MENA latency optimization) |
 | `RECAPTCHA_SECRET_KEY` | Google reCAPTCHA v3 secret key used on backend registration verification |
+| `OPENAI_API_KEY` / `OPENAI_MODEL` / `OPENAI_ORGANIZATION` | OpenAI credentials and model selection (`gpt-4o-mini`) for AI Support Assistant and session summaries |
 | `SENTRY_LARAVEL_DSN` | Backend error/performance monitoring (optional) |
 | `ADMIN_ALERT_EMAIL` | Recipient for alerts when classroom provisioning fails after all retries (optional, but recommended) |
 
@@ -999,7 +1013,7 @@ cd backend
 php artisan test
 ```
 
-**Current results:** `94 tests · 283 assertions` — all passing ✅
+**Current results:** `124 tests · 400 assertions` — all passing ✅
 
 The suite covers:
 
@@ -1011,10 +1025,13 @@ The suite covers:
 | `tests/Feature/BookingServiceTest.php` | Race-condition-safe slot reservation |
 | `tests/Feature/ClassroomAccessTest.php` | Token generation, classroom join, Agora token refresh |
 | `tests/Feature/DiscoveryTest.php` | Teacher search, subject & grade-level filtering |
+| `tests/Feature/GenerateSessionSummaryJobTest.php` | Async AI session summary & quiz generation background job |
 | `tests/Feature/ParentChildTest.php` | Parent sub-account management & spending permissions |
 | `tests/Feature/PayoutRequestTest.php` | Teacher payout request lifecycle |
 | `tests/Feature/ProfileTest.php` | Teacher KYC profile update & verification reset |
 | `tests/Feature/ReviewTest.php` | Mandatory post-session review submission |
+| `tests/Feature/SessionSummaryApiTest.php` | Session summary viewing, quiz submission & role permission checks |
+| `tests/Feature/SupportChatApiTest.php` | AI Support Chat API validation, guest/authenticated context & rate limits |
 | `tests/Feature/SupportTicketTest.php` | Support ticket creation & messaging |
 | `tests/Feature/TeacherSlotTest.php` | Availability slot creation, update, deletion |
 | `tests/Feature/WalletServiceTest.php` | Wallet deposit, deduction, overdraft protection |
@@ -1022,6 +1039,8 @@ The suite covers:
 | `tests/Unit/BookingServiceUnitTest.php` | Unit: booking business rules |
 | `tests/Unit/PayoutServiceUnitTest.php` | Unit: payout calculation & commission split |
 | `tests/Unit/ReviewServiceUnitTest.php` | Unit: review validation logic |
+| `tests/Unit/SessionSummaryModelTest.php` | Unit: session summary Eloquent model relationships & cascading deletes |
+| `tests/Unit/SupportKnowledgeBaseTest.php` | Unit: AI support prompt grounding, WhatsApp URI formatting & fake AI replies |
 | `tests/Unit/WalletServiceUnitTest.php` | Unit: wallet transaction ledger |
 | `tests/Unit/WhiteboardServiceTest.php` | Unit: Netless room creation & token minting |
 
@@ -1037,12 +1056,13 @@ npm run test
 npm run test:watch
 ```
 
-**Current results:** `33 tests · 5 test suites` — all passing ✅
+**Current results:** `40 tests · 7 test suites` — all passing ✅
 
 The suite covers:
 
 | Test File | Area |
 |---|---|
+| `src/components/support/__tests__/TajSupportChatWidget.test.tsx` | AI Support Chat widget rendering, interactive chat & dual escalation cards |
 | `src/components/classroom/__tests__/Whiteboard.test.tsx` | Whiteboard SDK integration & connection lifecycle |
 | `src/components/dashboard/__tests__/utils.test.tsx` | Dashboard utility functions |
 | `src/components/dashboard/financial/__tests__/WalletSummary.test.tsx` | Wallet summary component rendering |

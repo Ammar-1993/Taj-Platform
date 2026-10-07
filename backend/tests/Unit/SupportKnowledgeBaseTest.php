@@ -131,6 +131,7 @@ class SupportKnowledgeBaseTest extends TestCase
 
     public function test_chat_throws_exception_when_client_not_configured(): void
     {
+        config(['services.openai.api_key' => '']);
         $service = new OpenAIService(null);
 
         $this->expectException(RuntimeException::class);
