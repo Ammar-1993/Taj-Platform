@@ -379,3 +379,11 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - **AOF Disk Persistence (`appendonly yes`):** Enabled Append-Only File persistence with `--appendfsync everysec` logging to `/data` (backed by persistent Docker volume `taj_redis_data`). This ensures zero job loss across container restarts while avoiding copy-on-write `fork()` memory spikes associated with RDB snapshotting (`--save ""`).
   - **Memory Scaling & Container Headroom:** Increased Redis internal `--maxmemory` from `64mb` to `128mb` and raised container memory limits in Docker deploy resources from `96M` to `256M`, ensuring ample headroom for jemalloc metadata, AOF rewrite buffers, and client connections without triggering Linux kernel OOM kills.
   - **CI/CD Pipeline Synchronization:** Updated [`.github/workflows/deploy-backend.yml`](file:///home/ammar/code/taj-platform/.github/workflows/deploy-backend.yml) to include `docker compose up -d --remove-orphans taj_redis` during production deployments so container configuration changes take effect immediately upon deployment.
+
+### 2. System Architecture Diagram Modernization (OpenAI Cloud Integration & AI Background Pipelines)
+- **Context:** Following the launch of Release v2.3.0 (Taj AI Support Assistant, AI Session Summaries, and Auto-Graded Quizzes), the top-level System Architecture Mermaid diagram in [`README.md`](file:///home/ammar/code/taj-platform/README.md) had not yet represented the external OpenAI API cloud integration and its asynchronous worker ingestion paths.
+- **Architectural Enhancements:**
+  - **External Cloud Node:** Added `OpenAICloud` node (`🧠 OpenAI Cloud API (gpt-4o-mini)`) styled with modern dark-cyan aesthetics matching the platform's visual standard.
+  - **Direct AI Chat Flow:** Modeled synchronous client interaction `Backend -->|Real-Time AI Support Assistant Chat| OpenAICloud` for grounded customer support chat.
+  - **Asynchronous AI Pipelines:** Modeled `Backend -->|Dispatch Async Provisioning & AI Jobs| Redis`, `QueueWorker -->|Generate Session Summary & Quiz API| OpenAICloud`, and `QueueWorker -->|Update Booking, Summaries & Quizzes| MySQL`.
+  - **Data Flow Table Sync:** Updated the Architecture & Data Flow Key table across Worker and SaaS integrations tiers to accurately document full OpenAI `gpt-4o-mini` workflows.

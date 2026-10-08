@@ -81,6 +81,7 @@ graph TB
     NetlessWB["🎨 Netless Whiteboard Cloud<br/><b>Agora Fastboard Interactive Canvas</b>"]
     CloudflareR2["☁️ Cloudflare R2 Storage<br/><b>Zero-Egress Object Store & Edge CDN</b>"]
     MoyasarAPI["💳 Moyasar Payment Gateway<br/><b>Mada, Visa, Apple Pay & Escrow Vault</b>"]
+    OpenAICloud["🧠 OpenAI Cloud API (gpt-4o-mini)<br/><b>AI Assistant, Session Summaries & Quizzes</b>"]
     RecaptchaAPI["🤖 Google reCAPTCHA v3<br/><b>Bot Mitigation & Risk Scoring</b>"]
     SentryTelemetry["📊 Sentry APM & Telemetry<br/><b>Error Tracking & Source Map Profiling</b>"]
 
@@ -93,12 +94,12 @@ graph TB
         end
 
         subgraph AsyncLayer ["2. Asynchronous Queue & Background Worker Tier"]
-            QueueWorker["⚡ <b>taj_queue_worker</b><br/>Laravel Queue Engine (CLI Worker)<br/>• Classroom Provisioning (ProvisionVirtualClassroom)<br/>• Agora RTC / RTM / Screen Token Pre-signing<br/>• Escrow Releases & Automated Refund Dispatch<br/><code>Redis Worker Daemon</code>"]
+            QueueWorker["⚡ <b>taj_queue_worker</b><br/>Laravel Queue Engine (CLI Worker)<br/>• Classroom Provisioning (ProvisionVirtualClassroom)<br/>• Agora RTC / RTM / Screen Token Pre-signing<br/>• Escrow Releases & Automated Refund Dispatch<br/>• AI Session Summaries (GenerateSessionSummaryJob)<br/><code>Redis Worker Daemon</code>"]
         end
 
         subgraph StorageLayer ["3. Distributed State, Caching & Database Tier"]
             Redis[("⚡ <b>taj_redis</b><br/>Redis 7 (Alpine)<br/>• Tagged Catalog Cache (subjects, teachers, slots)<br/>• Parent Dashboard Aggregates Cache (10m)<br/>• Pre-signed Agora Token Store (110m TTL)<br/>• High-Throughput Job Queue Broker<br/><code>Internal 6379 / Host 6381/6390</code>")]
-            MySQL[("🐬 <b>taj_mysql</b><br/>MySQL 8.0 Relational Engine<br/>• Double-Entry Escrow Wallets & Ledger<br/>• Bookings (Composite Index Covered)<br/>• Teacher KYC Docs, Slots, Subjects & Reviews<br/><code>Internal 3306 / Host 3306/3307</code>")]
+            MySQL[("🐬 <b>taj_mysql</b><br/>MySQL 8.0 Relational Engine<br/>• Double-Entry Escrow Wallets & Ledger<br/>• Bookings (Composite Index Covered)<br/>• Session Summaries & Interactive Quizzes<br/>• Teacher KYC Docs, Slots, Subjects & Reviews<br/><code>Internal 3306 / Host 3306/3307</code>")]
         end
 
     end
@@ -120,6 +121,7 @@ graph TB
     %% Backend to External Third-Party Integrations
     Backend -->|Verify Token Score via Secret Key| RecaptchaAPI
     Backend -->|Hold / Capture / Release Escrow Funds| MoyasarAPI
+    Backend -->|Real-Time AI Support Assistant Chat| OpenAICloud
     Backend -->|Stream Avatars & KYC Uploads via S3 API| CloudflareR2
     Backend <-->|Fetch KYC Credentials for Admin Verification| CloudflareR2
     Backend -.->|Server Exceptions & Performance Traces| SentryTelemetry
@@ -128,12 +130,13 @@ graph TB
     %% Backend Core Data & State Access
     Backend <-->|PDO / Eloquent ORM / ACID Transactions| MySQL
     Backend <-->|Cache Tags, Rate Limits & Token Lookup| Redis
-    Backend -->|Dispatch Async Provisioning Jobs| Redis
+    Backend -->|Dispatch Async Provisioning & AI Jobs| Redis
 
     %% Worker Consumption & Background Provisioning
     Redis -->|Poll Background Jobs via BLPOP| QueueWorker
-    QueueWorker -->|Update Booking & Provision State| MySQL
+    QueueWorker -->|Update Booking, Summaries & Quizzes| MySQL
     QueueWorker -->|HMAC-SHA256 Token Pre-generation & Cache| Redis
+    QueueWorker -->|Generate Session Summary & Quiz API| OpenAICloud
 
     %% Modern Theme Styling
     classDef client fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
@@ -144,6 +147,7 @@ graph TB
     classDef external fill:#18181b,stroke:#a1a1aa,stroke-width:1px,stroke-dasharray: 4 4,color:#f8fafc;
     classDef cloudflare fill:#2e1065,stroke:#f97316,stroke-width:2px,color:#f8fafc;
     classDef media fill:#022c22,stroke:#10b981,stroke-width:2px,color:#f8fafc;
+    classDef ai fill:#0c2a4a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
 
     class Student,Teacher,Admin client;
     class Frontend,Backend gateway;
@@ -151,6 +155,7 @@ graph TB
     class Redis redis;
     class MySQL mysql;
     class MoyasarAPI,RecaptchaAPI,SentryTelemetry external;
+    class OpenAICloud ai;
     class CloudflareR2 cloudflare;
     class AgoraRTC,NetlessWB media;
 ```
@@ -163,11 +168,11 @@ graph TB
 | :--- | :--- | :--- |
 | **0. External Actors & Roles** | RBAC (Student, Teacher, Parent, Admin) | Distinct personas partitioned by Spatie RBAC, accessing tailored functional portals and localized Arabic RTL interfaces. |
 | **1. Presentation & API Gateway Tier** | Next.js 15.3 App Router (React 19) & Laravel 12 API / Filament v3 | Hybrid Edge architecture with React Server Components (RSC) and SWR caching on the frontend (`taj-frontend`); REST API v1 with Sanctum Bearer tokens and administrative KYC/dispute dashboard on the backend (`taj_admin_web`). |
-| **2. Asynchronous Queue & Background Worker Tier** | Laravel Queue Worker (`taj_queue_worker` / Redis) | Dedicated background CLI daemon executing `ProvisionVirtualClassroom` to pre-generate Agora RTC/RTM tokens and whiteboard rooms ahead of time, plus processing escrow releases and refund dispatches. |
+| **2. Asynchronous Queue & Background Worker Tier** | Laravel Queue Worker (`taj_queue_worker` / Redis) | Dedicated background CLI daemon executing `ProvisionVirtualClassroom` to pre-generate Agora RTC/RTM tokens and whiteboard rooms ahead of time, processing escrow releases and refund dispatches, and generating AI session summaries and quizzes via OpenAI. |
 | **3. Distributed State, Caching & Database Tier** | MySQL 8.0 (`taj_mysql`) & Redis 7 (`taj_redis`) | InnoDB ACID financial ledger with composite indexing (`idx_bookings_booked_by_status_date`) and pessimistic row locking (`lockForUpdate()`), paired with tagged Redis caching (`Cache::tags()`), AOF disk persistence (`appendfsync everysec`), and eviction-proof financial queues via `volatile-lru`. |
 | **Cloud Object Storage (Zero Egress)** | Cloudflare R2 Storage (`league/flysystem-aws-s3-v3`) | S3-compatible cloud bucket storing user profile avatars and teacher KYC documents (national ID & degrees) with direct CDN distribution, Livewire local staging, and zero bandwidth egress fees. |
 | **Real-Time Media Cloud (Zero Server Load)** | Agora SD-RTN (RTC/RTM) & Netless Cloud | **Direct browser-to-cloud streams**: Real-time 720p/120p simulcast video, independent screen sharing channel (`UID + 1_000_000_000`), WebSocket signaling, and collaborative vector whiteboard canvas. |
-| **Cloud SaaS & Security Integrations** | Moyasar + Google reCAPTCHA v3 + Sentry | Saudi-compliant payment escrow with HMAC-SHA256 signed webhooks, Google reCAPTCHA v3 bot protection, and full-stack Sentry APM with automated production source maps. |
+| **Cloud SaaS & Security Integrations** | Moyasar + Google reCAPTCHA v3 + Sentry + OpenAI | Saudi-compliant payment escrow with HMAC-SHA256 signed webhooks, Google reCAPTCHA v3 bot protection, full-stack Sentry APM with automated production source maps, and OpenAI `gpt-4o-mini` for 24/7 grounded support chat, post-lesson summaries, and auto-graded quizzes. |
 
 ---
 
