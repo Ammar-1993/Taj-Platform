@@ -387,3 +387,11 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - **Direct AI Chat Flow:** Modeled synchronous client interaction `Backend -->|Real-Time AI Support Assistant Chat| OpenAICloud` for grounded customer support chat.
   - **Asynchronous AI Pipelines:** Modeled `Backend -->|Dispatch Async Provisioning & AI Jobs| Redis`, `QueueWorker -->|Generate Session Summary & Quiz API| OpenAICloud`, and `QueueWorker -->|Update Booking, Summaries & Quizzes| MySQL`.
   - **Data Flow Table Sync:** Updated the Architecture & Data Flow Key table across Worker and SaaS integrations tiers to accurately document full OpenAI `gpt-4o-mini` workflows.
+
+### 3. System Architecture Visual Overhaul — Flowchart LR Panoramic Layout
+- **Context:** User inspection of GitHub rendering revealed that the former `graph TB` diagram suffered from extreme vertical elongation, wire spaghetti crossing through the entire Docker container, overlapping label collisions, and inverted tier numbering.
+- **Architectural Enhancements:**
+  - **Balanced Horizontal Layout (`flowchart LR`):** Restructured the architecture into 4 intuitive columns: Users & Roles (`ClientsCol`), Presentation & Real-Time Edge (`EdgeCol`), Taj Docker Core (`DockerApp`), and External Cloud & AI Services (`CloudCol`).
+  - **Eliminated Cross-Tier Line Spaghetti:** Co-located real-time browser-to-cloud media engines (`Agora SD-RTN` & `Netless Cloud`) alongside `taj-frontend` in `EdgeCol`, eliminating 8+ vertical crossing lines. Co-located `OpenAI`, `Moyasar`, `Cloudflare R2`, `reCAPTCHA`, and `Sentry` directly beside the backend gateway and background worker.
+  - **Micro-Label Optimization:** Replaced verbose edge labels with concise, readable descriptors (`|Direct WebRTC|`, `|Direct WebSocket|`, `|REST API v1 + Sanctum|`, `|ACID Ledger|`, `|Cache & Tokens|`, `|Jobs Queue|`), completely eradicating label collisions.
+  - **Restored Tier Hierarchy:** Structured `DockerApp` into 3 sequential tiers: Gateway Tier (1) ➡️ Background Worker Tier (2) ➡️ State & Ledger Tier (3).
