@@ -63,7 +63,7 @@ services:
     restart: unless-stopped
     command: php artisan reverb:start --host=0.0.0.0 --port=8080
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8085:8080"
     env_file:
       - ./backend/.env.prod
     extra_hosts:
