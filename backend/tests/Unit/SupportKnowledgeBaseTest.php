@@ -129,6 +129,42 @@ class SupportKnowledgeBaseTest extends TestCase
         $this->assertEquals('/dashboard/support', $result['support_options']['ticket']['link']);
     }
 
+    public function test_system_prompt_includes_zero_hallucination_guardrails_and_few_shot_examples(): void
+    {
+        $prompt = SupportKnowledgeBase::getSystemPrompt();
+
+        $this->assertStringContainsString('القواعد الصارمة لمنع الهلوسة والتواضع المعرفي', $prompt);
+        $this->assertStringContainsString('قاعدة التواضع المعرفي', $prompt);
+        $this->assertStringContainsString('قاعدة التخصص الحصري', $prompt);
+        $this->assertStringContainsString('حظر الوعود المالية القاطعة', $prompt);
+        $this->assertStringContainsString('أمثلة توضيحية لأسلوب الرد النموذجي (Few-Shot Demonstrations)', $prompt);
+        $this->assertStringContainsString('لو حجزت حصة وأردت إلغاءها', $prompt);
+        $this->assertStringContainsString('المعلم لم يشرح جيداً وخرج قبل نهاية الوقت', $prompt);
+    }
+
+    public function test_system_prompt_includes_expanded_platform_policies(): void
+    {
+        $prompt = SupportKnowledgeBase::getSystemPrompt();
+
+        // Cancellation & Rescheduling
+        $this->assertStringContainsString('قبل 12 ساعة', $prompt);
+        $this->assertStringContainsString('إعادة الجدولة', $prompt);
+        $this->assertStringContainsString('15 دقيقة', $prompt);
+
+        // Teacher verification & payout
+        $this->assertStringContainsString('الهوية الرسمية', $prompt);
+        $this->assertStringContainsString('80%', $prompt);
+        $this->assertStringContainsString('20%', $prompt);
+        $this->assertStringContainsString('IBAN', $prompt);
+
+        // Virtual Classroom
+        $this->assertStringContainsString('Agora', $prompt);
+        $this->assertStringContainsString('Whiteboard', $prompt);
+
+        // Safety
+        $this->assertStringContainsString('حظر التواصل الخارجي', $prompt);
+    }
+
     public function test_chat_throws_exception_when_client_not_configured(): void
     {
         config(['services.openai.api_key' => '']);

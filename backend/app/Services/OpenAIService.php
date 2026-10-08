@@ -187,7 +187,7 @@ PROMPT;
                 'model' => $this->model,
                 'response_format' => ['type' => 'json_object'],
                 'messages' => $chatMessages,
-                'temperature' => 0.3,
+                'temperature' => 0.1,
                 'max_tokens' => 1000,
             ]);
 
