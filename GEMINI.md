@@ -365,3 +365,17 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - Added `<env name="FILESYSTEM_DISK" value="public"/>` to [`phpunit.xml`](file:///home/ammar/code/taj-platform/backend/phpunit.xml) ensuring test isolation without real external network I/O.
   - Verified live upload, retrieval, and public CDN access through `curl` against `https://pub-1fceead7795d4023b09382ec33f52f2a.r2.dev/`.
   - Entire backend test suite passing: **89 passed (275 assertions)**. Formatted via `laravel/pint`.
+
+## 📖 Session Log & Recent Updates (Oct 8, 2026)
+
+### 1. Production Redis Hardening & Eviction-Proof Financial Queues
+- **Context:** An in-depth audit of the production System Architecture revealed a critical vulnerability in [`docker-compose.prod.yml`](file:///home/ammar/code/taj-platform/docker-compose.prod.yml): `taj_redis` was configured with `--maxmemory 64mb --maxmemory-policy allkeys-lru --save ""` with container memory limit `96M`.
+- **Root Cause & Risks Identified:**
+  - Because `taj_redis` serves concurrently as both the application Cache (`REDIS_CACHE_DB=1`) and the asynchronous Job Queue Broker (`QUEUE_CONNECTION=redis`, `database=0`), an `allkeys-lru` eviction policy under memory pressure would evict queue data structures (`queues:default`, `queues:default:delayed`, `queues:default:reserved`) indiscriminately.
+  - This posed an existential threat of losing financial escrow settlements, refund dispatches, and AI background jobs.
+  - Additionally, `--save ""` with disabled AOF meant complete queue data loss in the event of an unexpected container restart.
+- **Architectural Resolution:**
+  - **Eviction-Proof Policy (`volatile-lru`):** Changed Redis maxmemory policy to `volatile-lru`. In Redis, keys without TTL (such as Laravel queue lists and zsets) will never be evicted. Memory pressure will strictly evict cached catalog data and Agora tokens (which naturally have TTLs and can be safely re-fetched or regenerated on cache misses).
+  - **AOF Disk Persistence (`appendonly yes`):** Enabled Append-Only File persistence with `--appendfsync everysec` logging to `/data` (backed by persistent Docker volume `taj_redis_data`). This ensures zero job loss across container restarts while avoiding copy-on-write `fork()` memory spikes associated with RDB snapshotting (`--save ""`).
+  - **Memory Scaling & Container Headroom:** Increased Redis internal `--maxmemory` from `64mb` to `128mb` and raised container memory limits in Docker deploy resources from `96M` to `256M`, ensuring ample headroom for jemalloc metadata, AOF rewrite buffers, and client connections without triggering Linux kernel OOM kills.
+  - **CI/CD Pipeline Synchronization:** Updated [`.github/workflows/deploy-backend.yml`](file:///home/ammar/code/taj-platform/.github/workflows/deploy-backend.yml) to include `docker compose up -d --remove-orphans taj_redis` during production deployments so container configuration changes take effect immediately upon deployment.
