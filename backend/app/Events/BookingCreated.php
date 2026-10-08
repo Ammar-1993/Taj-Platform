@@ -31,9 +31,16 @@ class BookingCreated implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
-        return [
+        $channels = [
             new PrivateChannel('teacher.'.$this->booking->teacher_id),
+            new PrivateChannel('App.Models.User.'.$this->booking->student_id),
         ];
+
+        if ($this->booking->booked_by_id && $this->booking->booked_by_id !== $this->booking->student_id) {
+            $channels[] = new PrivateChannel('App.Models.User.'.$this->booking->booked_by_id);
+        }
+
+        return $channels;
     }
 
     /**

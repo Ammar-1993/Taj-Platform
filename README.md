@@ -97,8 +97,9 @@ flowchart LR
     subgraph DockerApp ["🐳 Taj Docker Ecosystem (taj-net)"]
         direction TB
 
-        subgraph GatewayTier ["1. API & Admin Gateway"]
+        subgraph GatewayTier ["1. API & WebSockets Gateway"]
             Backend["⚙️ <b>taj_admin_web</b><br/>Laravel 12 • PHP 8.3 FPM<br/>Sanctum Auth • Filament Panel"]
+            Reverb["⚡ <b>taj_reverb</b> (WebSockets)<br/>Laravel Reverb • Port 8080<br/>Instant In-App Event Push"]
         end
 
         subgraph WorkerTier ["2. Asynchronous Background Engine"]
@@ -133,13 +134,16 @@ flowchart LR
     Frontend <-->|Direct WebSocket| Netless
     Frontend -.->|Edge CDN Avatars| R2
 
-    %% ── FRONTEND TO BACKEND API ──
+    %% ── FRONTEND TO BACKEND API & WEBSOCKETS ──
     Frontend -->|REST API v1 + Sanctum| Backend
+    Frontend <-->|WebSockets Echo Push| Reverb
 
     %% ── BACKEND & STORAGE RELATIONSHIPS ──
     Backend <-->|Cache & Tokens| Redis
     Backend <-->|ACID Ledger| MySQL
     Backend -->|Dispatch Jobs| Redis
+    Backend -->|Broadcast Events| Reverb
+    Redis <-->|Scaling Pub/Sub| Reverb
 
     %% ── QUEUE WORKER CONSUMPTION ──
     Redis -->|Poll BLPOP| QueueWorker
@@ -167,7 +171,7 @@ flowchart LR
 
     class Student,Teacher,Admin client;
     class Frontend,Agora,Netless edge;
-    class Backend gateway;
+    class Backend,Reverb gateway;
     class QueueWorker worker;
     class Redis redis;
     class MySQL mysql;
@@ -182,7 +186,7 @@ flowchart LR
 | Layer / Tier | Primary Technologies | Architectural Role & Implementation Details |
 | :--- | :--- | :--- |
 | **0. External Actors & Roles** | RBAC (Student, Teacher, Parent, Admin) | Distinct personas partitioned by Spatie RBAC, accessing tailored functional portals and localized Arabic RTL interfaces. |
-| **1. Presentation & API Gateway Tier** | Next.js 15.3 App Router (React 19) & Laravel 12 API / Filament v3 | Hybrid Edge architecture with React Server Components (RSC) and SWR caching on the frontend (`taj-frontend`); REST API v1 with Sanctum Bearer tokens and administrative KYC/dispute dashboard on the backend (`taj_admin_web`). |
+| **1. Presentation & API Gateway Tier** | Next.js 15.3 App Router (React 19) & Laravel 12 API / Filament v3 / Laravel Reverb | Hybrid Edge architecture with React Server Components (RSC) and SWR caching on the frontend (`taj-frontend`); REST API v1 with Sanctum Bearer tokens and administrative KYC/dispute dashboard on the backend (`taj_admin_web`), paired with native high-throughput Laravel Reverb WebSockets (`taj_reverb` / port 8080) for instant event push (bookings, wallets, classroom presence). |
 | **2. Asynchronous Queue & Background Worker Tier** | Laravel Queue Worker (`taj_queue_worker` / Redis) | Dedicated background CLI daemon executing `ProvisionVirtualClassroom` to pre-generate Agora RTC/RTM tokens and whiteboard rooms ahead of time, processing escrow releases and refund dispatches, and generating AI session summaries and quizzes via OpenAI. |
 | **3. Distributed State, Caching & Database Tier** | MySQL 8.0 (`taj_mysql`) & Redis 7 (`taj_redis`) | InnoDB ACID financial ledger with composite indexing (`idx_bookings_booked_by_status_date`) and pessimistic row locking (`lockForUpdate()`), paired with tagged Redis caching (`Cache::tags()`), AOF disk persistence (`appendfsync everysec`), and eviction-proof financial queues via `volatile-lru`. |
 | **Cloud Object Storage (Zero Egress)** | Cloudflare R2 Storage (`league/flysystem-aws-s3-v3`) | S3-compatible cloud bucket storing user profile avatars and teacher KYC documents (national ID & degrees) with direct CDN distribution, Livewire local staging, and zero bandwidth egress fees. |

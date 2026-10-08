@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\ClassroomJoined;
 use App\Http\Controllers\Controller;
 use App\Jobs\ProvisionVirtualClassroom;
 use App\Models\Booking;
@@ -42,13 +43,19 @@ class ClassroomController extends Controller
 
         // تحديث حالة الحضور بشكل ذري (Atomic) لتجنب Race Conditions
         if ($user->hasRole('teacher') && ! $booking->teacher_joined_at) {
-            Booking::where('id', $booking->id)
+            $updated = Booking::where('id', $booking->id)
                 ->whereNull('teacher_joined_at')
                 ->update(['teacher_joined_at' => now(), 'status' => 'in_progress']);
+            if ($updated) {
+                event(new ClassroomJoined($booking, $user, 'teacher'));
+            }
         } elseif ($user->hasRole('student') && ! $booking->student_joined_at) {
-            Booking::where('id', $booking->id)
+            $updated = Booking::where('id', $booking->id)
                 ->whereNull('student_joined_at')
                 ->update(['student_joined_at' => now()]);
+            if ($updated) {
+                event(new ClassroomJoined($booking, $user, 'student'));
+            }
         }
 
         // تحديد الدور: المعلم والطالب هم "host" (إرسال واستقبال)، المراقبين "audience" (استقبال فقط)

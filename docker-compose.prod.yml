@@ -56,6 +56,29 @@ services:
         limits:
           memory: 128M # الـ Worker يحتاج ذاكرة أقل لإجراء المهام في الخلفية
 
+  # ── Reverb WebSocket Server (البث اللحظي المباشر) ─────────────
+  taj_reverb:
+    image: taj-platform-prod:latest
+    container_name: taj_reverb
+    restart: unless-stopped
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./backend/.env.prod
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - taj-net
+    depends_on:
+      - taj_admin_web
+      - taj_redis
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
   # ── Redis (Cache + Queue Driver) ─────────────────────────────
   taj_redis:
     image: redis:7-alpine

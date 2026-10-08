@@ -105,6 +105,24 @@ services:
       redis:
         condition: service_healthy
 
+  # 5. Laravel Reverb WebSocket Server (Port 8080)
+  reverb:
+    image: taj-laravel-8.3
+    restart: unless-stopped
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    volumes:
+      - './backend:/var/www/html'
+    ports:
+      - '${FORWARD_REVERB_PORT:-8080}:8080'
+    environment:
+      WWWUSER: '${WWWUSER:-1000}'
+      LARAVEL_SAIL: 1
+    networks:
+      - taj-network
+    depends_on:
+      redis:
+        condition: service_healthy
+
 networks:
   taj-network:
     driver: bridge

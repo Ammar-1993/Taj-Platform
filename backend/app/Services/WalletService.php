@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\WalletUpdated;
 use App\Models\User;
 use App\Models\WalletTransaction;
 use Exception;
@@ -14,7 +15,9 @@ class WalletService
      */
     public function processTransaction(User $user, float $amount, string $type, string $description, ?int $bookingId = null): WalletTransaction
     {
-        return DB::transaction(function () use ($user, $amount, $type, $description, $bookingId) {
+        $newBalance = 0.00;
+
+        $transaction = DB::transaction(function () use ($user, $amount, $type, $description, $bookingId, &$newBalance) {
             // lockForUpdate يمنع أي عملية أخرى من تعديل رصيد هذا المستخدم حتى تنتهي هذه العملية
             $wallet = $user->wallet()->lockForUpdate()->firstOrCreate(
                 ['user_id' => $user->id],
@@ -28,6 +31,7 @@ class WalletService
             }
 
             $wallet->save();
+            $newBalance = (float) $wallet->balance;
 
             // تسجيل الحركة المالية كقيمة مطلقة (موجبة دائماً في السجل)
             return $wallet->transactions()->create([
@@ -37,5 +41,10 @@ class WalletService
                 'description' => $description,
             ]);
         });
+
+        // بث حدث تحديث المحفظة لحظياً عبر WebSockets للمستخدم
+        event(new WalletUpdated($user, $newBalance, $transaction));
+
+        return $transaction;
     }
 }

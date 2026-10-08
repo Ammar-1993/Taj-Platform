@@ -395,3 +395,31 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - **Eliminated Cross-Tier Line Spaghetti:** Co-located real-time browser-to-cloud media engines (`Agora SD-RTN` & `Netless Cloud`) alongside `taj-frontend` in `EdgeCol`, eliminating 8+ vertical crossing lines. Co-located `OpenAI`, `Moyasar`, `Cloudflare R2`, `reCAPTCHA`, and `Sentry` directly beside the backend gateway and background worker.
   - **Micro-Label Optimization:** Replaced verbose edge labels with concise, readable descriptors (`|Direct WebRTC|`, `|Direct WebSocket|`, `|REST API v1 + Sanctum|`, `|ACID Ledger|`, `|Cache & Tokens|`, `|Jobs Queue|`), completely eradicating label collisions.
   - **Restored Tier Hierarchy:** Structured `DockerApp` into 3 sequential tiers: Gateway Tier (1) ➡️ Background Worker Tier (2) ➡️ State & Ledger Tier (3).
+
+### 4. Native Real-Time WebSockets Engine Integration (Laravel Reverb & Laravel Echo)
+- **Context:** To eliminate repetitive client-side HTTP polling and deliver sub-second event notifications without relying on external paid services (e.g. Pusher), the first-party WebSocket engine **Laravel Reverb** was integrated into the Laravel 12 backend and Next.js 15 frontend.
+- **Backend Architecture & Packages:**
+  - Installed `laravel/reverb` (v1.12.0) and `pusher/pusher-php-server` (v7.3.0) via Composer.
+  - Published and configured [`config/reverb.php`](file:///home/ammar/code/taj-platform/backend/config/reverb.php) and [`config/broadcasting.php`](file:///home/ammar/code/taj-platform/backend/config/broadcasting.php) with the `'reverb'` connection driver.
+  - Configured Reverb environment variables in [`backend/.env.example`](file:///home/ammar/code/taj-platform/backend/.env.example) (`BROADCAST_CONNECTION=reverb`, `REVERB_APP_KEY`, `REVERB_PORT=8080`, etc.).
+  - Configured channel authorization in [`backend/routes/channels.php`](file:///home/ammar/code/taj-platform/backend/routes/channels.php) using `Broadcast::routes(['middleware' => ['auth:sanctum']])`, enabling seamless Bearer token auth for SPA private channels over `/broadcasting/auth`.
+- **Real-Time Broadcast Events:**
+  - **`BookingCreated` ([`BookingCreated.php`](file:///home/ammar/code/taj-platform/backend/app/Events/BookingCreated.php)):** Expanded to broadcast across private channels for teachers (`private-teacher.{id}`), students (`private-App.Models.User.{student_id}`), and parents (`private-App.Models.User.{booked_by_id}`).
+  - **`WalletUpdated` ([`WalletUpdated.php`](file:///home/ammar/code/taj-platform/backend/app/Events/WalletUpdated.php)):** Created new broadcast event on `private-App.Models.User.{user_id}` dispatching live wallet balances and transaction metadata directly inside [`WalletService::processTransaction`](file:///home/ammar/code/taj-platform/backend/app/Services/WalletService.php).
+  - **`ClassroomJoined` ([`ClassroomJoined.php`](file:///home/ammar/code/taj-platform/backend/app/Events/ClassroomJoined.php)):** Created new broadcast event on `private-classroom.{booking_id}` tracking student and teacher entries upon atomic first join in [`ClassroomController::getAccessDetails`](file:///home/ammar/code/taj-platform/backend/app/Http/Controllers/Api/ClassroomController.php).
+- **Frontend Integration (Laravel Echo):**
+  - Installed `laravel-echo` (v2.6.1) and `pusher-js` (v8.6.0).
+  - Created singleton Echo client [`frontend/src/lib/echo.ts`](file:///home/ammar/code/taj-platform/frontend/src/lib/echo.ts) with Bearer token authorization, SSL awareness, and silent fallback on connection interruptions.
+  - Built custom React hook [`frontend/src/hooks/useEcho.ts`](file:///home/ammar/code/taj-platform/frontend/src/hooks/useEcho.ts) that subscribes to user and teacher channels, triggers instant toast notifications, and automatically invalidates TanStack Query caches (`['wallet']`, `['dashboard']`, `['bookings']`).
+  - Integrated `useEcho()` into [`frontend/src/app/dashboard/page.tsx`](file:///home/ammar/code/taj-platform/frontend/src/app/dashboard/page.tsx).
+- **Containerization, Infrastructure & CI/CD:**
+  - Added dedicated `reverb` service to [`docker-compose.yml`](file:///home/ammar/code/taj-platform/docker-compose.yml) running `php artisan reverb:start --host=0.0.0.0 --port=8080`.
+  - Added production `taj_reverb` service to [`docker-compose.prod.yml`](file:///home/ammar/code/taj-platform/docker-compose.prod.yml) with 128M memory limit and port 8080 binding.
+  - Updated deployment workflow [`.github/workflows/deploy-backend.yml`](file:///home/ammar/code/taj-platform/.github/workflows/deploy-backend.yml) to include `taj_reverb` in automated container rollouts.
+  - Updated [`README.md`](file:///home/ammar/code/taj-platform/README.md) Mermaid diagram and Data Flow Key table with `taj_reverb`.
+- **Automated Verification Results:**
+  - Added unit test suite [`backend/tests/Unit/BroadcastEventsTest.php`](file:///home/ammar/code/taj-platform/backend/tests/Unit/BroadcastEventsTest.php) (3 tests, 17 assertions passed).
+  - Backend test suite: **126 passed (417 assertions)** with 0 failures (`php artisan test`).
+  - Frontend test suite: **40 passed (7 suites)** with 0 failures (`npm test`).
+  - Code style: `laravel/pint` passed on all 194 files.
+

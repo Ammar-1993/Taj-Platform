@@ -19,10 +19,14 @@ const ReviewModal = dynamic(
   { ssr: false },
 );
 import { Role } from "@/types";
+import { useEcho } from "@/hooks/useEcho";
 
 export default function DashboardPage() {
   const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
+
+  // تفعيل استماع WebSockets اللحظي عبر Reverb لتحديثات المحفظة والحجوزات
+  useEcho();
 
   const isTeacher =
     user?.roles?.some((r: Role) => r.name === "teacher") || false;
