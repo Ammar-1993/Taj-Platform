@@ -185,17 +185,100 @@ export const TajSupportChatWidget: React.FC = () => {
       setInputValue("");
       setIsLoading(true);
 
-      try {
-        // Prepare payload for backend (role & content only)
-        const payload = updatedMessages.map((m) => ({
-          role: m.role,
-          content: m.content,
-        }));
+      const payload = updatedMessages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
 
+      const botMessageId = "msg-" + (Date.now() + 1) + "-reply";
+
+      // 1. Try Streaming via SSE first if available
+      if (typeof supportService.streamMessage === "function") {
+        let streamTokensReceived = false;
+
+        try {
+          await supportService.streamMessage(payload, {
+            onToken: (token: string) => {
+              if (!streamTokensReceived) {
+                streamTokensReceived = true;
+                setIsLoading(false);
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: botMessageId,
+                    role: "assistant",
+                    content: token,
+                    timestamp: new Date().toISOString(),
+                  },
+                ]);
+              } else {
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === botMessageId
+                      ? { ...msg, content: msg.content + token }
+                      : msg
+                  )
+                );
+              }
+            },
+            onDone: (data) => {
+              setIsLoading(false);
+              setMessages((prev) => {
+                const exists = prev.some((msg) => msg.id === botMessageId);
+                if (exists) {
+                  return prev.map((msg) =>
+                    msg.id === botMessageId
+                      ? {
+                          ...msg,
+                          content: data.reply || msg.content,
+                          needs_human_support: data.needs_human_support,
+                          support_options: data.support_options,
+                          suggested_questions: data.suggested_questions,
+                        }
+                      : msg
+                  );
+                }
+                return [
+                  ...prev,
+                  {
+                    id: botMessageId,
+                    role: "assistant",
+                    content: data.reply,
+                    timestamp: new Date().toISOString(),
+                    needs_human_support: data.needs_human_support,
+                    support_options: data.support_options,
+                    suggested_questions: data.suggested_questions,
+                  },
+                ];
+              });
+
+              if (!isOpen) {
+                setHasUnread(true);
+              }
+            },
+            onError: (err) => {
+              console.warn("Support streaming error event:", err);
+            },
+          });
+
+          // Stream completed successfully
+          return;
+        } catch (streamError) {
+          if (streamTokensReceived) {
+            console.warn("Streaming interrupted after tokens received:", streamError);
+            setIsLoading(false);
+            return;
+          }
+          console.warn("Stream unavailable, falling back to synchronous chat:", streamError);
+        }
+      }
+
+      // 2. Synchronous fallback (or if streamMessage failed before first token)
+      try {
         const res = await supportService.sendMessage(payload);
 
         const botMessage: SupportChatMessage = {
-          id: "msg-" + Date.now() + "-reply",
+          id: botMessageId,
           role: "assistant",
           content: res.data.reply,
           timestamp: new Date().toISOString(),

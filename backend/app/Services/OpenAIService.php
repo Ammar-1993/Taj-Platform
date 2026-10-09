@@ -235,4 +235,173 @@ PROMPT;
             throw new RuntimeException('Support assistant generation failed: '.$e->getMessage(), 0, $e);
         }
     }
+
+    /**
+     * Stream an intelligent conversation with the Taj Support Assistant
+     * yielding SSE events for text tokens and final structured metadata.
+     *
+     * @param  array<int, array{role: string, content: string}>  $messages
+     * @param  callable(string $event, array<string, mixed> $data): void  $emitter
+     *
+     * @throws RuntimeException
+     */
+    public function streamSupportAssistantChat(array $messages, ?User $user, callable $emitter): void
+    {
+        if ($this->client === null) {
+            throw new RuntimeException('OpenAI client is not configured. Missing OPENAI_API_KEY.');
+        }
+
+        $systemPrompt = SupportKnowledgeBase::getSystemPrompt($user);
+
+        $history = array_slice($messages, -8);
+        $chatMessages = [
+            ['role' => 'system', 'content' => $systemPrompt],
+        ];
+
+        foreach ($history as $msg) {
+            if (isset($msg['role'], $msg['content']) && in_array($msg['role'], ['user', 'assistant'], true)) {
+                $chatMessages[] = [
+                    'role' => $msg['role'],
+                    'content' => (string) $msg['content'],
+                ];
+            }
+        }
+
+        try {
+            $stream = $this->client->chat()->createStreamed([
+                'model' => $this->model,
+                'response_format' => ['type' => 'json_object'],
+                'messages' => $chatMessages,
+                'temperature' => 0.1,
+                'max_tokens' => 1000,
+            ]);
+
+            $parser = new SupportJsonStreamParser;
+
+            foreach ($stream as $response) {
+                $chunk = $response->choices[0]->delta->content ?? '';
+                if ($chunk !== '') {
+                    $parser->processChunk($chunk, function (string $token) use ($emitter) {
+                        $emitter('token', ['token' => $token]);
+                    });
+                }
+            }
+
+            $fullData = json_decode($parser->fullRaw, true);
+            if (! is_array($fullData) || ! isset($fullData['reply'])) {
+                $fullData = [
+                    'reply' => ! empty($parser->reply) ? $parser->reply : 'مرحباً بك! كيف يمكنني مساعدتك اليوم في منصة تاج التعليمية؟',
+                    'needs_human_support' => false,
+                    'suggested_questions' => [
+                        'كيف أبدأ بحجز أول حصة؟',
+                        'كيف أضمن حقي المالي في المنصة؟',
+                    ],
+                ];
+            }
+
+            $needsHuman = (bool) ($fullData['needs_human_support'] ?? false);
+            $supportOptions = null;
+
+            if ($needsHuman) {
+                $supportOptions = [
+                    'whatsapp' => [
+                        'phone' => SupportKnowledgeBase::SUPPORT_WHATSAPP_NUMBER,
+                        'link' => SupportKnowledgeBase::buildWhatsAppLink(),
+                        'label' => 'التحدث مع موظف الدعم عبر واتساب ('.SupportKnowledgeBase::SUPPORT_WHATSAPP_NUMBER.')',
+                    ],
+                    'ticket' => [
+                        'link' => SupportKnowledgeBase::SUPPORT_TICKET_PATH,
+                        'label' => 'فتح تذكرة دعم فني',
+                    ],
+                ];
+            }
+
+            $emitter('done', [
+                'reply' => $fullData['reply'] ?? $parser->reply,
+                'needs_human_support' => $needsHuman,
+                'support_options' => $supportOptions,
+                'suggested_questions' => $fullData['suggested_questions'] ?? [],
+                'model_used' => $this->model,
+            ]);
+        } catch (Exception $e) {
+            throw new RuntimeException('Support assistant stream failed: '.$e->getMessage(), 0, $e);
+        }
+    }
+}
+
+class SupportJsonStreamParser
+{
+    private string $buffer = '';
+
+    private bool $inReply = false;
+
+    private bool $replyFinished = false;
+
+    private bool $isEscaping = false;
+
+    private ?string $unicodeBuffer = null;
+
+    public string $reply = '';
+
+    public string $fullRaw = '';
+
+    public function processChunk(string $chunk, callable $onToken): void
+    {
+        $this->fullRaw .= $chunk;
+        $len = strlen($chunk);
+
+        for ($i = 0; $i < $len; $i++) {
+            $char = $chunk[$i];
+
+            if ($this->unicodeBuffer !== null) {
+                $this->unicodeBuffer .= $char;
+                if (strlen($this->unicodeBuffer) === 4) {
+                    $token = mb_chr((int) hexdec($this->unicodeBuffer), 'UTF-8');
+                    $this->unicodeBuffer = null;
+                    $this->isEscaping = false;
+                    $this->reply .= $token;
+                    $onToken($token);
+                }
+
+                continue;
+            }
+
+            if (! $this->inReply && ! $this->replyFinished) {
+                $this->buffer .= $char;
+                if (preg_match('/"reply"\s*:\s*"$/', $this->buffer)) {
+                    $this->inReply = true;
+                    $this->buffer = '';
+                }
+            } elseif ($this->inReply) {
+                if ($this->isEscaping) {
+                    if ($char === 'u') {
+                        $this->unicodeBuffer = '';
+                    } else {
+                        $this->isEscaping = false;
+                        $token = match ($char) {
+                            'n' => "\n",
+                            'r' => "\r",
+                            't' => "\t",
+                            '"' => '"',
+                            '\\' => '\\',
+                            default => '\\'.$char,
+                        };
+                        $this->reply .= $token;
+                        $onToken($token);
+                    }
+                } elseif ($char === '\\') {
+                    $this->isEscaping = true;
+                } elseif ($char === '"') {
+                    $this->inReply = false;
+                    $this->replyFinished = true;
+                    $this->buffer = '';
+                } else {
+                    $this->reply .= $char;
+                    $onToken($char);
+                }
+            } else {
+                $this->buffer .= $char;
+            }
+        }
+    }
 }

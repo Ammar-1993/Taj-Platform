@@ -423,3 +423,22 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - Frontend test suite: **40 passed (7 suites)** with 0 failures (`npm test`).
   - Code style: `laravel/pint` passed on all 194 files.
 
+### 5. AI Support Assistant Streaming / Server-Sent Events (SSE) Architecture
+- **Context:** `POST /api/v1/support/chat` previously waited synchronously for OpenAI API generation before returning a response, causing blocking waits on PHP-FPM workers for up to 30 seconds and delaying time-to-first-token for users.
+- **Backend Architecture & Streaming Pipeline:**
+  - **Incremental Streaming Service ([`OpenAIService::streamSupportAssistantChat`](file:///home/ammar/code/taj-platform/backend/app/Services/OpenAIService.php)):** Uses `$this->client->chat()->createStreamed()` combined with custom `SupportJsonStreamParser` to parse the JSON output stream in real time. It extracts and streams tokens from the `reply` key via `event: token` while preserving the full response object to extract human escalation metadata (`needs_human_support`, `support_options`, `suggested_questions`) emitted in `event: done`.
+  - **SSE Controller Response ([`SupportChatController::chat`](file:///home/ammar/code/taj-platform/backend/app/Http/Controllers/Api/SupportChatController.php)):** Supports both `stream=true` payload parameter and `Accept: text/event-stream` request header. Returns a `StreamedResponse` with `Content-Type: text/event-stream; charset=UTF-8`, `X-Accel-Buffering: no` (disabling Nginx FastCGI proxy buffering), `Cache-Control: no-cache, no-transform`, and immediate output buffer flushing (`ob_flush(); flush();`).
+  - **Graceful Unconfigured & Failure Handling:** When OpenAI is unconfigured or encounters an error, the controller streams the maintenance message and support channels (WhatsApp + Ticket) via SSE before completing, preserving a consistent UI experience.
+  - **100% Backward Compatibility:** Standard JSON requests without `stream=true` or with `Accept: application/json` continue to return the standard JSON response without any changes.
+- **Frontend Integration (Next.js 15 & React):**
+  - **Streaming Client ([`supportService.streamMessage`](file:///home/ammar/code/taj-platform/frontend/src/services/api/supportService.ts)):** Implemented `fetch` streaming with `ReadableStream` reader and `TextDecoder`, parsing incoming SSE chunks across line boundaries and invoking `onToken`, `onDone`, and `onError` callbacks. Authenticates using Sanctum Bearer tokens from cookies.
+  - **Live Chat Widget ([`TajSupportChatWidget.tsx`](file:///home/ammar/code/taj-platform/frontend/src/components/support/TajSupportChatWidget.tsx)):** Streams tokens into the assistant message bubble in real time as soon as they arrive (transitioning immediately from the "المساعد يفكر..." typing indicator to live word-by-word streaming). Includes automatic, resilient fallback to `supportService.sendMessage` if streaming is unavailable or fails before the first token.
+- **Automated Verification & Test Results:**
+  - Added dedicated streaming tests to [`SupportChatApiTest.php`](file:///home/ammar/code/taj-platform/backend/tests/Feature/SupportChatApiTest.php) verifying guest streaming, unconfigured service handling, and event emission (all 8 tests passed).
+  - Added dedicated streaming and fallback unit tests to [`TajSupportChatWidget.test.tsx`](file:///home/ammar/code/taj-platform/frontend/src/components/support/__tests__/TajSupportChatWidget.test.tsx) (all 5 tests passed).
+  - Full backend test suite: **131 passed (444 assertions)** with 0 failures (`php artisan test`).
+  - Full frontend test suite: **41 passed (7 suites)** with 0 failures (`npm test`).
+  - Frontend production build: `npm run build` compiled successfully (exit code 0).
+  - Code style: `laravel/pint` formatted cleanly.
+
+

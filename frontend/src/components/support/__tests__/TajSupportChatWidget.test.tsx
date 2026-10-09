@@ -7,6 +7,7 @@ import { supportService } from '@/services/api/supportService'
 jest.mock('@/services/api/supportService', () => ({
   supportService: {
     sendMessage: jest.fn(),
+    streamMessage: jest.fn(),
   },
 }))
 
@@ -36,7 +37,8 @@ describe('TajSupportChatWidget', () => {
     expect(screen.getByText(/كيف أبدأ بحجز أول حصة؟/)).toBeInTheDocument()
   })
 
-  it('sends user message and renders AI assistant reply', async () => {
+  it('sends user message and renders AI assistant reply via synchronous fallback', async () => {
+    ;(supportService.streamMessage as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
     ;(supportService.sendMessage as jest.Mock).mockResolvedValueOnce({
       status: 'success',
       data: {
@@ -65,10 +67,42 @@ describe('TajSupportChatWidget', () => {
     })
   })
 
+  it('streams assistant response in real-time via streamMessage (SSE)', async () => {
+    ;(supportService.streamMessage as jest.Mock).mockImplementationOnce((payload, callbacks) => {
+      callbacks.onToken('أهلاً ')
+      callbacks.onToken('بك في منصة تاج التعليمية!')
+      callbacks.onDone({
+        reply: 'أهلاً بك في منصة تاج التعليمية!',
+        needs_human_support: false,
+        support_options: null,
+        suggested_questions: ['كيف أبدأ أول حصة؟'],
+      })
+      return Promise.resolve()
+    })
+
+    render(<TajSupportChatWidget />)
+
+    // Open chat
+    fireEvent.click(screen.getByRole('button', { name: /فتح المساعد الذكي للدعم الفني/i }))
+
+    const input = screen.getByPlaceholderText(/اكتب سؤالك هنا/i)
+    fireEvent.change(input, { target: { value: 'مرحبا' } })
+
+    const sendBtn = screen.getByRole('button', { name: /إرسال السؤال/i })
+    fireEvent.click(sendBtn)
+
+    expect(screen.getByText('مرحبا')).toBeInTheDocument()
+
+    await waitFor(() => {
+      expect(screen.getByText('أهلاً بك في منصة تاج التعليمية!')).toBeInTheDocument()
+      expect(screen.getByText(/كيف أبدأ أول حصة؟/)).toBeInTheDocument()
+    })
+  })
+
   it('displays both WhatsApp (+967774344625) and support ticket options when human assistance is needed', async () => {
-    ;(supportService.sendMessage as jest.Mock).mockResolvedValueOnce({
-      status: 'success',
-      data: {
+    ;(supportService.streamMessage as jest.Mock).mockImplementationOnce((payload, callbacks) => {
+      callbacks.onToken('نأسف لحدوث هذا الأمر. يرجى التواصل مع فريق الدعم للمتابعة.')
+      callbacks.onDone({
         reply: 'نأسف لحدوث هذا الأمر. يرجى التواصل مع فريق الدعم للمتابعة.',
         needs_human_support: true,
         support_options: {
@@ -83,7 +117,8 @@ describe('TajSupportChatWidget', () => {
           },
         },
         suggested_questions: [],
-      },
+      })
+      return Promise.resolve()
     })
 
     render(<TajSupportChatWidget />)
@@ -107,3 +142,4 @@ describe('TajSupportChatWidget', () => {
     })
   })
 })
+

@@ -8,6 +8,7 @@ use App\Services\SupportKnowledgeBase;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 class SupportChatController extends Controller
@@ -17,9 +18,9 @@ class SupportChatController extends Controller
     ) {}
 
     /**
-     * Handle support conversation with Taj AI Assistant.
+     * Handle support conversation with Taj AI Assistant (supports both JSON and SSE streaming).
      */
-    public function chat(Request $request): JsonResponse
+    public function chat(Request $request): JsonResponse|StreamedResponse
     {
         $validated = $request->validate([
             'messages' => 'required|array|min:1|max:20',
@@ -27,7 +28,48 @@ class SupportChatController extends Controller
             'messages.*.content' => 'required|string|max:2000',
         ]);
 
+        $isStreaming = $request->boolean('stream') || str_contains($request->header('Accept', ''), 'text/event-stream');
+
         if (! $this->openAIService->isConfigured()) {
+            if ($isStreaming) {
+                return response()->stream(function () {
+                    $unavailableReply = 'عذراً، خدمة المساعد الذكي تخضع للصيانة حالياً. يسعدنا تقديم المساعدة المباشرة لك عبر خيارات الدعم التالية:';
+                    echo "event: token\n";
+                    echo 'data: '.json_encode(['token' => $unavailableReply], JSON_UNESCAPED_UNICODE)."\n\n";
+                    if (ob_get_level() > 0) {
+                        ob_flush();
+                    }
+                    flush();
+
+                    echo "event: done\n";
+                    echo 'data: '.json_encode([
+                        'reply' => $unavailableReply,
+                        'needs_human_support' => true,
+                        'support_options' => [
+                            'whatsapp' => [
+                                'phone' => SupportKnowledgeBase::SUPPORT_WHATSAPP_NUMBER,
+                                'link' => SupportKnowledgeBase::buildWhatsAppLink('مرحباً فريق تاج، أود الاستفسار عن...'),
+                                'label' => 'التحدث مع موظف الدعم عبر واتساب ('.SupportKnowledgeBase::SUPPORT_WHATSAPP_NUMBER.')',
+                            ],
+                            'ticket' => [
+                                'link' => SupportKnowledgeBase::SUPPORT_TICKET_PATH,
+                                'label' => 'فتح تذكرة دعم فني',
+                            ],
+                        ],
+                        'suggested_questions' => [],
+                    ], JSON_UNESCAPED_UNICODE)."\n\n";
+                    if (ob_get_level() > 0) {
+                        ob_flush();
+                    }
+                    flush();
+                }, 200, [
+                    'Content-Type' => 'text/event-stream; charset=UTF-8',
+                    'Cache-Control' => 'no-cache, no-transform',
+                    'Connection' => 'keep-alive',
+                    'X-Accel-Buffering' => 'no',
+                ]);
+            }
+
             return response()->json([
                 'status' => 'unavailable',
                 'message' => 'خدمة المساعد الذكي غير مهيأة حالياً.',
@@ -52,6 +94,51 @@ class SupportChatController extends Controller
 
         // Resolves user if Bearer token is provided via Sanctum, otherwise null for guests
         $user = $request->user('sanctum');
+
+        if ($isStreaming) {
+            return response()->stream(function () use ($validated, $user) {
+                try {
+                    $this->openAIService->streamSupportAssistantChat(
+                        $validated['messages'],
+                        $user,
+                        function (string $event, array $data) {
+                            echo "event: {$event}\n";
+                            echo 'data: '.json_encode($data, JSON_UNESCAPED_UNICODE)."\n\n";
+                            if (ob_get_level() > 0) {
+                                ob_flush();
+                            }
+                            flush();
+                        }
+                    );
+                } catch (Throwable $e) {
+                    Log::error('Support assistant stream error: '.$e->getMessage());
+                    echo "event: error\n";
+                    echo 'data: '.json_encode([
+                        'message' => 'حدث خطأ مؤقت أثناء معالجة المحادثة.',
+                        'reply' => 'نعتذر منك، حدث خطأ مؤقت أثناء معالجة طلبك. يمكنك إعادة المحاولة أو التواصل المباشر مع فريق الدعم عبر الخيارات أدناه:',
+                        'needs_human_support' => true,
+                        'support_options' => [
+                            'whatsapp' => [
+                                'phone' => SupportKnowledgeBase::SUPPORT_WHATSAPP_NUMBER,
+                                'link' => SupportKnowledgeBase::buildWhatsAppLink('مرحباً فريق تاج، أود الاستفسار عن...'),
+                                'label' => 'التحدث مع موظف الدعم عبر واتساب ('.SupportKnowledgeBase::SUPPORT_WHATSAPP_NUMBER.')',
+                            ],
+                            'ticket' => [
+                                'link' => SupportKnowledgeBase::SUPPORT_TICKET_PATH,
+                                'label' => 'فتح تذكرة دعم فني',
+                            ],
+                        ],
+                        'suggested_questions' => [],
+                    ], JSON_UNESCAPED_UNICODE)."\n\n";
+                    flush();
+                }
+            }, 200, [
+                'Content-Type' => 'text/event-stream; charset=UTF-8',
+                'Cache-Control' => 'no-cache, no-transform',
+                'Connection' => 'keep-alive',
+                'X-Accel-Buffering' => 'no',
+            ]);
+        }
 
         try {
             $result = $this->openAIService->chatWithSupportAssistant($validated['messages'], $user);
