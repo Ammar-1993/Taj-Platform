@@ -341,6 +341,10 @@ class SupportJsonStreamParser
 
     private ?string $unicodeBuffer = null;
 
+    private string $pendingUtf8 = '';
+
+    private string $tokenBuffer = '';
+
     public string $reply = '';
 
     public string $fullRaw = '';
@@ -348,11 +352,24 @@ class SupportJsonStreamParser
     public function processChunk(string $chunk, callable $onToken): void
     {
         $this->fullRaw .= $chunk;
-        $len = strlen($chunk);
 
-        for ($i = 0; $i < $len; $i++) {
-            $char = $chunk[$i];
+        $stringToProcess = $this->pendingUtf8.$chunk;
+        $this->pendingUtf8 = '';
 
+        // If string ends with an incomplete multi-byte sequence, keep tail in pendingUtf8
+        while ($stringToProcess !== '' && ! mb_check_encoding($stringToProcess, 'UTF-8')) {
+            $lastByte = substr($stringToProcess, -1);
+            $stringToProcess = substr($stringToProcess, 0, -1);
+            $this->pendingUtf8 = $lastByte.$this->pendingUtf8;
+        }
+
+        if ($stringToProcess === '') {
+            return;
+        }
+
+        $chars = mb_str_split($stringToProcess, 1, 'UTF-8');
+
+        foreach ($chars as $char) {
             if ($this->unicodeBuffer !== null) {
                 $this->unicodeBuffer .= $char;
                 if (strlen($this->unicodeBuffer) === 4) {
@@ -360,7 +377,7 @@ class SupportJsonStreamParser
                     $this->unicodeBuffer = null;
                     $this->isEscaping = false;
                     $this->reply .= $token;
-                    $onToken($token);
+                    $this->tokenBuffer .= $token;
                 }
 
                 continue;
@@ -387,7 +404,7 @@ class SupportJsonStreamParser
                             default => '\\'.$char,
                         };
                         $this->reply .= $token;
-                        $onToken($token);
+                        $this->tokenBuffer .= $token;
                     }
                 } elseif ($char === '\\') {
                     $this->isEscaping = true;
@@ -395,13 +412,23 @@ class SupportJsonStreamParser
                     $this->inReply = false;
                     $this->replyFinished = true;
                     $this->buffer = '';
+                    if ($this->tokenBuffer !== '') {
+                        $onToken($this->tokenBuffer);
+                        $this->tokenBuffer = '';
+                    }
                 } else {
                     $this->reply .= $char;
-                    $onToken($char);
+                    $this->tokenBuffer .= $char;
                 }
             } else {
                 $this->buffer .= $char;
             }
+        }
+
+        // Emit any buffered tokens at the end of each chunk if we are inside reply
+        if ($this->inReply && $this->tokenBuffer !== '') {
+            $onToken($this->tokenBuffer);
+            $this->tokenBuffer = '';
         }
     }
 }
