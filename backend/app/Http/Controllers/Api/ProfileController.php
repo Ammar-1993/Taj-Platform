@@ -21,6 +21,9 @@ class ProfileController extends Controller
 
         // جلب الملف مع علاقة المادة لتعبئة نموذج التعديل في الواجهة الأمامية
         $profile = TeacherProfile::with('subject')->where('user_id', $user->id)->first();
+        if ($profile) {
+            $profile->makeVisible(['national_id_path', 'degree_path']);
+        }
 
         return response()->json([
             'status' => 'success',
@@ -63,8 +66,11 @@ class ProfileController extends Controller
             if ($profile->national_id_path) {
                 Storage::disk($disk)->delete($profile->national_id_path);
             }
-            // حفظ الملف الجديد وإرجاع مساره
-            $profile->national_id_path = $request->file('national_id')->store('teacher_documents', $disk);
+            // حفظ الملف الجديد وإرجاع مساره بصلاحية خاصة Private
+            $profile->national_id_path = $request->file('national_id')->store('teacher_documents', [
+                'disk' => $disk,
+                'visibility' => 'private',
+            ]);
         }
 
         // معالجة رفع الشهادة
@@ -72,16 +78,22 @@ class ProfileController extends Controller
             if ($profile->degree_path) {
                 Storage::disk($disk)->delete($profile->degree_path);
             }
-            $profile->degree_path = $request->file('degree')->store('teacher_documents', $disk);
+            // حفظ الشهادة بصلاحية خاصة Private
+            $profile->degree_path = $request->file('degree')->store('teacher_documents', [
+                'disk' => $disk,
+                'visibility' => 'private',
+            ]);
         }
 
         $profile->save();
+        $profile->makeVisible(['national_id_path', 'degree_path']);
 
         return response()->json([
             'status' => 'success',
             'message' => 'تم استكمال ملف المعلم ورفع المستندات بنجاح. حسابك الآن قيد المراجعة الإدارية ⏳',
             'data' => $profile,
         ]);
+
     }
 
     // ==========================================

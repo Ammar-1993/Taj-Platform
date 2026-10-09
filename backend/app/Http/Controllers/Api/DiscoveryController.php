@@ -89,7 +89,21 @@ class DiscoveryController extends Controller
             $query = User::select('users.*')
                 ->role('teacher')
                 ->where('users.is_active', true)
-                ->with(['teacherProfile.subject']) // Eager Loading لتسريع الاستعلام
+                ->with([
+                    'teacherProfile' => function ($q) {
+                        $q->select([
+                            'id',
+                            'user_id',
+                            'subject_id',
+                            'bio',
+                            'is_verified',
+                            'average_rating',
+                            'reviews_count',
+                        ]);
+                    },
+                    'teacherProfile.subject',
+                ])
+
                 ->withCount(['teacherSlots as active_slots_count' => function ($q) {
                     $q->where('status', 'available')
                         ->where('slot_date', '>=', now()->toDateString());

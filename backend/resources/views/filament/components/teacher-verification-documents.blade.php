@@ -2,9 +2,13 @@
     $record = $getRecord() ?? ($record ?? null);
     $disk = \Illuminate\Support\Facades\Storage::disk(config('filesystems.default', 'public'));
 
-    // 1. معالجة وثيقة الهوية الوطنية
+    // 1. معالجة وثيقة الهوية الوطنية (Presigned Ephemeral URL - 5 Minutes)
     $idPath = $record?->national_id_path;
-    $idUrl = $idPath ? $disk->url($idPath) : null;
+    $idUrl = $record && method_exists($record, 'getNationalIdUrl')
+        ? $record->getNationalIdUrl(5)
+        : ($idPath ? (function () use ($disk, $idPath) {
+            try { return $disk->temporaryUrl($idPath, now()->addMinutes(5)); } catch (\Throwable) { return $disk->url($idPath); }
+        })() : null);
     $idExt = $idPath ? strtolower(pathinfo($idPath, PATHINFO_EXTENSION)) : '';
     $idIsImage = in_array($idExt, ['jpg', 'jpeg', 'png', 'webp', 'gif']);
     $idIsPdf = ($idExt === 'pdf');
@@ -20,9 +24,14 @@
         }
     }
 
-    // 2. معالجة وثيقة الشهادة الجامعية / الأكاديمية
+    // 2. معالجة وثيقة الشهادة الجامعية / الأكاديمية (Presigned Ephemeral URL - 5 Minutes)
     $degreePath = $record?->degree_path;
-    $degreeUrl = $degreePath ? $disk->url($degreePath) : null;
+    $degreeUrl = $record && method_exists($record, 'getDegreeUrl')
+        ? $record->getDegreeUrl(5)
+        : ($degreePath ? (function () use ($disk, $degreePath) {
+            try { return $disk->temporaryUrl($degreePath, now()->addMinutes(5)); } catch (\Throwable) { return $disk->url($degreePath); }
+        })() : null);
+
     $degreeExt = $degreePath ? strtolower(pathinfo($degreePath, PATHINFO_EXTENSION)) : '';
     $degreeIsImage = in_array($degreeExt, ['jpg', 'jpeg', 'png', 'webp', 'gif']);
     $degreeIsPdf = ($degreeExt === 'pdf');
@@ -239,9 +248,13 @@
                         <span class="h-2 w-2 rounded-full inline-block" style="background-color: {{ $doc['path'] ? '#10b981' : '#f59e0b' }};"></span>
                         {{ $doc['path'] ? 'مستند موثق وسليم' : 'بانتظار الرفع' }}
                     </span>
-                    <span class="font-mono text-[10px] text-gray-400 dark:text-gray-500">
-                        Cloudflare R2 Storage
+                    <span class="inline-flex items-center gap-1 font-mono text-[10px] text-emerald-600 dark:text-emerald-400" title="رابط مؤقت مشفر عبر S3 Presigned URL ينتهي تلقائياً بعد 5 دقائق لحماية الخصوصية">
+                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                        </svg>
+                        <span>Presigned S3 (5m) • Private R2</span>
                     </span>
+
                 </div>
 
             </div>

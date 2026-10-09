@@ -454,3 +454,26 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - Added unit test suite [`backend/tests/Unit/DatabaseReadWriteSplittingTest.php`](file:///home/ammar/code/taj-platform/backend/tests/Unit/DatabaseReadWriteSplittingTest.php) (4 tests, 26 assertions passed).
   - Full backend test suite: **135 passed (470 assertions)** with 0 failures (`php artisan test`).
   - Code style: `laravel/pint` passed on all 195 files.
+
+### 7. Cloudflare R2 KYC Security Architecture (Private Bucket & 5-Minute Ephemeral Presigned URLs)
+- **Context:** Teacher verification documents (National ID `national_id_path` and Degree `degree_path`) represent highly sensitive KYC data. Previously, storage URLs were static and public endpoint searches (`GET /api/v1/discovery/teachers`) inadvertently exposed raw KYC paths in public JSON payloads.
+- **Filesystem & Private Storage Architecture ([`backend/config/filesystems.php`](file:///home/ammar/code/taj-platform/backend/config/filesystems.php)):**
+  - Configured `'visibility' => env('AWS_VISIBILITY', 'private')` on the `'s3'` (Cloudflare R2) disk array, guaranteeing private object ACLs by default for all uploads.
+  - Documented `AWS_VISIBILITY=private` in [`backend/.env.example`](file:///home/ammar/code/taj-platform/backend/.env.example).
+  - Configured teacher document upload pipeline in [`ProfileController::completeTeacherProfile`](file:///home/ammar/code/taj-platform/backend/app/Http/Controllers/Api/ProfileController.php) to explicitly store files with `['disk' => $disk, 'visibility' => 'private']`.
+- **Ephemeral Presigned S3 URLs ([`TeacherProfile::getNationalIdUrl`](file:///home/ammar/code/taj-platform/backend/app/Models/TeacherProfile.php) & [`TeacherProfile::getDegreeUrl`](file:///home/ammar/code/taj-platform/backend/app/Models/TeacherProfile.php)):**
+  - Implemented model helper methods generating AWS4-HMAC-SHA256 presigned ephemeral URLs via `$disk->temporaryUrl($path, now()->addMinutes(5))` strictly expiring after 300 seconds (5 minutes).
+  - Added robust exception handling with safe fallback to prevent crashes in offline or testing environments lacking S3 temporary URL support.
+- **Filament Admin Dashboard UI ([`teacher-verification-documents.blade.php`](file:///home/ammar/code/taj-platform/backend/resources/views/filament/components/teacher-verification-documents.blade.php)):**
+  - Updated KYC review interface in Filament to generate fresh 5-minute presigned URLs on every page load for image previews, PDF reader links, and direct downloads.
+  - Added visual security badge indicating `Presigned S3 (5m) • Private R2` with tooltip explaining automated 5-minute cryptographic expiration.
+- **Public Data Leak Prevention & Defense-in-Depth:**
+  - Added `protected $hidden = ['national_id_path', 'degree_path']` on [`TeacherProfile`](file:///home/ammar/code/taj-platform/backend/app/Models/TeacherProfile.php), preventing automated serialization leaks in any public API responses.
+  - Constrained eager loading select queries in [`DiscoveryController::teachers`](file:///home/ammar/code/taj-platform/backend/app/Http/Controllers/Api/DiscoveryController.php) to only fetch public fields (`id`, `user_id`, `subject_id`, `bio`, `is_verified`, `average_rating`, `reviews_count`), keeping KYC paths completely off MySQL read queries.
+  - Retained explicit `$profile->makeVisible(['national_id_path', 'degree_path'])` exclusively for the authenticated teacher in [`ProfileController::getTeacherProfile`](file:///home/ammar/code/taj-platform/backend/app/Http/Controllers/Api/ProfileController.php) and `completeTeacherProfile` so the teacher frontend accurately displays `مرفوعة مسبقاً` status without exposing paths publicly.
+- **Automated Verification & Test Suite:**
+  - Created unit test suite [`backend/tests/Unit/TeacherKycSecurityTest.php`](file:///home/ammar/code/taj-platform/backend/tests/Unit/TeacherKycSecurityTest.php) (4 tests, 16 assertions passed).
+  - Full backend test suite: **139 passed (486 assertions)** with 0 failures (`php artisan test`).
+  - Full frontend test suite: **41 passed (7 suites)** with 0 failures (`npm test`).
+  - Code style: `laravel/pint` passed on all 196 files.
+
