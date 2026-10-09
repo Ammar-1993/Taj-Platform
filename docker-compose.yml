@@ -16,6 +16,7 @@ services:
       WWWUSER: '${WWWUSER:-1000}'
       LARAVEL_SAIL: 1
       PHP_CLI_SERVER_WORKERS: 4
+      REVERB_HOST: reverb
     volumes:
       - './backend:/var/www/html'
     networks:
@@ -97,6 +98,7 @@ services:
     environment:
       WWWUSER: '${WWWUSER:-1000}'
       LARAVEL_SAIL: 1
+      REVERB_HOST: reverb
     networks:
       - taj-network
     depends_on:
@@ -117,6 +119,7 @@ services:
     environment:
       WWWUSER: '${WWWUSER:-1000}'
       LARAVEL_SAIL: 1
+      REVERB_HOST: reverb
     networks:
       - taj-network
     depends_on:
