@@ -441,4 +441,16 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - Frontend production build: `npm run build` compiled successfully (exit code 0).
   - Code style: `laravel/pint` formatted cleanly.
 
-
+### 6. Read/Write Database Splitting & Sticky Connection Architecture (MySQL / MariaDB)
+- **Context:** To scale database read throughput and prepare the Taj platform for multi-node database clusters (e.g., MySQL Read Replicas), read operations (discovery endpoints, subject/grade catalogs, teacher profiles, reviews) were separated from critical write operations (bookings, escrow wallet ledgers, user registration).
+- **Configuration & Connection Factory Architecture ([`backend/config/database.php`](file:///home/ammar/code/taj-platform/backend/config/database.php)):**
+  - **Read Pool Configuration:** Configured `'read'` array in both `mysql` and `mariadb` connections with `host` (supporting comma-separated list of read replicas via `DB_READ_HOST`), `port` (`DB_READ_PORT`), `username` (`DB_READ_USERNAME`), and `password` (`DB_READ_PASSWORD`), defaulting safely to the primary master host (`DB_HOST`) when unconfigured.
+  - **Write Pool Configuration:** Configured `'write'` array targeting the primary ACID master (`DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, with optional `DB_WRITE_HOST`).
+  - **Replication Lag Shield (`'sticky' => true`):** Enabled Laravel's native `'sticky' => true` connection behavior. If a write operation (e.g. creating a booking, top-up, withdrawal) is executed during the request lifecycle, all subsequent reads within that same request immediately latch onto the primary write connection (`$connection->getPdo()`), completely eliminating race conditions caused by asynchronous replica sync lag.
+  - **Transaction Protection:** All database transactions (`DB::transaction(...)`), including pessimistic locks (`lockForUpdate()`) in [`WalletService`](file:///home/ammar/code/taj-platform/backend/app/Services/WalletService.php) and [`BookingService`](file:///home/ammar/code/taj-platform/backend/app/Services/BookingService.php), strictly bypass the read replica and execute directly on the primary write master.
+- **Environment & Documentation ([`backend/.env.example`](file:///home/ammar/code/taj-platform/backend/.env.example)):**
+  - Documented `DB_READ_HOST`, `DB_READ_PORT`, `DB_READ_USERNAME`, `DB_READ_PASSWORD`, and `DB_WRITE_HOST`.
+- **Automated Verification Results:**
+  - Added unit test suite [`backend/tests/Unit/DatabaseReadWriteSplittingTest.php`](file:///home/ammar/code/taj-platform/backend/tests/Unit/DatabaseReadWriteSplittingTest.php) (4 tests, 26 assertions passed).
+  - Full backend test suite: **135 passed (470 assertions)** with 0 failures (`php artisan test`).
+  - Code style: `laravel/pint` passed on all 195 files.
