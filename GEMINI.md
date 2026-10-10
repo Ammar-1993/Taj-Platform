@@ -477,3 +477,17 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - Full frontend test suite: **41 passed (7 suites)** with 0 failures (`npm test`).
   - Code style: `laravel/pint` passed on all 196 files.
 
+### 8. GitHub Actions CI/CD Deployment Collision Root-Cause Analysis & Fix
+- **Context:** Following the push of commit `e6f56e9`, GitHub Actions reported a red failure `❌ Deploy Backend to DigitalOcean VPS / Deploy Laravel to VPS (push) Failing after 3m`, while `🧪 Run Tests` (30s) and Vercel frontend deployments both passed with green checks.
+- **Root-Cause Analysis:**
+  - **Docker Daemon Race Condition:** GitHub Actions automatically triggered its deployment workflow upon receiving the commit. Concurrently, an agent terminal session also initiated an SSH deployment (`docker compose up -d --force-recreate ...`) on the single VPS at the exact same second.
+  - **Container Removal Collision:** When both Docker clients attempted to delete and recreate the same container (`taj_reverb` / `taj_admin_web`), one client successfully removed the container ID, causing the second client (running inside GitHub Actions' `appleboy/ssh-action`) to receive `Error response from daemon: No such container: 6562fd585041...`. Because the workflow uses `set -e`, this immediately failed the GitHub Actions job.
+  - **Omission in Path Triggers:** Subsequent commit `5366f66` only modified `README.md`, which was excluded by the workflow's `paths` filter, leaving the red check unrefreshed on GitHub.
+- **Resolution & Hardening:**
+  - **Graceful Termination & Dependency Ordering:** Refactored container startup in [`.github/workflows/deploy-backend.yml`](file:///home/ammar/code/taj-platform/.github/workflows/deploy-backend.yml) to use `--timeout 30` across all services (`taj_redis`, `taj_admin_web`, `taj_queue_worker`, `taj_reverb`), eliminating aggressive SIGKILL crashes (exit code 137) during Reverb and worker shutdown.
+  - **Worktree Cleanliness:** Added `git clean -fd || true` before fetch to cleanly discard any untracked backup files on the host.
+  - **Trigger Expansion:** Added `'.github/workflows/deploy-backend.yml'` to `paths` filter so CI changes automatically trigger new builds.
+  - **Compose v2 Cleanup:** Removed obsolete `version: '3.8'` declaration from [`docker-compose.prod.yml`](file:///home/ammar/code/taj-platform/docker-compose.prod.yml).
+- **Verification:** Pushed commit `43354f7`. GitHub Actions run `#38092790729` completed with **100% SUCCESS (GREEN ✅)** across both `🧪 Run Tests` and `Deploy Laravel to VPS`. All production containers (`taj_admin_web`, `taj_queue_worker`, `taj_reverb`, `taj_redis`) are healthy and active on the DigitalOcean server.
+
+
