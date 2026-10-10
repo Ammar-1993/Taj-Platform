@@ -1098,9 +1098,20 @@ The suite covers:
 ## 👤 Author
 
 <div align="center">
-  <p>Developed with ❤️ by <b>Eng. Ammar Al-Najjar (م. عمار النجار)</b></p>
-  <p>
-    <a href="https://github.com/Ammar-1993"><img src="https://img.shields.io/badge/GitHub-Ammar--1993-181717?style=flat-square&logo=github" alt="GitHub Profile" /></a>
-    <a href="mailto:ammaralnggar@gmail.com"><img src="https://img.shields.io/badge/Email-ammaralnggar@gmail.com-D14836?style=flat-square&logo=gmail&logoColor=white" alt="Email" /></a>
+  <p>Architected & Engineered with ❤️ by <b>Eng. Ammar Al-Najjar (م. عمار النجار)</b></p>
+
+<p>
+  <a href="mailto:ammaralnggar@gmail.com">
+    <img src="https://img.shields.io/badge/Call_me_on_Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white" alt="Email">
+  </a>
+  <a href="https://wa.me/967714294340">
+    <img src="https://img.shields.io/badge/Call_me_on_WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" alt="WhatsApp">
+  </a>
+  <a href="https://ammar1993.vercel.app/">
+    <img src="https://img.shields.io/badge/Visit_My_Portfolio-3E7FFF?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Portfolio">
+  </a>
   </p>
+  <div align="center">
+   <sub>All rights reserved © 2026 Engineer Ammar Al-Najjar</sub>
+  </div>
 </div>
