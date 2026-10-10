@@ -1,7 +1,6 @@
-version: '3.8'
-
 # قالب لتحديد حجم السجلات بـ 10 ميجابايت كحد أقصى
 x-logging: &default-logging
+
   driver: "json-file"
   options:
     max-size: "10m"

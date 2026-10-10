@@ -6,6 +6,7 @@ on:
     paths:
       - 'backend/**'
       - 'docker-compose.prod.yml'
+      - '.github/workflows/deploy-backend.yml'
 
 jobs:
   # ==========================================
@@ -67,20 +68,19 @@ jobs:
             echo "📥 [1/6] سحب آخر التحديثات من GitHub..."
             cd /opt/taj-platform
             git restore . || true
+            git clean -fd || true
             GIT_SSH_COMMAND="ssh -i /root/.ssh/taj_deploy -o StrictHostKeyChecking=no" git fetch origin main
             git reset --hard origin/main
 
             echo "🔨 [2/6] بناء صورة Docker الجديدة (بنية Alpine الخفيفة)..."
-            # إزالة التحديد لبناء كل ما يلزم في الملف المحدث
             docker compose -f docker-compose.prod.yml build
 
             echo "🔧 [3/6] تشغيل التهجيرات بأمان قبل النشر..."
-            # تم استخدام الاسم الصحيح والجديد (taj_admin_web)
             docker compose -f docker-compose.prod.yml run --rm taj_admin_web php artisan migrate --force
 
             echo "🚀 [4/6] تحديث الحاويات لتشغيل الكود الجديد (Minimal Downtime)..."
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans taj_redis
-            docker compose -f docker-compose.prod.yml up -d --force-recreate --remove-orphans --no-deps taj_admin_web taj_queue_worker taj_reverb
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans --timeout 30 taj_redis taj_admin_web taj_queue_worker taj_reverb
+
 
             echo "⚡ [5/6] تنظيف وبناء الكاش لتحسين الأداء..."
             docker exec taj_admin_web php artisan optimize:clear
