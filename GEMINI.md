@@ -501,6 +501,17 @@ Resolved three critical build warnings during `npm run build` in the frontend:
 - **Verification:**
   - Full backend test suite executed: **139 passed (486 assertions)** with 0 failures (`php artisan test`).
 
+### 10. CI/CD Deployment Timeout Diagnosis (Layer Invalidation & 10m SSH Timeout)
+- **Context:** Following commit `d30432e`, GitHub Actions failed on `Deploy Backend to DigitalOcean VPS / Deploy Laravel to VPS` with error `Failing after 10m`.
+- **Root-Cause Analysis:**
+  - Modifying `Dockerfile.prod` line 40 (`RUN apt-get update ... docker-php-ext-install ... opcache`) invalidated the base Docker image layer cache.
+  - Recompiling all C extensions (`intl`, `gd`, `zip`, `opcache`) on the DigitalOcean Droplet CPU took ~10 minutes.
+  - `appleboy/ssh-action` has a default `command_timeout: 10m`. Exactly at the 10-minute threshold, the action prematurely killed the SSH session.
+- **Resolution:**
+  - Configured `command_timeout: 30m` and `timeout: 60s` in [`.github/workflows/deploy-backend.yml`](file:///home/ammar/code/taj-platform/.github/workflows/deploy-backend.yml).
+  - Verified on live production: `taj-platform-prod:latest` completed compilation and layers are cached; `taj_admin_web`, `taj_queue_worker`, `taj_redis`, and `taj_reverb` are all healthy and active with OPcache + JIT running.
+
+
 
 
 
