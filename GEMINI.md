@@ -490,4 +490,17 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - **Compose v2 Cleanup:** Removed obsolete `version: '3.8'` declaration from [`docker-compose.prod.yml`](file:///home/ammar/code/taj-platform/docker-compose.prod.yml).
 - **Verification:** Pushed commit `43354f7`. GitHub Actions run `#38092790729` completed with **100% SUCCESS (GREEN ✅)** across both `🧪 Run Tests` and `Deploy Laravel to VPS`. All production containers (`taj_admin_web`, `taj_queue_worker`, `taj_reverb`, `taj_redis`) are healthy and active on the DigitalOcean server.
 
+### 9. Production PHP 8.3 OPcache & JIT Compiler Acceleration (Memory-Safe Architecture)
+- **Context:** Production server on DigitalOcean ran PHP 8.3 in raw interpretation mode without opcode caching. `backend/docker/8.3/Dockerfile.prod` omitted the `opcache` extension from `docker-php-ext-install`, and `backend/php.ini` lacked OPcache and JIT directives.
+- **Memory Constraint Safety Analysis:**
+  - `taj_admin_web` in `docker-compose.prod.yml` enforces a strict memory ceiling of `256M`. Allocating standard unconstrained OPcache values (e.g. 128M OPcache + 64M JIT) would trigger Linux OOM kills (`OOMKilled`) under peak concurrency.
+  - Configured safe, highly optimized quotas: `opcache.memory_consumption = 64M` (comfortably fitting Laravel 12's ~30MB bytecode footprint) and `opcache.jit_buffer_size = 16M` with tracing mode (`opcache.jit = tracing`).
+- **Implementation:**
+  - [`backend/docker/8.3/Dockerfile.prod`](file:///home/ammar/code/taj-platform/backend/docker/8.3/Dockerfile.prod): Added `opcache` to `docker-php-ext-install`.
+  - [`backend/php.ini`](file:///home/ammar/code/taj-platform/backend/php.ini): Configured `opcache.enable = 1`, `opcache.enable_cli = 0`, `opcache.interned_strings_buffer = 12`, `opcache.max_accelerated_files = 10000`, `opcache.validate_timestamps = 0` (immutable production builds), and `opcache.save_comments = 1` (retaining PHP 8 attributes & Filament metadata).
+- **Verification:**
+  - Full backend test suite executed: **139 passed (486 assertions)** with 0 failures (`php artisan test`).
+
+
+
 
