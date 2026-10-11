@@ -1112,5 +1112,6 @@ The suite covers:
   </a>
   </p>
   <div align="center">
+   <sub>All rights reserved © 2026 Engineer Ammar Al-Najjar</sub>
   </div>
 </div>
