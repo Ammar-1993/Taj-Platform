@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use App\Support\CustomLostConnectionDetector;
+use App\Support\CustomPredisConnector;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Database\LostConnectionDetector;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
@@ -17,7 +20,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // 🔄 تسجيل CustomLostConnectionDetector لدعم التعرف على انقطاع اتصال Redis/Predis لإنهاء العامل وإعادة تشغيله بنظافة
+        $this->app->singleton(
+            LostConnectionDetector::class,
+            CustomLostConnectionDetector::class
+        );
     }
 
     /**
@@ -45,5 +52,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('login', function (Request $request) {
             return Limit::perMinute(5)->by($request->ip());
         });
+
+        // ⚡ تهيئة مشغل Predis بدعم إعادة المحاولة التلقائية (Retry Backoff) لمنع أخطاء Stream is already at the end
+        if ($this->app->bound('redis')) {
+            $this->app->make('redis')->extend('predis', fn () => new CustomPredisConnector);
+        }
     }
 }

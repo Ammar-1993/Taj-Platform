@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
+use Predis\Connection\ConnectionException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -30,6 +31,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
             // تجاهل محاولات تعديل الخصائص المحمية (Locked Properties) بواسطة أدوات الفحص
             if ($e instanceof CannotUpdateLockedPropertyException) {
+                return false;
+            }
+
+            // تجاهل انقطاعات اتصال Redis/Predis العابرة أثناء إعادة تشغيل الحاوية أو عمليات النشر
+            if ($e instanceof ConnectionException && (
+                str_contains($e->getMessage(), 'Stream is already at the end') ||
+                str_contains($e->getMessage(), 'Connection refused')
+            )) {
                 return false;
             }
 

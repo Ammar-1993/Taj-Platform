@@ -530,6 +530,22 @@ Resolved three critical build warnings during `npm run build` in the frontend:
 - **Verification:**
   - Full backend test suite executed: **139 passed (486 assertions)** with 0 failures (`php artisan test`).
 
+### 13. Queue Worker & Redis Connection Loss Resilience Architecture (Stream is already at the end)
+- **Context:** Sentry recorded `Predis\Connection\ConnectionException: Stream is already at the end [tcp://taj_redis:6379]` on October 8 with queue worker terminating with `exit: 1`. Investigation revealed that while August's fix (`read_write_timeout = -1`) prevented idle socket timeouts, it did not handle Redis container restarts, TCP stream resets, or Docker bridge idle drops.
+- **Root-Cause Analysis:**
+  1. **Laravel Detector Gap:** Laravel's `LostConnectionDetector` only contains SQL database disconnect strings (`server has gone away`, `SQLSTATE[HY000]`), omitting Redis and Predis connection drop strings.
+  2. **Uncaught Crash:** Because `causedByLostConnection($e)` returned `false`, the worker did not trigger `$this->shouldQuit = true`. Subsequent loops outside `getNextJob` (in `queueShouldRestart` / `queuePaused`) threw uncaught exceptions crashing the worker with `exit 1`.
+  3. **No Retries by Default:** `Predis` defaults to `new Retry(new NoBackoff(), 0)`, failing immediately on transient TCP drop rather than auto-reconnecting.
+  4. **Redis Keep-Alive:** The production Redis container command lacked `--tcp-keepalive 60` and `--timeout 0`.
+- **Comprehensive 4-Layer Resolution:**
+  1. **`CustomLostConnectionDetector` ([`CustomLostConnectionDetector.php`](file:///home/ammar/code/taj-platform/backend/app/Support/CustomLostConnectionDetector.php)):** Implemented and registered `Illuminate\Contracts\Database\LostConnectionDetector` in [`AppServiceProvider`](file:///home/ammar/code/taj-platform/backend/app/Providers/AppServiceProvider.php) recognizing `Predis\Connection\ConnectionException`, `Stream is already at the end`, `Connection closed`, and `Connection refused`. When Redis restarts, the worker cleanly halts with `EXIT_SUCCESS` (exit 0) and is immediately restarted cleanly by Docker.
+  2. **Auto-Retry & Socket Optimization ([`CustomPredisConnector.php`](file:///home/ammar/code/taj-platform/backend/app/Support/CustomPredisConnector.php)):** Extended Predis driver in `AppServiceProvider::boot()` with `new Retry(new EqualBackoff(150), 3)` and `tcp_nodelay = true`. Transient disconnects during deployments self-heal within milliseconds without restarting the worker.
+  3. **Sentry Noise Filter ([`bootstrap/app.php`](file:///home/ammar/code/taj-platform/backend/bootstrap/app.php)):** Suppressed transient `ConnectionException` instances from Sentry during container restarts.
+  4. **TCP Keepalive ([`docker-compose.prod.yml`](file:///home/ammar/code/taj-platform/docker-compose.prod.yml)):** Added `--tcp-keepalive 60 --timeout 0` to Redis server command.
+- **Verification:**
+  - Automated unit test suite ([`RedisQueueResilienceTest.php`](file:///home/ammar/code/taj-platform/backend/tests/Unit/RedisQueueResilienceTest.php)) added and passing: 7 tests, 11 assertions.
+  - Full test suite passed: **146 passed (497 assertions)** with 0 failures (`php artisan test`).
+
 
 
 
