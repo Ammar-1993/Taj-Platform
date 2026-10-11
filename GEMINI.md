@@ -521,6 +521,16 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - Live testing via `curl -s -I -H 'Accept-Encoding: gzip' https://api.taj-edu.online/api/v1/discovery/subjects` confirmed `content-encoding: gzip` and `vary: Accept-Encoding`.
   - Confirmed 80% compression reduction on live payloads: `/api/v1/discovery/teachers` dropped from `10,200 bytes` to `2,038 bytes`.
 
+### 12. Queue Worker Priority Queues Architecture (`high`, `default`, `low`)
+- **Context:** `ProvisionVirtualClassroom` (real-time Agora/Whiteboard classroom setup) and `GenerateSessionSummaryJob` (10-25s external OpenAI API calls) both executed on a single shared `default` queue with `--sleep=3`. Long-running AI jobs caused Head-of-Line (HoL) blocking for urgent live classroom joins.
+- **Implementation:**
+  - **Classroom Provisioning Job ([`ProvisionVirtualClassroom.php`](file:///home/ammar/code/taj-platform/backend/app/Jobs/ProvisionVirtualClassroom.php)):** Assigned to `high` queue via `$this->onQueue('high')`.
+  - **AI Session Summary Job ([`GenerateSessionSummaryJob.php`](file:///home/ammar/code/taj-platform/backend/app/Jobs/GenerateSessionSummaryJob.php)):** Assigned to `low` queue via `$this->onQueue('low')`.
+  - **Worker Command Configuration ([`docker-compose.prod.yml`](file:///home/ammar/code/taj-platform/docker-compose.prod.yml) & [`docker-compose.yml`](file:///home/ammar/code/taj-platform/docker-compose.yml)):** Updated worker command to `--queue=high,default,low --sleep=1 --tries=5 --max-time=3600 --backoff=10,30,60`, enforcing strict priority draining where live classroom provisioning always preempts background AI jobs, with polling sleep reduced from 3s to 1s.
+- **Verification:**
+  - Full backend test suite executed: **139 passed (486 assertions)** with 0 failures (`php artisan test`).
+
+
 
 
 

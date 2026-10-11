@@ -38,7 +38,7 @@ services:
     image: taj-platform-prod:latest
     container_name: taj_queue_worker
     restart: unless-stopped
-    command: php artisan queue:work redis --sleep=3 --tries=5 --max-time=3600 --backoff=10,30,60
+    command: php artisan queue:work redis --queue=high,default,low --sleep=1 --tries=5 --max-time=3600 --backoff=10,30,60
     env_file:
       - ./backend/.env.prod
     extra_hosts:

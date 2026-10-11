@@ -29,7 +29,10 @@ class GenerateSessionSummaryJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(public Booking $booking) {}
+    public function __construct(public Booking $booking)
+    {
+        $this->onQueue('low');
+    }
 
     /**
      * Execute the job.

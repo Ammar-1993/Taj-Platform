@@ -92,7 +92,7 @@ services:
   queue:
     image: taj-laravel-8.3
     restart: unless-stopped
-    command: php artisan queue:work redis --sleep=3 --tries=3
+    command: php artisan queue:work redis --queue=high,default,low --sleep=1 --tries=3
     volumes:
       - './backend:/var/www/html'
     environment:
