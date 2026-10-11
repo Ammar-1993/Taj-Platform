@@ -511,6 +511,17 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - Configured `command_timeout: 30m` and `timeout: 60s` in [`.github/workflows/deploy-backend.yml`](file:///home/ammar/code/taj-platform/.github/workflows/deploy-backend.yml).
   - Verified on live production: `taj-platform-prod:latest` completed compilation and layers are cached; `taj_admin_web`, `taj_queue_worker`, `taj_redis`, and `taj_reverb` are all healthy and active with OPcache + JIT running.
 
+### 11. Production Nginx Gzip Compression Architecture (80% Egress Payload Reduction)
+- **Context:** Production API responses (`/api/v1/discovery/*`, `/api/v1/parent/dashboard`) were served uncompressed over HTTP/2, transmitting raw JSON payloads (~10.2KB for teachers catalog).
+- **Implementation ([`backend/docker/8.3/nginx-prod.conf`](file:///home/ammar/code/taj-platform/backend/docker/8.3/nginx-prod.conf)):**
+  - Configured `gzip on`, `gzip_vary on`, and critically `gzip_proxied any` to ensure compression applies through reverse proxies (e.g. Caddy).
+  - Selected `gzip_comp_level 5` for optimal CPU-to-compression ratio and `gzip_min_length 256` to avoid compressing trivial byte sizes.
+  - Specified MIME types: `application/json`, `application/javascript`, `text/css`, `text/plain`, `text/xml`, `application/xml`, and `image/svg+xml`.
+- **Live Verification:**
+  - Live testing via `curl -s -I -H 'Accept-Encoding: gzip' https://api.taj-edu.online/api/v1/discovery/subjects` confirmed `content-encoding: gzip` and `vary: Accept-Encoding`.
+  - Confirmed 80% compression reduction on live payloads: `/api/v1/discovery/teachers` dropped from `10,200 bytes` to `2,038 bytes`.
+
+
 
 
 
