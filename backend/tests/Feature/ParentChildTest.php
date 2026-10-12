@@ -158,7 +158,7 @@ class ParentChildTest extends TestCase
 
         // 3. Assert: Verify the monitoring data
         $response->assertStatus(200)
-            ->assertJsonPath('data.total_spent', 100)
+            ->assertJsonPath('data.total_spent', fn ($value) => (float) $value === 100.0)
             ->assertJsonCount(1, 'data.bookings.data')
             ->assertJsonPath('data.bookings.data.0.student.name', $child->name)
             ->assertJsonPath('data.bookings.data.0.teacher.name', $teacher->name)
@@ -213,7 +213,7 @@ class ParentChildTest extends TestCase
         // Second call: must reflect the newly added booking (total_spent = 150)
         $res2 = $this->actingAs($this->parent)->getJson('/api/v1/parent/dashboard');
         $res2->assertStatus(200)
-            ->assertJsonPath('data.total_spent', 150)
+            ->assertJsonPath('data.total_spent', fn ($value) => (float) $value === 150.0)
             ->assertJsonCount(1, 'data.bookings.data');
     }
 }

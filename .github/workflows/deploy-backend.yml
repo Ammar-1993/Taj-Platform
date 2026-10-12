@@ -36,20 +36,72 @@ jobs:
           cp .env.example .env
           php artisan key:generate
           
-      - name: 🚀 Run Tests (Fallback included)
+      - name: 🚀 Run Tests (Blocking Gate)
         working-directory: ./backend
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ":memory:"
-        # سيتم تشغيل الاختبارات إن وجدت، وإلا سيتجاوز الخطوة بنجاح
-        run: php artisan test --graceful || true 
+        # 🔴 بوابة إلزامية: أي فشل في الاختبارات (أو عدم تنفيذ أي اختبار) يوقف الـ Workflow ويمنع النشر
+        run: php artisan test
+
+  # ==========================================
+  # 🐬 اختبارات التكامل على MySQL الحقيقي (أقفال المحفظة، القيود الفريدة، Idempotency)
+  # ==========================================
+  test-mysql:
+    name: 🧪 Run Tests (MySQL 8)
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: taj_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: ✅ Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐘 Setup PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, bcmath, mbstring, xml, curl, zip
+
+      - name: 📦 Install Dependencies
+        working-directory: ./backend
+        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+      - name: ⚙️ Prepare Test Environment
+        working-directory: ./backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: 🚀 Run Tests on MySQL (Blocking Gate)
+        working-directory: ./backend
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: taj_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
+        run: php artisan test
 
   # ==========================================
   # 🚀 المرحلة الثانية: النشر الفعلي (Deployment)
   # ==========================================
   deploy:
     name: Deploy Laravel to VPS
-    needs: test # 🔴 لا تقم بالنشر أبداً إلا إذا نجحت الاختبارات في المرحلة السابقة
+    needs: [test, test-mysql] # 🔴 لا تقم بالنشر أبداً إلا إذا نجحت اختبارات SQLite و MySQL
     runs-on: ubuntu-latest
 
     steps:
@@ -71,7 +123,18 @@ jobs:
             cd /opt/taj-platform
             git restore . || true
             git clean -fd || true
-            GIT_SSH_COMMAND="ssh -i /root/.ssh/taj_deploy -o StrictHostKeyChecking=no" git fetch origin main
+
+            # 🔒 تثبيت مفاتيح GitHub الرسمية (https://api.github.com/meta) بدل StrictHostKeyChecking=no
+            mkdir -p /root/.ssh
+            cat > /root/.ssh/github_known_hosts <<'KNOWN_HOSTS'
+            github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+            github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
+            github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=
+            KNOWN_HOSTS
+            sed -i 's/^ *//' /root/.ssh/github_known_hosts
+            chmod 600 /root/.ssh/github_known_hosts
+
+            GIT_SSH_COMMAND="ssh -i /root/.ssh/taj_deploy -o UserKnownHostsFile=/root/.ssh/github_known_hosts -o StrictHostKeyChecking=yes" git fetch origin main
             git reset --hard origin/main
 
             echo "🔨 [2/6] بناء صورة Docker الجديدة (بنية Alpine الخفيفة)..."
