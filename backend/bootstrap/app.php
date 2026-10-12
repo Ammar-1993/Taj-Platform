@@ -5,6 +5,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Predis\Connection\ConnectionException;
+use Predis\Connection\Resource\Exception\StreamInitException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -34,8 +35,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 return false;
             }
 
-            // تجاهل انقطاعات اتصال Redis/Predis العابرة أثناء إعادة تشغيل الحاوية أو عمليات النشر
-            if ($e instanceof ConnectionException && (
+            // تجاهل انقطاعات اتصال واستعلامات Redis/Predis العابرة أثناء إعادة تشغيل الحاوية أو عمليات النشر
+            if (($e instanceof ConnectionException || $e instanceof StreamInitException) && (
                 str_contains($e->getMessage(), 'Stream is already at the end') ||
                 str_contains($e->getMessage(), 'Connection refused') ||
                 str_contains($e->getMessage(), 'Temporary failure in name resolution') ||

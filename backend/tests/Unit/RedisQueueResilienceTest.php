@@ -10,6 +10,7 @@ use Illuminate\Queue\Worker;
 use PHPUnit\Framework\Attributes\Test;
 use Predis\Connection\ConnectionException;
 use Predis\Connection\NodeConnectionInterface;
+use Predis\Connection\Resource\Exception\StreamInitException;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -34,6 +35,18 @@ class RedisQueueResilienceTest extends TestCase
         );
 
         $this->assertTrue($detector->causedByLostConnection($predisException));
+    }
+
+    #[Test]
+    public function it_detects_stream_init_exception_as_lost_connection(): void
+    {
+        $detector = new CustomLostConnectionDetector;
+
+        $streamInitException = new StreamInitException(
+            'php_network_getaddresses: getaddrinfo for taj_redis failed: Temporary failure in name resolution [tcp://taj_redis:6379]'
+        );
+
+        $this->assertTrue($detector->causedByLostConnection($streamInitException));
     }
 
     #[Test]

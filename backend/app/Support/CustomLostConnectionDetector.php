@@ -6,6 +6,7 @@ use Illuminate\Contracts\Database\LostConnectionDetector as LostConnectionDetect
 use Illuminate\Database\LostConnectionDetector;
 use Illuminate\Support\Str;
 use Predis\Connection\ConnectionException as PredisConnectionException;
+use Predis\Connection\Resource\Exception\StreamInitException;
 use Throwable;
 
 class CustomLostConnectionDetector implements LostConnectionDetectorContract
@@ -26,7 +27,7 @@ class CustomLostConnectionDetector implements LostConnectionDetectorContract
             return true;
         }
 
-        if ($e instanceof PredisConnectionException) {
+        if ($e instanceof PredisConnectionException || $e instanceof StreamInitException) {
             return true;
         }
 
