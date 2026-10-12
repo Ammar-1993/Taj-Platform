@@ -37,7 +37,9 @@ return Application::configure(basePath: dirname(__DIR__))
             // تجاهل انقطاعات اتصال Redis/Predis العابرة أثناء إعادة تشغيل الحاوية أو عمليات النشر
             if ($e instanceof ConnectionException && (
                 str_contains($e->getMessage(), 'Stream is already at the end') ||
-                str_contains($e->getMessage(), 'Connection refused')
+                str_contains($e->getMessage(), 'Connection refused') ||
+                str_contains($e->getMessage(), 'Temporary failure in name resolution') ||
+                str_contains($e->getMessage(), 'php_network_getaddresses')
             )) {
                 return false;
             }

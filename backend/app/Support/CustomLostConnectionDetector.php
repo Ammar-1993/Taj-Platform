@@ -40,6 +40,10 @@ class CustomLostConnectionDetector implements LostConnectionDetectorContract
             'Redis server went away',
             'Connection refused',
             'Failed to read from the socket',
+            'Temporary failure in name resolution',
+            'php_network_getaddresses',
+            'Failed to connect to',
+            'Network is unreachable',
         ], ignoreCase: true);
     }
 }

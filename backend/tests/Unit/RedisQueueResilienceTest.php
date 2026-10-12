@@ -6,6 +6,7 @@ use App\Support\CustomLostConnectionDetector;
 use App\Support\CustomPredisConnector;
 use Exception;
 use Illuminate\Contracts\Database\LostConnectionDetector as LostConnectionDetectorContract;
+use Illuminate\Queue\Worker;
 use PHPUnit\Framework\Attributes\Test;
 use Predis\Connection\ConnectionException;
 use Predis\Connection\NodeConnectionInterface;
@@ -46,13 +47,15 @@ class RedisQueueResilienceTest extends TestCase
     }
 
     #[Test]
-    public function it_detects_redis_connection_refused_or_closed(): void
+    public function it_detects_redis_connection_refused_or_closed_or_dns_failure(): void
     {
         $detector = new CustomLostConnectionDetector;
 
         $this->assertTrue($detector->causedByLostConnection(new Exception('Connection refused')));
         $this->assertTrue($detector->causedByLostConnection(new Exception('Connection closed')));
         $this->assertTrue($detector->causedByLostConnection(new Exception('Error while reading line from the server')));
+        $this->assertTrue($detector->causedByLostConnection(new Exception('Temporary failure in name resolution [tcp://taj_redis:6379]')));
+        $this->assertTrue($detector->causedByLostConnection(new Exception('php_network_getaddresses: getaddrinfo for taj_redis failed')));
     }
 
     #[Test]
@@ -90,5 +93,12 @@ class RedisQueueResilienceTest extends TestCase
 
         // Verify with mock or dry inspection of configuration parameter transformation
         $this->assertInstanceOf(CustomPredisConnector::class, $connector);
+    }
+
+    #[Test]
+    public function queue_without_interruption_polling_disables_cache_spam(): void
+    {
+        $this->assertFalse(Worker::$restartable);
+        $this->assertFalse(Worker::$pausable);
     }
 }

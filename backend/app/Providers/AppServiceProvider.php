@@ -8,6 +8,7 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Database\LostConnectionDetector;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Number;
@@ -56,6 +57,12 @@ class AppServiceProvider extends ServiceProvider
         // ⚡ تهيئة مشغل Predis بدعم إعادة المحاولة التلقائية (Retry Backoff) لمنع أخطاء Stream is already at the end
         if ($this->app->bound('redis')) {
             $this->app->make('redis')->extend('predis', fn () => new CustomPredisConnector);
+        }
+
+        // 🚀 تعطيل الاستعلام المتكرر عن إشارات الإيقاف المؤقت وإعادة التشغيل في بيئة الحاويات (Docker)
+        // هذا يمنع إرهاق Redis و Sentry بـ 4 طلبات كاش كل ثانية، ويمنع انهيار العامل عند انقطاع الاتصال خارج نطاق المعالجة
+        if ($this->app->bound('queue')) {
+            Queue::withoutInterruptionPolling();
         }
     }
 }
