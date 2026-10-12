@@ -543,8 +543,22 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   3. **Sentry Noise Filter ([`bootstrap/app.php`](file:///home/ammar/code/taj-platform/backend/bootstrap/app.php)):** Suppressed transient `ConnectionException` instances from Sentry during container restarts.
   4. **TCP Keepalive ([`docker-compose.prod.yml`](file:///home/ammar/code/taj-platform/docker-compose.prod.yml)):** Added `--tcp-keepalive 60 --timeout 0` to Redis server command.
 - **Verification:**
-  - Automated unit test suite ([`RedisQueueResilienceTest.php`](file:///home/ammar/code/taj-platform/backend/tests/Unit/RedisQueueResilienceTest.php)) added and passing: 7 tests, 11 assertions.
+  - Automated unit test suite ([`RedisQueueResilienceTest.php`](file:///home/ammar/code/taj-platform/backend/tests/Unit/RedisQueueResilienceTest.php)) added and passing: 9 tests, 16 assertions.
   - Full test suite passed: **146 passed (497 assertions)** with 0 failures (`php artisan test`).
+
+### 14. Unauthenticated Navigation Routing Resilience Architecture (`Route [login] not defined`)
+- **Context:** Sentry captured `Symfony\Component\Routing\Exception\RouteNotFoundException: Route [login] not defined` on October 8 during navigation requests to protected API routes.
+- **Root-Cause Analysis:**
+  1. **Missing JSON Accept Header:** When a browser, web crawler, or client makes a GET navigation request to a protected API endpoint (e.g. `/api/v1/auth/me`) without `Accept: application/json`, `$request->expectsJson()` returns `false`.
+  2. **Fallback to Undefined Route:** Laravel's `Handler::unauthenticated()` redirects to `$exception->redirectTo($request) ?? route('login')`. Because `redirectGuestsTo(fn () => null)` returned `null`, Laravel evaluated `route('login')`.
+  3. **No Named Login Route:** The API monorepo routes authentication via `/api/v1/auth/login` (POST) and frontend Next.js (`/login`), with no named `login` route registered in Laravel. The missing route threw `RouteNotFoundException`, turning a 401 Unauthenticated into an unhandled 500 server error in Sentry.
+- **Comprehensive 3-Layer Resolution:**
+  1. **Strict API JSON Responses ([`backend/bootstrap/app.php`](file:///home/ammar/code/taj-platform/backend/bootstrap/app.php)):** Configured `$exceptions->shouldRenderJsonWhen()` ensuring all `/api/*` and `/api` requests always return JSON (`401 Unauthorized` with `{"message": "Unauthenticated."}`), regardless of the request `Accept` header.
+  2. **Smart Guest Redirection ([`backend/bootstrap/app.php`](file:///home/ammar/code/taj-platform/backend/bootstrap/app.php)):** Configured `redirectGuestsTo()` to return `null` for API/JSON requests, route to `filament.admin.auth.login` for `/admin/*`, and fallback to `route('login')` for web guests.
+  3. **Named Login Route Definition ([`backend/routes/web.php`](file:///home/ammar/code/taj-platform/backend/routes/web.php)):** Registered `Route::get('/login', ...)->name('login')` redirecting away to the frontend login page (`env('FRONTEND_URL', 'https://www.taj-edu.online').'/login'`), guaranteeing `route('login')` always resolves.
+- **Verification:**
+  - Automated feature test suite ([`LoginRouteResilienceTest.php`](file:///home/ammar/code/taj-platform/backend/tests/Feature/Auth/LoginRouteResilienceTest.php)) added and passing: 3 tests, 7 assertions.
+
 
 
 

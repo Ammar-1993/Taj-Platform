@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Predis\Connection\ConnectionException;
 use Predis\Connection\Resource\Exception\StreamInitException;
@@ -17,9 +18,27 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
-        $middleware->redirectGuestsTo(fn () => null);
+        $middleware->redirectGuestsTo(function (Request $request) {
+            if ($request->is('api/*') || $request->is('api') || $request->expectsJson()) {
+                return null;
+            }
+
+            if ($request->is('admin/*') || $request->is('admin')) {
+                return route('filament.admin.auth.login');
+            }
+
+            return route('login');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->shouldRenderJsonWhen(function (Request $request, Throwable $e) {
+            if ($request->is('api/*') || $request->is('api')) {
+                return true;
+            }
+
+            return $request->expectsJson();
+        });
+
         $exceptions->report(function (Throwable $e) {
             // تجاهل أخطاء TypeError الناتجة عن تلاعب البوتات وأدوات الفحص بحالة ومكونات Livewire
             if ($e instanceof TypeError && (
