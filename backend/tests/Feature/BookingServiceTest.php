@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\ProvisionVirtualClassroom;
 use App\Models\GradeLevel;
 use App\Models\PromoCode;
 use App\Models\TeacherSlot;
@@ -9,6 +10,7 @@ use App\Models\User;
 use App\Services\BookingService;
 use App\Services\WalletService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class BookingServiceTest extends TestCase
@@ -22,6 +24,7 @@ class BookingServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Queue::fake([ProvisionVirtualClassroom::class]);
         $this->walletService = app(WalletService::class);
         $this->bookingService = app(BookingService::class);
     }
