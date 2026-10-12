@@ -49,7 +49,15 @@ jobs:
           DB_CONNECTION: sqlite
           DB_DATABASE: ":memory:"
         # 🔴 بوابة إلزامية: أي فشل في الاختبارات (أو عدم تنفيذ أي اختبار) يوقف الـ Workflow ويمنع النشر
-        run: php artisan test
+        run: |
+          set +e
+          php artisan test --no-ansi 2>&1 | tee /tmp/test.log
+          code=${PIPESTATUS[0]}
+          if [ "$code" -ne 0 ]; then
+            msg=$(grep -v '✓' /tmp/test.log | grep -v '^\s*$' | tail -c 3500 | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')
+            echo "::error title=Test failure (exit $code)::$msg"
+          fi
+          exit $code
 
   # ==========================================
   # 🐬 اختبارات التكامل على MySQL الحقيقي (أقفال المحفظة، القيود الفريدة، Idempotency)
@@ -108,7 +116,15 @@ jobs:
           DB_DATABASE: taj_test
           DB_USERNAME: root
           DB_PASSWORD: root
-        run: php artisan test
+        run: |
+          set +e
+          php artisan test --no-ansi 2>&1 | tee /tmp/test.log
+          code=${PIPESTATUS[0]}
+          if [ "$code" -ne 0 ]; then
+            msg=$(grep -v '✓' /tmp/test.log | grep -v '^\s*$' | tail -c 3500 | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')
+            echo "::error title=Test failure (exit $code)::$msg"
+          fi
+          exit $code
 
   # ==========================================
   # 🚀 المرحلة الثانية: النشر الفعلي (Deployment)
