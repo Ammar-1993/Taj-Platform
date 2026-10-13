@@ -12,25 +12,35 @@ use Illuminate\Support\Facades\DB;
 class WalletService
 {
     /**
-     * معالجة أي عملية مالية (إيداع أو سحب) بأمان تام
+     * معالجة أي عملية مالية (إيداع أو سحب) بأمان تام مع التحقق بالهللات
      */
-    public function processTransaction(User $user, float $amount, string $type, string $description, ?int $bookingId = null): WalletTransaction
-    {
+    public function processTransaction(
+        User $user,
+        float $amount,
+        string $type,
+        string $description,
+        ?int $bookingId = null,
+        ?string $providerReference = null
+    ): WalletTransaction {
         $newBalance = 0.00;
 
-        $transaction = DB::transaction(function () use ($user, $amount, $type, $description, $bookingId, &$newBalance) {
+        $transaction = DB::transaction(function () use ($user, $amount, $type, $description, $bookingId, $providerReference, &$newBalance) {
             // lockForUpdate يمنع أي عملية أخرى من تعديل رصيد هذا المستخدم حتى تنتهي هذه العملية
             $wallet = $user->wallet()->lockForUpdate()->firstOrCreate(
                 ['user_id' => $user->id],
                 ['balance' => 0.00]
             );
 
-            $wallet->balance += $amount;
+            // احتساب الرصيد بالهللات لتجنب مشاكل دقة الفاصلة العائمة
+            $currentHalalas = (int) round(((float) $wallet->balance) * 100);
+            $amountHalalas = (int) round($amount * 100);
+            $newHalalas = $currentHalalas + $amountHalalas;
 
-            if ($wallet->balance < 0) {
+            if ($newHalalas < 0) {
                 throw new Exception('عفواً، رصيد المحفظة غير كافٍ لإتمام العملية.');
             }
 
+            $wallet->balance = $newHalalas / 100;
             $wallet->save();
             $newBalance = (float) $wallet->balance;
 
@@ -40,6 +50,7 @@ class WalletService
                 'amount' => abs($amount),
                 'type' => $type,
                 'description' => $description,
+                'provider_reference' => $providerReference,
             ]);
         });
 
@@ -54,12 +65,19 @@ class WalletService
      *
      * @param  array<int, string>  $legacyIds  معرّفات دفع قديمة قد تكون سُجلت نصياً في الوصف قبل إضافة provider_reference
      */
-    public function depositOnce(User $user, float $amount, string $description, string $providerReference, array $legacyIds = []): ?WalletTransaction
-    {
+    public function depositOnce(
+        User $user,
+        float $amount,
+        string $description,
+        string $providerReference,
+        array $legacyIds = [],
+        string $type = 'deposit',
+        ?int $bookingId = null
+    ): ?WalletTransaction {
         $newBalance = 0.00;
 
         try {
-            $transaction = DB::transaction(function () use ($user, $amount, $description, $providerReference, $legacyIds, &$newBalance) {
+            $transaction = DB::transaction(function () use ($user, $amount, $description, $providerReference, $legacyIds, $type, $bookingId, &$newBalance) {
                 $wallet = $user->wallet()->lockForUpdate()->firstOrCreate(
                     ['user_id' => $user->id],
                     ['balance' => 0.00]
@@ -72,7 +90,7 @@ class WalletService
                 foreach (array_filter($legacyIds) as $legacyId) {
                     $escaped = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $legacyId);
                     $legacyExists = WalletTransaction::where('wallet_id', $wallet->id)
-                        ->where('type', 'deposit')
+                        ->where('type', $type)
                         ->whereRaw("description LIKE ? ESCAPE '!'", ['%'.$escaped.'%'])
                         ->exists();
 
@@ -81,13 +99,17 @@ class WalletService
                     }
                 }
 
-                $wallet->balance += $amount;
+                // احتساب الرصيد بالهللات
+                $currentHalalas = (int) round(((float) $wallet->balance) * 100);
+                $amountHalalas = (int) round($amount * 100);
+                $wallet->balance = ($currentHalalas + $amountHalalas) / 100;
                 $wallet->save();
                 $newBalance = (float) $wallet->balance;
 
                 return $wallet->transactions()->create([
+                    'booking_id' => $bookingId,
                     'amount' => abs($amount),
-                    'type' => 'deposit',
+                    'type' => $type,
                     'description' => $description,
                     'provider_reference' => $providerReference,
                 ]);
@@ -102,5 +124,58 @@ class WalletService
         }
 
         return $transaction;
+    }
+
+    /**
+     * مطابقة وتدقيق رصيد المحفظة مع سجل الحركات المالية (Ledger Reconciliation)
+     *
+     * @return array{user_id: int, wallet_id: ?int, current_balance: float, ledger_balance: float, discrepancy: float, is_reconciled: bool}
+     */
+    public function reconcileBalance(User $user, bool $autoCorrect = false): array
+    {
+        $wallet = $user->wallet;
+        if (! $wallet) {
+            return [
+                'user_id' => $user->id,
+                'wallet_id' => null,
+                'current_balance' => 0.00,
+                'ledger_balance' => 0.00,
+                'discrepancy' => 0.00,
+                'is_reconciled' => true,
+            ];
+        }
+
+        // إجمالي الإيداعات: deposit, class_earnings, wallet_topup, refund
+        $credits = (float) $wallet->transactions()
+            ->whereIn('type', ['deposit', 'class_earnings', 'wallet_topup', 'refund'])
+            ->sum('amount');
+
+        // إجمالي الخصومات: withdrawal, payout
+        $debits = (float) $wallet->transactions()
+            ->whereIn('type', ['withdrawal', 'payout'])
+            ->sum('amount');
+
+        $ledgerBalance = round($credits - $debits, 2);
+        $currentBalance = round((float) $wallet->balance, 2);
+        $discrepancy = round($currentBalance - $ledgerBalance, 2);
+
+        if ($autoCorrect && abs($discrepancy) >= 0.001) {
+            DB::transaction(function () use ($wallet, $ledgerBalance) {
+                $wallet->lockForUpdate()->first();
+                $wallet->balance = $ledgerBalance;
+                $wallet->save();
+            });
+            $currentBalance = $ledgerBalance;
+            $discrepancy = 0.00;
+        }
+
+        return [
+            'user_id' => $user->id,
+            'wallet_id' => $wallet->id,
+            'current_balance' => $currentBalance,
+            'ledger_balance' => $ledgerBalance,
+            'discrepancy' => $discrepancy,
+            'is_reconciled' => abs($discrepancy) < 0.001,
+        ];
     }
 }

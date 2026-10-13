@@ -4,8 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PayoutRequestResource\Pages;
 use App\Models\PayoutRequest;
-use App\Notifications\PayoutProcessedNotification;
-use App\Services\WalletService;
+use App\Services\PayoutService;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -14,8 +13,6 @@ use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class PayoutRequestResource extends Resource
 {
@@ -110,20 +107,21 @@ class PayoutRequestResource extends Resource
                         ->requiresConfirmation()
                         ->visible(fn (PayoutRequest $record): bool => $record->status === 'pending')
                         ->action(function (PayoutRequest $record) {
-                            $record->update(['status' => 'approved']);
-                            DB::table('notifications')->insert([
-                                'id' => Str::uuid(),
-                                'type' => 'App\Notifications\PayoutApprovedNotification',
-                                'notifiable_type' => 'App\Models\User',
-                                'notifiable_id' => $record->user_id,
-                                'data' => json_encode([
-                                    'type' => 'payout_approved',
-                                    'message' => "تم اعتماد طلب السحب بمبلغ {$record->amount} ريال وسوف يتم تحويله قريباً.",
-                                    'time' => now()->format('Y-m-d h:i A'),
-                                ]),
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ]);
+                            try {
+                                app(PayoutService::class)->approvePayout($record);
+
+                                Notification::make()
+                                    ->title('تم اعتماد الطلب بنجاح')
+                                    ->body("تم اعتماد طلب السحب بمبلغ {$record->amount} ريال وسوف يتم تحويله قريباً.")
+                                    ->success()
+                                    ->send();
+                            } catch (\Throwable $e) {
+                                Notification::make()
+                                    ->title('تعذر اعتماد الطلب')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
                         }),
 
                     // 🟢 2. زر تم التحويل (إغلاق الطلب وإرسال إشعار) - ✨ محدث
@@ -136,17 +134,21 @@ class PayoutRequestResource extends Resource
                         ->modalDescription('هل قمت بتحويل المبلغ فعلياً لحساب المعلم؟ سيتم إغلاق الطلب وإرسال إشعار للمعلم.')
                         ->visible(fn (PayoutRequest $record): bool => $record->status === 'approved')
                         ->action(function (PayoutRequest $record) {
-                            $record->update(['status' => 'transferred']);
+                            try {
+                                app(PayoutService::class)->markAsTransferred($record);
 
-                            if (class_exists(PayoutProcessedNotification::class)) {
-                                $record->user->notify(new PayoutProcessedNotification($record));
+                                Notification::make()
+                                    ->title('تم إغلاق الطلب بنجاح')
+                                    ->body('تم تأكيد التحويل وإرسال إشعار للمعلم.')
+                                    ->success()
+                                    ->send();
+                            } catch (\Throwable $e) {
+                                Notification::make()
+                                    ->title('تعذر إتمام العملية')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
                             }
-
-                            Notification::make()
-                                ->title('تم إغلاق الطلب بنجاح')
-                                ->body('تم تغيير الحالة وإرسال إشعار للمعلم.')
-                                ->success()
-                                ->send();
                         }),
 
                     // 🔴 3. زر الرفض (وإرجاع المال الفعلي)
@@ -162,40 +164,21 @@ class PayoutRequestResource extends Resource
                         ])
                         ->visible(fn (PayoutRequest $record): bool => $record->status === 'pending')
                         ->action(function (PayoutRequest $record, array $data) {
-                            DB::transaction(function () use ($record, $data) {
-                                $record->update([
-                                    'status' => 'rejected',
-                                    'admin_notes' => $data['admin_notes'],
-                                ]);
-
-                                $walletService = resolve(WalletService::class);
-                                $walletService->processTransaction(
-                                    $record->user,
-                                    $record->amount,
-                                    'deposit',
-                                    'استرجاع مبلغ طلب سحب مرفوض. السبب: '.$data['admin_notes']
-                                );
-
-                                DB::table('notifications')->insert([
-                                    'id' => Str::uuid(),
-                                    'type' => 'App\Notifications\PayoutRejectedNotification',
-                                    'notifiable_type' => 'App\Models\User',
-                                    'notifiable_id' => $record->user_id,
-                                    'data' => json_encode([
-                                        'type' => 'payout_rejected',
-                                        'message' => "تم رفض طلب السحب وإرجاع المبلغ لمحفظتك. السبب: {$data['admin_notes']}",
-                                        'time' => now()->format('Y-m-d h:i A'),
-                                    ]),
-                                    'created_at' => now(),
-                                    'updated_at' => now(),
-                                ]);
+                            try {
+                                app(PayoutService::class)->rejectPayout($record, $data['admin_notes']);
 
                                 Notification::make()
                                     ->title('تم الرفض بنجاح')
-                                    ->body('تم إرجاع المبلغ إلى محفظة المعلم.')
+                                    ->body('تم إرجاع المبلغ إلى محفظة المعلم بشكل آمن وغير قابل للتكرار.')
                                     ->success()
                                     ->send();
-                            });
+                            } catch (\Throwable $e) {
+                                Notification::make()
+                                    ->title('تعذر رفض الطلب')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
                         }),
                 ])->icon('heroicon-m-ellipsis-vertical'),
             ])
@@ -210,16 +193,16 @@ class PayoutRequestResource extends Resource
                         ->modalHeading('تأكيد التحويل الجماعي')
                         ->modalDescription('سيتم تحويل حالة جميع الطلبات (المعتمدة) المحددة إلى "تم التحويل" وسيتم إرسال إشعار لكل معلم. هل أنت متأكد؟')
                         ->action(function (Collection $records) {
+                            $service = app(PayoutService::class);
                             $processedCount = 0;
                             foreach ($records as $record) {
-                                // نعالج فقط الطلبات التي تم اعتمادها مسبقاً
                                 if ($record->status === 'approved') {
-                                    $record->update(['status' => 'transferred']);
-
-                                    if (class_exists(PayoutProcessedNotification::class)) {
-                                        $record->user->notify(new PayoutProcessedNotification($record));
+                                    try {
+                                        $service->markAsTransferred($record);
+                                        $processedCount++;
+                                    } catch (\Throwable) {
+                                        // Skip already transferred or concurrently modified
                                     }
-                                    $processedCount++;
                                 }
                             }
 

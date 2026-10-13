@@ -164,16 +164,27 @@ class BookingService
 
             $booking->update($updateData);
 
-            // توزيع الأرباح: 80% تذهب لمحفظة المعلم، و20% تظل في حساب المنصة (لا تضاف لمحفظة أحد)
-            $teacherShare = $booking->net_paid * 0.80;
+            // توزيع الأرباح: حساب بدقة الهللات (80% للمعلم و 20% للمنصة)
+            $netPaidHalalas = (int) round(((float) $booking->net_paid) * 100);
+            $teacherHalalas = (int) round($netPaidHalalas * 0.80);
+            $platformHalalas = $netPaidHalalas - $teacherHalalas;
+            $teacherShare = $teacherHalalas / 100;
+            $platformShare = $platformHalalas / 100;
+
+            $metadata = $booking->metadata ?? [];
+            $metadata['teacher_share'] = $teacherShare;
+            $metadata['platform_share'] = $platformShare;
+            $metadata['commission_rate'] = 0.20;
+            $booking->update(['metadata' => $metadata]);
 
             if ($teacherShare > 0) {
                 $this->walletService->processTransaction(
                     $booking->teacher,
                     $teacherShare,
-                    'class_earnings', // إيداع أرباح
+                    'class_earnings',
                     'أرباح حصة منتهية رقم #'.$booking->id,
-                    $booking->id
+                    $booking->id,
+                    "booking_earnings:{$booking->id}"
                 );
             }
 
