@@ -7,6 +7,7 @@ use App\Models\GradeLevel;
 use App\Models\TeacherSlot;
 use App\Models\User;
 use App\Services\WalletService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -26,6 +27,7 @@ class BookingLifecycleTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Carbon::setTestNow(Carbon::parse('2026-10-13 14:00:00'));
         Role::firstOrCreate(['name' => 'student']);
         Role::firstOrCreate(['name' => 'teacher']);
 
@@ -62,6 +64,12 @@ class BookingLifecycleTest extends TestCase
 
         // خصم المبلغ يدوياً من المحفظة لمحاكاة وضع الحجز الحقيقي
         app(WalletService::class)->processTransaction($this->student, -100.00, 'withdrawal', 'Booking payment');
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 
     public function test_teacher_cannot_complete_scheduled_booking_directly()
