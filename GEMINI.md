@@ -559,6 +559,41 @@ Resolved three critical build warnings during `npm run build` in the frontend:
 - **Verification:**
   - Automated feature test suite ([`LoginRouteResilienceTest.php`](file:///home/ammar/code/taj-platform/backend/tests/Feature/Auth/LoginRouteResilienceTest.php)) added and passing: 3 tests, 7 assertions.
 
+## 📖 Session Log & Recent Updates (Oct 13, 2026)
+
+### Phase 1 (P1) Review Security Hardening & Business Logic Safeguards
+- **F-01: Laravel Framework Upgrade (`v12.56.0` → `v12.70.0`)**:
+  - Updated `laravel/framework` in `composer.lock` to `v12.70.0`.
+  - Resolved official security advisories: CRLF injection in email verification (GHSA-5vg9-5847-vvmq), local disk signed URL route disambiguation (GHSA-crmm-hgp2-wgrp), and debug page XSS (GHSA-jh5r-qr3c-85q8).
+  - Executed `composer audit` and verified zero advisories on `laravel/framework`.
+- **F-02: Classroom Time Window & Premature Completion Guard**:
+  - Centralized session start/end and active window calculations in `Booking::getSessionStartTime()`, `Booking::getSessionEndTime()`, and `Booking::isWithinClassroomWindow()`.
+  - Enforced `ClassroomPolicy::deny()` prohibiting early classroom entry prior to 15 minutes before the scheduled session start time (admins exempted).
+  - Added strict scheduled start time check in `BookingService::completeBooking()`, blocking premature completion and payout release for sessions before their scheduled start time.
+  - Added feature tests in `BookingLifecycleTest` and `ClassroomAccessTest`.
+- **F-03: Agora Token Security & Role Partitioning**:
+  - Removed legacy unpartitioned cache key lookups (`agora_token_{$bookingId}_{$uid}`) from `AgoraService::getRtcToken()`, `getRtmToken()`, and `getScreenToken()`.
+  - Tuned `TOKEN_TTL_SECONDS` to 5400 (90 minutes) and `CACHE_TTL_MINUTES` to 80 minutes, eliminating excessive 2-hour token lifetimes.
+  - Added explicit tests in `AgoraServiceTest` and `ClassroomAccessTest` proving parents/observers strictly receive `subscriber` tokens and cannot bypass role separation.
+- **F-04: Wallet Reconciliation Concurrency & Row-Level Locking**:
+  - Fixed row locking in `WalletService::reconcileBalance()` to use `Wallet::whereKey($wallet->id)->lockForUpdate()->firstOrFail()`.
+  - Recalculated transaction credit/debit sums directly inside the locked database transaction to prevent race conditions with concurrent transactions.
+  - Added `was_corrected` return status and audit table output in `ReconcileWalletsCommand`.
+  - Added feature tests in `PayoutRequestTest` confirming isolated locking without impacting adjacent wallets.
+- **F-05: KYC Dedicated Private Filesystem Disk**:
+  - Configured dedicated `'kyc'` disk (`app/private/kyc`) with `'visibility' => 'private'` in `config/filesystems.php`.
+  - Updated `ProfileController::completeTeacherProfile()` to upload and purge teacher ID and degree documents strictly via `config('filesystems.kyc_disk', 'kyc')`.
+  - Updated Filament teacher verification view to read documents from the dedicated private disk.
+  - Updated `ProfileTest` asserting KYC uploads on the private disk.
+- **F-06: Real-Time Classroom Broadcast Channel Authorization**:
+  - Bound private broadcast channel `classroom.{bookingId}` in `routes/channels.php` to participant role, active booking status (`isClassroomOpen()`), and scheduled session window (`isWithinClassroomWindow()`).
+  - Added feature tests in `ClassroomAccessTest` verifying immediate channel rejection (403 / false) for outsiders, cancelled/completed sessions, and future sessions outside the window.
+- **Verification & Deployment**:
+  - Full test suite: **200 tests passed (688 assertions)** with 0 failures across both SQLite and MySQL 8 CI/CD pipelines.
+  - Pint style compliance: 100% passed (211 files).
+  - Deployed to DigitalOcean production VPS (`152.42.194.175`), live endpoints verified 200 OK.
+
+
 
 
 
