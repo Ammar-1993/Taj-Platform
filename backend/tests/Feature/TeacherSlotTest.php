@@ -25,10 +25,16 @@ class TeacherSlotTest extends TestCase
         $this->teacher->assignRole('teacher');
 
         $grade = GradeLevel::create(['name' => 'Primary 1', 'session_price' => 50]);
-        Subject::create([
+        $subject = Subject::create([
             'grade_level_id' => $grade->id,
             'name' => 'Math',
             'is_active' => true,
+        ]);
+
+        $this->teacher->teacherProfile()->create([
+            'subject_id' => $subject->id,
+            'bio' => 'Teaching info',
+            'is_verified' => true,
         ]);
     }
 
@@ -148,5 +154,73 @@ class TeacherSlotTest extends TestCase
         $res2 = $this->actingAs($this->teacher)->getJson('/api/v1/teacher/slots');
         $res2->assertStatus(200);
         $this->assertArrayHasKey($slotDate.' 00:00:00', $res2->json('data'));
+    }
+
+    public function test_non_teacher_cannot_create_slots(): void
+    {
+        Role::firstOrCreate(['name' => 'student']);
+        $student = User::factory()->create();
+        $student->assignRole('student');
+
+        $response = $this->actingAs($student)->postJson('/api/v1/teacher/slots', [
+            'slot_date' => now()->addDay()->toDateString(),
+            'start_time' => '10:00',
+            'end_time' => '11:00',
+        ]);
+
+        $response->assertStatus(403);
+    }
+
+    public function test_unverified_teacher_cannot_create_slots(): void
+    {
+        $this->teacher->teacherProfile->update(['is_verified' => false]);
+
+        $response = $this->actingAs($this->teacher)->postJson('/api/v1/teacher/slots', [
+            'slot_date' => now()->addDay()->toDateString(),
+            'start_time' => '10:00',
+            'end_time' => '11:00',
+        ]);
+
+        $response->assertStatus(403)
+            ->assertJsonFragment(['status' => 'error']);
+    }
+
+    public function test_inactive_teacher_cannot_create_slots(): void
+    {
+        $this->teacher->update(['is_active' => false]);
+
+        $response = $this->actingAs($this->teacher)->postJson('/api/v1/teacher/slots', [
+            'slot_date' => now()->addDay()->toDateString(),
+            'start_time' => '10:00',
+            'end_time' => '11:00',
+        ]);
+
+        $response->assertStatus(403)
+            ->assertJsonFragment(['status' => 'error']);
+    }
+
+    public function test_non_teacher_cannot_list_or_delete_slots(): void
+    {
+        Role::firstOrCreate(['name' => 'student']);
+        $student = User::factory()->create();
+        $student->assignRole('student');
+
+        $listRes = $this->actingAs($student)->getJson('/api/v1/teacher/slots');
+        $listRes->assertStatus(403);
+
+        $deleteRes = $this->actingAs($student)->deleteJson('/api/v1/teacher/slots/1');
+        $deleteRes->assertStatus(403);
+    }
+
+    public function test_cannot_create_slot_with_past_time_today(): void
+    {
+        $response = $this->actingAs($this->teacher)->postJson('/api/v1/teacher/slots', [
+            'slot_date' => now()->toDateString(),
+            'start_time' => '00:01',
+            'end_time' => '00:30',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonFragment(['status' => 'error']);
     }
 }

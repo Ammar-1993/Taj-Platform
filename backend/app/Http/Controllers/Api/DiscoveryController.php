@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\TeacherPublicResource;
 use App\Models\GradeLevel;
 use App\Models\Review;
 use App\Models\Subject;
@@ -142,7 +143,10 @@ class DiscoveryController extends Controller
             }
 
             // نستخدم التصفح (Pagination) لكي لا ينهار السيرفر إذا كان لدينا 1000 معلم
-            return $query->paginate(15);
+            $paginator = $query->paginate(15);
+            $paginator->through(fn ($user) => (new TeacherPublicResource($user))->resolve());
+
+            return $paginator;
         };
 
         $teachers = Cache::supportsTags()
@@ -174,7 +178,7 @@ class DiscoveryController extends Controller
 
             return [
                 'teacher_name' => $teacher->name,
-                'teacher' => $teacher,
+                'teacher' => (new TeacherPublicResource($teacher))->resolve(),
                 'data' => $slots,
             ];
         };

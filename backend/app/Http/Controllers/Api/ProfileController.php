@@ -112,18 +112,23 @@ class ProfileController extends Controller
             return response()->json(['message' => 'غير مصرح لك.'], 403);
         }
 
-        $profile = $user->studentProfile()->updateOrCreate(
-            ['user_id' => $user->id],
-            [
+        $profile = $user->studentProfile;
+
+        if ($profile) {
+            $profile->update([
                 'grade_level_id' => $request->grade_level_id,
-                'can_book_independently' => true,
-            ]
-        );
+            ]);
+        } else {
+            $profile = $user->studentProfile()->create([
+                'grade_level_id' => $request->grade_level_id,
+                'can_book_independently' => is_null($user->parent_id),
+            ]);
+        }
 
         return response()->json([
             'status' => 'success',
             'message' => 'تم استكمال ملف الطالب بنجاح',
-            'data' => $profile,
+            'data' => $profile->fresh(),
         ]);
     }
 }

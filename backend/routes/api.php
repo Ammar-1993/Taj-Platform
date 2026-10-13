@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\SupportChatController;
 use App\Http\Controllers\Api\TeacherSlotController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\PayoutRequestController;
+use App\Models\Booking;
 use App\Models\Subject;
 use App\Models\SupportTicket;
 use Illuminate\Http\Request;
@@ -137,9 +138,21 @@ Route::prefix('v1')->group(function () {
                 'booking_id' => 'nullable|exists:bookings,id',
             ]);
 
+            $bookingId = $request->booking_id;
+            if ($bookingId) {
+                $booking = Booking::find($bookingId);
+                $userId = $request->user()->id;
+                if ($booking && $booking->student_id !== $userId && $booking->teacher_id !== $userId && $booking->booked_by_id !== $userId) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'الحجز المحدد لا يتبع لحسابك.',
+                    ], 403);
+                }
+            }
+
             SupportTicket::create([
                 'user_id' => $request->user()->id,
-                'booking_id' => $request->booking_id,
+                'booking_id' => $bookingId,
                 'subject' => $request->subject,
                 'description' => $request->description,
                 'status' => 'open',

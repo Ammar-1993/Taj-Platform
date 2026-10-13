@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class TeacherSlotController extends Controller
 {
@@ -16,6 +17,13 @@ class TeacherSlotController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
+
+        if (! $user->hasRole('teacher')) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'غير مصرح لك. هذه الصفحة مخصصة للمعلمين فقط.',
+            ], 403);
+        }
 
         $cacheKey = "teacher_schedule:{$user->id}:slots:".now()->toDateString();
         $tags = ["teacher_{$user->id}", 'teacher_slots'];
@@ -45,6 +53,28 @@ class TeacherSlotController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        if (! $user->hasRole('teacher')) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'غير مصرح لك بإضافة مواعيد. يجب أن تمتلك حساب معلم.',
+            ], 403);
+        }
+
+        if ($user->is_active === false) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'حسابك معطل حالياً. يرجى مراجعة إدارة المنصة.',
+            ], 403);
+        }
+
+        $profile = $user->teacherProfile;
+        if (! $profile || ! $profile->is_verified) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'يجب توثيق حسابك واعتماده من قبل الإدارة لتتمكن من إضافة المواعيد.',
+            ], 403);
+        }
+
         $request->validate([
             'slot_date' => 'required|date|after_or_equal:today',
             'start_time' => 'required|date_format:H:i',
@@ -54,36 +84,57 @@ class TeacherSlotController extends Controller
             'slot_date.after_or_equal' => 'لا يمكنك إضافة مواعيد في الماضي.',
         ]);
 
-        // 🛡️ التحقق من التضارب الزمني (Time Overlap Security Check)
-        $overlappingSlot = TeacherSlot::where('teacher_id', $user->id)
-            ->where('slot_date', $request->slot_date)
-            ->where(function ($query) use ($request) {
-                // خوارزمية التداخل: إذا بدأ موعد جديد قبل نهاية الموعد القديم، وانتهى بعد بداية الموعد القديم
-                $query->where('start_time', '<', $request->end_time)
-                    ->where('end_time', '>', $request->start_time);
-            })
-            ->first();
-
-        if ($overlappingSlot) {
+        if ($request->slot_date === now()->toDateString() && $request->start_time <= now()->format('H:i')) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'يوجد تضارب زمني! لديك موعد آخر في هذا الوقت يبدأ الساعة '.substr($overlappingSlot->start_time, 0, 5),
+                'message' => 'لا يمكنك إضافة موعد في وقت قد مضى اليوم.',
             ], 422);
         }
 
-        // إنشاء الموعد
-        $slot = TeacherSlot::create([
-            'teacher_id' => $user->id,
-            'slot_date' => $request->slot_date,
-            'start_time' => $request->start_time,
-            'end_time' => $request->end_time,
-            'status' => 'available',
-        ]);
+        $result = DB::transaction(function () use ($user, $request) {
+            // Pessimistic lock to serialize slot creation for this teacher and prevent concurrent overlap race condition
+            User::where('id', $user->id)->lockForUpdate()->first();
+
+            // 🛡️ التحقق من التضارب الزمني (Time Overlap Security Check)
+            $overlappingSlot = TeacherSlot::where('teacher_id', $user->id)
+                ->where('slot_date', $request->slot_date)
+                ->where(function ($query) use ($request) {
+                    $query->where('start_time', '<', $request->end_time)
+                        ->where('end_time', '>', $request->start_time);
+                })
+                ->lockForUpdate()
+                ->first();
+
+            if ($overlappingSlot) {
+                return [
+                    'error' => true,
+                    'message' => 'يوجد تضارب زمني! لديك موعد آخر في هذا الوقت يبدأ الساعة '.substr($overlappingSlot->start_time, 0, 5),
+                ];
+            }
+
+            // إنشاء الموعد
+            $slot = TeacherSlot::create([
+                'teacher_id' => $user->id,
+                'slot_date' => $request->slot_date,
+                'start_time' => $request->start_time,
+                'end_time' => $request->end_time,
+                'status' => 'available',
+            ]);
+
+            return ['error' => false, 'slot' => $slot];
+        });
+
+        if ($result['error']) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $result['message'],
+            ], 422);
+        }
 
         return response()->json([
             'status' => 'success',
             'message' => 'تم إضافة الموعد بنجاح!',
-            'data' => $slot,
+            'data' => $result['slot'],
         ], 201);
     }
 
@@ -92,6 +143,13 @@ class TeacherSlotController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
+
+        if (! $user->hasRole('teacher')) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'غير مصرح لك بحذف المواعيد.',
+            ], 403);
+        }
 
         $slot = TeacherSlot::where('teacher_id', $user->id)->findOrFail($id);
 

@@ -218,4 +218,50 @@ class DiscoveryTest extends TestCase
         $publicRes2 = $this->getJson("/api/v1/discovery/teachers/{$teacher->id}/slots");
         $publicRes2->assertStatus(200);
     }
+
+    public function test_discovery_endpoints_do_not_expose_internal_sensitive_user_attributes(): void
+    {
+        $parent = User::factory()->create();
+        $teacher = User::role('teacher')->first();
+        $teacher->update([
+            'last_login_ip' => '192.168.10.50',
+            'metadata' => ['internal_note' => 'vip_teacher'],
+            'parent_id' => $parent->id,
+        ]);
+
+        $teacher->teacherProfile->update([
+            'national_id_path' => 'kyc/national_id_secret.pdf',
+            'degree_path' => 'kyc/degree_secret.pdf',
+        ]);
+
+        // 1. Check teachers catalog endpoint
+        $catalogRes = $this->getJson('/api/v1/discovery/teachers');
+        $catalogRes->assertStatus(200);
+
+        $catalogTeacher = $catalogRes->json('data.data.0');
+        $this->assertNotNull($catalogTeacher);
+        $this->assertArrayNotHasKey('last_login_ip', $catalogTeacher);
+        $this->assertArrayNotHasKey('metadata', $catalogTeacher);
+        $this->assertArrayNotHasKey('parent_id', $catalogTeacher);
+
+        if (isset($catalogTeacher['teacher_profile'])) {
+            $this->assertArrayNotHasKey('national_id_path', $catalogTeacher['teacher_profile']);
+            $this->assertArrayNotHasKey('degree_path', $catalogTeacher['teacher_profile']);
+        }
+
+        // 2. Check teacher public slots endpoint
+        $slotsRes = $this->getJson("/api/v1/discovery/teachers/{$teacher->id}/slots");
+        $slotsRes->assertStatus(200);
+
+        $slotsTeacher = $slotsRes->json('teacher');
+        $this->assertNotNull($slotsTeacher);
+        $this->assertArrayNotHasKey('last_login_ip', $slotsTeacher);
+        $this->assertArrayNotHasKey('metadata', $slotsTeacher);
+        $this->assertArrayNotHasKey('parent_id', $slotsTeacher);
+
+        if (isset($slotsTeacher['teacher_profile'])) {
+            $this->assertArrayNotHasKey('national_id_path', $slotsTeacher['teacher_profile']);
+            $this->assertArrayNotHasKey('degree_path', $slotsTeacher['teacher_profile']);
+        }
+    }
 }

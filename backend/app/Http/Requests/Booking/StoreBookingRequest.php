@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Booking;
 
+use App\Models\TeacherSlot;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Http\FormRequest;
@@ -61,6 +62,18 @@ class StoreBookingRequest extends FormRequest
 
                     if (! $child) {
                         $validator->errors()->add('child_id', 'الابن المختار غير صالح أو لا يتبع لك.');
+                    }
+                }
+            }
+
+            if ($this->teacher_slot_id) {
+                $slot = TeacherSlot::with('teacher.teacherProfile')->find($this->teacher_slot_id);
+                if ($slot && $slot->teacher) {
+                    if (! $slot->teacher->is_active) {
+                        $validator->errors()->add('teacher_slot_id', 'المعلم صاحب هذا الموعد غير نشط حالياً.');
+                    }
+                    if ($slot->teacher->teacherProfile && ! $slot->teacher->teacherProfile->is_verified) {
+                        $validator->errors()->add('teacher_slot_id', 'المعلم صاحب هذا الموعد غير موثق بعد.');
                     }
                 }
             }

@@ -87,6 +87,28 @@ class ParentChildTest extends TestCase
         $this->assertTrue($profile->refresh()->can_book_independently);
     }
 
+    public function test_child_cannot_override_parent_booking_restriction_via_complete_profile(): void
+    {
+        $child = User::factory()->create(['parent_id' => $this->parent->id]);
+        $child->assignRole('student');
+        $profile = $child->studentProfile()->create([
+            'grade_level_id' => $this->grade->id,
+            'can_book_independently' => false,
+        ]);
+
+        $otherGrade = GradeLevel::create(['name' => 'Grade 2', 'session_price' => 60]);
+
+        $response = $this->actingAs($child)
+            ->postJson('/api/v1/profile/student', [
+                'grade_level_id' => $otherGrade->id,
+            ]);
+
+        $response->assertStatus(200);
+
+        $this->assertEquals($otherGrade->id, $profile->refresh()->grade_level_id);
+        $this->assertFalse($profile->refresh()->can_book_independently);
+    }
+
     public function test_parent_cannot_manage_other_parents_child()
     {
         $otherParent = User::factory()->create();
