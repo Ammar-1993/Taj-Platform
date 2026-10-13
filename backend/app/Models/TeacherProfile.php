@@ -77,7 +77,7 @@ class TeacherProfile extends Model
     }
 
     /**
-     * Generate an ephemeral presigned URL or safely fallback to standard URL.
+     * Generate an ephemeral presigned URL or safely fail closed for sensitive documents.
      */
     protected function generateEphemeralDocumentUrl(?string $path, int $expirationMinutes = 5): ?string
     {
@@ -85,7 +85,7 @@ class TeacherProfile extends Model
             return null;
         }
 
-        $diskName = config('filesystems.default', 'public');
+        $diskName = config('filesystems.kyc_disk', config('filesystems.default', 'public'));
         $disk = Storage::disk($diskName);
 
         try {
@@ -94,7 +94,12 @@ class TeacherProfile extends Model
                 now()->addMinutes($expirationMinutes)
             );
         } catch (\Throwable) {
-            return $disk->url($path);
+            // Fail-closed: Never expose a permanent public URL in production or staging!
+            if (app()->environment(['local', 'testing'])) {
+                return $disk->url($path);
+            }
+
+            return null;
         }
     }
 }

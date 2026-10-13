@@ -34,8 +34,8 @@ Route::prefix('v1')->group(function () {
     // 1. المصادقة (Auth)
     Route::prefix('auth')->group(function () {
         Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
-        Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-        Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+        Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:6,1');
+        Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:6,1');
 
         // 🟢 التعديل الأمني هنا: إضافة throttle:login لتقييد محاولات الدخول الخاطئة
         Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
@@ -63,9 +63,9 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:15,1');
 
     // ==========================================
-    // مسارات محمية (Protected Routes) - تتطلب Sanctum Token
+    // مسارات محمية (Protected Routes) - تتطلب Sanctum Token وحساب نشط
     // ==========================================
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'active'])->group(function () {
 
         // 1. المصادقة والجلسة (Auth Session)
         Route::get('/auth/me', [AuthController::class, 'me']);

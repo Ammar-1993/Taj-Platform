@@ -99,20 +99,16 @@ class AuthController extends Controller
     public function forgotPassword(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
+            'email' => 'required|email',
         ]);
 
-        $status = Password::sendResetLink($request->only('email'));
+        Password::sendResetLink($request->only('email'));
 
-        return $status === Password::RESET_LINK_SENT
-            ? response()->json([
-                'status' => 'success',
-                'message' => 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.',
-            ])
-            : response()->json([
-                'status' => 'error',
-                'message' => __($status),
-            ], 500);
+        // دائماً إرجاع رسالة نجاح موحدة لمنع استنتاج البريد الإلكتروني المسجل (Anti-Account Enumeration)
+        return response()->json([
+            'status' => 'success',
+            'message' => 'إذا كان البريد الإلكتروني مسجلاً، فستصلك رسالة تحتوي على تعليمات إعادة تعيين كلمة المرور.',
+        ]);
     }
 
     /**
@@ -121,7 +117,7 @@ class AuthController extends Controller
     public function resetPassword(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
+            'email' => 'required|email',
             'token' => 'required|string',
             'password' => 'required|string|min:8|confirmed',
         ]);
@@ -133,6 +129,9 @@ class AuthController extends Controller
                     'password' => Hash::make($password),
                     'remember_token' => Str::random(60),
                 ])->save();
+
+                // 🔒 أمان الجلسات: إلغاء كافة التوكنات السابقة للمستخدم عند استعادة كلمة المرور
+                $user->tokens()->delete();
             }
         );
 
@@ -207,6 +206,12 @@ class AuthController extends Controller
             }
 
             $user->password = Hash::make($request->password);
+
+            // 🔒 أمان الجلسات: إلغاء كافة التوكنات على الأجهزة الأخرى والإبقاء على الجلسة الحالية
+            $currentToken = $user->currentAccessToken();
+            if ($currentToken) {
+                $user->tokens()->where('id', '!=', $currentToken->id)->delete();
+            }
 
             // إرسال إشعار بتغيير كلمة المرور
             Notification::send($user, new PasswordChanged);

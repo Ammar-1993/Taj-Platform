@@ -41,11 +41,20 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::updated(function (User $user) {
+            if ($user->wasChanged('is_active') && ! $user->is_active) {
+                $user->tokens()->delete();
+            }
+        });
+    }
+
     // 🔒 جدار الحماية: من يُسمح له بدخول لوحة التحكم؟
     public function canAccessPanel(Panel $panel): bool
     {
-        // فقط المستخدم الذي يمتلك دور "admin" يمكنه الدخول
-        return $this->hasRole('admin');
+        // فقط المستخدم الذي يمتلك دور "admin" وحسابه نشط يمكنه الدخول
+        return $this->hasRole('admin') && (bool) $this->is_active;
     }
 
     // 🎨 تخصيص أيقونة المستخدم في القائمة العلوية

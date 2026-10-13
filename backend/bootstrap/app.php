@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureUserIsActive;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,6 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
+        $middleware->alias([
+            'active' => EnsureUserIsActive::class,
+        ]);
         $middleware->redirectGuestsTo(function (Request $request) {
             if ($request->is('api/*') || $request->is('api') || $request->expectsJson()) {
                 return null;
@@ -42,9 +46,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->report(function (Throwable $e) {
             // تجاهل أخطاء TypeError الناتجة عن تلاعب البوتات وأدوات الفحص بحالة ومكونات Livewire
             if ($e instanceof TypeError && (
-                str_contains($e->getMessage(), 'Cannot assign') ||
+                (str_contains($e->getFile(), '/livewire/') && str_contains($e->getMessage(), 'Cannot assign')) ||
                 str_contains($e->getMessage(), 'BasePage::getInfolist') ||
-                str_contains($e->getFile(), '/livewire/')
+                str_contains($e->getMessage(), 'FilamentNotificationsComponent')
             )) {
                 return false;
             }

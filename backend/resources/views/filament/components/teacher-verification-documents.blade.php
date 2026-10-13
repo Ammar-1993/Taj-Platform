@@ -7,7 +7,7 @@
     $idUrl = $record && method_exists($record, 'getNationalIdUrl')
         ? $record->getNationalIdUrl(5)
         : ($idPath ? (function () use ($disk, $idPath) {
-            try { return $disk->temporaryUrl($idPath, now()->addMinutes(5)); } catch (\Throwable) { return $disk->url($idPath); }
+            try { return $disk->temporaryUrl($idPath, now()->addMinutes(5)); } catch (\Throwable) { return app()->environment(['local', 'testing']) ? $disk->url($idPath) : null; }
         })() : null);
     $idExt = $idPath ? strtolower(pathinfo($idPath, PATHINFO_EXTENSION)) : '';
     $idIsImage = in_array($idExt, ['jpg', 'jpeg', 'png', 'webp', 'gif']);
@@ -29,7 +29,7 @@
     $degreeUrl = $record && method_exists($record, 'getDegreeUrl')
         ? $record->getDegreeUrl(5)
         : ($degreePath ? (function () use ($disk, $degreePath) {
-            try { return $disk->temporaryUrl($degreePath, now()->addMinutes(5)); } catch (\Throwable) { return $disk->url($degreePath); }
+            try { return $disk->temporaryUrl($degreePath, now()->addMinutes(5)); } catch (\Throwable) { return app()->environment(['local', 'testing']) ? $disk->url($degreePath) : null; }
         })() : null);
 
     $degreeExt = $degreePath ? strtolower(pathinfo($degreePath, PATHINFO_EXTENSION)) : '';
