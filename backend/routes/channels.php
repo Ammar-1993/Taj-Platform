@@ -14,13 +14,25 @@ Broadcast::channel('teacher.{id}', function ($user, $id) {
 });
 
 Broadcast::channel('classroom.{bookingId}', function ($user, $bookingId) {
-    $booking = Booking::find($bookingId);
+    $booking = Booking::with('teacherSlot')->find($bookingId);
     if (! $booking) {
         return false;
     }
 
+    // السماح للمشرفين بمتابعة الفصل في أي وقت
+    if ($user->hasRole('admin')) {
+        return true;
+    }
+
     // السماح للمعلم أو الطالب أو ولي الأمر (الذي حجز الحصة) بالدخول
-    return (int) $user->id === (int) $booking->teacher_id ||
+    $isParticipant = (int) $user->id === (int) $booking->teacher_id ||
            (int) $user->id === (int) $booking->student_id ||
            (int) $user->id === (int) $booking->booked_by_id;
+
+    if (! $isParticipant) {
+        return false;
+    }
+
+    // يجب أن تكون الحصة مفتوحة وضمن نافذة الدخول الزمنية
+    return $booking->isClassroomOpen() && $booking->isWithinClassroomWindow();
 });

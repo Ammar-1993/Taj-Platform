@@ -54,7 +54,8 @@ class ProfileTest extends TestCase
 
     public function test_teacher_can_complete_profile_with_uploads()
     {
-        Storage::fake('public');
+        $kycDisk = config('filesystems.kyc_disk', 'kyc');
+        Storage::fake($kycDisk);
 
         /** @var User $user */
         $user = User::factory()->create();
@@ -94,7 +95,7 @@ class ProfileTest extends TestCase
         $this->assertNotNull($profile->degree_path);
 
         /** @var FilesystemAdapter $disk */
-        $disk = Storage::disk('public');
+        $disk = Storage::disk($kycDisk);
         $disk->assertExists($profile->national_id_path);
         $disk->assertExists($profile->degree_path);
     }

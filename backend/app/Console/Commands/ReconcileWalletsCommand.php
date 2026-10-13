@@ -37,14 +37,15 @@ class ReconcileWalletsCommand extends Command
 
         foreach ($users as $user) {
             $result = $walletService->reconcileBalance($user, $shouldFix);
-            if (! $result['is_reconciled']) {
+            if ($result['was_corrected'] || ! $result['is_reconciled']) {
                 $discrepancies[] = [
                     'User ID' => $result['user_id'],
                     'Wallet ID' => $result['wallet_id'],
+                    'Previous' => $result['previous_balance'],
                     'Current' => $result['current_balance'],
                     'Ledger' => $result['ledger_balance'],
                     'Diff' => $result['discrepancy'],
-                    'Fixed' => $shouldFix ? 'Yes' : 'No',
+                    'Fixed' => $result['was_corrected'] ? 'Yes' : 'No',
                 ];
             }
         }
@@ -55,8 +56,8 @@ class ReconcileWalletsCommand extends Command
             return Command::SUCCESS;
         }
 
-        $this->warn('Found '.count($discrepancies).' wallet discrepancies:');
-        $this->table(['User ID', 'Wallet ID', 'Current', 'Ledger', 'Diff', 'Fixed'], $discrepancies);
+        $this->warn('Processed '.count($discrepancies).' wallet discrepancies:');
+        $this->table(['User ID', 'Wallet ID', 'Previous', 'Current', 'Ledger', 'Diff', 'Fixed'], $discrepancies);
 
         return $shouldFix ? Command::SUCCESS : Command::FAILURE;
     }

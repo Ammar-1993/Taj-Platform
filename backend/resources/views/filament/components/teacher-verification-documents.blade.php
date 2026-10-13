@@ -1,6 +1,6 @@
 @php
     $record = $getRecord() ?? ($record ?? null);
-    $disk = \Illuminate\Support\Facades\Storage::disk(config('filesystems.default', 'public'));
+    $disk = \Illuminate\Support\Facades\Storage::disk(config('filesystems.kyc_disk', 'kyc'));
 
     // 1. معالجة وثيقة الهوية الوطنية (Presigned Ephemeral URL - 5 Minutes)
     $idPath = $record?->national_id_path;

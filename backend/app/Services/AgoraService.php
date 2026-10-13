@@ -16,11 +16,11 @@ class AgoraService
 
     protected ?string $appCertificate;
 
-    // Token TTL: 2 hours (7200 seconds)
-    public const TOKEN_TTL_SECONDS = 7200;
+    // Token TTL: 90 minutes (5400 seconds) - provides session buffer without 2-hour window
+    public const TOKEN_TTL_SECONDS = 5400;
 
-    // Cache TTL: 110 minutes (Safety margin: refresh from cache 10 mins before Agora rejects it)
-    public const CACHE_TTL_MINUTES = 110;
+    // Cache TTL: 80 minutes (Safety margin: refresh from cache 10 mins before Agora token expiry)
+    public const CACHE_TTL_MINUTES = 80;
 
     public function __construct()
     {
@@ -35,19 +35,9 @@ class AgoraService
     {
         $roleKey = ($role === 'publisher' || $role === 'host') ? 'publisher' : 'subscriber';
         $cacheKey = "agora:rtc:{$channelName}:{$uid}:{$roleKey}";
-        $legacyKey = $bookingId ? "agora_token_{$bookingId}_{$uid}" : null;
 
-        if ($legacyKey && Cache::has($legacyKey)) {
-            return (string) Cache::get($legacyKey);
-        }
-
-        return Cache::remember($cacheKey, now()->addMinutes(self::CACHE_TTL_MINUTES), function () use ($channelName, $uid, $role, $legacyKey) {
-            $token = $this->generateRtcToken($channelName, $uid, $role);
-            if ($legacyKey) {
-                Cache::put($legacyKey, $token, now()->addMinutes(self::CACHE_TTL_MINUTES));
-            }
-
-            return $token;
+        return Cache::remember($cacheKey, now()->addMinutes(self::CACHE_TTL_MINUTES), function () use ($channelName, $uid, $role) {
+            return $this->generateRtcToken($channelName, $uid, $role);
         });
     }
 
@@ -57,19 +47,9 @@ class AgoraService
     public function getRtmToken(int|string $uid, ?int $bookingId = null): string
     {
         $cacheKey = "agora:rtm:{$uid}";
-        $legacyKey = $bookingId ? "agora_rtm_token_{$bookingId}_{$uid}" : null;
 
-        if ($legacyKey && Cache::has($legacyKey)) {
-            return (string) Cache::get($legacyKey);
-        }
-
-        return Cache::remember($cacheKey, now()->addMinutes(self::CACHE_TTL_MINUTES), function () use ($uid, $legacyKey) {
-            $token = $this->generateRtmToken((string) $uid);
-            if ($legacyKey) {
-                Cache::put($legacyKey, $token, now()->addMinutes(self::CACHE_TTL_MINUTES));
-            }
-
-            return $token;
+        return Cache::remember($cacheKey, now()->addMinutes(self::CACHE_TTL_MINUTES), function () use ($uid) {
+            return $this->generateRtmToken((string) $uid);
         });
     }
 
@@ -80,19 +60,9 @@ class AgoraService
     {
         $screenUid = $teacherUid + 1_000_000_000;
         $cacheKey = "agora:rtc:{$channelName}:{$screenUid}:publisher";
-        $legacyKey = $bookingId ? "agora_token_{$bookingId}_screen" : null;
 
-        if ($legacyKey && Cache::has($legacyKey)) {
-            return (string) Cache::get($legacyKey);
-        }
-
-        return Cache::remember($cacheKey, now()->addMinutes(self::CACHE_TTL_MINUTES), function () use ($channelName, $screenUid, $legacyKey) {
-            $token = $this->generateRtcToken($channelName, $screenUid, 'publisher');
-            if ($legacyKey) {
-                Cache::put($legacyKey, $token, now()->addMinutes(self::CACHE_TTL_MINUTES));
-            }
-
-            return $token;
+        return Cache::remember($cacheKey, now()->addMinutes(self::CACHE_TTL_MINUTES), function () use ($channelName, $screenUid) {
+            return $this->generateRtcToken($channelName, $screenUid, 'publisher');
         });
     }
 
@@ -108,19 +78,11 @@ class AgoraService
         Cache::put("agora:rtc:{$channelName}:{$uid}:{$roleKey}", $rtcToken, now()->addMinutes(self::CACHE_TTL_MINUTES));
         Cache::put("agora:rtm:{$uid}", $rtmToken, now()->addMinutes(self::CACHE_TTL_MINUTES));
 
-        if ($bookingId) {
-            Cache::put("agora_token_{$bookingId}_{$uid}", $rtcToken, now()->addMinutes(self::CACHE_TTL_MINUTES));
-            Cache::put("agora_rtm_token_{$bookingId}_{$uid}", $rtmToken, now()->addMinutes(self::CACHE_TTL_MINUTES));
-        }
-
         $screenToken = null;
         if ($isTeacher) {
             $screenUid = $uid + 1_000_000_000;
             $screenToken = $this->generateRtcToken($channelName, $screenUid, 'publisher');
             Cache::put("agora:rtc:{$channelName}:{$screenUid}:publisher", $screenToken, now()->addMinutes(self::CACHE_TTL_MINUTES));
-            if ($bookingId) {
-                Cache::put("agora_token_{$bookingId}_screen", $screenToken, now()->addMinutes(self::CACHE_TTL_MINUTES));
-            }
         }
 
         return [

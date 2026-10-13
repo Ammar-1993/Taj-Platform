@@ -61,7 +61,19 @@ return [
             'report' => false,
         ],
 
+        // 🔒 قرص التخزين الآمن والمغلق لوثائق التحقق والهويات الوطنية (KYC Isolated Private Disk)
+        'kyc' => [
+            'driver' => env('KYC_FILESYSTEM_DRIVER', 'local'),
+            'root' => storage_path('app/private/kyc'),
+            'visibility' => 'private',
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
+
+    'kyc_disk' => env('KYC_FILESYSTEM_DISK', 'kyc'),
 
     /*
     |--------------------------------------------------------------------------

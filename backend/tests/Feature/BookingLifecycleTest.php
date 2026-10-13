@@ -77,8 +77,31 @@ class BookingLifecycleTest extends TestCase
         $this->assertEquals(0.00, (float) ($this->teacher->wallet?->balance ?? 0));
     }
 
+    public function test_teacher_cannot_complete_future_in_progress_booking_before_start_time()
+    {
+        // الحصة في موعد مستقبلي، حتى لو كانت in_progress لا يُسمح بإكمالها
+        $this->booking->update(['status' => 'in_progress', 'teacher_joined_at' => now()]);
+
+        $response = $this->actingAs($this->teacher)
+            ->patchJson("/api/v1/bookings/{$this->booking->id}/complete");
+
+        $response->assertStatus(400)
+            ->assertJson(['status' => 'error'])
+            ->assertJsonPath('message', 'لا يمكن إكمال الحصة قبل حلول موعدها المحدد.');
+
+        $this->assertEquals('in_progress', $this->booking->refresh()->status);
+        $this->assertEquals(0.00, (float) ($this->teacher->wallet?->balance ?? 0));
+    }
+
     public function test_teacher_can_complete_booking_and_earn_money()
     {
+        // تعيين موعد الحصة ليكون قد حان وقته الفعلي
+        $this->slot->update([
+            'slot_date' => now()->toDateString(),
+            'start_time' => now()->subMinutes(30)->format('H:i'),
+            'end_time' => now()->addMinutes(30)->format('H:i'),
+        ]);
+
         // الحصة تبدأ وتصبح in_progress عندما يدخل المعلم إلى الفصل
         $this->booking->update(['status' => 'in_progress', 'teacher_joined_at' => now()]);
 

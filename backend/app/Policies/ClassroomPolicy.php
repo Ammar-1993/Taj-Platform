@@ -61,6 +61,19 @@ class ClassroomPolicy
             ], 409);
         }
 
+        // التحقق من نافذة موعد الحصة: يُمنع الدخول المبكر أو بعد انتهاء النافذة إلا للمدير (Supervision)
+        if (! $booking->isWithinClassroomWindow() && ! $user->hasRole('admin')) {
+            $startTime = $booking->getSessionStartTime();
+            $msg = $startTime && now()->lessThan($startTime)
+                ? 'لم يحن موعد الحصة بعد. يمكنك الدخول قبل موعد الحصة بـ 15 دقيقة.'
+                : 'انتهت النافذة الزمنية المخصصة لدخول هذه الحصة.';
+
+            return response()->json([
+                'status' => 'error',
+                'message' => $msg,
+            ], 403);
+        }
+
         return null;
     }
 }

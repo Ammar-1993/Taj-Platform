@@ -58,9 +58,9 @@ class ProfileController extends Controller
         // نجعله false بمجرد التعديل/الرفع حتى توافق عليه الإدارة مجدداً
         $profile->is_verified = false;
 
-        $disk = config('filesystems.default', 'public');
+        $disk = config('filesystems.kyc_disk', 'kyc');
 
-        // معالجة رفع الهوية الوطنية بأمان
+        // معالجة رفع الهوية الوطنية بأمان على قرص KYC الخاص
         if ($request->hasFile('national_id')) {
             // حذف الملف القديم إن وجد لتوفير مساحة التخزين
             if ($profile->national_id_path) {

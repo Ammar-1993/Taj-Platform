@@ -146,6 +146,13 @@ class BookingService
                 throw new Exception("لا يمكن إكمال الحصة في حالتها الحالية ({$booking->status}).");
             }
 
+            // 🔒 حماية النزاهة المالية: منع إكمال الحصة وصرف أرباحها قبل حلول وقتها الفعلي
+            $sessionStart = $booking->getSessionStartTime();
+            $isAdmin = $actor && $actor->hasRole('admin');
+            if ($sessionStart && now()->lessThan($sessionStart) && ! $isAdmin) {
+                throw new Exception('لا يمكن إكمال الحصة قبل حلول موعدها المحدد.');
+            }
+
             $updateData = [
                 'status' => BookingStatus::COMPLETED,
                 'completed_at' => now(),

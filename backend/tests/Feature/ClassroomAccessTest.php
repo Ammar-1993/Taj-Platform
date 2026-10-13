@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\Booking;
+use App\Models\TeacherSlot;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 use Spatie\Permission\Models\Role;
@@ -32,6 +34,7 @@ class ClassroomAccessTest extends TestCase
         Role::firstOrCreate(['name' => 'teacher', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'parent', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     }
 
     // ─── Authorization Tests ────────────────────────────────────────────────────
@@ -329,5 +332,91 @@ class ClassroomAccessTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonPath('data.role', 'audience');
         $this->assertNull($response->json('data.screen_token'));
+        $this->assertTrue(Cache::has("agora:rtc:{$booking->agora_channel}:{$parent->id}:subscriber"));
+        $this->assertFalse(Cache::has("agora:rtc:{$booking->agora_channel}:{$parent->id}:publisher"));
+
+        // تجديد التوكن لولي الأمر لا يعيد أبداً screen_token ويحافظ على subscriber
+        $refreshResponse = $this->actingAs($parent)->getJson("/api/v1/bookings/{$booking->id}/refresh-token");
+        $refreshResponse->assertStatus(200);
+        $this->assertNull($refreshResponse->json('data.screen_token'));
+    }
+
+    #[Test]
+    public function test_user_cannot_access_classroom_before_session_window(): void
+    {
+        $teacher = User::factory()->create();
+        $student = User::factory()->create();
+        $teacher->assignRole('teacher');
+        $student->assignRole('student');
+
+        $futureSlot = TeacherSlot::factory()->future()->create([
+            'teacher_id' => $teacher->id,
+            'status' => 'booked',
+        ]);
+
+        $booking = Booking::factory()->create([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'booked_by_id' => $student->id,
+            'teacher_slot_id' => $futureSlot->id,
+            'status' => 'scheduled',
+        ]);
+
+        $response = $this->actingAs($student)->getJson("/api/v1/bookings/{$booking->id}/classroom");
+
+        $response->assertStatus(403)
+            ->assertJsonPath('status', 'error')
+            ->assertJsonPath('message', 'لم يحن موعد الحصة بعد. يمكنك الدخول قبل موعد الحصة بـ 15 دقيقة.');
+    }
+
+    #[Test]
+    public function test_broadcast_channel_authorizes_open_sessions_and_denies_closed_or_future_ones(): void
+    {
+        $teacher = User::factory()->create();
+        $student = User::factory()->create();
+        $outsider = User::factory()->create();
+        $teacher->assignRole('teacher');
+        $student->assignRole('student');
+        $outsider->assignRole('student');
+
+        $slot = TeacherSlot::factory()->create(['teacher_id' => $teacher->id]);
+        $booking = Booking::factory()->create([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'booked_by_id' => $student->id,
+            'teacher_slot_id' => $slot->id,
+            'status' => 'scheduled',
+        ]);
+
+        // استخراج دالة التحقق من القناة المسجلة في channels.php
+        $channelCallback = Broadcast::getChannels()->get('classroom.{bookingId}');
+        $this->assertNotNull($channelCallback, 'قناة classroom.{bookingId} يجب أن تكون معرفة في channels.php');
+
+        // 1. مشارك بحصة نشطة وضمن النافذة -> مسموح (true)
+        $this->assertTrue((bool) $channelCallback($student, $booking->id));
+        $this->assertTrue((bool) $channelCallback($teacher, $booking->id));
+
+        // 2. مستخدم خارجي ليس طرفاً في الحصة -> مرفوض (false)
+        $this->assertFalse((bool) $channelCallback($outsider, $booking->id));
+
+        // 3. الحصة مكتملة أو ملغاة -> مرفوض حتى للمشارك الأصلي (false)
+        $booking->update(['status' => 'completed']);
+        $this->assertFalse((bool) $channelCallback($student, $booking->id));
+
+        // 4. الحصة في المستقبل ولم يحن وقتها بعد -> مرفوض حتى للمشارك (false)
+        $futureSlot = TeacherSlot::factory()->future()->create(['teacher_id' => $teacher->id]);
+        $futureBooking = Booking::factory()->create([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'booked_by_id' => $student->id,
+            'teacher_slot_id' => $futureSlot->id,
+            'status' => 'scheduled',
+        ]);
+        $this->assertFalse((bool) $channelCallback($student, $futureBooking->id));
+
+        // 5. المشرف -> مسموح دائماً للإشراف والمتابعة (true)
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+        $this->assertTrue((bool) $channelCallback($admin, $booking->id));
     }
 }

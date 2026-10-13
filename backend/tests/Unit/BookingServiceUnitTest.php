@@ -25,7 +25,7 @@ class BookingServiceUnitTest extends TestCase
 
         $slot = TeacherSlot::create([
             'teacher_id' => $teacher->id,
-            'slot_date' => now()->addDay(),
+            'slot_date' => now()->subHour(),
             'start_time' => '12:00:00',
             'end_time' => '13:00:00',
             'status' => 'booked',
@@ -72,7 +72,7 @@ class BookingServiceUnitTest extends TestCase
 
         $slot = TeacherSlot::create([
             'teacher_id' => $teacher->id,
-            'slot_date' => now()->addDay(),
+            'slot_date' => now()->subHour(),
             'start_time' => '12:00:00',
             'end_time' => '13:00:00',
             'status' => 'booked',

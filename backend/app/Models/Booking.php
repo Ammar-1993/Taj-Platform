@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\BookingStatus;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -151,5 +152,75 @@ class Booking extends Model
     public function sessionQuiz(): HasOne
     {
         return $this->hasOne(SessionQuiz::class);
+    }
+
+    /**
+     * احسب وقت بداية الحصة الدقيق بالاعتماد على تاريخ ووقت الموعد (TeacherSlot).
+     */
+    public function getSessionStartTime(): ?Carbon
+    {
+        if (! $this->relationLoaded('teacherSlot')) {
+            $this->load('teacherSlot');
+        }
+
+        if (! $this->teacherSlot || ! $this->teacherSlot->slot_date || ! $this->teacherSlot->start_time) {
+            return null;
+        }
+
+        $dateStr = $this->teacherSlot->slot_date instanceof Carbon
+            ? $this->teacherSlot->slot_date->toDateString()
+            : (string) $this->teacherSlot->slot_date;
+        $timeStr = (string) $this->teacherSlot->start_time;
+
+        return Carbon::parse("{$dateStr} {$timeStr}");
+    }
+
+    /**
+     * احسب وقت نهاية الحصة الدقيق.
+     */
+    public function getSessionEndTime(): ?Carbon
+    {
+        if (! $this->relationLoaded('teacherSlot')) {
+            $this->load('teacherSlot');
+        }
+
+        if (! $this->teacherSlot || ! $this->teacherSlot->slot_date || ! $this->teacherSlot->end_time) {
+            return null;
+        }
+
+        $dateStr = $this->teacherSlot->slot_date instanceof Carbon
+            ? $this->teacherSlot->slot_date->toDateString()
+            : (string) $this->teacherSlot->slot_date;
+        $timeStr = (string) $this->teacherSlot->end_time;
+
+        return Carbon::parse("{$dateStr} {$timeStr}");
+    }
+
+    /**
+     * التحقق مما إذا كان الوقت الحالي يقع ضمن نافذة الدخول المسموح بها للحصة
+     * (من 15 دقيقة قبل البداية وحتى نهاية وقت الحصة + ساعتين للطوارئ).
+     */
+    public function isWithinClassroomWindow(): bool
+    {
+        $startTime = $this->getSessionStartTime();
+        if (! $startTime) {
+            return true;
+        }
+
+        $windowStart = $startTime->copy()->subMinutes(15);
+        $endTime = $this->getSessionEndTime() ?? $startTime->copy()->addHour();
+        $windowEnd = $endTime->copy()->addHours(2);
+
+        $now = now();
+
+        return $now->greaterThanOrEqualTo($windowStart) && $now->lessThanOrEqualTo($windowEnd);
+    }
+
+    /**
+     * التحقق مما إذا كانت حالة الحصة تسمح بدخول الفصل الافتراضي.
+     */
+    public function isClassroomOpen(): bool
+    {
+        return BookingStatus::isClassroomOpen($this->status);
     }
 }

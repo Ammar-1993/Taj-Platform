@@ -253,4 +253,26 @@ class PayoutRequestTest extends TestCase
         $this->artisan('wallet:reconcile', ['--user' => $this->teacher->id])
             ->assertSuccessful();
     }
+
+    public function test_reconciliation_isolates_wallets_and_preserves_other_users_balances(): void
+    {
+        $walletService = app(WalletService::class);
+
+        $otherTeacher = User::factory()->create();
+        $otherTeacher->assignRole('teacher');
+        $otherWallet = $otherTeacher->wallet()->create(['balance' => 0.00]);
+        $walletService->processTransaction($otherTeacher, 350.00, 'deposit', 'Other Deposit');
+
+        // Teacher 1 has discrepancy
+        $this->teacher->wallet->update(['balance' => 999.00]);
+
+        // Auto correct teacher 1
+        $walletService->reconcileBalance($this->teacher, autoCorrect: true);
+
+        // Teacher 1 is corrected
+        $this->assertEquals(0.00, $this->teacher->wallet->fresh()->balance);
+
+        // Other teacher's wallet balance must be completely untouched
+        $this->assertEquals(350.00, $otherWallet->fresh()->balance);
+    }
 }

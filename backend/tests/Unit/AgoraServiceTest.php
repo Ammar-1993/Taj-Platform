@@ -91,7 +91,24 @@ class AgoraServiceTest extends TestCase
 
         $this->assertSame($result['token'], Cache::get("agora:rtc:{$channel}:{$teacherUid}:publisher"));
         $this->assertSame($result['rtm_token'], Cache::get("agora:rtm:{$teacherUid}"));
-        $this->assertSame($result['token'], Cache::get("agora_token_{$bookingId}_{$teacherUid}"));
+    }
+
+    #[Test]
+    public function test_get_rtc_token_distinguishes_roles_and_does_not_return_legacy_key(): void
+    {
+        $channel = 'role_test_channel';
+        $parentId = 505;
+
+        // Simulate an old legacy token in cache
+        Cache::put("agora_token_99_{$parentId}", 'legacy_publisher_token', now()->addHours(2));
+
+        // When requesting token for parent/subscriber, it must not return the legacy publisher token
+        $subscriberToken = $this->service->getRtcToken($channel, $parentId, 'subscriber', 99);
+
+        $this->assertNotEmpty($subscriberToken);
+        $this->assertNotSame('legacy_publisher_token', $subscriberToken);
+        $this->assertTrue(Cache::has("agora:rtc:{$channel}:{$parentId}:subscriber"));
+        $this->assertFalse(Cache::has("agora:rtc:{$channel}:{$parentId}:publisher"));
     }
 
     #[Test]
@@ -107,6 +124,9 @@ class AgoraServiceTest extends TestCase
         $this->service->getRtcToken($channel, $studentId, 'publisher', $bookingId);
         $this->service->getRtmToken($teacherId, $bookingId);
         $this->service->getRtmToken($studentId, $bookingId);
+
+        // Also put a legacy token to ensure invalidate clears it
+        Cache::put("agora_token_{$bookingId}_{$teacherId}", 'old_token', now()->addHours(2));
 
         // Invalidate
         $this->service->invalidateTokens($channel, $teacherId, $studentId, $bookingId);
