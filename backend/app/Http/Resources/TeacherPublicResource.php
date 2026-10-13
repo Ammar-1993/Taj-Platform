@@ -34,7 +34,6 @@ class TeacherPublicResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'email' => $this->email,
             'avatar_url' => $this->avatar_url,
             'is_active' => (bool) $this->is_active,
             'active_slots_count' => $this->active_slots_count ?? 0,

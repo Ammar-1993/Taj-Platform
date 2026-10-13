@@ -593,6 +593,38 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - Pint style compliance: 100% passed (211 files).
   - Deployed to DigitalOcean production VPS (`152.42.194.175`), live endpoints verified 200 OK.
 
+### Phase 2 (Sprint P2) Business Logic Maturity, Ledger Immutability & Data Integrity
+- **F-07: Public API Eloquent Attribute Leakage Prevention**:
+  - Hidden `last_login_ip` in [`User.php`](file:///home/ammar/code/taj-platform/backend/app/Models/User.php).
+  - Constrained relationship eager-loading in [`BookingController::store()`](file:///home/ammar/code/taj-platform/backend/app/Http/Controllers/Api/BookingController.php) to safe attributes (`teacher:id,name,email` and `teacherSlot:id,slot_date,start_time,end_time,status`).
+  - Added explicit field whitelist selection in [`ParentController::getChildren()`](file:///home/ammar/code/taj-platform/backend/app/Http/Controllers/Api/ParentController.php).
+  - Removed private email from [`TeacherPublicResource`](file:///home/ammar/code/taj-platform/backend/app/Http/Resources/TeacherPublicResource.php) to protect teacher privacy on public discovery pages.
+- **F-08 & F-09: Atomic Promo Code Locking & Accurate Booking Date**:
+  - Implemented pessimistic locking (`lockForUpdate()`) on promo codes inside [`BookingService::createBooking()`](file:///home/ammar/code/taj-platform/backend/app/Services/BookingService.php), throwing explicit exceptions for expired/depleted/invalid codes.
+  - Linked `promo_code_id` on the booking and assigned `booking_date` to `$slot->slot_date` rather than creation time.
+- **F-10: Quiz Submission Security & Immutability**:
+  - Restricted quiz submission in [`SessionSummaryController::submitQuiz()`](file:///home/ammar/code/taj-platform/backend/app/Http/Controllers/Api/SessionSummaryController.php) strictly to the student (`student_id` or admin).
+  - Prohibited resubmission or modification once `completed_at` is set, preserving evaluation integrity.
+- **F-11 & F-12: Moyasar Payment Decimal Guard & Error Sanitization**:
+  - Enforced decimal precision via regex `regex:/^\d+(\.\d{1,2})?$/` in [`PaymentController::create()`](file:///home/ammar/code/taj-platform/backend/app/Http/Controllers/Api/PaymentController.php), rejecting invalid sub-halala amounts (e.g. `10.001`).
+  - Normalized amounts to integer halalas via `(int) round($amount * 100)`.
+  - Added HTTP timeout (15s) and sanitized external error responses so raw gateway internals are logged to server logs and never leaked to users.
+- **F-13 & F-14: Atomic Registration & reCAPTCHA Action Verification**:
+  - Enclosed user creation, role assignment, and wallet generation inside `DB::transaction()` in [`AuthController::register()`](file:///home/ammar/code/taj-platform/backend/app/Http/Controllers/Api/AuthController.php).
+  - Added expected action validation (`'register'`) and HTTP timeout (10s) in [`RecaptchaService::verify()`](file:///home/ammar/code/taj-platform/backend/app/Services/RecaptchaService.php) matching frontend registration payload.
+- **F-15: Configurable Trusted Proxies**:
+  - Supported `TRUSTED_PROXIES` environment variable with graceful fallback to `*` in [`bootstrap/app.php`](file:///home/ammar/code/taj-platform/backend/bootstrap/app.php).
+- **F-18: Immutable Financial Ledger (`WalletTransaction`)**:
+  - Added `updating` and `deleting` hooks in [`WalletTransaction.php`](file:///home/ammar/code/taj-platform/backend/app/Models/WalletTransaction.php) throwing `LogicException` to guarantee ledger records cannot be altered or removed after creation.
+  - Defined explicit transaction type constants and credit/debit classification helpers (`isCredit()`, `isDebit()`).
+- **F-19: Controller Hygiene & Dead Code Removal**:
+  - Audited routes via `php artisan route:list` and safely removed 10 empty scaffolding stubs from `app/Http/Controllers/`.
+  - Cleaned up unused stub methods in [`PayoutRequestController.php`](file:///home/ammar/code/taj-platform/backend/app/Http/Controllers/PayoutRequestController.php).
+- **Testing & Verification**:
+  - Full backend test suite passing: **213 passed (727 assertions)** with 0 failures (`php artisan test`).
+  - Full frontend test suite passing: **41 passed (7 suites)** with 0 failures (`npm test`).
+  - Code formatted with `laravel/pint`: 100% compliant.
+
 
 
 

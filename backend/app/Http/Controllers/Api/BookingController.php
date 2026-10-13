@@ -40,7 +40,10 @@ class BookingController extends Controller
                 $request->child_id // تمرير معرّف الابن هنا
             );
 
-            $booking->load(['teacher', 'teacherSlot']);
+            $booking->load([
+                'teacher:id,name,email',
+                'teacherSlot:id,slot_date,start_time,end_time,status',
+            ]);
 
             return response()->json([
                 'status' => 'success',

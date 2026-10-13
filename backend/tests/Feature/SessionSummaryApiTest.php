@@ -194,7 +194,50 @@ class SessionSummaryApiTest extends TestCase
                 'answers' => ['1' => 0],
             ]);
 
-        $response->assertStatus(403);
+        $response->assertStatus(403)
+            ->assertJsonPath('status', 'error')
+            ->assertJsonPath('message', 'حل الاختبار مخصص للطالب فقط.');
+    }
+
+    public function test_parent_cannot_submit_quiz_for_student(): void
+    {
+        $parent = User::create([
+            'name' => 'Parent User',
+            'email' => 'parent_'.uniqid().'@taj.com',
+            'phone' => '05'.substr(str_shuffle('01234567890123456789'), 0, 8),
+            'password' => bcrypt('password123'),
+        ]);
+        $this->student->update(['parent_id' => $parent->id]);
+        $this->booking->update(['booked_by_id' => $parent->id]);
+
+        $response = $this->actingAs($parent, 'sanctum')
+            ->postJson("/api/v1/bookings/{$this->booking->id}/quiz/submit", [
+                'answers' => ['1' => 0],
+            ]);
+
+        $response->assertStatus(403)
+            ->assertJsonPath('status', 'error')
+            ->assertJsonPath('message', 'حل الاختبار مخصص للطالب فقط.');
+    }
+
+    public function test_student_cannot_resubmit_completed_quiz(): void
+    {
+        // First submission succeeds
+        $firstResponse = $this->actingAs($this->student, 'sanctum')
+            ->postJson("/api/v1/bookings/{$this->booking->id}/quiz/submit", [
+                'answers' => ['1' => 0, '2' => 1],
+            ]);
+        $firstResponse->assertStatus(200);
+
+        // Attempting to submit again must be rejected
+        $secondResponse = $this->actingAs($this->student, 'sanctum')
+            ->postJson("/api/v1/bookings/{$this->booking->id}/quiz/submit", [
+                'answers' => ['1' => 1, '2' => 0],
+            ]);
+
+        $secondResponse->assertStatus(422)
+            ->assertJsonPath('status', 'error')
+            ->assertJsonPath('message', 'تم إرسال إجابات هذا الاختبار مسبقاً ولا يمكن تعديلها.');
     }
 
     public function test_participant_can_trigger_summary_generation_manually(): void

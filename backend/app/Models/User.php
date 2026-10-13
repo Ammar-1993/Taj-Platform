@@ -28,6 +28,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     protected $hidden = [
         'password',
         'remember_token',
+        'last_login_ip',
     ];
 
     protected function casts(): array

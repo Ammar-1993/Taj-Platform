@@ -10,7 +10,7 @@ class RecaptchaService
     /**
      * Verify the reCAPTCHA token with Google.
      */
-    public function verify(?string $token, ?string $ip = null): bool
+    public function verify(?string $token, ?string $ip = null, ?string $expectedAction = null): bool
     {
         // 🟢 التعديل: السماح بالتسجيل بدون توكن في البيئة المحلية لتسهيل التطوير
         if (empty($token)) {
@@ -22,13 +22,11 @@ class RecaptchaService
         if (empty($secret)) {
             Log::warning('reCAPTCHA secret key is not configured.');
 
-            // If not configured, we might want to allow in dev, but for this task we assume it should be there.
-            // Return true for local development if needed, but let's be strict.
             return app()->environment('local');
         }
 
         try {
-            $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            $response = Http::timeout(10)->asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
                 'secret' => $secret,
                 'response' => $token,
                 'remoteip' => $ip,
@@ -36,7 +34,22 @@ class RecaptchaService
 
             $result = $response->json();
 
-            return isset($result['success']) && $result['success'] === true && isset($result['score']) && $result['score'] >= 0.5;
+            $isSuccessful = isset($result['success']) && $result['success'] === true && isset($result['score']) && $result['score'] >= 0.5;
+
+            if (! $isSuccessful) {
+                return false;
+            }
+
+            if ($expectedAction !== null) {
+                $returnedAction = $result['action'] ?? null;
+                if ($returnedAction !== $expectedAction) {
+                    Log::warning("reCAPTCHA action mismatch: expected '{$expectedAction}', got '{$returnedAction}'");
+
+                    return false;
+                }
+            }
+
+            return true;
         } catch (\Exception $e) {
             Log::error('reCAPTCHA verification failed: '.$e->getMessage());
 

@@ -142,11 +142,7 @@ class SessionSummaryController extends Controller
 
         $booking = Booking::with(['sessionSummary.quiz', 'student'])->findOrFail($id);
 
-        $isStudentOrPayer = ($user->id === $booking->student_id)
-            || ($user->id === $booking->booked_by_id)
-            || ($booking->student && $booking->student->parent_id === $user->id);
-
-        if (! $isStudentOrPayer && ! $user->hasRole('admin')) {
+        if ((int) $user->id !== (int) $booking->student_id && ! $user->hasRole('admin')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'حل الاختبار مخصص للطالب فقط.',
@@ -160,6 +156,13 @@ class SessionSummaryController extends Controller
                 'status' => 'error',
                 'message' => 'لا يوجد اختبار متاح لهذه الحصة.',
             ], 404);
+        }
+
+        if ($quiz->completed_at !== null) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'تم إرسال إجابات هذا الاختبار مسبقاً ولا يمكن تعديلها.',
+            ], 422);
         }
 
         $validated = $request->validate([

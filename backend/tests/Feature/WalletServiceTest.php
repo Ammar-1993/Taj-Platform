@@ -59,4 +59,39 @@ class WalletServiceTest extends TestCase
         // محاولة سحب مبلغ أكبر من الرصيد
         $this->walletService->processTransaction($user, -100.00, 'withdrawal', 'محاولة اختراق');
     }
+
+    public function test_wallet_transactions_are_immutable_and_cannot_be_updated(): void
+    {
+        $user = User::factory()->create();
+        $transaction = $this->walletService->processTransaction($user, 100.00, 'deposit', 'شحن');
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('ثابتة محاسبياً وغير قابلة للتعديل');
+
+        $transaction->update(['amount' => 999.00]);
+    }
+
+    public function test_wallet_transactions_are_immutable_and_cannot_be_deleted(): void
+    {
+        $user = User::factory()->create();
+        $transaction = $this->walletService->processTransaction($user, 100.00, 'deposit', 'شحن');
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('ثابتة محاسبياً وغير قابلة للحذف');
+
+        $transaction->delete();
+    }
+
+    public function test_wallet_transaction_direction_classification(): void
+    {
+        $user = User::factory()->create();
+        $creditTx = $this->walletService->processTransaction($user, 100.00, 'deposit', 'شحن');
+        $debitTx = $this->walletService->processTransaction($user, -50.00, 'withdrawal', 'سحب');
+
+        $this->assertTrue($creditTx->isCredit());
+        $this->assertFalse($creditTx->isDebit());
+
+        $this->assertTrue($debitTx->isDebit());
+        $this->assertFalse($debitTx->isCredit());
+    }
 }

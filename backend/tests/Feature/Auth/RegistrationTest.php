@@ -3,8 +3,10 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
-use App\Services\RecaptchaService; // 🟢 التعديل الأول
-use Illuminate\Foundation\Testing\RefreshDatabase; // 🟢 التعديل الثاني
+use App\Models\Wallet; // 🟢 التعديل الأول
+use App\Services\RecaptchaService; // 🟢 التعديل الثاني
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -111,5 +113,59 @@ class RegistrationTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['recaptcha_token']);
+    }
+
+    #[Test]
+    public function registration_rolls_back_completely_if_wallet_creation_fails(): void
+    {
+        Wallet::creating(function () {
+            throw new \RuntimeException('Simulated wallet failure for transaction rollback');
+        });
+
+        $payload = [
+            'name' => 'طالب اختبار الرول باك',
+            'email' => 'rollback_user@test.com',
+            'phone' => '0500000123',
+            'password' => 'password123',
+            'role' => 'student',
+            'recaptcha_token' => 'fake-token',
+        ];
+
+        try {
+            $this->postJson('/api/v1/auth/register', $payload);
+        } catch (\RuntimeException $e) {
+            // Caught simulated exception
+        }
+
+        $this->assertDatabaseMissing('users', [
+            'email' => 'rollback_user@test.com',
+        ]);
+    }
+
+    #[Test]
+    public function recaptcha_service_verifies_expected_action_correctly(): void
+    {
+        config(['services.recaptcha.secret' => 'test_secret_key']);
+        $service = new RecaptchaService;
+
+        Http::fake([
+            'https://www.google.com/recaptcha/api/siteverify' => Http::sequence()
+                ->push([
+                    'success' => true,
+                    'score' => 0.9,
+                    'action' => 'login',
+                ])
+                ->push([
+                    'success' => true,
+                    'score' => 0.9,
+                    'action' => 'register',
+                ]),
+        ]);
+
+        // 1. Mismatched action -> returns false
+        $this->assertFalse($service->verify('test-token', '127.0.0.1', 'register'));
+
+        // 2. Matching action -> returns true
+        $this->assertTrue($service->verify('test-token', '127.0.0.1', 'register'));
     }
 }

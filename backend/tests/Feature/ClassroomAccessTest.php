@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Booking;
 use App\Models\TeacherSlot;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Bus;
@@ -30,11 +31,18 @@ class ClassroomAccessTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Carbon::setTestNow(Carbon::parse('2026-10-13 14:00:00'));
         // إنشاء الأدوار مسبقًا (Spatie Permission)
         Role::firstOrCreate(['name' => 'teacher', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'parent', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 
     // ─── Authorization Tests ────────────────────────────────────────────────────

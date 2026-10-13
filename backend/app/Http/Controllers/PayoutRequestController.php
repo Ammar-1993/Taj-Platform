@@ -67,11 +67,4 @@ class PayoutRequestController extends Controller
             ], 400); // Badrequest for logic failure
         }
     }
-
-    // يمكننا إبقاء باقي الدوال فارغة أو حذفها إذا لم نكن نحتاجها في واجهة المعلم
-    public function show(PayoutRequest $payoutRequest) {}
-
-    public function update(Request $request, PayoutRequest $payoutRequest) {}
-
-    public function destroy(PayoutRequest $payoutRequest) {}
 }

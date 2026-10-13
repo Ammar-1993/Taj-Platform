@@ -23,12 +23,14 @@ class PaymentController extends Controller
     public function create(Request $request)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:10|max:5000',
+            'amount' => ['required', 'numeric', 'min:10', 'max:5000', 'regex:/^\d+(\.\d{1,2})?$/'],
+        ], [
+            'amount.regex' => 'يجب ألا يحتوي المبلغ على أكثر من خانتين عشريتين (هللات).',
         ]);
 
-        $amount = $request->input('amount');
+        $amount = (float) $request->input('amount');
         $user = $request->user();
-        $amountInHalalas = $amount * 100;
+        $amountInHalalas = (int) round($amount * 100);
 
         try {
             // 🟢 تجهيز رابط الواجهة الأمامية مع رابط احتياطي للحماية
@@ -36,7 +38,7 @@ class PaymentController extends Controller
             // التأكد من إزالة أي / زائدة في نهاية الرابط
             $frontendUrl = rtrim($frontendUrl, '/');
 
-            $response = Http::withHeaders([
+            $response = Http::timeout(15)->withHeaders([
                 'Authorization' => 'Basic '.base64_encode(config('services.moyasar.secret_key').':'),
                 'Content-Type' => 'application/json',
             ])->post('https://api.moyasar.com/v1/invoices', [
@@ -65,15 +67,24 @@ class PaymentController extends Controller
                     ],
                 ]);
             } else {
+                Log::error('Moyasar create invoice failed', [
+                    'user_id' => $user->id,
+                    'status' => $response->status(),
+                    'response' => $response->json(),
+                ]);
+
                 return response()->json([
-                    'error' => 'فشل في إنشاء جلسة الدفع',
-                    'moyasar_error_details' => $response->json(),
+                    'error' => 'تعذر إنشاء جلسة الدفع لدى مزود الخدمة، يُرجى المحاولة لاحقاً.',
                 ], 400);
             }
         } catch (\Exception $e) {
+            Log::error('Moyasar gateway connection exception: '.$e->getMessage(), [
+                'user_id' => $user->id,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             return response()->json([
-                'error' => 'خطأ في الاتصال ببوابة الدفع',
-                'exception_details' => $e->getMessage(),
+                'error' => 'حدث خطأ في الاتصال ببوابة الدفع، يُرجى المحاولة لاحقاً.',
             ], 500);
         }
     }
@@ -92,7 +103,7 @@ class PaymentController extends Controller
 
         try {
             // 🟢 المحاولة الأولى: التحقق كعملية دفع (Payment) لأن ميسر يرسل رقم الدفع غالباً في الرابط
-            $response = Http::withHeaders([
+            $response = Http::timeout(15)->withHeaders([
                 'Authorization' => 'Basic '.base64_encode(config('services.moyasar.secret_key').':'),
             ])->get("https://api.moyasar.com/v1/payments/{$id}");
 
@@ -106,7 +117,7 @@ class PaymentController extends Controller
 
                 // إذا كان الدفع مرتبطاً بفاتورة، نجلب بيانات الفاتورة للحصول على الـ metadata
                 if ($linkedInvoiceId) {
-                    $invoiceResponse = Http::withHeaders([
+                    $invoiceResponse = Http::timeout(15)->withHeaders([
                         'Authorization' => 'Basic '.base64_encode(config('services.moyasar.secret_key').':'),
                     ])->get("https://api.moyasar.com/v1/invoices/{$linkedInvoiceId}");
 
@@ -137,7 +148,7 @@ class PaymentController extends Controller
                 }
             } else {
                 // 🟢 المحاولة الثانية: التحقق كفاتورة مباشرة (Invoice)
-                $response = Http::withHeaders([
+                $response = Http::timeout(15)->withHeaders([
                     'Authorization' => 'Basic '.base64_encode(config('services.moyasar.secret_key').':'),
                 ])->get("https://api.moyasar.com/v1/invoices/{$id}");
 

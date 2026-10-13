@@ -71,6 +71,91 @@ class BookingServiceTest extends TestCase
 
         // د. عدد استخدامات كود الخصم زاد بمقدار 1
         $this->assertEquals(1, $promo->refresh()->used_count);
+
+        // هـ. حفظ معرف كود الخصم وتاريخ الحجز المطابق للموعد
+        $this->assertEquals($promo->id, $booking->promo_code_id);
+        $this->assertEquals($slot->slot_date->toDateString(), $booking->booking_date->toDateString());
+    }
+
+    public function test_it_throws_exception_when_promo_code_is_invalid()
+    {
+        $grade = GradeLevel::create(['name' => 'ابتدائي', 'session_price' => 100.00, 'is_active' => true]);
+        $student = User::create(['name' => 'طالب', 'email' => 's_promo_inv@taj.com', 'phone' => '0511111111', 'password' => '123']);
+        $student->studentProfile()->create(['grade_level_id' => $grade->id]);
+        $this->walletService->processTransaction($student, 200.00, 'deposit', 'شحن');
+
+        $teacher = User::create(['name' => 'معلم', 'email' => 't_promo_inv@taj.com', 'phone' => '0522222222', 'password' => '123']);
+        $slot = TeacherSlot::create([
+            'teacher_id' => $teacher->id,
+            'slot_date' => now()->addDay(),
+            'start_time' => '10:00:00',
+            'end_time' => '11:00:00',
+            'status' => 'available',
+        ]);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('كود الخصم المدخل غير صحيح.');
+
+        $this->bookingService->createBooking($student, $slot->id, 'NON_EXISTENT_CODE');
+    }
+
+    public function test_it_throws_exception_when_promo_code_is_expired()
+    {
+        $grade = GradeLevel::create(['name' => 'ابتدائي', 'session_price' => 100.00, 'is_active' => true]);
+        $student = User::create(['name' => 'طالب', 'email' => 's_promo_exp@taj.com', 'phone' => '0533333333', 'password' => '123']);
+        $student->studentProfile()->create(['grade_level_id' => $grade->id]);
+        $this->walletService->processTransaction($student, 200.00, 'deposit', 'شحن');
+
+        $teacher = User::create(['name' => 'معلم', 'email' => 't_promo_exp@taj.com', 'phone' => '0544444444', 'password' => '123']);
+        $slot = TeacherSlot::create([
+            'teacher_id' => $teacher->id,
+            'slot_date' => now()->addDay(),
+            'start_time' => '10:00:00',
+            'end_time' => '11:00:00',
+            'status' => 'available',
+        ]);
+
+        PromoCode::create([
+            'code' => 'EXPIRED20',
+            'discount_percentage' => 20.00,
+            'max_uses' => 10,
+            'used_count' => 0,
+            'expires_at' => now()->subDay(),
+        ]);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('عفواً، لقد انتهت صلاحية كود الخصم هذا.');
+
+        $this->bookingService->createBooking($student, $slot->id, 'EXPIRED20');
+    }
+
+    public function test_it_throws_exception_when_promo_code_max_uses_reached()
+    {
+        $grade = GradeLevel::create(['name' => 'ابتدائي', 'session_price' => 100.00, 'is_active' => true]);
+        $student = User::create(['name' => 'طالب', 'email' => 's_promo_max@taj.com', 'phone' => '0555555555', 'password' => '123']);
+        $student->studentProfile()->create(['grade_level_id' => $grade->id]);
+        $this->walletService->processTransaction($student, 200.00, 'deposit', 'شحن');
+
+        $teacher = User::create(['name' => 'معلم', 'email' => 't_promo_max@taj.com', 'phone' => '0566666666', 'password' => '123']);
+        $slot = TeacherSlot::create([
+            'teacher_id' => $teacher->id,
+            'slot_date' => now()->addDay(),
+            'start_time' => '10:00:00',
+            'end_time' => '11:00:00',
+            'status' => 'available',
+        ]);
+
+        PromoCode::create([
+            'code' => 'FULL_USES',
+            'discount_percentage' => 30.00,
+            'max_uses' => 5,
+            'used_count' => 5,
+        ]);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('عفواً، تم استنفاد الحد الأقصى لاستخدام كود الخصم هذا.');
+
+        $this->bookingService->createBooking($student, $slot->id, 'FULL_USES');
     }
 
     public function test_it_prevents_double_booking()

@@ -285,4 +285,63 @@ class PaymentSecurityTest extends TestCase
 
         $this->assertSame(25.0, $this->balance($user));
     }
+
+    #[Test]
+    public function payment_create_accepts_valid_two_decimal_amount_and_normalizes_halalas(): void
+    {
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        Http::fake([
+            'api.moyasar.com/v1/invoices' => Http::response([
+                'id' => 'inv_test_123',
+                'url' => 'https://moyasar.com/checkout/123',
+                'status' => 'initiated',
+            ], 200),
+        ]);
+
+        $response = $this->postJson('/api/v1/payments/create', ['amount' => 10.50]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.payment_id', 'inv_test_123')
+            ->assertJsonPath('data.amount', 10.5);
+
+        Http::assertSent(function ($request) {
+            return $request->url() === 'https://api.moyasar.com/v1/invoices'
+                && $request['amount'] === 1050; // 10.50 SAR = 1050 halalas
+        });
+    }
+
+    #[Test]
+    public function payment_create_rejects_sub_halalas_decimal_precision(): void
+    {
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $response = $this->postJson('/api/v1/payments/create', ['amount' => 10.001]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['amount']);
+    }
+
+    #[Test]
+    public function payment_create_sanitizes_gateway_error_and_does_not_leak_raw_details(): void
+    {
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        Http::fake([
+            'api.moyasar.com/v1/invoices' => Http::response([
+                'type' => 'invalid_request_error',
+                'message' => 'Internal sensitive merchant error with secret details',
+            ], 400),
+        ]);
+
+        $response = $this->postJson('/api/v1/payments/create', ['amount' => 50.00]);
+
+        $response->assertStatus(400)
+            ->assertJsonMissing(['moyasar_error_details'])
+            ->assertJsonPath('error', 'تعذر إنشاء جلسة الدفع لدى مزود الخدمة، يُرجى المحاولة لاحقاً.');
+    }
 }

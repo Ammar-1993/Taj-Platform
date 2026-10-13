@@ -11,6 +11,7 @@ use App\Models\TeacherSlot;
 use App\Models\User;
 use App\Notifications\NewBookingNotification;
 use App\Support\BookingStatus;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -62,13 +63,23 @@ class BookingService
 
             $sessionPrice = $gradeLevel->session_price;
             $discountAmount = 0;
+            $promoId = null;
 
             if ($promoCode) {
-                $promo = PromoCode::where('code', $promoCode)->first();
-                if ($promo && $promo->isValid()) {
-                    $discountAmount = ($sessionPrice * $promo->discount_percentage) / 100;
-                    $promo->increment('used_count');
+                $promo = PromoCode::where('code', $promoCode)->lockForUpdate()->first();
+                if (! $promo) {
+                    throw new Exception('كود الخصم المدخل غير صحيح.');
                 }
+                if ($promo->expires_at && $promo->expires_at->isPast()) {
+                    throw new Exception('عفواً، لقد انتهت صلاحية كود الخصم هذا.');
+                }
+                if ($promo->used_count >= $promo->max_uses) {
+                    throw new Exception('عفواً، تم استنفاد الحد الأقصى لاستخدام كود الخصم هذا.');
+                }
+
+                $discountAmount = ($sessionPrice * $promo->discount_percentage) / 100;
+                $promo->increment('used_count');
+                $promoId = $promo->id;
             }
 
             $netPrice = $sessionPrice - $discountAmount;
@@ -92,7 +103,8 @@ class BookingService
                 'teacher_id' => $slot->teacher_id,
                 'booked_by_id' => $payer->id, // توثيق من قام بالدفع
                 'teacher_slot_id' => $slot->id,
-                'booking_date' => now(),
+                'promo_code_id' => $promoId,
+                'booking_date' => $slot->slot_date ? ($slot->slot_date instanceof Carbon ? $slot->slot_date->toDateString() : (string) $slot->slot_date) : now()->toDateString(),
                 'session_price' => $sessionPrice,
                 'discount_amount' => $discountAmount,
                 'net_paid' => $netPrice,

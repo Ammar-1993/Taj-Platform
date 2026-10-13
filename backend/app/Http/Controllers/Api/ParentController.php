@@ -24,7 +24,11 @@ class ParentController extends Controller
         $user = Auth::user();
 
         $children = User::where('parent_id', $user->id)
-            ->with('studentProfile.gradeLevel')
+            ->select(['id', 'name', 'email', 'parent_id', 'is_active', 'created_at'])
+            ->with([
+                'studentProfile:id,user_id,grade_level_id,can_book_independently',
+                'studentProfile.gradeLevel:id,name',
+            ])
             ->get();
 
         return response()->json(['status' => 'success', 'data' => $children]);

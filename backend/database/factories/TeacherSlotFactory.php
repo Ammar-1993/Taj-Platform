@@ -18,7 +18,7 @@ class TeacherSlotFactory extends Factory
      */
     public function definition(): array
     {
-        $start = now()->subMinutes(5);
+        $start = now()->hour >= 22 ? now()->setTime(14, 0) : now()->subMinutes(5);
         $end = (clone $start)->addHour();
 
         return [

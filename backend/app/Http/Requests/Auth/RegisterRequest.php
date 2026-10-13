@@ -44,7 +44,7 @@ class RegisterRequest extends FormRequest
         $validator->after(function ($validator) {
             if ($this->has('recaptcha_token')) {
                 $recaptcha = app(RecaptchaService::class);
-                if (! $recaptcha->verify($this->recaptcha_token, $this->ip())) {
+                if (! $recaptcha->verify($this->recaptcha_token, $this->ip(), 'register')) {
                     $validator->errors()->add('recaptcha_token', 'فشل التحقق من reCAPTCHA. يرجى المحاولة مرة أخرى.');
                 }
             }

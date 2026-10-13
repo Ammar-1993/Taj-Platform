@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\PasswordChanged;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
@@ -25,22 +26,26 @@ class AuthController extends Controller
     {
         $data = $request->validated();
 
-        // 1. إنشاء المستخدم الأساسي
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'phone' => $data['phone'],
-            'password' => Hash::make($data['password']),
-            'is_active' => true,
-        ]);
+        $user = DB::transaction(function () use ($data) {
+            // 1. إنشاء المستخدم الأساسي
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'],
+                'password' => Hash::make($data['password']),
+                'is_active' => true,
+            ]);
 
-        // 2. تعيين الصلاحية (teacher, student, parent)
-        $user->assignRole($data['role']);
+            // 2. تعيين الصلاحية (teacher, student, parent)
+            $user->assignRole($data['role']);
 
-        // 3. إنشاء محفظة مالية فارغة فوراً
-        $user->wallet()->create(['balance' => 0.00]);
+            // 3. إنشاء محفظة مالية فارغة فوراً
+            $user->wallet()->create(['balance' => 0.00]);
 
-        // 4. توليد التوكن
+            return $user;
+        });
+
+        // 4. توليد التوكن بعد نجاح المعاملة
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
