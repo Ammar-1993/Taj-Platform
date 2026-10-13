@@ -40,7 +40,7 @@ class BookingServiceUnitTest extends TestCase
             'session_price' => 100.00,
             'discount_amount' => 0.00,
             'net_paid' => 100.00,
-            'status' => 'scheduled',
+            'status' => 'in_progress',
             'agora_channel' => 'taj_test',
         ]);
 
@@ -63,6 +63,44 @@ class BookingServiceUnitTest extends TestCase
 
         $this->assertEquals('completed', $result->status);
         $this->assertNotNull($result->completed_at);
+    }
+
+    public function test_cannot_complete_scheduled_booking_before_in_progress()
+    {
+        $teacher = User::create(['name' => 'teacher', 'email' => 't_sched@taj.com', 'phone' => '1110', 'password' => '123']);
+        $student = User::create(['name' => 'student', 'email' => 's_sched@taj.com', 'phone' => '2220', 'password' => '123']);
+
+        $slot = TeacherSlot::create([
+            'teacher_id' => $teacher->id,
+            'slot_date' => now()->addDay(),
+            'start_time' => '12:00:00',
+            'end_time' => '13:00:00',
+            'status' => 'booked',
+        ]);
+
+        $booking = Booking::create([
+            'student_id' => $student->id,
+            'teacher_id' => $teacher->id,
+            'booked_by_id' => $student->id,
+            'teacher_slot_id' => $slot->id,
+            'booking_date' => now(),
+            'session_price' => 100.00,
+            'discount_amount' => 0.00,
+            'net_paid' => 100.00,
+            'status' => 'scheduled',
+            'agora_channel' => 'taj_test_sched',
+        ]);
+
+        $walletServiceMock = Mockery::mock(WalletService::class);
+        $whiteboardServiceMock = Mockery::mock(WhiteboardService::class);
+        $walletServiceMock->shouldNotReceive('processTransaction');
+
+        $service = new BookingService($walletServiceMock, $whiteboardServiceMock);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('لا يمكن إكمال الحصة قبل بدئها ودخول المعلم إلى الفصل.');
+
+        $service->completeBooking($booking);
     }
 
     public function test_cancel_booking_refunds_payer_and_sets_slot_available()

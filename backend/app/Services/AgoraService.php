@@ -99,12 +99,13 @@ class AgoraService
     /**
      * Force-regenerate and overwrite cached tokens (used for mid-session token renewal).
      */
-    public function refreshTokens(string $channelName, int $uid, bool $isTeacher = false, ?int $bookingId = null): array
+    public function refreshTokens(string $channelName, int $uid, bool $isTeacher = false, ?int $bookingId = null, string $role = 'publisher'): array
     {
-        $rtcToken = $this->generateRtcToken($channelName, $uid, 'publisher');
+        $roleKey = ($role === 'publisher' || $role === 'host') ? 'publisher' : 'subscriber';
+        $rtcToken = $this->generateRtcToken($channelName, $uid, $roleKey);
         $rtmToken = $this->generateRtmToken((string) $uid);
 
-        Cache::put("agora:rtc:{$channelName}:{$uid}:publisher", $rtcToken, now()->addMinutes(self::CACHE_TTL_MINUTES));
+        Cache::put("agora:rtc:{$channelName}:{$uid}:{$roleKey}", $rtcToken, now()->addMinutes(self::CACHE_TTL_MINUTES));
         Cache::put("agora:rtm:{$uid}", $rtmToken, now()->addMinutes(self::CACHE_TTL_MINUTES));
 
         if ($bookingId) {
@@ -130,13 +131,15 @@ class AgoraService
     }
 
     /**
-     * Invalidate all cached tokens for a channel and participants upon cancellation.
+     * Invalidate all cached tokens for a channel and participants upon cancellation or completion.
      */
     public function invalidateTokens(string $channelName, int $teacherId, int $studentId, ?int $bookingId = null): void
     {
         if ($channelName) {
             Cache::forget("agora:rtc:{$channelName}:{$teacherId}:publisher");
+            Cache::forget("agora:rtc:{$channelName}:{$teacherId}:subscriber");
             Cache::forget("agora:rtc:{$channelName}:{$studentId}:publisher");
+            Cache::forget("agora:rtc:{$channelName}:{$studentId}:subscriber");
             Cache::forget("agora:rtc:{$channelName}:".($teacherId + 1_000_000_000).':publisher');
         }
 

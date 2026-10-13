@@ -64,8 +64,24 @@ class BookingLifecycleTest extends TestCase
         app(WalletService::class)->processTransaction($this->student, -100.00, 'withdrawal', 'Booking payment');
     }
 
+    public function test_teacher_cannot_complete_scheduled_booking_directly()
+    {
+        $response = $this->actingAs($this->teacher)
+            ->patchJson("/api/v1/bookings/{$this->booking->id}/complete");
+
+        $response->assertStatus(400)
+            ->assertJson(['status' => 'error'])
+            ->assertJsonPath('message', 'لا يمكن إكمال الحصة قبل بدئها ودخول المعلم إلى الفصل.');
+
+        $this->assertEquals('scheduled', $this->booking->refresh()->status);
+        $this->assertEquals(0.00, (float) ($this->teacher->wallet?->balance ?? 0));
+    }
+
     public function test_teacher_can_complete_booking_and_earn_money()
     {
+        // الحصة تبدأ وتصبح in_progress عندما يدخل المعلم إلى الفصل
+        $this->booking->update(['status' => 'in_progress', 'teacher_joined_at' => now()]);
+
         $response = $this->actingAs($this->teacher)
             ->patchJson("/api/v1/bookings/{$this->booking->id}/complete");
 
@@ -76,6 +92,42 @@ class BookingLifecycleTest extends TestCase
 
         // Teacher earns 80% of 100 = 80
         $this->assertEquals(80.00, $this->teacher->wallet->refresh()->balance);
+    }
+
+    public function test_cancelled_booking_cannot_be_accessed_nor_completed_and_yields_no_earnings()
+    {
+        // 1. إلغاء الحجز
+        $this->actingAs($this->teacher)
+            ->patchJson("/api/v1/bookings/{$this->booking->id}/cancel")
+            ->assertOk();
+
+        $this->assertEquals('cancelled', $this->booking->refresh()->status);
+
+        // 2. محاولة الدخول إلى الفصل الافتراضي بعد الإلغاء -> تُرفض بـ 409
+        $accessResponse = $this->actingAs($this->teacher)
+            ->getJson("/api/v1/bookings/{$this->booking->id}/classroom");
+
+        $accessResponse->assertStatus(409)
+            ->assertJsonPath('status', 'error')
+            ->assertJsonPath('message', 'هذه الحصة لم تعد متاحة للدخول (ملغاة أو منتهية).');
+
+        // 3. محاولة تجديد التوكن بعد الإلغاء -> تُرفض بـ 409
+        $refreshResponse = $this->actingAs($this->teacher)
+            ->getJson("/api/v1/bookings/{$this->booking->id}/refresh-token");
+
+        $refreshResponse->assertStatus(409)
+            ->assertJsonPath('status', 'error');
+
+        // 4. محاولة إنهاء الحصة وصرف الأرباح بعد الإلغاء -> تُرفض بـ 400 ولا تُصرف أي أرباح
+        $completeResponse = $this->actingAs($this->teacher)
+            ->patchJson("/api/v1/bookings/{$this->booking->id}/complete");
+
+        $completeResponse->assertStatus(400)
+            ->assertJsonPath('status', 'error')
+            ->assertJsonPath('message', 'لا يمكن إكمال هذه الحصة لأنها ملغاة.');
+
+        // رصيد المعلم يجب أن يبقى 0 تماماً
+        $this->assertEquals(0.00, (float) ($this->teacher->wallet?->balance ?? 0));
     }
 
     public function test_teacher_can_cancel_booking_and_student_gets_refund()

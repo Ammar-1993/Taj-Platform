@@ -231,7 +231,7 @@ class SessionSummaryApiTest extends TestCase
             'session_price' => 100.00,
             'discount_amount' => 0.00,
             'net_paid' => 100.00,
-            'status' => 'scheduled',
+            'status' => 'in_progress',
             'agora_channel' => 'taj_'.uniqid(),
         ]);
 

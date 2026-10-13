@@ -262,4 +262,69 @@ class ClassroomAccessTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+    #[Test]
+    /**
+     * يجب رفض دخول الفصل (409 Conflict) إذا كانت الحصة ملغاة أو مكتملة.
+     */
+    public function test_classroom_access_is_rejected_for_closed_bookings(): void
+    {
+        $teacher = User::factory()->create();
+        $student = User::factory()->create();
+        $teacher->assignRole('teacher');
+        $student->assignRole('student');
+
+        $cancelledBooking = Booking::factory()->create([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'status' => 'cancelled',
+        ]);
+
+        $completedBooking = Booking::factory()->create([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'status' => 'completed',
+        ]);
+
+        // الحجز الملغي
+        $this->actingAs($student)
+            ->getJson("/api/v1/bookings/{$cancelledBooking->id}/classroom")
+            ->assertStatus(409)
+            ->assertJsonPath('status', 'error')
+            ->assertJsonPath('message', 'هذه الحصة لم تعد متاحة للدخول (ملغاة أو منتهية).');
+
+        // الحجز المكتمل
+        $this->actingAs($teacher)
+            ->getJson("/api/v1/bookings/{$completedBooking->id}/classroom")
+            ->assertStatus(409)
+            ->assertJsonPath('status', 'error')
+            ->assertJsonPath('message', 'هذه الحصة لم تعد متاحة للدخول (ملغاة أو منتهية).');
+    }
+
+    #[Test]
+    /**
+     * المراقب (ولي الأمر الذي دفع) يحصل على دور audience/subscriber ولا يحصل على screen_token.
+     */
+    public function test_observer_parent_gets_audience_role_and_no_screen_token(): void
+    {
+        $teacher = User::factory()->create();
+        $student = User::factory()->create();
+        $parent = User::factory()->create();
+        $teacher->assignRole('teacher');
+        $student->assignRole('student');
+        $parent->assignRole('parent');
+
+        $booking = Booking::factory()->create([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'booked_by_id' => $parent->id,
+            'status' => 'scheduled',
+        ]);
+
+        $response = $this->actingAs($parent)->getJson("/api/v1/bookings/{$booking->id}/classroom");
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('data.role', 'audience');
+        $this->assertNull($response->json('data.screen_token'));
+    }
 }

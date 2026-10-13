@@ -7,8 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Jobs\ProvisionVirtualClassroom;
 use App\Models\Booking;
 use App\Models\User;
+use App\Policies\ClassroomPolicy;
 use App\Services\AgoraService;
 use App\Services\WhiteboardService;
+use App\Support\BookingStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -21,10 +23,13 @@ class ClassroomController extends Controller
 
     protected AgoraService $agoraService;
 
-    public function __construct(WhiteboardService $whiteboardService, AgoraService $agoraService)
+    protected ClassroomPolicy $classroomPolicy;
+
+    public function __construct(WhiteboardService $whiteboardService, AgoraService $agoraService, ClassroomPolicy $classroomPolicy)
     {
         $this->whiteboardService = $whiteboardService;
         $this->agoraService = $agoraService;
+        $this->classroomPolicy = $classroomPolicy;
     }
 
     /**
@@ -36,22 +41,25 @@ class ClassroomController extends Controller
         $user = $request->user();
         $booking = Booking::findOrFail($bookingId);
 
-        // حماية أمنية: هل هذا المستخدم هو المعلم أو الطالب الخاص بهذه الحصة؟
-        if ($booking->student_id !== $user->id && $booking->teacher_id !== $user->id && $booking->booked_by_id !== $user->id) {
-            return response()->json(['message' => 'غير مصرح لك بدخول هذه الغرفة'], 403);
+        // حماية أمنية: هل هذا المستخدم طرف في الحصة؟ وهل حالة الحجز ما زالت تسمح بالدخول؟
+        if ($denied = $this->classroomPolicy->deny($user, $booking, 'غير مصرح لك بدخول هذه الغرفة')) {
+            return $denied;
         }
 
-        // تحديث حالة الحضور بشكل ذري (Atomic) لتجنب Race Conditions
-        if ($user->hasRole('teacher') && ! $booking->teacher_joined_at) {
+        // تحديث حالة الحضور بشكل ذري (Atomic) لتجنب Race Conditions.
+        // شرط الحالة داخل الـ UPDATE يمنع إعادة فتح حجز أُلغي بالتزامن (لا انتقال خارج المسموح).
+        if ($this->classroomPolicy->isTeacher($user, $booking) && ! $booking->teacher_joined_at) {
             $updated = Booking::where('id', $booking->id)
                 ->whereNull('teacher_joined_at')
-                ->update(['teacher_joined_at' => now(), 'status' => 'in_progress']);
+                ->whereIn('status', BookingStatus::CLASSROOM_OPEN)
+                ->update(['teacher_joined_at' => now(), 'status' => BookingStatus::IN_PROGRESS]);
             if ($updated) {
                 event(new ClassroomJoined($booking, $user, 'teacher'));
             }
-        } elseif ($user->hasRole('student') && ! $booking->student_joined_at) {
+        } elseif ($this->classroomPolicy->isStudent($user, $booking) && ! $booking->student_joined_at) {
             $updated = Booking::where('id', $booking->id)
                 ->whereNull('student_joined_at')
+                ->whereIn('status', BookingStatus::CLASSROOM_OPEN)
                 ->update(['student_joined_at' => now()]);
             if ($updated) {
                 event(new ClassroomJoined($booking, $user, 'student'));
@@ -59,13 +67,13 @@ class ClassroomController extends Controller
         }
 
         // تحديد الدور: المعلم والطالب هم "host" (إرسال واستقبال)، المراقبين "audience" (استقبال فقط)
-        $role = ($user->id === $booking->teacher_id || $user->id === $booking->student_id) ? 'host' : 'audience';
+        $agoraRole = $this->classroomPolicy->agoraRole($user, $booking);
+        $role = ($agoraRole === 'publisher') ? 'host' : 'audience';
 
         // 🟢 1. جلب التوكنات بشكل ذري ومخزن مؤقتاً عبر AgoraService
-        $agoraRole = ($role === 'host') ? 'publisher' : 'subscriber';
         $token = $this->agoraService->getRtcToken($booking->agora_channel, $user->id, $agoraRole, $booking->id);
         $rtmToken = $this->agoraService->getRtmToken($user->id, $booking->id);
-        $screenToken = ($user->id === $booking->teacher_id)
+        $screenToken = $this->classroomPolicy->isTeacher($user, $booking)
             ? $this->agoraService->getScreenToken($booking->agora_channel, $user->id, $booking->id)
             : null;
 
@@ -90,7 +98,7 @@ class ClassroomController extends Controller
 
         $whiteboardPayload = null;
         if ($whiteboardRoomUuid) {
-            $tokenRole = ($user->id === $booking->teacher_id) ? 'admin' : 'reader';
+            $tokenRole = $this->classroomPolicy->isTeacher($user, $booking) ? 'admin' : 'reader';
             $cacheKey = "whiteboard_token_{$whiteboardRoomUuid}_{$tokenRole}";
 
             // ── 5.1: Non-blocking token read ────────────────────────────────────
@@ -132,21 +140,29 @@ class ClassroomController extends Controller
         $user = $request->user();
         $booking = Booking::findOrFail($bookingId);
 
-        // Security check: Same as getAccessDetails
-        if ($booking->student_id !== $user->id && $booking->teacher_id !== $user->id && $booking->booked_by_id !== $user->id) {
-            return response()->json(['message' => 'غير مصرح لك بتجديد التوكن'], 403);
+        // Security check: Same policy as getAccessDetails (participant + booking still open)
+        if ($denied = $this->classroomPolicy->deny($user, $booking, 'غير مصرح لك بتجديد التوكن')) {
+            return $denied;
         }
 
         try {
-            $isTeacher = ($user->id === $booking->teacher_id);
-            $tokens = $this->agoraService->refreshTokens($booking->agora_channel, $user->id, $isTeacher, $booking->id);
+            $isTeacher = $this->classroomPolicy->isTeacher($user, $booking);
+            $tokens = $this->agoraService->refreshTokens(
+                $booking->agora_channel,
+                $user->id,
+                $isTeacher,
+                $booking->id,
+                $this->classroomPolicy->agoraRole($user, $booking)
+            );
 
             return response()->json([
                 'status' => 'success',
                 'data' => $tokens,
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            Log::error("refreshToken failed for booking #{$bookingId}: ".$e->getMessage());
+
+            return response()->json(['message' => 'فشل تجديد التوكن، يُرجى إعادة تحميل الصفحة.'], 500);
         }
     }
 
@@ -165,12 +181,8 @@ class ClassroomController extends Controller
         $user = $request->user();
         $booking = Booking::findOrFail($bookingId);
 
-        if (
-            $booking->student_id !== $user->id &&
-            $booking->teacher_id !== $user->id &&
-            $booking->booked_by_id !== $user->id
-        ) {
-            return response()->json(['message' => 'غير مصرح لك'], 403);
+        if ($denied = $this->classroomPolicy->deny($user, $booking, 'غير مصرح لك')) {
+            return $denied;
         }
 
         $whiteboardRoomUuid = $booking->whiteboard_room_uuid;
@@ -180,7 +192,7 @@ class ClassroomController extends Controller
         }
 
         try {
-            $tokenRole = ($user->id === $booking->teacher_id) ? 'admin' : 'reader';
+            $tokenRole = $this->classroomPolicy->isTeacher($user, $booking) ? 'admin' : 'reader';
             $durationMs = isset($booking->duration_minutes)
                 ? ($booking->duration_minutes + 30) * 60 * 1000
                 : 3600000;
@@ -230,13 +242,9 @@ class ClassroomController extends Controller
         $user = $request->user();
         $booking = Booking::findOrFail($bookingId);
 
-        // Security: same access control as the main endpoint
-        if (
-            $booking->student_id !== $user->id &&
-            $booking->teacher_id !== $user->id &&
-            $booking->booked_by_id !== $user->id
-        ) {
-            return response()->json(['message' => 'غير مصرح لك'], 403);
+        // Security: same access policy as the main endpoint (participant + booking still open)
+        if ($denied = $this->classroomPolicy->deny($user, $booking, 'غير مصرح لك')) {
+            return $denied;
         }
 
         $whiteboardRoomUuid = $booking->whiteboard_room_uuid;
@@ -251,7 +259,7 @@ class ClassroomController extends Controller
 
         // Room exists — generate (or retrieve from cache) the room token
         try {
-            $tokenRole = ($user->id === $booking->teacher_id) ? 'admin' : 'reader';
+            $tokenRole = $this->classroomPolicy->isTeacher($user, $booking) ? 'admin' : 'reader';
             $durationMs = isset($booking->duration_minutes)
                 ? ($booking->duration_minutes + 30) * 60 * 1000
                 : 3600000;

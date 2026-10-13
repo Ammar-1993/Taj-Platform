@@ -10,6 +10,7 @@ use App\Models\PromoCode;
 use App\Models\TeacherSlot;
 use App\Models\User;
 use App\Notifications\NewBookingNotification;
+use App\Support\BookingStatus;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -95,7 +96,7 @@ class BookingService
                 'session_price' => $sessionPrice,
                 'discount_amount' => $discountAmount,
                 'net_paid' => $netPrice,
-                'status' => 'scheduled',
+                'status' => BookingStatus::SCHEDULED,
                 'agora_channel' => 'taj_'.bin2hex(random_bytes(16)),
             ]);
 
@@ -125,16 +126,28 @@ class BookingService
         $completedBooking = DB::transaction(function () use ($booking, $actor, $note) {
             $booking = Booking::where('id', $booking->id)->lockForUpdate()->firstOrFail();
 
-            if ($booking->status === 'completed') {
+            if ($booking->status === BookingStatus::COMPLETED) {
                 throw new Exception('تم إغلاق هذه الحصة مسبقاً.');
             }
 
-            if (in_array($booking->status, ['cancelled', 'refunded'])) {
+            if (in_array($booking->status, [BookingStatus::CANCELLED, BookingStatus::REFUNDED], true)) {
                 throw new Exception('لا يمكن إكمال هذه الحصة لأنها ملغاة.');
             }
 
+            if ($booking->status === BookingStatus::ABANDONED && ! ($actor && $actor->hasRole('admin'))) {
+                throw new Exception('هذه الحصة معلقة لدى الإدارة ولا يمكن إكمالها إلا من قبل المشرف.');
+            }
+
+            if ($booking->status === BookingStatus::SCHEDULED) {
+                throw new Exception('لا يمكن إكمال الحصة قبل بدئها ودخول المعلم إلى الفصل.');
+            }
+
+            if (! BookingStatus::canTransition($booking->status, BookingStatus::COMPLETED)) {
+                throw new Exception("لا يمكن إكمال الحصة في حالتها الحالية ({$booking->status}).");
+            }
+
             $updateData = [
-                'status' => 'completed',
+                'status' => BookingStatus::COMPLETED,
                 'completed_at' => now(),
             ];
 
@@ -164,6 +177,9 @@ class BookingService
                 );
             }
 
+            // إزالة جميع توكنات الفصل الافتراضي فور اكتمال الحصة لمنع أي وصول لاحق
+            $this->clearClassroomCacheTokens($booking);
+
             return $booking;
         });
 
@@ -185,15 +201,16 @@ class BookingService
         return DB::transaction(function () use ($booking, $canceller, $reason) {
             $booking = Booking::where('id', $booking->id)->lockForUpdate()->firstOrFail();
 
-            if (! in_array($booking->status, ['scheduled', 'in_progress', 'abandoned'])) {
+            if (! in_array($booking->status, [BookingStatus::SCHEDULED, BookingStatus::IN_PROGRESS, BookingStatus::ABANDONED], true)
+                || ! BookingStatus::canTransition($booking->status, BookingStatus::CANCELLED)) {
                 throw new Exception('لا يمكن إلغاء هذه الحصة في حالتها الحالية.');
             }
 
-            if ($booking->status === 'abandoned' && ! $canceller->hasRole('admin')) {
+            if ($booking->status === BookingStatus::ABANDONED && ! $canceller->hasRole('admin')) {
                 throw new Exception('هذه الحصة معلقة لدى الإدارة ولا يمكن إلغاؤها إلا من قبل المشرف.');
             }
 
-            $updateData = ['status' => 'cancelled'];
+            $updateData = ['status' => BookingStatus::CANCELLED];
 
             if ($reason || $canceller) {
                 $metadata = $booking->metadata ?? [];
@@ -260,11 +277,11 @@ class BookingService
             $booking = Booking::where('id', $booking->id)->lockForUpdate()->firstOrFail();
 
             // إعادة الفحص داخل القفل: قد تكون اكتملت أو أُلغيت بين لحظة الاستعلام وهذه اللحظة
-            if ($booking->status !== 'in_progress') {
+            if ($booking->status !== BookingStatus::IN_PROGRESS) {
                 return $booking;
             }
 
-            $booking->update(['status' => 'abandoned']);
+            $booking->update(['status' => BookingStatus::ABANDONED]);
             $booking->teacherSlot?->update(['status' => 'available']);
 
             $this->clearClassroomCacheTokens($booking);
