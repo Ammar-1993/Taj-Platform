@@ -307,6 +307,8 @@ class ClassroomAccessTest extends TestCase
      */
     public function test_observer_parent_gets_audience_role_and_no_screen_token(): void
     {
+        Bus::fake();
+
         $teacher = User::factory()->create();
         $student = User::factory()->create();
         $parent = User::factory()->create();
@@ -319,6 +321,7 @@ class ClassroomAccessTest extends TestCase
             'student_id' => $student->id,
             'booked_by_id' => $parent->id,
             'status' => 'scheduled',
+            'whiteboard_room_uuid' => 'test_whiteboard_uuid',
         ]);
 
         $response = $this->actingAs($parent)->getJson("/api/v1/bookings/{$booking->id}/classroom");
