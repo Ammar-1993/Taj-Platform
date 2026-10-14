@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\BookingService;
 use App\Services\WalletService;
 use App\Services\WhiteboardService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Mockery;
@@ -35,6 +36,7 @@ class SessionSummaryApiTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Carbon::setTestNow(Carbon::parse('2026-10-14 16:00:00'));
 
         $this->teacher = User::create([
             'name' => 'Teacher User',
@@ -283,5 +285,11 @@ class SessionSummaryApiTest extends TestCase
         Queue::assertPushed(GenerateSessionSummaryJob::class, function ($job) use ($pendingBooking) {
             return $job->booking->id === $pendingBooking->id;
         });
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 }
