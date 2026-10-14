@@ -13,8 +13,8 @@
   </p>
 
   <p>
-    <a href="#"><img src="https://img.shields.io/badge/Release-v2.3.0-emerald?style=for-the-badge&logo=git&logoColor=white" alt="Release v2.3.0" /></a>
-    <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-12.0-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 12" /></a>
+    <a href="#"><img src="https://img.shields.io/badge/Release-v2.4.0-emerald?style=for-the-badge&logo=git&logoColor=white" alt="Release v2.4.0" /></a>
+    <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-12.70-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 12.70" /></a>
     <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-15.3-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 15" /></a>
     <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19.3-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" /></a>
     <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" /></a>
@@ -63,7 +63,7 @@ The platform operates on a high-performance decoupled monorepo architecture engi
 2. **Direct-to-Cloud Real-Time Media (Zero Server Load)**: The virtual classroom (adaptive HD video, isolated screen sharing, and interactive Netless whiteboard) connects **directly, browser-to-cloud**, via Agora SD-RTN and Netless CDN — keeping the backend API 100% free of heavy media traffic and CPU load.
 3. **Async Queue & WebRTC Token Pre-Provisioning**: A background Redis queue worker (`ProvisionVirtualClassroom`) pre-provisions whiteboard rooms and pre-generates Agora RTC/RTM tokens ahead of time, ensuring `< 1ms` instantaneous cold-join cache hits.
 4. **ACID Financial Ledger & Escrow Economy**: MySQL 8.0 handles overdraft-proof wallet transactions and slot bookings with row-level locks (`lockForUpdate()`) and composite indexing (`idx_bookings_booked_by_status_date`), safely holding funds in escrow until lesson completion (80% teacher / 20% platform revenue split).
-5. **Zero-Egress Cloud Object Storage & Edge Asset CDN**: Cloudflare R2 Object Storage (via S3-compatible API & `league/flysystem-aws-s3-v3`) hosts and streams all user profile avatars and teacher KYC verification credentials (national ID & degrees) through Cloudflare's global edge network with zero egress bandwidth fees, completely eliminating local disk coupling and enabling horizontal container scalability.
+5. **Zero-Egress Cloud Storage & Isolated KYC Privacy**: Cloudflare R2 Object Storage (via S3-compatible API & `league/flysystem-aws-s3-v3`) hosts and streams public user profile avatars through Cloudflare's global edge network with zero egress bandwidth fees. Meanwhile, sensitive teacher KYC credentials (national ID & degrees) are isolated on a dedicated private storage disk (`kyc` / `app/private/kyc`) with attribute serialization masking (`$hidden`), fail-closed ephemeral presigned URLs, and zero direct web exposure.
 6. **Administrative Governance & Operations**: A fully localized FilamentPHP v3 dashboard empowers platform administrators with dynamic avatar customization, teacher KYC audits (national ID & degrees), dispute adjudication, abandoned booking resolution, and automated bank payout reconciliation.
 7. **Multi-Tier Tagged Invalidation & Cloud Security**: Redis 7 cache tags with automated Eloquent lifecycle hooks (`saved`, `deleted`), Moyasar HMAC-signed webhooks, Google reCAPTCHA v3 bot protection, and full-stack Sentry APM observability.
 8. **AI Guidance & Session Intelligence Engine**: OpenAI `gpt-4o-mini` integration with domain knowledge grounding ([`SupportKnowledgeBase`](backend/app/Services/SupportKnowledgeBase.php)), rate-limited REST API (`POST /api/v1/support/chat` with `throttle:15,1`), automated session summary generation, interactive quiz auto-grading, and dual human support escalation (WhatsApp `+967774344625` & Support Ticket `/dashboard/support`).
@@ -189,7 +189,7 @@ flowchart LR
 | **1. Presentation & API Gateway Tier** | Next.js 15.3 App Router (React 19) & Laravel 12 API / Filament v3 / Laravel Reverb | Hybrid Edge architecture with React Server Components (RSC) and SWR caching on the frontend (`taj-frontend`); REST API v1 with Sanctum Bearer tokens and administrative KYC/dispute dashboard on the backend (`taj_admin_web`), paired with native high-throughput Laravel Reverb WebSockets (`taj_reverb` / port 8080) for instant event push (bookings, wallets, classroom presence). |
 | **2. Asynchronous Queue & Background Worker Tier** | Laravel Queue Worker (`taj_queue_worker` / Redis) | Dedicated background CLI daemon executing `ProvisionVirtualClassroom` to pre-generate Agora RTC/RTM tokens and whiteboard rooms ahead of time, processing escrow releases and refund dispatches, and generating AI session summaries and quizzes via OpenAI. |
 | **3. Distributed State, Caching & Database Tier** | MySQL 8.0 (`taj_mysql`) & Redis 7 (`taj_redis`) | InnoDB ACID financial ledger with composite indexing (`idx_bookings_booked_by_status_date`) and pessimistic row locking (`lockForUpdate()`), paired with tagged Redis caching (`Cache::tags()`), AOF disk persistence (`appendfsync everysec`), and eviction-proof financial queues via `volatile-lru`. |
-| **Cloud Object Storage (Zero Egress)** | Cloudflare R2 Storage (`league/flysystem-aws-s3-v3`) | S3-compatible cloud bucket storing user profile avatars and teacher KYC documents (national ID & degrees) with direct CDN distribution, Livewire local staging, and zero bandwidth egress fees. |
+| **Cloud Object Storage & KYC Privacy** | Cloudflare R2 (`league/flysystem-aws-s3-v3`) & Private KYC Disk | S3-compatible cloud bucket streaming public user avatars with zero egress fees, paired with a dedicated private storage disk (`app/private/kyc`) isolating sensitive teacher KYC credentials (national IDs & degrees) via fail-closed ephemeral presigned URLs. |
 | **Real-Time Media Cloud (Zero Server Load)** | Agora SD-RTN (RTC/RTM) & Netless Cloud | **Direct browser-to-cloud streams**: Real-time 720p/120p simulcast video, independent screen sharing channel (`UID + 1_000_000_000`), WebSocket signaling, and collaborative vector whiteboard canvas. |
 | **Cloud SaaS & Security Integrations** | Moyasar + Google reCAPTCHA v3 + Sentry + OpenAI | Saudi-compliant payment escrow with HMAC-SHA256 signed webhooks, Google reCAPTCHA v3 bot protection, full-stack Sentry APM with automated production source maps, and OpenAI `gpt-4o-mini` for 24/7 grounded support chat, post-lesson summaries, and auto-graded quizzes. |
 
@@ -211,8 +211,8 @@ A comprehensive architectural overhaul transitioned Taj Educational Platform fro
 | **Teacher Discovery Catalog** | Direct MySQL queries on each search | **Multi-tier Redis tagged cache** (`10m – 24h` TTL) | **🚀 ~85% reduction** in response time |
 | **Booking Filter Execution Time** | `~15ms` (Full table scan on `booked_by_id`) | **`< 1.5ms`** (`idx_bookings_booked_by_status_date`) | **🚀 ~90% faster** query execution |
 | **Database Read Load at Peak** | 100% direct database queries on catalog/schedule | **~68% reduction** in MySQL read queries | **🛡️ High resilience** against DB connection pool exhaustion |
-| **Backend Test Coverage** | 69 passed (190 assertions) | **94 passed (283 assertions)** | **📈 +36% tests, +49% assertions** (100% passing) |
-| **Frontend Test Coverage** | 28 passed across 5 suites | **33 passed across 5 suites** | **📈 +18% tests** (100% passing test suite) |
+| **Backend Test Coverage** | 69 passed (190 assertions) | **213 passed (727 assertions)** | **📈 +208% tests, +282% assertions** (100% passing across 34 test suites) |
+| **Frontend Test Coverage** | 28 passed across 5 suites | **41 passed across 7 test suites** | **📈 +46% tests** (100% passing across all 7 suites) |
 
 ### 🔍 Architectural Drivers Behind the Performance Gains
 
@@ -246,6 +246,17 @@ A comprehensive architectural overhaul transitioned Taj Educational Platform fro
 ---
 
 ## 🆕 What's New
+
+### 🚀 Release v2.4.0 — Enterprise Security Hardening, Business Logic Maturity & Ledger Immutability
+- **🛡️ OWASP ZAP Remediation & HTTP Security Hardening** — Enforced strict Content-Security-Policy (CSP) whitelisting Agora RTC/RTM, Netless, Moyasar, and Google reCAPTCHA; implemented `Strict-Transport-Security`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Permissions-Policy`, and cloaked Nginx/PHP server banners (`server_tokens off`, `expose_php = Off`).
+- **📦 Framework Core Upgrade (Laravel 12.70)** — Upgraded Laravel framework from `12.56.0` to `12.70.0`, eliminating all known vulnerability audit advisories.
+- **⏱️ Virtual Classroom Scheduling Guard & Integrity** — Enforced strict scheduled entry window checks ([`isWithinClassroomWindow()`](backend/app/Models/Booking.php)) permitting access only within 10 minutes prior to session until 30 minutes post-scheduled end; engineered anti-premature session completion guards to prevent teachers from marking uncommenced lessons as completed.
+- **🎥 Agora WebRTC Role Isolation & Reverb Channel Security** — Hardened token generation in [`AgoraService`](backend/app/Services/AgoraService.php) with strict publisher/subscriber role separation (students/teachers get publisher tokens; parent observer mode receives audience tokens), enforced 90-minute TTL with safety margin, and protected Laravel Reverb private channels with strict policy authorization.
+- **💰 ACID Ledger Immutability & Financial Precision** — Enforced ledger immutability on [`WalletTransaction`](backend/app/Models/WalletTransaction.php) (throwing `LogicException` on attempted update or deletion to guarantee an untampered audit trail), encapsulated atomic debit/credit operations, added pessimistic row locking (`lockForUpdate()`) for wallet reconciliations and promo codes, and enforced strict decimal precision regex (`regex:/^\d+(\.\d{1,2})?$/`) on Moyasar payments with sanitized external payment errors.
+- **🔐 Atomic User Onboarding & reCAPTCHA v3 Action Verification** — Wrapped user registration within `DB::transaction()` with automatic rollback on email/profile failures, and verified the explicit `'register'` action in Google reCAPTCHA v3 payloads.
+- **🔒 Dedicated Isolated KYC Filesystem Disk** — Isolated sensitive teacher national IDs and academic degrees to a dedicated private disk (`app/private/kyc`) with `'serve' => false`, attribute serialization masking (`$hidden` in [`TeacherProfile`](backend/app/Models/TeacherProfile.php)), and fail-closed ephemeral presigned URLs.
+- **🧹 Dead Code Pruning & Controller Hygiene** — Pruned 10 empty scaffolding stubs from `app/Http/Controllers/` to streamline API codebase maintainability.
+- **🧪 100% Automated Test Suites Green** — Expanded test coverage to **213 passing backend tests (727 assertions)** via PHPUnit across 34 test files, and **41 passing frontend tests across 7 test suites** via Jest (100% passing).
 
 ### 🚀 Release v2.3.0 — Taj AI Support Assistant, AI Session Summaries & Automated Quizzes
 - **🤖 Taj AI Support Assistant ("مساعد تاج الذكي")** — Engineered an interactive, 24/7 AI conversational support widget powered by OpenAI `gpt-4o-mini`, grounded in platform knowledge ([`SupportKnowledgeBase`](backend/app/Services/SupportKnowledgeBase.php)), rate-limited via `throttle:15,1` (`POST /api/v1/support/chat`), and styled with custom Markdown parsing and quick suggestion chips.
@@ -861,15 +872,15 @@ sequenceDiagram
 
 ### Backend (`/backend`)
 
-> **Core:** Laravel 12.0 • PHP 8.3 • MySQL 8.0
+> **Core:** Laravel 12.70 • PHP 8.3 • MySQL 8.0
 > **Admin & Security:** Filament V3 • Laravel Sanctum • Spatie Permission
-> **Cloud Storage:** Cloudflare R2 Object Storage (`league/flysystem-aws-s3-v3`)
+> **Cloud Storage:** Cloudflare R2 Object Storage (`league/flysystem-aws-s3-v3`) & Private KYC Disk (`app/private/kyc`)
 > **Real-Time & Media:** Agora RTC/RTM Token Generation • Netless Whiteboard REST API
 > **Payments:** Moyasar Payment Gateway (SAR)
 > **Async Processing:** Laravel Queues backed by **Redis** (Predis client)
 > **AI & Intelligence Engine:** OpenAI API (`gpt-4o-mini`) • `SupportKnowledgeBase` grounding engine
 > **Monitoring:** Sentry (`sentry/sentry-laravel`)
-> **Testing:** PHPUnit via `php artisan test` — **124 tests, 400 assertions**
+> **Testing:** PHPUnit via `php artisan test` — **213 tests, 727 assertions** (100% passing across 34 test suites)
 
 ### Frontend (`/frontend`)
 
@@ -878,7 +889,7 @@ sequenceDiagram
 > **Live Classroom:** `agora-rtc-sdk-ng` (video/audio/screen share) • `agora-rtm-sdk` (cursor & event sync) • `white-web-sdk` (interactive whiteboard with React 19 compatibility shim)
 > **AI Support & Data:** Taj AI Support Assistant widget • TanStack Query (React Query) • Axios
 > **Monitoring:** `@sentry/nextjs` with Source Maps
-> **Testing:** Jest + React Testing Library — **40 tests across 7 test suites**
+> **Testing:** Jest + React Testing Library — **41 tests across 7 test suites** (100% passing)
 
 ---
 
@@ -889,7 +900,7 @@ sequenceDiagram
 | **🚀 Architecture**       | Monorepo (Next.js frontend + Laravel REST API)                   |
 | **🔐 Role Support**       | Admin, Teacher, Student, Parent                                  |
 | **🤖 AI Capabilities**    | 24/7 AI Support Assistant + AI Session Summaries & Quizzes       |
-| **☁️ Cloud Storage**     | Cloudflare R2 (S3 API) — zero egress fees & edge CDN             |
+| **☁️ Cloud Storage**     | Cloudflare R2 (S3 API) & Private KYC Disk (`app/private/kyc`)     |
 | **📡 Video/Audio**        | Agora RTC — adaptive bitrate, simulcast-enabled                  |
 | **🖊️ Whiteboard**         | Netless `white-web-sdk` — real-time collaborative                |
 | **💳 Payments**           | Moyasar (SAR, Saudi market) with webhook verification            |
@@ -897,8 +908,8 @@ sequenceDiagram
 | **🛰️ Monitoring**         | Sentry — full-stack (backend + frontend) with Source Maps        |
 | **🌍 Localization**       | 100% Arabic (RTL-native interface)                               |
 | **🛡️ Security**           | Sanctum tokens + Spatie RBAC + rate limiting                     |
-| **🧪 Backend Tests**      | 124 tests · 400 assertions (PHPUnit)                             |
-| **🧪 Frontend Tests**     | 40 tests · 7 suites (Jest + React Testing Library)               |
+| **🧪 Backend Tests**      | 213 tests · 727 assertions (PHPUnit)                             |
+| **🧪 Frontend Tests**     | 41 tests · 7 suites (Jest + React Testing Library)               |
 | **📦 Deployment**         | Backend → DigitalOcean VPS / Render · Frontend → Vercel          |
 
 ---
@@ -1037,35 +1048,43 @@ cd backend
 php artisan test
 ```
 
-**Current results:** `124 tests · 400 assertions` — all passing ✅
+**Current results:** `213 tests · 727 assertions` — all passing ✅
 
 The suite covers:
 
 | Test File | Area |
 |---|---|
-| `tests/Feature/Auth/` | Registration, login, Sanctum token issuance |
+| `tests/Feature/Auth/RegistrationTest.php` | User registration, atomic transactions, reCAPTCHA v3 action validation |
+| `tests/Feature/Auth/LoginRouteResilienceTest.php` | Unauthenticated guest fallbacks & JSON API enforcement |
+| `tests/Feature/Auth/SecurityHardeningTest.php` | Active user check, token revocation on password change, fail-closed KYC URLs |
 | `tests/Feature/AdminProfileTest.php` | Dynamic admin avatar resolution, storage URL generation & fallback |
-| `tests/Feature/BookingLifecycleTest.php` | Full booking → session → completion → payout flow |
+| `tests/Feature/BookingLifecycleTest.php` | Full booking → session → completion → escrow payout flow |
 | `tests/Feature/BookingServiceTest.php` | Race-condition-safe slot reservation |
-| `tests/Feature/ClassroomAccessTest.php` | Token generation, classroom join, Agora token refresh |
-| `tests/Feature/DiscoveryTest.php` | Teacher search, subject & grade-level filtering |
+| `tests/Feature/ClassroomAccessTest.php` | Token generation, classroom join, time window guards, Agora token refresh |
+| `tests/Feature/DiscoveryTest.php` | Teacher search, subject & grade-level filtering with Redis tag caching |
 | `tests/Feature/GenerateSessionSummaryJobTest.php` | Async AI session summary & quiz generation background job |
 | `tests/Feature/ParentChildTest.php` | Parent sub-account management & spending permissions |
+| `tests/Feature/PaymentSecurityTest.php` | Moyasar webhook HMAC verification, replay attack prevention & decimal precision |
 | `tests/Feature/PayoutRequestTest.php` | Teacher payout request lifecycle |
-| `tests/Feature/ProfileTest.php` | Teacher KYC profile update & verification reset |
+| `tests/Feature/ProfileTest.php` | Teacher KYC profile update, verification reset & document uploads |
 | `tests/Feature/ReviewTest.php` | Mandatory post-session review submission |
 | `tests/Feature/SessionSummaryApiTest.php` | Session summary viewing, quiz submission & role permission checks |
 | `tests/Feature/SupportChatApiTest.php` | AI Support Chat API validation, guest/authenticated context & rate limits |
 | `tests/Feature/SupportTicketTest.php` | Support ticket creation & messaging |
 | `tests/Feature/TeacherSlotTest.php` | Availability slot creation, update, deletion |
-| `tests/Feature/WalletServiceTest.php` | Wallet deposit, deduction, overdraft protection |
-| `tests/Unit/AgoraServiceTest.php` | Unit: Agora RTC, RTM & Screen token minting and atomic Redis caching |
-| `tests/Unit/BookingServiceUnitTest.php` | Unit: booking business rules |
+| `tests/Feature/WalletServiceTest.php` | Wallet deposit, deduction, overdraft protection & transaction immutability |
+| `tests/Unit/AgoraServiceTest.php` | Unit: Agora RTC, RTM & Screen token minting, role isolation & atomic Redis caching |
+| `tests/Unit/BookingServiceUnitTest.php` | Unit: booking business rules & time-window validations |
+| `tests/Unit/BroadcastEventsTest.php` | Unit: WebRTC & classroom broadcasting event payload contracts (Reverb/Pusher) |
+| `tests/Unit/DatabaseReadWriteSplittingTest.php` | Unit: primary/replica database connection routing & sticky session transactions |
+| `tests/Unit/OpenAIServiceTest.php` | Unit: OpenAI gpt-4o-mini client mock responses, token limits & fallbacks |
 | `tests/Unit/PayoutServiceUnitTest.php` | Unit: payout calculation & commission split |
+| `tests/Unit/RedisQueueResilienceTest.php` | Unit: Predis auto-reconnect, persistent read/write timeouts & queue retry backoff |
 | `tests/Unit/ReviewServiceUnitTest.php` | Unit: review validation logic |
 | `tests/Unit/SessionSummaryModelTest.php` | Unit: session summary Eloquent model relationships & cascading deletes |
 | `tests/Unit/SupportKnowledgeBaseTest.php` | Unit: AI support prompt grounding, WhatsApp URI formatting & fake AI replies |
-| `tests/Unit/WalletServiceUnitTest.php` | Unit: wallet transaction ledger |
+| `tests/Unit/TeacherKycSecurityTest.php` | Unit: KYC document path masking, private disk isolation & public leak prevention |
+| `tests/Unit/WalletServiceUnitTest.php` | Unit: wallet transaction ledger & decimal balance calculations |
 | `tests/Unit/WhiteboardServiceTest.php` | Unit: Netless room creation & token minting |
 
 ### Frontend — Jest + React Testing Library
@@ -1080,7 +1099,7 @@ npm run test
 npm run test:watch
 ```
 
-**Current results:** `40 tests · 7 test suites` — all passing ✅
+**Current results:** `41 tests · 7 test suites` — all passing ✅
 
 The suite covers:
 
@@ -1088,6 +1107,7 @@ The suite covers:
 |---|---|
 | `src/components/support/__tests__/TajSupportChatWidget.test.tsx` | AI Support Chat widget rendering, interactive chat & dual escalation cards |
 | `src/components/classroom/__tests__/Whiteboard.test.tsx` | Whiteboard SDK integration & connection lifecycle |
+| `src/components/dashboard/__tests__/SessionSummaryCard.test.tsx` | AI session summary card rendering, status badges & quiz modal triggers |
 | `src/components/dashboard/__tests__/utils.test.tsx` | Dashboard utility functions |
 | `src/components/dashboard/financial/__tests__/WalletSummary.test.tsx` | Wallet summary component rendering |
 | `src/app/classroom/__tests__/ClassroomPage.test.tsx` | Classroom page access control & rendering |
