@@ -2,13 +2,20 @@
     $record = $getRecord() ?? ($record ?? null);
     $disk = \Illuminate\Support\Facades\Storage::disk(config('filesystems.kyc_disk', 'kyc'));
 
-    // 1. معالجة وثيقة الهوية الوطنية (Presigned Ephemeral URL - 5 Minutes)
+    // 1. معالجة وثيقة الهوية الوطنية (Presigned URL أو Signed Route آمن للإدارة)
     $idPath = $record?->national_id_path;
     $idUrl = $record && method_exists($record, 'getNationalIdUrl')
-        ? $record->getNationalIdUrl(5)
-        : ($idPath ? (function () use ($disk, $idPath) {
-            try { return $disk->temporaryUrl($idPath, now()->addMinutes(5)); } catch (\Throwable) { return app()->environment(['local', 'testing']) ? $disk->url($idPath) : null; }
-        })() : null);
+        ? $record->getNationalIdUrl(15)
+        : ($idPath && $record?->exists && \Illuminate\Support\Facades\Route::has('admin.teacher.kyc.document')
+            ? \Illuminate\Support\Facades\URL::temporarySignedRoute('admin.teacher.kyc.document', now()->addMinutes(15), ['profile' => $record->id, 'type' => 'national_id'])
+            : null);
+
+    $idDownloadUrl = $record && method_exists($record, 'getNationalIdDownloadUrl')
+        ? $record->getNationalIdDownloadUrl(15)
+        : ($idPath && $record?->exists && \Illuminate\Support\Facades\Route::has('admin.teacher.kyc.document')
+            ? \Illuminate\Support\Facades\URL::temporarySignedRoute('admin.teacher.kyc.document', now()->addMinutes(15), ['profile' => $record->id, 'type' => 'national_id', 'download' => 1])
+            : $idUrl);
+
     $idExt = $idPath ? strtolower(pathinfo($idPath, PATHINFO_EXTENSION)) : '';
     $idIsImage = in_array($idExt, ['jpg', 'jpeg', 'png', 'webp', 'gif']);
     $idIsPdf = ($idExt === 'pdf');
@@ -24,13 +31,19 @@
         }
     }
 
-    // 2. معالجة وثيقة الشهادة الجامعية / الأكاديمية (Presigned Ephemeral URL - 5 Minutes)
+    // 2. معالجة وثيقة الشهادة الجامعية / الأكاديمية
     $degreePath = $record?->degree_path;
     $degreeUrl = $record && method_exists($record, 'getDegreeUrl')
-        ? $record->getDegreeUrl(5)
-        : ($degreePath ? (function () use ($disk, $degreePath) {
-            try { return $disk->temporaryUrl($degreePath, now()->addMinutes(5)); } catch (\Throwable) { return app()->environment(['local', 'testing']) ? $disk->url($degreePath) : null; }
-        })() : null);
+        ? $record->getDegreeUrl(15)
+        : ($degreePath && $record?->exists && \Illuminate\Support\Facades\Route::has('admin.teacher.kyc.document')
+            ? \Illuminate\Support\Facades\URL::temporarySignedRoute('admin.teacher.kyc.document', now()->addMinutes(15), ['profile' => $record->id, 'type' => 'degree'])
+            : null);
+
+    $degreeDownloadUrl = $record && method_exists($record, 'getDegreeDownloadUrl')
+        ? $record->getDegreeDownloadUrl(15)
+        : ($degreePath && $record?->exists && \Illuminate\Support\Facades\Route::has('admin.teacher.kyc.document')
+            ? \Illuminate\Support\Facades\URL::temporarySignedRoute('admin.teacher.kyc.document', now()->addMinutes(15), ['profile' => $record->id, 'type' => 'degree', 'download' => 1])
+            : $degreeUrl);
 
     $degreeExt = $degreePath ? strtolower(pathinfo($degreePath, PATHINFO_EXTENSION)) : '';
     $degreeIsImage = in_array($degreeExt, ['jpg', 'jpeg', 'png', 'webp', 'gif']);
@@ -54,6 +67,7 @@
             'icon_type' => 'id_card',
             'path' => $idPath,
             'url' => $idUrl,
+            'download_url' => $idDownloadUrl,
             'ext' => $idExt,
             'size' => $idSize,
             'is_image' => $idIsImage,
@@ -66,6 +80,7 @@
             'icon_type' => 'academic_cap',
             'path' => $degreePath,
             'url' => $degreeUrl,
+            'download_url' => $degreeDownloadUrl,
             'ext' => $degreeExt,
             'size' => $degreeSize,
             'is_image' => $degreeIsImage,
@@ -108,7 +123,7 @@
                     </div>
 
                     {{-- شارات الملف وأزرار التحميل/المعاينة --}}
-                    @if ($doc['path'] && $doc['url'])
+                    @if ($doc['path'])
                         <div class="flex items-center gap-1.5 shrink-0">
                             {{-- شارة الامتداد --}}
                             @if ($doc['is_pdf'])
@@ -128,30 +143,32 @@
                                 </span>
                             @endif
 
-                            {{-- زر التحميل المباشر --}}
-                            <a 
-                                href="{{ $doc['url'] }}" 
-                                download="{{ basename($doc['path']) }}"
-                                title="تحميل المستند"
-                                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-gray-50 text-gray-700 transition hover:bg-gray-200 hover:text-gray-900 dark:border-white/15 dark:bg-white/10 dark:text-gray-200 dark:hover:bg-white/20 dark:hover:text-white shadow-sm"
-                            >
-                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                                </svg>
-                            </a>
+                            @if ($doc['url'])
+                                {{-- زر التحميل المباشر --}}
+                                <a 
+                                    href="{{ $doc['download_url'] ?? $doc['url'] }}" 
+                                    download="{{ basename($doc['path']) }}"
+                                    title="تحميل المستند مباشرة"
+                                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-gray-50 text-gray-700 transition hover:bg-gray-200 hover:text-gray-900 dark:border-white/15 dark:bg-white/10 dark:text-gray-200 dark:hover:bg-white/20 dark:hover:text-white shadow-sm"
+                                >
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                    </svg>
+                                </a>
 
-                            {{-- زر الفتح في تاب جديد --}}
-                            <a 
-                                href="{{ $doc['url'] }}" 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                title="فتح في تبويب جديد"
-                                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-gray-50 text-gray-700 transition hover:bg-gray-200 hover:text-gray-900 dark:border-white/15 dark:bg-white/10 dark:text-gray-200 dark:hover:bg-white/20 dark:hover:text-white shadow-sm"
-                            >
-                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                                </svg>
-                            </a>
+                                {{-- زر الفتح في تاب جديد للمعاينة الكاملة --}}
+                                <a 
+                                    href="{{ $doc['url'] }}" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    title="فتح في تبويب جديد"
+                                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-gray-50 text-gray-700 transition hover:bg-gray-200 hover:text-gray-900 dark:border-white/15 dark:bg-white/10 dark:text-gray-200 dark:hover:bg-white/20 dark:hover:text-white shadow-sm"
+                                >
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                    </svg>
+                                </a>
+                            @endif
                         </div>
                     @endif
                 </div>
@@ -199,8 +216,8 @@
                                 <p class="text-xs font-semibold text-gray-800 dark:text-gray-200">
                                     مستند أكاديمي رقمي معتمد
                                 </p>
-                                <p class="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
-                                    جاهز للمراجعة والتحقق المباشر
+                                <p class="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400 font-mono">
+                                    {{ basename($doc['path']) }}
                                 </p>
 
                                 <a 
@@ -231,13 +248,22 @@
                                 </a>
                             </div>
                         @endif
-                    @else
-                        {{-- ⚠️ حالة عدم الرفع --}}
-                        <div class="flex flex-col items-center justify-center p-4 text-center text-gray-400 dark:text-gray-500">
-                            <svg class="h-9 w-9 mb-1" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    @elseif ($doc['path'])
+                        {{-- ⚠️ المستند مرفوع بالمسار ولكن تعذر إنشاء الرابط المباشر --}}
+                        <div class="flex flex-col items-center justify-center p-4 text-center text-amber-600 dark:text-amber-400">
+                            <svg class="h-8 w-8 mb-1.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                             </svg>
-                            <span class="text-xs font-medium">لم يتم رفع هذا المستند بعد</span>
+                            <span class="text-xs font-semibold">المستند مرفوع (جاري تحضير المعاينة)</span>
+                            <span class="text-[11px] text-gray-500 mt-1 font-mono">{{ basename($doc['path']) }}</span>
+                        </div>
+                    @else
+                        {{-- ⚠️ حالة عدم الرفع الفعلي من المعلم --}}
+                        <div class="flex flex-col items-center justify-center p-4 text-center text-gray-400 dark:text-gray-500">
+                            <svg class="h-9 w-9 mb-1" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                            </svg>
+                            <span class="text-xs font-medium">لم يتم رفع هذا المستند من قبل المعلم</span>
                         </div>
                     @endif
                 </div>
@@ -248,11 +274,11 @@
                         <span class="h-2 w-2 rounded-full inline-block" style="background-color: {{ $doc['path'] ? '#10b981' : '#f59e0b' }};"></span>
                         {{ $doc['path'] ? 'مستند موثق وسليم' : 'بانتظار الرفع' }}
                     </span>
-                    <span class="inline-flex items-center gap-1 font-mono text-[10px] text-emerald-600 dark:text-emerald-400" title="رابط مؤقت مشفر عبر S3 Presigned URL ينتهي تلقائياً بعد 5 دقائق لحماية الخصوصية">
+                    <span class="inline-flex items-center gap-1 font-mono text-[10px] text-emerald-600 dark:text-emerald-400" title="رابط آمن ومشفر عبر Signed URL مخصص للإدارة ينتهي تلقائياً بعد 15 دقيقة">
                         <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                         </svg>
-                        <span>Presigned S3 (5m) • Private R2</span>
+                        <span>Protected Signed URL (15m) • Isolated KYC</span>
                     </span>
 
                 </div>

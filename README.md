@@ -211,7 +211,7 @@ A comprehensive architectural overhaul transitioned Taj Educational Platform fro
 | **Teacher Discovery Catalog** | Direct MySQL queries on each search | **Multi-tier Redis tagged cache** (`10m – 24h` TTL) | **🚀 ~85% reduction** in response time |
 | **Booking Filter Execution Time** | `~15ms` (Full table scan on `booked_by_id`) | **`< 1.5ms`** (`idx_bookings_booked_by_status_date`) | **🚀 ~90% faster** query execution |
 | **Database Read Load at Peak** | 100% direct database queries on catalog/schedule | **~68% reduction** in MySQL read queries | **🛡️ High resilience** against DB connection pool exhaustion |
-| **Backend Test Coverage** | 69 passed (190 assertions) | **213 passed (727 assertions)** | **📈 +208% tests, +282% assertions** (100% passing across 34 test suites) |
+| **Backend Test Coverage** | 69 passed (190 assertions) | **221 passed (747 assertions)** | **📈 +220% tests, +293% assertions** (100% passing across 35 test suites) |
 | **Frontend Test Coverage** | 28 passed across 5 suites | **41 passed across 7 test suites** | **📈 +46% tests** (100% passing across all 7 suites) |
 
 ### 🔍 Architectural Drivers Behind the Performance Gains
@@ -254,9 +254,9 @@ A comprehensive architectural overhaul transitioned Taj Educational Platform fro
 - **🎥 Agora WebRTC Role Isolation & Reverb Channel Security** — Hardened token generation in [`AgoraService`](backend/app/Services/AgoraService.php) with strict publisher/subscriber role separation (students/teachers get publisher tokens; parent observer mode receives audience tokens), enforced 90-minute TTL with safety margin, and protected Laravel Reverb private channels with strict policy authorization.
 - **💰 ACID Ledger Immutability & Financial Precision** — Enforced ledger immutability on [`WalletTransaction`](backend/app/Models/WalletTransaction.php) (throwing `LogicException` on attempted update or deletion to guarantee an untampered audit trail), encapsulated atomic debit/credit operations, added pessimistic row locking (`lockForUpdate()`) for wallet reconciliations and promo codes, and enforced strict decimal precision regex (`regex:/^\d+(\.\d{1,2})?$/`) on Moyasar payments with sanitized external payment errors.
 - **🔐 Atomic User Onboarding & reCAPTCHA v3 Action Verification** — Wrapped user registration within `DB::transaction()` with automatic rollback on email/profile failures, and verified the explicit `'register'` action in Google reCAPTCHA v3 payloads.
-- **🔒 Dedicated Isolated KYC Filesystem Disk** — Isolated sensitive teacher national IDs and academic degrees to a dedicated private disk (`app/private/kyc`) with `'serve' => false`, attribute serialization masking (`$hidden` in [`TeacherProfile`](backend/app/Models/TeacherProfile.php)), and fail-closed ephemeral presigned URLs.
+- **🔒 Dedicated Isolated KYC Filesystem Disk & Secure Admin Stream** — Isolated sensitive teacher national IDs and academic degrees to a dedicated private disk (`app/private/kyc`) with `'serve' => false`, attribute serialization masking (`$hidden` in [`TeacherProfile`](backend/app/Models/TeacherProfile.php)), and engineered authenticated temporary signed route streaming ([`TeacherKycDocumentController`](backend/app/Http/Controllers/Admin/TeacherKycDocumentController.php)) for confidential administrative verification and download.
 - **🧹 Dead Code Pruning & Controller Hygiene** — Pruned 10 empty scaffolding stubs from `app/Http/Controllers/` to streamline API codebase maintainability.
-- **🧪 100% Automated Test Suites Green** — Expanded test coverage to **213 passing backend tests (727 assertions)** via PHPUnit across 34 test files, and **41 passing frontend tests across 7 test suites** via Jest (100% passing).
+- **🧪 100% Automated Test Suites Green** — Expanded test coverage to **221 passing backend tests (747 assertions)** via PHPUnit across 35 test files, and **41 passing frontend tests across 7 test suites** via Jest (100% passing).
 
 ### 🚀 Release v2.3.0 — Taj AI Support Assistant, AI Session Summaries & Automated Quizzes
 - **🤖 Taj AI Support Assistant ("مساعد تاج الذكي")** — Engineered an interactive, 24/7 AI conversational support widget powered by OpenAI `gpt-4o-mini`, grounded in platform knowledge ([`SupportKnowledgeBase`](backend/app/Services/SupportKnowledgeBase.php)), rate-limited via `throttle:15,1` (`POST /api/v1/support/chat`), and styled with custom Markdown parsing and quick suggestion chips.
@@ -880,7 +880,7 @@ sequenceDiagram
 > **Async Processing:** Laravel Queues backed by **Redis** (Predis client)
 > **AI & Intelligence Engine:** OpenAI API (`gpt-4o-mini`) • `SupportKnowledgeBase` grounding engine
 > **Monitoring:** Sentry (`sentry/sentry-laravel`)
-> **Testing:** PHPUnit via `php artisan test` — **213 tests, 727 assertions** (100% passing across 34 test suites)
+> **Testing:** PHPUnit via `php artisan test` — **221 tests, 747 assertions** (100% passing across 35 test suites)
 
 ### Frontend (`/frontend`)
 
@@ -908,7 +908,7 @@ sequenceDiagram
 | **🛰️ Monitoring**         | Sentry — full-stack (backend + frontend) with Source Maps        |
 | **🌍 Localization**       | 100% Arabic (RTL-native interface)                               |
 | **🛡️ Security**           | Sanctum tokens + Spatie RBAC + rate limiting                     |
-| **🧪 Backend Tests**      | 213 tests · 727 assertions (PHPUnit)                             |
+| **🧪 Backend Tests**      | 221 tests · 747 assertions (PHPUnit)                             |
 | **🧪 Frontend Tests**     | 41 tests · 7 suites (Jest + React Testing Library)               |
 | **📦 Deployment**         | Backend → DigitalOcean VPS / Render · Frontend → Vercel          |
 
@@ -1048,12 +1048,13 @@ cd backend
 php artisan test
 ```
 
-**Current results:** `213 tests · 727 assertions` — all passing ✅
+**Current results:** `221 tests · 747 assertions` — all passing ✅
 
 The suite covers:
 
 | Test File | Area |
 |---|---|
+| `tests/Feature/Admin/TeacherKycDocumentTest.php` | Secure signed URL document streaming & authenticated admin KYC preview/download |
 | `tests/Feature/Auth/RegistrationTest.php` | User registration, atomic transactions, reCAPTCHA v3 action validation |
 | `tests/Feature/Auth/LoginRouteResilienceTest.php` | Unauthenticated guest fallbacks & JSON API enforcement |
 | `tests/Feature/Auth/SecurityHardeningTest.php` | Active user check, token revocation on password change, fail-closed KYC URLs |
