@@ -8,5 +8,5 @@ Sentry.init({
   integrations: [
     Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
   ],
-  enabled: true, // تفعيل Sentry في بيئة التطوير مؤقتاً للاختبار
+  enabled: process.env.NODE_ENV === "production" || process.env.NEXT_PUBLIC_ENABLE_SENTRY_DEV === "true",
 });

@@ -625,6 +625,36 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - Full frontend test suite passing: **41 passed (7 suites)** with 0 failures (`npm test`).
   - Code formatted with `laravel/pint`: 100% compliant.
 
+## 📖 Session Log & Recent Updates (Oct 16, 2026)
+
+### 1. Admin KYC Document Streamer & Temporary Signed URLs
+- **Context:** In production, admin KYC document verification links (`national_id_url` and `degree_url`) pointed to local storage paths without a streaming controller, preventing administrative document inspection.
+- **Resolution:**
+  - **`TeacherKycDocumentController` ([`TeacherKycDocumentController.php`](file:///home/ammar/code/taj-platform/backend/app/Http/Controllers/Admin/TeacherKycDocumentController.php)):** Created dedicated streaming endpoint with HMAC-SHA256 signed route verification (`URL::temporarySignedRoute`), role checks (`admin` or document owner), and binary response streaming via `Storage::disk($disk)->response($path)`.
+  - **Model Helpers ([`TeacherProfile.php`](file:///home/ammar/code/taj-platform/backend/app/Models/TeacherProfile.php)):** Generated secure signed URLs expiring after 10 minutes (`now()->addMinutes(10)`).
+  - **Blade Component ([`teacher-verification-documents.blade.php`](file:///home/ammar/code/taj-platform/backend/resources/views/filament/components/teacher-verification-documents.blade.php)):** Added responsive image previews, PDF embeds, and direct download links.
+  - **Automated Verification:** Added 8 feature tests in [`TeacherKycDocumentTest.php`](file:///home/ammar/code/taj-platform/backend/tests/Feature/Admin/TeacherKycDocumentTest.php). Full backend test suite: **221 passed (747 assertions)**.
+
+### 2. Sentry First-Party Tunneling, CSP Whitelisting & Client Circuit Breakers
+- **Context:** Browser console reported repeated `POST https://o4511651317874688.ingest.de.sentry.io/api/.../envelope/ net::ERR_CONNECTION_TIMED_OUT` intertwined with cascading `postMessage` loops in React Scheduler.
+- **Root-Cause Analysis:**
+  - Regional ISP DNS filtering and client-side ad-blockers sinkholed direct browser connections to Germany-based Sentry ingest hosts (`*.ingest.de.sentry.io`).
+  - CSP in `next.config.mjs` allowed `*.ingest.sentry.io` which did not match multi-level domain `*.ingest.de.sentry.io`.
+  - Sentry's `consoleLoggingIntegration` captured the network timeout error itself, triggering `replaysOnErrorSampleRate: 1.0` -> `sendEnvelope` -> failure -> React Scheduler retry loop (`postMessage` storm).
+  - First-party tunneling was commented out in `next.config.mjs`.
+- **Resolution:**
+  - **Sentry Tunneling ([`next.config.mjs`](file:///home/ammar/code/taj-platform/frontend/next.config.mjs) & [`instrumentation-client.ts`](file:///home/ammar/code/taj-platform/frontend/src/instrumentation-client.ts)):** Enabled `tunnelRoute: "/monitoring"`, proxying all client-side telemetry through same-origin Next.js rewrites server-to-server.
+  - **CSP Alignment ([`next.config.mjs`](file:///home/ammar/code/taj-platform/frontend/next.config.mjs)):** Added `https://*.ingest.de.sentry.io https://*.ingest.us.sentry.io` to `connect-src`.
+  - **Circuit Breakers & Noise Filtering ([`instrumentation-client.ts`](file:///home/ammar/code/taj-platform/frontend/src/instrumentation-client.ts)):**
+    - Added `ignoreErrors` for `ERR_CONNECTION_TIMED_OUT`, `Failed to fetch`, `NetworkError`, `ERR_BLOCKED_BY_CLIENT`.
+    - Added `beforeSendLog(log)` dropping any console log mentioning `sentry.io`, `/monitoring`, or `envelope`.
+    - Enhanced `beforeSend(event)` to drop any self-referential Sentry transport/tunneling failure events.
+- **Verification:**
+  - Frontend Jest test suite: **41 passed (7 suites)** with 0 failures (`npm test`).
+  - Frontend production build: `npm run build` compiled successfully (exit code 0).
+  - Backend test suite: **221 passed (747 assertions)** with 0 failures (`php artisan test`).
+
+
 
 
 

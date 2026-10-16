@@ -9,7 +9,7 @@ const cspDirectives = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' blob: data: http://localhost:8000 http://127.0.0.1:8000 http://localhost:* http://127.0.0.1:* https://api.taj-edu.online https://ui-avatars.com https://*.agora.io https://*.google.com https://*.gstatic.com https://*.netless.link https://*.whiteboard.agora.io https://*.whiteboard.rtelink.com https://*.sd-rtn.com https://*.r2.dev https://*.cloudflarestorage.com",
   "font-src 'self' data: https://fonts.gstatic.com",
-  "connect-src 'self' blob: http://localhost:8000 http://127.0.0.1:8000 https://api.taj-edu.online https://www.google.com/recaptcha/ https://*.agora.io https://*.agora.io:* https://*.edge.agora.io:* https://*.sd-rtn.com https://*.sd-rtn.com:* https://*.edge.sd-rtn.com:* https://*.whiteboard.sd-rtn.com https://*.whiteboard.sd-rtn.com:* https://*.netless.link https://*.netless.link:* https://*.whiteboard.agora.io https://*.whiteboard.agora.io:* https://*.whiteboard.rtelink.com https://*.whiteboard.rtelink.com:* https://*.rtelink.com https://*.rtelink.com:* https://rest-argus-ad.agoralab.co https://*.sentry.io https://*.ingest.sentry.io wss://*.agora.io wss://*.agora.io:* wss://*.edge.agora.io:* wss://*.sd-rtn.com wss://*.sd-rtn.com:* wss://*.edge.sd-rtn.com:* wss://*.whiteboard.sd-rtn.com wss://*.whiteboard.sd-rtn.com:* wss://*.netless.link wss://*.netless.link:* wss://*.whiteboard.agora.io wss://*.whiteboard.agora.io:* wss://*.whiteboard.rtelink.com wss://*.whiteboard.rtelink.com:* wss://*.rtelink.com wss://*.rtelink.com:* https://www.gstatic.com/generate_204 https://clients3.google.com/generate_204",
+  "connect-src 'self' blob: http://localhost:8000 http://127.0.0.1:8000 https://api.taj-edu.online https://www.google.com/recaptcha/ https://*.agora.io https://*.agora.io:* https://*.edge.agora.io:* https://*.sd-rtn.com https://*.sd-rtn.com:* https://*.edge.sd-rtn.com:* https://*.whiteboard.sd-rtn.com https://*.whiteboard.sd-rtn.com:* https://*.netless.link https://*.netless.link:* https://*.whiteboard.agora.io https://*.whiteboard.agora.io:* https://*.whiteboard.rtelink.com https://*.whiteboard.rtelink.com:* https://*.rtelink.com https://*.rtelink.com:* https://rest-argus-ad.agoralab.co https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://*.ingest.us.sentry.io wss://*.agora.io wss://*.agora.io:* wss://*.edge.agora.io:* wss://*.sd-rtn.com wss://*.sd-rtn.com:* wss://*.edge.sd-rtn.com:* wss://*.whiteboard.sd-rtn.com wss://*.whiteboard.sd-rtn.com:* wss://*.netless.link wss://*.netless.link:* wss://*.whiteboard.agora.io wss://*.whiteboard.agora.io:* wss://*.whiteboard.rtelink.com wss://*.whiteboard.rtelink.com:* wss://*.rtelink.com wss://*.rtelink.com:* https://www.gstatic.com/generate_204 https://clients3.google.com/generate_204",
   "frame-src 'self' https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://*.moyasar.com",
   "media-src 'self' blob: mediastream: https://*.agora.io",
   "worker-src 'self' blob:",
@@ -168,11 +168,9 @@ export default withSentryConfig(nextConfig, {
   // "warning: could not determine a source map reference"
   // Sentry will still correctly upload source maps for all application code.
 
-  // Uncomment to route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-  // This can increase your server load as well as your hosting bill.
-  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
-  // side errors will fail.
-  // tunnelRoute: "/monitoring",
+  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers and ISP timeouts.
+  // This proxies client-side envelopes through the same origin (/monitoring), preventing ERR_CONNECTION_TIMED_OUT.
+  tunnelRoute: "/monitoring",
 
   webpack: {
     automaticVercelMonitors: true,
