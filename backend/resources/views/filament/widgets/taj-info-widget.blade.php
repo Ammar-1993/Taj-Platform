@@ -1,9 +1,9 @@
 <x-filament-widgets::widget class="fi-info-widget">
     <x-filament::section class="relative overflow-hidden transition-all duration-300 hover:shadow-md border border-gray-200/80 dark:border-white/10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-2xl">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center justify-between gap-x-3">
             
             {{-- الجانب الأيمن: أيقونة المنصة والبيانات الأساسية --}}
-            <div class="flex items-center gap-x-3.5">
+            <div class="flex items-center gap-x-3.5 min-w-0">
                 <div class="flex items-center justify-center h-12 w-12 rounded-xl bg-gradient-to-br from-primary-500/15 via-indigo-500/10 to-blue-500/20 text-primary-600 dark:text-primary-400 border border-primary-500/20 shadow-sm shrink-0">
                     <x-filament::icon
                         icon="heroicon-o-academic-cap"
@@ -32,7 +32,7 @@
             </div>
             
             {{-- الجانب الأيسر: زر زيارة الموقع --}}
-            <div class="flex items-center gap-x-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 dark:border-gray-800">
+            <div class="flex items-center gap-x-2 shrink-0">
                 <x-filament::button
                     tag="a"
                     href="{{ env('FRONTEND_URL', 'https://www.taj-edu.online') }}"
