@@ -654,6 +654,26 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - Frontend production build: `npm run build` compiled successfully (exit code 0).
   - Backend test suite: **221 passed (747 assertions)** with 0 failures (`php artisan test`).
 
+### 3. Admin Account Self-Lockout & Deactivation Prevention Architecture
+- **Context:** An admin deactivated their own account via the Filament `is_active` table ToggleColumn. Because `User::canAccessPanel` mandates `is_active === true`, the admin was instantly locked out with a 403 Forbidden page and rejected at `/admin/login`.
+- **Immediate Production Recovery:** Reactivated the production admin record (`admin@taj.com`) via SSH/Tinker on `taj_admin_web`.
+- **Architectural Defense-in-Depth:**
+  - **`UserResource` Table ([`UserResource.php`](file:///home/ammar/code/taj-platform/backend/app/Filament/Resources/UserResource.php)):**
+    - Disabled `ToggleColumn::make('is_active')` when `$record->id === auth()->id()`.
+    - Added Arabic tooltip explaining that self-deactivation is restricted to prevent system lockout.
+    - Added `beforeStateUpdated` hook that blocks and emits an error notification if self-deactivation is attempted.
+  - **`UserResource` Form & Actions:**
+    - Disabled `Forms\Components\Toggle::make('is_active')` on edit forms when editing self.
+    - Disabled `DeleteAction` for `$record->id === auth()->id()`.
+    - Guarded `DeleteBulkAction` rejecting `$user->id === auth()->id()` from deletion queues.
+  - **Eloquent Model Hook ([`User.php`](file:///home/ammar/code/taj-platform/backend/app/Models/User.php)):**
+    - Added `updating` hook in `User::booted()` throwing `InvalidArgumentException` if an authenticated user attempts to set `is_active = false` on their own model.
+- **Automated Verification:**
+  - Created [`UserManagementSecurityTest.php`](file:///home/ammar/code/taj-platform/backend/tests/Feature/Admin/UserManagementSecurityTest.php) testing self-deactivation prevention, token revocation on deactivating other users, and panel access authorization (all 4 tests passed).
+  - Full backend test suite passing: **225 passed (754 assertions)** with 0 failures (`php artisan test`).
+  - Code formatted with `laravel/pint`: 100% compliant.
+
+
 
 
 

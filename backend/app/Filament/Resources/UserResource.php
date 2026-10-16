@@ -13,11 +13,13 @@ use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\TextEntry\TextEntrySize;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\FontFamily;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Hash;
 
@@ -80,7 +82,9 @@ class UserResource extends Resource
                             ->searchable(),
                         Forms\Components\Toggle::make('is_active')
                             ->label('حساب نشط (يمكنه تسجيل الدخول)')
-                            ->default(true),
+                            ->default(true)
+                            ->disabled(fn (?User $record): bool => $record?->id === auth()->id())
+                            ->helperText(fn (?User $record): ?string => $record?->id === auth()->id() ? 'لا يمكنك إلغاء تفعيل حسابك الحالي منعاً لفقدان الوصول إلى لوحة الإدارة.' : null),
                     ])->columns(['sm' => 1, 'md' => 2]),
             ]);
     }
@@ -126,7 +130,20 @@ class UserResource extends Resource
                     }),
 
                 Tables\Columns\ToggleColumn::make('is_active')
-                    ->label('نشط'),
+                    ->label('نشط')
+                    ->disabled(fn (?User $record): bool => $record?->id === auth()->id())
+                    ->tooltip(fn (?User $record): ?string => $record?->id === auth()->id() ? 'لا يمكنك إلغاء تفعيل حسابك الحالي منعاً لفقدان الوصول إلى لوحة الإدارة' : null)
+                    ->beforeStateUpdated(function (User $record, bool $state) {
+                        if ($record->id === auth()->id() && ! $state) {
+                            Notification::make()
+                                ->title('إجراء محظور')
+                                ->body('لا يمكنك إلغاء تفعيل حسابك الخاص منعاً لفقدان الوصول إلى لوحة الإدارة.')
+                                ->danger()
+                                ->send();
+
+                            return false;
+                        }
+                    }),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('تاريخ التسجيل')
@@ -295,13 +312,19 @@ class UserResource extends Resource
                         ->modalSubmitAction(false)
                         ->modalCancelAction(fn (StaticAction $action) => $action->label('إغلاق')),
                     Tables\Actions\EditAction::make(),
-                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\DeleteAction::make()
+                        ->disabled(fn (User $record): bool => $record->id === auth()->id())
+                        ->tooltip(fn (User $record): ?string => $record->id === auth()->id() ? 'لا يمكنك حذف حسابك الحالي' : null),
                     Tables\Actions\RestoreAction::make(),
                 ])->icon('heroicon-m-ellipsis-vertical'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->action(function (Collection $records) {
+                            $records = $records->reject(fn (User $user) => $user->id === auth()->id());
+                            $records->each->delete();
+                        }),
                     Tables\Actions\RestoreBulkAction::make(),
                 ]),
             ]);

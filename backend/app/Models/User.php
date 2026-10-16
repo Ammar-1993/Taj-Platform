@@ -44,6 +44,14 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
     protected static function booted(): void
     {
+        static::updating(function (User $user) {
+            if ($user->isDirty('is_active') && ! $user->is_active) {
+                if (auth()->check() && auth()->id() === $user->id) {
+                    throw new \InvalidArgumentException('لا يمكن للمستخدم إلغاء تفعيل حسابه الخاص.');
+                }
+            }
+        });
+
         static::updated(function (User $user) {
             if ($user->wasChanged('is_active') && ! $user->is_active) {
                 $user->tokens()->delete();
