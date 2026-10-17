@@ -1,0 +1,378 @@
+"use client";
+
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Script from "next/script";
+import { useAuth } from "@/context/AuthContext";
+import DecorativeBackground from "@/components/layout/DecorativeBackground";
+import { showApiError } from "@/hooks/useApiError";
+import { useRecaptcha } from "@/hooks/useRecaptcha";
+import {
+  validateNameField,
+  validateEmailField,
+  validatePhoneField,
+  validatePasswordField,
+  parseRegistrationValidationErrors,
+} from "@/lib/validators";
+import {
+  User as UserIcon,
+  Mail,
+  Phone,
+  Lock,
+  Loader2,
+  CheckCircle,
+  ArrowLeft,
+  LogIn,
+} from "lucide-react";
+import ErrorBanner from "@/components/ui/ErrorBanner";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
+import { PasswordStrength } from "@/components/ui/PasswordStrength";
+import { authService } from "@/services/api";
+
+export interface RegistrationFormProps {
+  role: "student" | "teacher" | "parent";
+  emoji: string;
+  title: string;
+  subtitle: string;
+  nameLabel: string;
+  nameRequiredMessage: string;
+  emailPlaceholder: string;
+  submitLabel: string;
+  redirectPath: string;
+  redirectSubtitle: string;
+  headerBgClass: string;
+  topBlobClass: string;
+  bottomBlobClass: string;
+  backLinkHoverClass: string;
+}
+
+export function RegistrationForm({
+  role,
+  emoji,
+  title,
+  subtitle,
+  nameLabel,
+  nameRequiredMessage,
+  emailPlaceholder,
+  submitLabel,
+  redirectPath,
+  redirectSubtitle,
+  headerBgClass,
+  topBlobClass,
+  bottomBlobClass,
+  backLinkHoverClass,
+}: RegistrationFormProps) {
+  const router = useRouter();
+  const { login } = useAuth();
+  const { siteKey, executeRecaptcha } = useRecaptcha();
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
+  // Form Data States
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+
+  const [nameError, setNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  const validateName = (): string => {
+    const err = validateNameField(name, nameRequiredMessage);
+    setNameError(err);
+    return err;
+  };
+
+  const validateEmail = (): string => {
+    const err = validateEmailField(email);
+    setEmailError(err);
+    return err;
+  };
+
+  const validatePhone = (): string => {
+    const err = validatePhoneField(phone);
+    setPhoneError(err);
+    return err;
+  };
+
+  const validatePassword = (): string => {
+    const err = validatePasswordField(password);
+    setPasswordError(err);
+    return err;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const currentNameError = validateName();
+    const currentEmailError = validateEmail();
+    const currentPhoneError = validatePhone();
+    const currentPasswordError = validatePassword();
+
+    if (
+      currentNameError ||
+      currentEmailError ||
+      currentPhoneError ||
+      currentPasswordError
+    ) {
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const recaptchaToken = await executeRecaptcha("register");
+
+      const res = await authService.register({
+        name,
+        email,
+        phone,
+        password,
+        role,
+        recaptcha_token: recaptchaToken,
+      });
+
+      setSuccessMsg("تم إنشاء حسابك بنجاح!");
+
+      const { token, user } = res.data;
+      login(token, user);
+
+      setTimeout(() => {
+        router.push(redirectPath);
+      }, 2000);
+    } catch (err: unknown) {
+      setLoading(false);
+      console.error("Registration Error Details:", err);
+
+      const parsed = parseRegistrationValidationErrors(err);
+      if (parsed.isValidationError) {
+        if (parsed.emailError) setEmailError(parsed.emailError);
+        if (parsed.phoneError) setPhoneError(parsed.phoneError);
+        if (parsed.nameError) setNameError(parsed.nameError);
+        if (parsed.passwordError) setPasswordError(parsed.passwordError);
+        if (parsed.bannerError) setError(parsed.bannerError);
+
+        if (!parsed.hasCustomError) {
+          showApiError(err, "تأكد من صحة البيانات المدخلة.");
+        }
+      } else {
+        showApiError(err, "حدث خطأ أثناء التسجيل. يرجى المحاولة لاحقاً.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 flex justify-center items-center relative overflow-hidden bg-slate-50">
+      <DecorativeBackground />
+      {siteKey && (
+        <Script
+          src={`https://www.google.com/recaptcha/api.js?render=${siteKey}`}
+        />
+      )}
+
+      <div className="w-full max-w-2xl animate-fade-in-up relative z-10">
+        <Card variant="glass" className="overflow-hidden">
+          <div
+            className={`${headerBgClass} p-6 sm:p-8 text-center relative overflow-hidden`}
+          >
+            {/* Decorative blobs for header */}
+            <div
+              className={`absolute top-0 right-0 w-32 h-32 ${topBlobClass} rounded-full blur-3xl -translate-y-1/2 translate-x-1/2`}
+            ></div>
+            <div
+              className={`absolute bottom-0 left-0 w-24 h-24 ${bottomBlobClass} rounded-full blur-2xl translate-y-1/2 -translate-x-1/2`}
+            ></div>
+
+            <div className="w-16 h-16 bg-white/80 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto shadow-sm border border-white/50 mb-4 relative z-10">
+              <span className="text-3xl">{emoji}</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2 relative z-10">
+              {title}
+            </h2>
+            <p className="text-gray-600 font-medium relative z-10 text-sm sm:text-base">
+              {subtitle}
+            </p>
+          </div>
+
+          <CardContent className="p-6 sm:p-8">
+            {successMsg ? (
+              <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-[2rem] text-center animate-fade-in-up shadow-sm">
+                <CheckCircle className="w-14 h-14 text-emerald-500 mx-auto mb-3 animate-subtle-pulse" />
+                <h3 className="text-xl font-bold text-emerald-800 mb-2">
+                  {successMsg}
+                </h3>
+                <p className="text-emerald-600 text-sm font-medium flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {redirectSubtitle}
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+                {error && <ErrorBanner message={error} />}
+
+                {/* استخدام Grid لوضع الحقول بجانب بعضها في الشاشات المتوسطة والكبيرة */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* حقل الاسم (يأخذ العرض كاملاً) */}
+                  <div className="sm:col-span-2">
+                    <Input
+                      label={nameLabel}
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => {
+                        setName(e.target.value);
+                        if (nameError) setNameError("");
+                      }}
+                      onBlur={validateName}
+                      error={nameError}
+                      placeholder="الاسم الثنائي أو الثلاثي"
+                      icon={<UserIcon className="w-4 h-4" />}
+                    />
+                  </div>
+
+                  {/* حقل البريد الإلكتروني (يأخذ نصف العرض) */}
+                  <div className="flex flex-col gap-1">
+                    <Input
+                      label="البريد الإلكتروني *"
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (emailError) setEmailError("");
+                      }}
+                      onBlur={validateEmail}
+                      error={emailError === "email_taken" ? "" : emailError}
+                      className={
+                        emailError === "email_taken"
+                          ? "border-rose-500 ring-rose-500/20"
+                          : ""
+                      }
+                      placeholder={emailPlaceholder}
+                      dir="ltr"
+                      icon={<Mail className="w-4 h-4" />}
+                    />
+                    {emailError === "email_taken" && (
+                      <div className="flex flex-col gap-1 px-1">
+                        <p className="text-xs font-bold text-rose-600">
+                          هذا البريد الإلكتروني مسجل مسبقاً. هل تود تسجيل الدخول؟
+                        </p>
+                        <Link
+                          href="/login"
+                          className="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 w-fit"
+                        >
+                          <LogIn className="w-3 h-3" />
+                          انقر هنا لتسجيل الدخول
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* حقل رقم الجوال (يأخذ نصف العرض) */}
+                  <div className="flex flex-col gap-1">
+                    <Input
+                      label="رقم الجوال *"
+                      type="tel"
+                      required
+                      value={phone}
+                      onChange={(e) => {
+                        const val = e.target.value
+                          .replace(/\D/g, "")
+                          .slice(0, 10);
+                        setPhone(val);
+                        if (phoneError) setPhoneError("");
+                      }}
+                      onBlur={validatePhone}
+                      error={phoneError === "phone_taken" ? "" : phoneError}
+                      className={
+                        phoneError === "phone_taken"
+                          ? "border-rose-500 ring-rose-500/20"
+                          : ""
+                      }
+                      placeholder="05XXXXXXXX"
+                      dir="ltr"
+                      icon={<Phone className="w-4 h-4" />}
+                    />
+                    {phoneError === "phone_taken" && (
+                      <div className="flex flex-col gap-1 px-1">
+                        <p className="text-xs font-bold text-rose-600">
+                          رقم الجوال هذا مسجل مسبقاً. هل تود تسجيل الدخول؟
+                        </p>
+                        <Link
+                          href="/login"
+                          className="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 w-fit"
+                        >
+                          <LogIn className="w-3 h-3" />
+                          انقر هنا لتسجيل الدخول
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* حقل كلمة المرور (يأخذ العرض كاملاً) */}
+                  <div className="sm:col-span-2">
+                    <Input
+                      label="كلمة المرور *"
+                      type="password"
+                      required
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (passwordError) setPasswordError("");
+                      }}
+                      onBlur={validatePassword}
+                      error={passwordError}
+                      placeholder="••••••••"
+                      dir="ltr"
+                      icon={<Lock className="w-4 h-4" />}
+                    />
+                    <PasswordStrength password={password} />
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Button
+                    type="submit"
+                    isLoading={loading}
+                    className="w-full group"
+                  >
+                    {!loading ? (
+                      <span className="flex items-center gap-2">
+                        {submitLabel}
+                        <ArrowLeft className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                      </span>
+                    ) : (
+                      <span>جاري إنشاء الحساب...</span>
+                    )}
+                  </Button>
+                </div>
+
+                <div className="text-center mt-4">
+                  <Link
+                    href="/register"
+                    className={`inline-flex items-center gap-1 text-sm text-gray-500 ${backLinkHoverClass} font-bold transition-colors`}
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    العودة لاختيار نوع الحساب
+                  </Link>
+                </div>
+              </form>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+export default RegistrationForm;
