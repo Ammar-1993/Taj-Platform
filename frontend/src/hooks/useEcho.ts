@@ -32,6 +32,7 @@ export interface WalletUpdatedPayload {
 export const useEcho = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const isTeacher = user?.roles?.some((r) => r.name === "teacher") || false;
 
   useEffect(() => {
     if (!user?.id) {
@@ -64,6 +65,8 @@ export const useEcho = () => {
     userChannel.listen(".BookingCreated", (data: BookingCreatedPayload) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.bookings.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.parentDashboard.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all });
 
       if (data.message) {
         toast.success(data.message, {
@@ -75,13 +78,13 @@ export const useEcho = () => {
 
     // 2. Subscribe to Teacher Private Channel (if role is teacher)
     let teacherChannel: ReturnType<typeof echo.private> | null = null;
-    const isTeacher = user.roles?.some((r) => r.name === "teacher") || false;
 
     if (isTeacher) {
       teacherChannel = echo.private(`teacher.${user.id}`);
       teacherChannel.listen(".BookingCreated", (data: BookingCreatedPayload) => {
         queryClient.invalidateQueries({ queryKey: queryKeys.bookings.all });
         queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+        queryClient.invalidateQueries({ queryKey: queryKeys.teacherSlots.all });
 
         toast.success(`🎉 حجز جديد: قام الطالب ${data.student_name} بحجز حصة جديدة معك!`, {
           duration: 5000,
@@ -92,13 +95,16 @@ export const useEcho = () => {
 
     return () => {
       try {
+        userChannel.stopListening(".WalletUpdated");
+        userChannel.stopListening(".BookingCreated");
         echo.leave(`App.Models.User.${user.id}`);
         if (teacherChannel) {
+          teacherChannel.stopListening(".BookingCreated");
           echo.leave(`teacher.${user.id}`);
         }
       } catch {
         // Ignored during cleanup
       }
     };
-  }, [user?.id, user?.roles, queryClient]);
+  }, [user?.id, isTeacher, queryClient]);
 };

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '@/services/api';
 import { tokenStorage } from '@/lib/tokenStorage';
+import { disconnectEcho } from '@/lib/echo';
 import { User } from '@/types'; // تأكد من أن واجهة User مُعرفة في هذا المسار
 
 interface AuthContextType {
@@ -37,6 +38,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             } catch (error) {
                 console.warn("انتهت صلاحية الجلسة أو التوكن غير صالح", error);
                 tokenStorage.clearToken();
+                disconnectEcho();
                 setUser(null);
             } finally {
                 // 🟢 التحديث 3: ضمان إيقاف التحميل سواء نجح الطلب أو فشل
@@ -63,6 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } finally {
             // التنظيف المحلي في كل الأحوال
             tokenStorage.clearToken();
+            disconnectEcho();
             
             // إعادة توجيه المستخدم وتفريغ الذاكرة (Full Reload)
             // ملاحظة: لا نقوم باستدعاء setUser(null) هنا لتجنب تضارب التوجيه (InvalidStateError)
