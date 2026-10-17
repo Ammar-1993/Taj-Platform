@@ -18,8 +18,8 @@ function BookingDropdown({
 }: {
   booking: Booking;
   isTeacher: boolean;
-  onCancelClick: (id: number) => void;
-  onCompleteClick: (id: number) => void;
+  onCancelClick?: (id: number) => void;
+  onCompleteClick?: (id: number) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -59,7 +59,7 @@ function BookingDropdown({
             <button
               onClick={() => {
                 setIsOpen(false);
-                onCancelClick(booking.id);
+                onCancelClick?.(booking.id);
               }}
               className="flex items-center gap-3 px-4 py-3 cursor-pointer w-full transition-colors text-error-text font-medium hover:bg-error-bg text-sm"
             >
@@ -71,7 +71,7 @@ function BookingDropdown({
             <button
               onClick={() => {
                 setIsOpen(false);
-                onCompleteClick(booking.id);
+                onCompleteClick?.(booking.id);
               }}
               className="flex items-center gap-3 px-4 py-3 cursor-pointer w-full transition-colors text-success-text font-medium hover:bg-success-bg text-sm"
             >
@@ -89,8 +89,8 @@ interface ResponsiveBookingTableProps {
   bookings: Booking[];
   isTeacher: boolean;
   isParent?: boolean;
-  onCancelClick: (id: number) => void;
-  onCompleteClick: (id: number) => void;
+  onCancelClick?: (id: number) => void;
+  onCompleteClick?: (id: number) => void;
 }
 
 export const ResponsiveBookingTable: React.FC<ResponsiveBookingTableProps> = ({

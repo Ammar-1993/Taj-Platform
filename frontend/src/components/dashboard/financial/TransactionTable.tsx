@@ -9,6 +9,11 @@ import EmptyState from "@/components/ui/EmptyState";
 import { 
   History, ArrowUpLeft, ArrowDownRight 
 } from "lucide-react";
+import {
+  isNegativeTransaction,
+  normalizeTransactionStatusType,
+  parseTransactionDescription,
+} from "@/lib/financialUtils";
 
 interface TransactionTableProps {
   transactions: PaginatedResponse<WalletTransaction>;
@@ -21,35 +26,6 @@ export function TransactionTable({
   onPageChange,
   isLoading 
 }: TransactionTableProps) {
-  
-  // Quick mapping for standardizing backend types to Arabic keys for StatusBadge
-  const typeMap: Record<string, string> = {
-    'deposit': 'wallet_topup',
-    'payout': 'withdrawal',
-    'earnings': 'class_earnings',
-    'class_earnings': 'class_earnings',
-    'wallet_topup': 'wallet_topup',
-    'withdrawal': 'withdrawal',
-    'refund': 'refund'
-  };
-
-  /**
-   * Splits a description if it contains a hash or ID.
-   * Returns { main: string, sub?: string }
-   */
-  const parseDescription = (desc: string) => {
-    // Regex to detect UUIDs or long technical IDs (e.g. from Moyasar)
-    const idRegex = /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|[0-9a-f]{32,}|pay_[a-zA-Z0-9]+)/i;
-    const match = desc.match(idRegex);
-    
-    if (match) {
-      const main = desc.replace(match[0], '').replace(/:\s*$/, '').trim() || "عملية مالية";
-      return { main, sub: match[0] };
-    }
-    
-    return { main: desc };
-  };
-
   if (!isLoading && (!transactions.data || transactions.data.length === 0)) {
     return (
       <EmptyState
@@ -85,10 +61,10 @@ export function TransactionTable({
             ))
           ) : (
             transactions.data.map((tx) => {
-              const isNegative = tx.type === 'withdrawal' || tx.type === 'payout' || parseFloat(String(tx.amount)) < 0;
-              const { main, sub } = parseDescription(tx.description);
+              const isNegative = isNegativeTransaction(tx);
+              const { main, sub } = parseTransactionDescription(tx.description);
               const absAmount = Math.abs(parseFloat(tx.amount)).toFixed(2);
-              const displayType = typeMap[tx.type] || tx.type;
+              const displayType = normalizeTransactionStatusType(tx.type);
 
               return (
                 <div key={tx.id} className="p-4 flex items-center gap-3 active:bg-slate-50 transition-colors">
@@ -148,9 +124,9 @@ export function TransactionTable({
                 ))
               ) : (
                 transactions.data.map((tx) => {
-                  const isNegative = tx.type === 'withdrawal' || tx.type === 'payout' || parseFloat(String(tx.amount)) < 0;
-                  const { main, sub } = parseDescription(tx.description);
-                  const displayType = typeMap[tx.type] || tx.type;
+                  const isNegative = isNegativeTransaction(tx);
+                  const { main, sub } = parseTransactionDescription(tx.description);
+                  const displayType = normalizeTransactionStatusType(tx.type);
 
                   return (
                     <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
