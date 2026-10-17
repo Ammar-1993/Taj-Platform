@@ -70,112 +70,98 @@ The platform operates on a high-performance decoupled monorepo architecture engi
 
 
 ```mermaid
-flowchart LR
+flowchart TB
     %% ─────────────────────────────────────────────────────────────
-    %% 1. ACTORS & CLIENTS
+    %% 1. USERS & ROLES
     %% ─────────────────────────────────────────────────────────────
-    subgraph ClientsCol ["👥 Users & Roles"]
-        direction TB
-        Student(["👨‍🎓 Student & Parent<br/>Web Portal & Classroom"])
-        Teacher(["👩‍🏫 Verified Teacher<br/>Studio & Classroom Host"])
-        Admin(["🛡️ Platform Admin<br/>Filament v3 Dashboard"])
+    subgraph Actors ["1. Users & Roles (Arabic RTL)"]
+        direction LR
+        Users(["👥 Students, Parents & Teachers"])
+        Admin(["🛡️ Platform Admin"])
     end
 
     %% ─────────────────────────────────────────────────────────────
-    %% 2. PRESENTATION & REAL-TIME MEDIA EDGE
+    %% 2. FRONTEND & REAL-TIME MEDIA EDGE
     %% ─────────────────────────────────────────────────────────────
-    subgraph EdgeCol ["🌐 Presentation & Real-Time Edge"]
-        direction TB
-        Frontend["🖥️ <b>taj-frontend</b><br/>Next.js 15.3 • React 19<br/>Edge RSC • RTL Arabic<br/><code>Port 3000</code>"]
-        Agora["📹 <b>Agora SD-RTN Cloud</b><br/>Adaptive HD Video / Audio<br/>Isolated Screen Share Channel"]
-        Netless["🎨 <b>Netless Cloud</b><br/>Interactive Vector Whiteboard<br/>Real-Time Follower Mode"]
-    end
+    subgraph EdgeTier ["2. Presentation & Direct Media Edge"]
+        direction LR
+        Frontend["🖥️ Next.js 15 Web App (Edge RSC • React 19)"]
 
-    %% ─────────────────────────────────────────────────────────────
-    %% 3. TAJ DOCKER BACKEND ECOSYSTEM
-    %% ─────────────────────────────────────────────────────────────
-    subgraph DockerApp ["🐳 Taj Docker Ecosystem (taj-net)"]
-        direction TB
-
-        subgraph GatewayTier ["1. API & WebSockets Gateway"]
-            Backend["⚙️ <b>taj_admin_web</b><br/>Laravel 12 • PHP 8.3 FPM<br/>Sanctum Auth • Filament Panel"]
-            Reverb["⚡ <b>taj_reverb</b> (WebSockets)<br/>Laravel Reverb • Port 8080<br/>Instant In-App Event Push"]
-        end
-
-        subgraph WorkerTier ["2. Asynchronous Background Engine"]
-            QueueWorker["⚡ <b>taj_queue_worker</b><br/>Laravel Redis Daemon<br/>• Pre-provisioning (Agora & WB)<br/>• Escrow Releases & Refunds<br/>• AI Session Summaries"]
-        end
-
-        subgraph StorageTier ["3. Distributed State & Ledger"]
-            Redis[("⚡ <b>taj_redis</b> (Redis 7)<br/>128MB • volatile-lru • AOF<br/>Queue Broker & Tagged Cache")]
-            MySQL[("🐬 <b>taj_mysql</b> (MySQL 8.0)<br/>Double-Entry Escrow Ledger<br/>ACID Transactions & Bookings")]
+        subgraph MediaCloud ["🎥 Direct Browser-to-Cloud Media (Zero Backend Load)"]
+            direction TB
+            Agora["📹 Agora RTC / RTM (HD Video & Screen Share)"]
+            Netless["🎨 Netless Cloud (Collaborative Whiteboard)"]
         end
     end
 
     %% ─────────────────────────────────────────────────────────────
-    %% 4. EXTERNAL CLOUD APIS & AI
+    %% 3. CORE BACKEND ECOSYSTEM (DOCKER)
     %% ─────────────────────────────────────────────────────────────
-    subgraph CloudCol ["☁️ External Cloud & AI Services"]
+    subgraph BackendTier ["3. Taj Docker Backend Ecosystem (taj-net)"]
         direction TB
-        OpenAI["🧠 <b>OpenAI Cloud (gpt-4o-mini)</b><br/>24/7 AI Assistant • Summaries & Quizzes"]
-        Moyasar["💳 <b>Moyasar Payment Gateway</b><br/>Mada, Visa, Apple Pay • Escrow Vault"]
-        R2["☁️ <b>Cloudflare R2 Storage</b><br/>Zero-Egress Object Store & Edge CDN"]
-        Recaptcha["🤖 <b>Google reCAPTCHA v3</b><br/>Risk Scoring & Bot Mitigation"]
-        Sentry["📊 <b>Sentry APM</b><br/>Telemetry & Source Map Profiling"]
+        API["⚙️ Laravel 12 REST API & Filament v3 Admin"]
+        Reverb["⚡ Laravel Reverb (WebSockets Server)"]
+        MySQL[("🐬 MySQL 8.0 (ACID Escrow Ledger)")]
+        Redis[("⚡ Redis 7 (Tagged Cache & Job Queue)")]
+        Worker["🔄 Queue Worker (Token Pre-Provisioning & Async Jobs)"]
     end
 
-    %% ── USER INGRESS FLOWS ──
-    Student -->|HTTPS| Frontend
-    Teacher -->|HTTPS| Frontend
-    Admin -->|HTTPS Auth| Backend
+    %% ─────────────────────────────────────────────────────────────
+    %% 4. EXTERNAL CLOUD & AI SERVICES
+    %% ─────────────────────────────────────────────────────────────
+    subgraph CloudTier ["4. External Cloud, Payments & AI"]
+        direction LR
+        Moyasar["💳 Moyasar Gateway (Mada, Visa, Apple Pay)"]
+        Storage["☁️ Cloudflare R2 Avatars & Private KYC Disk"]
+        OpenAI["🧠 OpenAI gpt-4o-mini (AI Assistant, Summaries & Quizzes)"]
+        Security["🛡️ reCAPTCHA v3 & Sentry APM"]
+    end
 
-    %% ── DIRECT BROWSER-TO-CLOUD STREAMS (ZERO SERVER LOAD) ──
-    Frontend <-->|Direct WebRTC| Agora
-    Frontend <-->|Direct WebSocket| Netless
-    Frontend -.->|Edge CDN Avatars| R2
+    %% ── 1. USER INGRESS ──
+    Users -->|HTTPS| Frontend
+    Admin -->|HTTPS Admin Panel| API
 
-    %% ── FRONTEND TO BACKEND API & WEBSOCKETS ──
-    Frontend -->|REST API v1 + Sanctum| Backend
-    Frontend <-->|WebSockets Echo Push| Reverb
+    %% ── 2. DIRECT MEDIA STREAMS (BROWSER-TO-CLOUD) ──
+    Frontend <-->|"Direct WebRTC"| Agora
+    Frontend <-->|"Direct WebSocket"| Netless
 
-    %% ── BACKEND & STORAGE RELATIONSHIPS ──
-    Backend <-->|Cache & Tokens| Redis
-    Backend <-->|ACID Ledger| MySQL
-    Backend -->|Dispatch Jobs| Redis
-    Backend -->|Broadcast Events| Reverb
-    Redis <-->|Scaling Pub/Sub| Reverb
+    %% ── 3. FRONTEND TO BACKEND GATEWAY ──
+    Frontend -->|REST API v1 + Sanctum| API
+    Frontend <-->|Real-Time Events| Reverb
 
-    %% ── QUEUE WORKER CONSUMPTION ──
-    Redis -->|Poll BLPOP| QueueWorker
-    QueueWorker -->|Update State| MySQL
-    QueueWorker -->|Pre-sign Tokens| Redis
+    %% ── 4. INTERNAL BACKEND & ASYNC WORKFLOWS ──
+    API -->|Broadcast Events| Reverb
+    API <-->|Pessimistic Locks & ACID| MySQL
+    API <-->|Tagged Cache & Dispatch| Redis
+    Redis <-->|Pre-Sign Tokens & Poll Jobs| Worker
+    Worker -->|Update Session State| MySQL
 
-    %% ── BACKEND & WORKER TO CLOUD INTEGRATIONS ──
-    Backend -->|Live Support Chat| OpenAI
-    QueueWorker -->|Generate Summaries| OpenAI
-    Backend -->|Escrow Capture & Release| Moyasar
-    Backend <-->|S3 Uploads & KYC Docs| R2
-    Backend -.->|Score Check| Recaptcha
-    Backend -.->|Server Telemetry| Sentry
-    Frontend -.->|Client Errors| Sentry
+    %% ── 5. EXTERNAL CLOUD INTEGRATIONS ──
+    API <-->|Invoices & HMAC Webhooks| Moyasar
+    API <-->|Edge CDN & Signed KYC| Storage
+    API -.->|Bot Check & Telemetry| Security
+    API -->|24/7 Support Chat| OpenAI
+    Worker -->|Session Summaries & Quizzes| OpenAI
 
-    %% ── LUXURY MODERN COLOR PALETTE ──
-    classDef client fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
-    classDef edge fill:#022c22,stroke:#10b981,stroke-width:2px,color:#f8fafc;
+    %% ── VISUAL STYLING ──
+    classDef actor fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
+    classDef frontend fill:#022c22,stroke:#10b981,stroke-width:2px,color:#f8fafc;
+    classDef media fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#f8fafc;
     classDef gateway fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#f8fafc;
-    classDef worker fill:#1c1917,stroke:#f59e0b,stroke-width:2px,color:#f8fafc;
+    classDef data fill:#042f2e,stroke:#14b8a6,stroke-width:2px,color:#f8fafc;
     classDef redis fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#f8fafc;
-    classDef mysql fill:#042f2e,stroke:#14b8a6,stroke-width:2px,color:#f8fafc;
-    classDef cloud fill:#18181b,stroke:#a1a1aa,stroke-width:1px,stroke-dasharray: 4 4,color:#f8fafc;
+    classDef worker fill:#1c1917,stroke:#f59e0b,stroke-width:2px,color:#f8fafc;
+    classDef cloud fill:#18181b,stroke:#a1a1aa,stroke-width:1.5px,stroke-dasharray: 4 4,color:#f8fafc;
     classDef ai fill:#0c2a4a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
 
-    class Student,Teacher,Admin client;
-    class Frontend,Agora,Netless edge;
-    class Backend,Reverb gateway;
-    class QueueWorker worker;
+    class Users,Admin actor;
+    class Frontend frontend;
+    class Agora,Netless media;
+    class API,Reverb gateway;
+    class MySQL data;
     class Redis redis;
-    class MySQL mysql;
-    class Moyasar,R2,Recaptcha,Sentry cloud;
+    class Worker worker;
+    class Moyasar,Storage,Security cloud;
     class OpenAI ai;
 ```
 
