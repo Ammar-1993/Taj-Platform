@@ -141,5 +141,39 @@ describe('TajSupportChatWidget', () => {
       expect(screen.getByText('فتح تذكرة دعم فني')).toBeInTheDocument()
     })
   })
+
+  it('safely renders **bold** formatting while neutralizing HTML/XSS payloads without DOM injection', async () => {
+    const maliciousReply =
+      'مرحباً **طالب تاج**! <img src="x" data-testid="xss-img" onerror="alert(1)" /> <script data-testid="xss-script">alert(1)</script>'
+
+    ;(supportService.streamMessage as jest.Mock).mockImplementationOnce((_payload, callbacks) => {
+      callbacks.onToken(maliciousReply)
+      callbacks.onDone({
+        reply: maliciousReply,
+        needs_human_support: false,
+        support_options: null,
+        suggested_questions: [],
+      })
+      return Promise.resolve()
+    })
+
+    const { container } = render(<TajSupportChatWidget />)
+
+    fireEvent.click(screen.getByRole('button', { name: /فتح المساعد الذكي للدعم الفني/i }))
+
+    const input = screen.getByPlaceholderText(/اكتب سؤالك هنا/i)
+    fireEvent.change(input, { target: { value: 'اختبار أمان' } })
+    fireEvent.click(screen.getByRole('button', { name: /إرسال السؤال/i }))
+
+    await waitFor(() => {
+      const boldEl = screen.getByText('طالب تاج')
+      expect(boldEl.tagName).toBe('STRONG')
+    })
+
+    // Ensure no raw <img> or <script> elements were injected into the DOM
+    expect(container.querySelector('img[data-testid="xss-img"]')).toBeNull()
+    expect(container.querySelector('script[data-testid="xss-script"]')).toBeNull()
+  })
 })
+
 

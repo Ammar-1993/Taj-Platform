@@ -23,16 +23,8 @@ export const walletService = {
   /**
    * Submit a new payout request
    */
-  requestPayout: async (data: { amount: string; bank_name: string }) => {
+  requestPayout: async (data: { amount: string; bank_name: string; iban: string }) => {
     const res = await api.post<ApiResponse<unknown>>("/wallet/payouts", data);
-    return res.data;
-  },
-
-  /**
-   * Record a payment (for mock top-up or webhook simulation)
-   */
-  recordPayment: async (data: Record<string, unknown>) => {
-    const res = await api.post<ApiResponse<unknown>>("/webhooks/payment", data);
     return res.data;
   },
 };

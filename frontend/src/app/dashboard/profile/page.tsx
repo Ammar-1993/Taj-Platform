@@ -71,6 +71,36 @@ export default function TeacherProfilePage() {
         },
     });
 
+    const handleKycFileChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        setter: (file: File | null) => void
+    ) => {
+        const file = e.target.files?.[0] || null;
+        if (!file) {
+            setter(null);
+            return;
+        }
+
+        const maxSizeBytes = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSizeBytes) {
+            toast.error('حجم الملف يجب ألا يتجاوز 5 ميجابايت');
+            e.target.value = '';
+            setter(null);
+            return;
+        }
+
+        const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+        const allowedExt = /\.(jpg|jpeg|png|pdf)$/i;
+        if (!allowedTypes.includes(file.type) && !allowedExt.test(file.name)) {
+            toast.error('يرجى اختيار ملف بصيغة JPG أو PNG أو PDF فقط');
+            e.target.value = '';
+            setter(null);
+            return;
+        }
+
+        setter(file);
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const formData = new FormData();
@@ -213,7 +243,7 @@ export default function TeacherProfilePage() {
                                                 type="file" 
                                                 accept=".jpg,.jpeg,.png,.pdf"
                                                 required={!profile?.national_id_path}
-                                                onChange={(e) => setNationalIdFile(e.target.files?.[0] || null)}
+                                                onChange={(e) => handleKycFileChange(e, setNationalIdFile)}
                                                 className="hidden" 
                                             />
                                             <label 
@@ -244,7 +274,7 @@ export default function TeacherProfilePage() {
                                                 type="file" 
                                                 accept=".jpg,.jpeg,.png,.pdf"
                                                 required={!profile?.degree_path}
-                                                onChange={(e) => setDegreeFile(e.target.files?.[0] || null)}
+                                                onChange={(e) => handleKycFileChange(e, setDegreeFile)}
                                                 className="hidden" 
                                             />
                                             <label 

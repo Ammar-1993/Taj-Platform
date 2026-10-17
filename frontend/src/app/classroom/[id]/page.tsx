@@ -127,9 +127,6 @@ export default function ClassroomPage({ params: _params }: ClassroomPageProps) {
   const isTeacher = user?.roles?.some((r) => r.name === "teacher");
 
   useEffect(() => {
-    // [SENTRY VERIFICATION] Test log to ensure Sentry Logs is capturing frontend logs
-    console.log('User triggered test log', { log_source: 'sentry_test' });
-
     if (!authLoading && !user) {
       router.replace("/login");
     }

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
+import { Suspense, useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { paymentService } from '@/services/api';
 import PageHeader from '@/components/ui/PageHeader';
@@ -12,10 +13,11 @@ import RedirectCountdown from "@/components/ui/RedirectCountdown";
 
 type PaymentStatus = 'verifying' | 'success' | 'failed' | 'pending';
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
     const { user } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const queryClient = useQueryClient();
     const [isVerifying, setIsVerifying] = useState(true);
     const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('verifying');
     const [statusMessage, setStatusMessage] = useState('');
@@ -33,9 +35,11 @@ export default function PaymentSuccessPage() {
                     message?: string; 
                     balance?: number 
                 };
-                console.log("Verification Response:", response);
                 
                 if (response.status === 'success') {
+                    queryClient.invalidateQueries({ queryKey: ['wallet'] });
+                    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+                    queryClient.invalidateQueries({ queryKey: ['parentDashboard'] });
                     setPaymentStatus('success');
                 } else {
                     setStatusMessage(response.message || 'الدفع لا يزال قيد المعالجة');
@@ -55,24 +59,19 @@ export default function PaymentSuccessPage() {
         const paymentId = searchParams.get('id');
         const status = searchParams.get('status');
 
-        console.log("Success Page Params:", { paymentId, status });
-
-        if (paymentId) {
-            verifyPayment(paymentId);
-        } else if (status === 'paid') {
-            setPaymentStatus('success');
-            setIsVerifying(false);
-        } else if (status === 'failed') {
+        if (status === 'failed') {
+            hasVerified.current = true;
             setPaymentStatus('failed');
             setIsVerifying(false);
+        } else if (paymentId) {
+            verifyPayment(paymentId);
         } else {
-            // No clear status, assume success after delay (fallback)
-            setTimeout(() => {
-                setPaymentStatus('success');
-                setIsVerifying(false);
-            }, 2000);
+            hasVerified.current = true;
+            setStatusMessage('لم يتم العثور على معرف عملية الدفع للتحقق منها. يرجى مراجعة رصيد المحفظة في لوحة التحكم.');
+            setPaymentStatus('pending');
+            setIsVerifying(false);
         }
-    }, [searchParams]);
+    }, [searchParams, queryClient]);
 
     if (!user) return null;
 
@@ -191,5 +190,19 @@ export default function PaymentSuccessPage() {
                 </Card>
             </div>
         </div>
+    );
+}
+
+export default function PaymentSuccessPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="min-h-screen flex items-center justify-center bg-green-50/50">
+                    <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
+                </div>
+            }
+        >
+            <PaymentSuccessContent />
+        </Suspense>
     );
 }

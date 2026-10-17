@@ -67,7 +67,7 @@ function ChatMarkdown({ content }: { content: string }) {
           return (
             <div key={idx} className="flex items-start gap-1.5 ps-1">
               <span className="text-brand-600 font-black select-none">•</span>
-              <span dangerouslySetInnerHTML={{ __html: formatBold(listText) }} />
+              <span>{renderFormattedText(listText)}</span>
             </div>
           );
         }
@@ -78,22 +78,32 @@ function ChatMarkdown({ content }: { content: string }) {
           return (
             <div key={idx} className="flex items-start gap-1.5 ps-1">
               <span className="text-brand-600 font-bold select-none">{numMatch[1]}.</span>
-              <span dangerouslySetInnerHTML={{ __html: formatBold(numMatch[2]) }} />
+              <span>{renderFormattedText(numMatch[2])}</span>
             </div>
           );
         }
 
         // Regular paragraph with bold support
         return (
-          <p key={idx} dangerouslySetInnerHTML={{ __html: formatBold(trimmed) }} />
+          <p key={idx}>{renderFormattedText(trimmed)}</p>
         );
       })}
     </div>
   );
 }
 
-function formatBold(text: string): string {
-  return text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-900">$1</strong>');
+function renderFormattedText(text: string): React.ReactNode {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**") && part.length >= 4) {
+      return (
+        <strong key={index} className="font-bold text-slate-900">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return <React.Fragment key={index}>{part}</React.Fragment>;
+  });
 }
 
 // ─── Default Quick Suggestion Chips ────────────────────────────────────────────
