@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react'
-import { getStatusBadge } from '../utils'
+import StatusBadge from '@/components/ui/StatusBadge'
 
-describe('getStatusBadge', () => {
+describe('StatusBadge', () => {
   it('renders scheduled status badge', () => {
-    render(getStatusBadge('scheduled'))
+    render(<StatusBadge status="scheduled" />)
 
     const badge = screen.getByText('مجدول')
     expect(badge).toBeInTheDocument()
@@ -11,15 +11,15 @@ describe('getStatusBadge', () => {
   })
 
   it('renders in_progress status badge with animation', () => {
-    render(getStatusBadge('in_progress'))
+    render(<StatusBadge status="in_progress" />)
 
     const badge = screen.getByText('جارية الآن')
     expect(badge).toBeInTheDocument()
-    expect(badge).toHaveClass('bg-amber-100', 'text-amber-700', 'animate-pulse')
+    expect(badge).toHaveClass('bg-amber-100', 'text-amber-700', 'animate-subtle-pulse')
   })
 
   it('renders completed status badge', () => {
-    render(getStatusBadge('completed'))
+    render(<StatusBadge status="completed" />)
 
     const badge = screen.getByText('مكتمل')
     expect(badge).toBeInTheDocument()
@@ -27,7 +27,7 @@ describe('getStatusBadge', () => {
   })
 
   it('renders cancelled status badge', () => {
-    render(getStatusBadge('cancelled'))
+    render(<StatusBadge status="cancelled" />)
 
     const badge = screen.getByText('ملغي')
     expect(badge).toBeInTheDocument()
@@ -35,28 +35,39 @@ describe('getStatusBadge', () => {
   })
 
   it('renders refunded status badge', () => {
-    render(getStatusBadge('refunded'))
+    render(<StatusBadge status="refunded" />)
 
     const badge = screen.getByText('مسترجع')
     expect(badge).toBeInTheDocument()
     expect(badge).toHaveClass('bg-purple-100', 'text-purple-700')
   })
 
+  it('renders abandoned status badge', () => {
+    render(<StatusBadge status="abandoned" />)
+
+    const badge = screen.getByText('مهجورة')
+    expect(badge).toBeInTheDocument()
+    expect(badge).toHaveClass('bg-slate-100', 'text-slate-700')
+  })
+
   it('renders unknown status badge with default styling', () => {
-    render(getStatusBadge('unknown'))
+    render(<StatusBadge status="unknown" />)
 
     const badge = screen.getByText('unknown')
     expect(badge).toBeInTheDocument()
     expect(badge).toHaveClass('bg-gray-100', 'text-gray-700')
   })
 
-  it('includes status indicator dot for all statuses', () => {
-    const statuses = ['scheduled', 'in_progress', 'completed', 'cancelled', 'refunded', 'unknown']
+  it('includes status indicator dot or icon for all statuses', () => {
+    const dotStatuses = ['scheduled', 'in_progress', 'cancelled', 'refunded', 'abandoned', 'unknown']
 
-    statuses.forEach(status => {
-      const { container } = render(getStatusBadge(status))
+    dotStatuses.forEach(status => {
+      const { container } = render(<StatusBadge status={status} />)
       const dot = container.querySelector('span.w-1\\.5.h-1\\.5')
       expect(dot).toBeInTheDocument()
     })
+
+    const { container: completedContainer } = render(<StatusBadge status="completed" />)
+    expect(completedContainer.querySelector('svg')).toBeInTheDocument()
   })
 })
