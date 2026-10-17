@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { authService } from "@/services/api";
+import { validateEmailField, validateLoginPasswordField } from "@/lib/validators";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -21,15 +22,16 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const validateEmail = () => {
-    if (!email) setEmailError("البريد الإلكتروني مطلوب");
-    else if (!/^\S+@\S+\.\S+$/.test(email)) setEmailError("صيغة البريد الإلكتروني غير صحيحة");
-    else setEmailError("");
+  const validateEmail = (): string => {
+    const err = validateEmailField(email);
+    setEmailError(err);
+    return err;
   };
 
-  const validatePassword = () => {
-    if (!password) setPasswordError("كلمة المرور مطلوبة");
-    else setPasswordError("");
+  const validatePassword = (): string => {
+    const err = validateLoginPasswordField(password);
+    setPasswordError(err);
+    return err;
   };
 
   const router = useRouter();
@@ -38,10 +40,10 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    validateEmail();
-    validatePassword();
+    const currentEmailError = validateEmail();
+    const currentPasswordError = validatePassword();
     
-    if (!email || !password || emailError || passwordError) {
+    if (currentEmailError || currentPasswordError) {
       return;
     }
 

@@ -4,3 +4,4 @@ export * from "./useDashboardData";
 export * from "./useWallet";
 export * from "./useUserRole";
 export * from "./useNavLinks";
+export * from "./useRecaptcha";
