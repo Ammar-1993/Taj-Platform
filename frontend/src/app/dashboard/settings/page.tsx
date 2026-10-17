@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import ErrorBanner from "@/components/ui/ErrorBanner";
 import { Select } from "@/components/ui/Select";
+import { queryKeys } from "@/lib/queryKeys";
 import { GradeLevel } from "@/types";
 
 interface ProfileFormData {
@@ -83,7 +84,7 @@ export default function SettingsPage() {
 
   // Fetch grade levels for student role
   const { data: gradesData, isLoading: isLoadingGrades } = useQuery({
-    queryKey: ['grade-levels'],
+    queryKey: queryKeys.discovery.gradeLevels,
     queryFn: () => discoveryService.getGradeLevels(),
     enabled: !!user?.roles?.some(role => role.name === 'student'),
     staleTime: 5 * 60 * 1000,

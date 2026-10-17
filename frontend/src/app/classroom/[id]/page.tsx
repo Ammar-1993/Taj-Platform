@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { bookingService } from "@/services/api";
+import { queryKeys } from "@/lib/queryKeys";
 import { useQueryClient } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/context/AuthContext";
@@ -259,8 +260,8 @@ export default function ClassroomPage({ params: _params }: ClassroomPageProps) {
       await bookingService.complete(Number(bookingId));
 
       // Invalidate queries to refresh dashboard and wallet data
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      queryClient.invalidateQueries({ queryKey: ["wallet"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all });
 
       toast.success(
         <div className="flex items-center gap-2">

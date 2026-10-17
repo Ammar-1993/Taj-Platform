@@ -14,6 +14,7 @@ import { GraduationCap, Users, Plus, X, Check, Loader2 } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import { Select } from "@/components/ui/Select";
 import { parentService, discoveryService } from '@/services/api';
+import { queryKeys } from '@/lib/queryKeys';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function ChildrenManagementPage() {
@@ -22,14 +23,14 @@ export default function ChildrenManagementPage() {
     
     // Fetch children
     const { data: childrenData, isLoading: childrenLoading } = useQuery({
-        queryKey: ['parent-children', user?.id],
+        queryKey: queryKeys.parentChildren.byUser(user?.id),
         queryFn: () => parentService.getChildren(),
         enabled: !!user,
     });
     
     // Fetch grade levels
     const { data: gradesData, isLoading: gradesLoading } = useQuery({
-        queryKey: ['grade-levels'],
+        queryKey: queryKeys.discovery.gradeLevels,
         queryFn: () => discoveryService.getGradeLevels(),
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
@@ -49,7 +50,7 @@ export default function ChildrenManagementPage() {
             toast.success('تم إضافة الابن بنجاح! 🎉');
             setFormData({ name: '', email: '', password: '', grade_level_id: '' });
             setShowForm(false);
-            queryClient.invalidateQueries({ queryKey: ['parent-children', user?.id] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.parentChildren.byUser(user?.id) });
         },
         onError: (error: unknown) => {
             showApiError(error, 'حدث خطأ أثناء الإضافة');
@@ -66,10 +67,10 @@ export default function ChildrenManagementPage() {
         mutationFn: (childId: number) => parentService.toggleChildPermission(childId),
         onMutate: async (childId) => {
             // Optimistic UI update
-            await queryClient.cancelQueries({ queryKey: ['parent-children', user?.id] });
-            const previousChildren = queryClient.getQueryData(['parent-children', user?.id]);
+            await queryClient.cancelQueries({ queryKey: queryKeys.parentChildren.byUser(user?.id) });
+            const previousChildren = queryClient.getQueryData(queryKeys.parentChildren.byUser(user?.id));
             
-            queryClient.setQueryData(['parent-children', user?.id], (old: { data: User[] } | undefined) => {
+            queryClient.setQueryData(queryKeys.parentChildren.byUser(user?.id), (old: { data: User[] } | undefined) => {
                 if (!old?.data) return old;
                 return {
                     ...old,
@@ -88,11 +89,11 @@ export default function ChildrenManagementPage() {
             return { previousChildren };
         },
         onError: (err, childId, context) => {
-            queryClient.setQueryData(['parent-children', user?.id], context?.previousChildren);
+            queryClient.setQueryData(queryKeys.parentChildren.byUser(user?.id), context?.previousChildren);
             showApiError(err, 'حدث خطأ أثناء تغيير الصلاحية');
         },
         onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ['parent-children', user?.id] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.parentChildren.byUser(user?.id) });
         },
     });
 

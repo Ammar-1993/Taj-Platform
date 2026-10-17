@@ -12,6 +12,7 @@ import { showApiError } from '@/hooks/useApiError';
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { queryKeys } from "@/lib/queryKeys";
 import { CheckCircle2, Clock, Info, User, FileText, GraduationCap, Rocket, Loader2, Edit3, ShieldCheck, UploadCloud } from "lucide-react";
 
 export default function TeacherProfilePage() {
@@ -20,7 +21,7 @@ export default function TeacherProfilePage() {
     
     // Fetch subjects
     const { data: subjectsData } = useQuery({
-        queryKey: ['subjects'],
+        queryKey: queryKeys.discovery.subjects,
         queryFn: () => discoveryService.getSubjects(),
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
@@ -29,7 +30,7 @@ export default function TeacherProfilePage() {
 
     // Fetch profile
     const { data: profileData, isLoading: loading } = useQuery({
-        queryKey: ['teacher-profile', user?.id],
+        queryKey: queryKeys.teacherProfile.byUser(user?.id),
         queryFn: () => teacherService.getProfile(),
         enabled: !!user,
     });
@@ -64,7 +65,7 @@ export default function TeacherProfilePage() {
             toast.success(data.message || 'تم حفظ الملف الشخصي بنجاح.');
             setNationalIdFile(null);
             setDegreeFile(null);
-            queryClient.invalidateQueries({ queryKey: ['teacher-profile', user?.id] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.teacherProfile.byUser(user?.id) });
         },
         onError: (error: unknown) => {
             showApiError(error, 'حدث خطأ أثناء الرفع');

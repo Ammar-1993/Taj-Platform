@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 import { getEcho } from "@/lib/echo";
+import { queryKeys } from "@/lib/queryKeys";
 
 export interface BookingCreatedPayload {
   booking_id: number;
@@ -48,9 +49,9 @@ export const useEcho = () => {
     // Listen for Real-Time Wallet Balance Updates
     userChannel.listen(".WalletUpdated", (data: WalletUpdatedPayload) => {
       // Invalidate relevant caches to trigger immediate re-render
-      queryClient.invalidateQueries({ queryKey: ["wallet"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      queryClient.invalidateQueries({ queryKey: ["parent_dashboard"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.parentDashboard.all });
 
       const amountText = data.transaction ? ` (${data.transaction.description})` : "";
       toast.success(`💳 تم تحديث رصيد المحفظة: ${data.balance.toFixed(2)} ر.س${amountText}`, {
@@ -61,8 +62,8 @@ export const useEcho = () => {
 
     // Listen for Booking Confirmations (for Student / Parent)
     userChannel.listen(".BookingCreated", (data: BookingCreatedPayload) => {
-      queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.bookings.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
 
       if (data.message) {
         toast.success(data.message, {
@@ -79,8 +80,8 @@ export const useEcho = () => {
     if (isTeacher) {
       teacherChannel = echo.private(`teacher.${user.id}`);
       teacherChannel.listen(".BookingCreated", (data: BookingCreatedPayload) => {
-        queryClient.invalidateQueries({ queryKey: ["bookings"] });
-        queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.bookings.all });
+        queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
 
         toast.success(`🎉 حجز جديد: قام الطالب ${data.student_name} بحجز حصة جديدة معك!`, {
           duration: 5000,

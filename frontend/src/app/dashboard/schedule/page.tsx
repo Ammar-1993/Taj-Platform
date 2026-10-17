@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Plus, Loader2, CalendarRange, CalendarX2, CalendarDays, Clock, LockOpen, Lock, LockKeyhole, Trash2 } from "lucide-react";
 import { teacherService } from "@/services/api";
+import { queryKeys } from "@/lib/queryKeys";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function TeacherSchedulePage() {
@@ -22,7 +23,7 @@ export default function TeacherSchedulePage() {
 
   // Fetch slots using TanStack Query
   const { data: slotsData, isLoading: loading } = useQuery({
-    queryKey: ["teacher-slots", user?.id],
+    queryKey: queryKeys.teacherSlots.byUser(user?.id),
     queryFn: () => teacherService.getOwnSlots(),
     enabled: !!user,
   });
@@ -56,7 +57,7 @@ export default function TeacherSchedulePage() {
       toast.success("تم إضافة الموعد بنجاح!");
       setStartTime("");
       setEndTime("");
-      queryClient.invalidateQueries({ queryKey: ["teacher-slots", user?.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.teacherSlots.byUser(user?.id) });
     },
     onError: (error: unknown) => {
       showApiError(error, "حدث خطأ غير متوقع");
@@ -68,7 +69,7 @@ export default function TeacherSchedulePage() {
     mutationFn: (id: number) => teacherService.deleteSlot(id),
     onSuccess: () => {
       toast.success("تم حذف الموعد بنجاح.");
-      queryClient.invalidateQueries({ queryKey: ["teacher-slots", user?.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.teacherSlots.byUser(user?.id) });
     },
     onError: (error: unknown) => {
       showApiError(error, "لا يمكن حذف الموعد.");

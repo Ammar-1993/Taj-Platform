@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { paymentService } from '@/services/api';
+import { queryKeys } from '@/lib/queryKeys';
 import PageHeader from '@/components/ui/PageHeader';
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -37,9 +38,9 @@ function PaymentSuccessContent() {
                 };
                 
                 if (response.status === 'success') {
-                    queryClient.invalidateQueries({ queryKey: ['wallet'] });
-                    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-                    queryClient.invalidateQueries({ queryKey: ['parentDashboard'] });
+                    queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all });
+                    queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+                    queryClient.invalidateQueries({ queryKey: queryKeys.parentDashboard.all });
                     setPaymentStatus('success');
                 } else {
                     setStatusMessage(response.message || 'الدفع لا يزال قيد المعالجة');

@@ -8,6 +8,7 @@ import { Star, MessageSquare, Loader2, CalendarDays } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import { PaginationControls } from "@/components/ui/PaginationControls";
 import { formatDate } from "@/lib/formatters";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface TeacherReviewsModalProps {
   teacherId: number | null;
@@ -52,7 +53,7 @@ export default function TeacherReviewsModal({
   }, [isOpen, teacherId]);
 
   const { data: reviewsData, isLoading: loading } = useQuery({
-    queryKey: ["teacher-reviews-public", teacherId, page],
+    queryKey: queryKeys.teacherReviews.publicByTeacher(teacherId, page),
     queryFn: () => discoveryService.getTeacherReviews(teacherId!, page),
     enabled: isOpen && !!teacherId,
   });

@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import TeacherReviewsModal from "@/components/discovery/TeacherReviewsModal";
 import { useDebounce } from "@/hooks";
+import { queryKeys } from "@/lib/queryKeys";
 import { ApiResponse, PaginatedApiResponse, Subject, User } from "@/types";
 
 interface HomeClientProps {
@@ -62,7 +63,7 @@ export default function HomeClient({
 
   // Fetch Subjects with server-provided initialData
   const { data: subjectsData } = useQuery({
-    queryKey: ["discovery-subjects"],
+    queryKey: queryKeys.discovery.subjects,
     queryFn: () => discoveryService.getSubjects(),
     initialData: initialSubjects,
     staleTime: 1000 * 60 * 30, // 30 minutes
@@ -73,7 +74,7 @@ export default function HomeClient({
 
   // Fetch Teachers with server-provided initialData for default landing view
   const { data: teachersData, isLoading: loading } = useQuery({
-    queryKey: ["discovery-teachers", debouncedSearch, subjectId, sortBy, page],
+    queryKey: queryKeys.discovery.teachers(debouncedSearch, subjectId, sortBy, page),
     queryFn: () =>
       discoveryService.getTeachers({
         search: debouncedSearch || undefined,

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { discoveryService, bookingService, parentService } from "@/services/api";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 import { TeacherSlot, SlotsByDate, TeacherSlotsResponse } from "@/types";
 import { formatDate, formatTime, roundToSlot } from "@/lib/formatters";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
@@ -57,7 +58,7 @@ export default function TeacherProfileClient({
 
   // Fetch Teacher Slots with server-provided initialData
   const { data: slotsData } = useQuery({
-    queryKey: ['teacher-slots-public', teacherId],
+    queryKey: queryKeys.teacherSlots.publicByTeacher(teacherId),
     queryFn: async () => {
         const res = await discoveryService.getTeacherSlots(Number(teacherId));
         const dates = Object.keys(res.data);
@@ -71,7 +72,7 @@ export default function TeacherProfileClient({
 
   // Fetch Children if parent
   const { data: childrenData } = useQuery({
-    queryKey: ['parent-children', user?.id],
+    queryKey: queryKeys.parentChildren.byUser(user?.id),
     queryFn: () => parentService.getChildren(),
     enabled: !!user && isParent,
   });

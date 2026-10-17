@@ -16,6 +16,7 @@ import { CircleDollarSign, SendHorizonal, Send, AlertTriangle, TrendingUp, Inbox
 import EmptyState from "@/components/ui/EmptyState";
 import { Select } from "@/components/ui/Select";
 import { formatDate } from "@/lib/formatters";
+import { queryKeys } from "@/lib/queryKeys";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 
 export default function PayoutPage() {
@@ -24,14 +25,14 @@ export default function PayoutPage() {
     
     // Fetch wallet info
     const { data: walletData, isLoading: walletLoading } = useQuery({
-        queryKey: ['wallet', user?.id],
+        queryKey: queryKeys.wallet.byUser(user?.id),
         queryFn: () => walletService.getWallet(),
         enabled: !!user,
     });
     
     // Fetch payouts
     const { data: payoutsData, isLoading: payoutsLoading } = useQuery({
-        queryKey: ['payouts', user?.id],
+        queryKey: queryKeys.payouts.byUser(user?.id),
         queryFn: () => walletService.getPayouts(),
         enabled: !!user,
     });
@@ -56,8 +57,8 @@ export default function PayoutPage() {
             setAmount('');
             setBankName('');
             setIban('SA');
-            queryClient.invalidateQueries({ queryKey: ['wallet', user?.id] });
-            queryClient.invalidateQueries({ queryKey: ['payouts', user?.id] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.wallet.byUser(user?.id) });
+            queryClient.invalidateQueries({ queryKey: queryKeys.payouts.byUser(user?.id) });
         },
         onError: (error: unknown) => {
             showApiError(error, 'تأكد من صحة البيانات وألا يقل المبلغ عن 50 ر.س.');

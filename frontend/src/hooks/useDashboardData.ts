@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { parentService, walletService, bookingService, notificationService } from "@/services/api";
+import { queryKeys } from "@/lib/queryKeys";
 import { User, Booking, AppNotification } from "@/types";
 
 export const useDashboardData = (user: User | null, isParent: boolean, isTeacher: boolean) => {
@@ -23,14 +24,14 @@ export const useDashboardData = (user: User | null, isParent: boolean, isTeacher
   }, [isParent, user?.id]);
 
   const { data: parentData, isLoading: parentLoading } = useQuery({
-    queryKey: ['parentDashboard', user?.id, parentBookingPage],
+    queryKey: queryKeys.parentDashboard.page(user?.id, parentBookingPage),
     queryFn: () => parentService.getDashboardData(parentBookingPage).then(res => res.data),
     enabled: !!user && isParent,
   });
 
   // Fetch generic dashboard data
   const { data: dashboardData, isLoading: dashboardLoading, refetch: fetchDashboardData } = useQuery({
-    queryKey: ['dashboard', user?.id, bookingPage],
+    queryKey: queryKeys.dashboard.page(user?.id, bookingPage),
     queryFn: async () => {
       // For parents, we mainly want the wallet/notifications from this generic call
       const [walletRes, bookingsRes, notifRes] = await Promise.all([
@@ -59,9 +60,9 @@ export const useDashboardData = (user: User | null, isParent: boolean, isTeacher
   const refreshAll = useCallback(async () => {
     await Promise.all([
       fetchDashboardData(),
-      queryClient.invalidateQueries({ queryKey: ['wallet'] }),
-      queryClient.invalidateQueries({ queryKey: ['parentDashboard'] }),
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.parentDashboard.all }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all }),
     ]);
   }, [fetchDashboardData, queryClient]);
 
@@ -89,7 +90,7 @@ export const useDashboardData = (user: User | null, isParent: boolean, isTeacher
     mutationFn: (id: string) => notificationService.markAsRead(id),
     onSuccess: (res, id) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      queryClient.setQueryData(['dashboard', user?.id], (oldData: any) => {
+      queryClient.setQueryData(queryKeys.dashboard.byUser(user?.id), (oldData: any) => {
         if (!oldData) return oldData;
         return {
           ...oldData,

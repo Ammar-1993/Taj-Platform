@@ -31,6 +31,7 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { PaginationControls } from "@/components/ui/PaginationControls";
 import { formatDate } from "@/lib/formatters";
+import { queryKeys } from "@/lib/queryKeys";
 
 export default function SupportPage() {
   const { user } = useAuth();
@@ -44,14 +45,14 @@ export default function SupportPage() {
 
   // Fetch tickets
   const { data: ticketsData, isLoading: ticketsLoading } = useQuery({
-    queryKey: ['support-tickets', user?.id, ticketPage],
+    queryKey: queryKeys.supportTickets.page(user?.id, ticketPage),
     queryFn: () => supportService.getAll(ticketPage),
     enabled: !!user,
   });
 
   // Fetch bookings for connection
   const { data: bookingsData, isLoading: bookingsLoading } = useQuery({
-    queryKey: ['bookings', user?.id],
+    queryKey: queryKeys.bookings.byUser(user?.id),
     queryFn: () => bookingService.getAll(),
     enabled: !!user,
   });
@@ -70,7 +71,7 @@ export default function SupportPage() {
       setSubject("");
       setDescription("");
       setBookingId("");
-      queryClient.invalidateQueries({ queryKey: ['support-tickets', user?.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.supportTickets.byUser(user?.id) });
     },
     onError: (error: unknown) => {
       showApiError(error, "حدث خطأ أثناء إرسال التذكرة.");
