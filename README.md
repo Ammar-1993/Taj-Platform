@@ -140,7 +140,8 @@ flowchart TB
     API <-->|Invoices & HMAC Webhooks| Moyasar
     API <-->|Edge CDN & Signed KYC| Storage
     API -.->|Bot Check & Telemetry| Security
-    API -->|24/7 Support Chat| OpenAI
+    Frontend -.->|reCAPTCHA & Sentry Tunnel| Security
+    API -->|24/7 SSE Support Chat| OpenAI
     Worker -->|Session Summaries & Quizzes| OpenAI
 
     %% ── VISUAL STYLING ──
@@ -173,11 +174,11 @@ flowchart TB
 | :--- | :--- | :--- |
 | **0. External Actors & Roles** | RBAC (Student, Teacher, Parent, Admin) | Distinct personas partitioned by Spatie RBAC, accessing tailored functional portals and localized Arabic RTL interfaces. |
 | **1. Presentation & API Gateway Tier** | Next.js 15.3 App Router (React 19) & Laravel 12 API / Filament v3 / Laravel Reverb | Hybrid Edge architecture with React Server Components (RSC) and SWR caching on the frontend (`taj-frontend`); REST API v1 with Sanctum Bearer tokens and administrative KYC/dispute dashboard on the backend (`taj_admin_web`), paired with native high-throughput Laravel Reverb WebSockets (`taj_reverb` / port 8080) for instant event push (bookings, wallets, classroom presence). |
-| **2. Asynchronous Queue & Background Worker Tier** | Laravel Queue Worker (`taj_queue_worker` / Redis) | Dedicated background CLI daemon executing `ProvisionVirtualClassroom` to pre-generate Agora RTC/RTM tokens and whiteboard rooms ahead of time, processing escrow releases and refund dispatches, and generating AI session summaries and quizzes via OpenAI. |
-| **3. Distributed State, Caching & Database Tier** | MySQL 8.0 (`taj_mysql`) & Redis 7 (`taj_redis`) | InnoDB ACID financial ledger with composite indexing (`idx_bookings_booked_by_status_date`) and pessimistic row locking (`lockForUpdate()`), paired with tagged Redis caching (`Cache::tags()`), AOF disk persistence (`appendfsync everysec`), and eviction-proof financial queues via `volatile-lru`. |
-| **Cloud Object Storage & KYC Privacy** | Cloudflare R2 (`league/flysystem-aws-s3-v3`) & Private KYC Disk | S3-compatible cloud bucket streaming public user avatars with zero egress fees, paired with a dedicated private storage disk (`app/private/kyc`) isolating sensitive teacher KYC credentials (national IDs & degrees) via fail-closed ephemeral presigned URLs. |
+| **2. Asynchronous Queue & Background Worker Tier** | Laravel Queue Worker (`taj_queue_worker` / Redis) | Dedicated background CLI daemon draining priority queues (`--queue=high,default,low`), executing `ProvisionVirtualClassroom` (`high`) to pre-generate Agora RTC/RTM tokens and whiteboard rooms ahead of time, processing escrow releases and refund dispatches (`default`), and generating AI session summaries and quizzes (`low`) via OpenAI. |
+| **3. Distributed State, Caching & Database Tier** | MySQL 8.0 (`taj_mysql`) & Redis 7 (`taj_redis`) | InnoDB ACID financial ledger with Read/Write connection splitting (`sticky: true`), composite indexing (`idx_bookings_booked_by_status_date`), and pessimistic row locking (`lockForUpdate()`), paired with tagged Redis caching (`Cache::tags()`), AOF disk persistence (`appendfsync everysec`), and eviction-proof financial queues via `volatile-lru`. |
+| **Cloud Object Storage & KYC Privacy** | Cloudflare R2 (`league/flysystem-aws-s3-v3`) & Private KYC Disk | S3-compatible cloud bucket streaming public user avatars with zero egress fees, paired with a dedicated private storage disk (`app/private/kyc`) isolating sensitive teacher KYC credentials (national IDs & degrees) via fail-closed ephemeral HMAC-signed URLs. |
 | **Real-Time Media Cloud (Zero Server Load)** | Agora SD-RTN (RTC/RTM) & Netless Cloud | **Direct browser-to-cloud streams**: Real-time 720p/120p simulcast video, independent screen sharing channel (`UID + 1_000_000_000`), WebSocket signaling, and collaborative vector whiteboard canvas. |
-| **Cloud SaaS & Security Integrations** | Moyasar + Google reCAPTCHA v3 + Sentry + OpenAI | Saudi-compliant payment escrow with HMAC-SHA256 signed webhooks, Google reCAPTCHA v3 bot protection, full-stack Sentry APM with automated production source maps, and OpenAI `gpt-4o-mini` for 24/7 grounded support chat, post-lesson summaries, and auto-graded quizzes. |
+| **Cloud SaaS & Security Integrations** | Moyasar + Google reCAPTCHA v3 + Sentry + OpenAI | Saudi-compliant payment escrow with HMAC-SHA256 signed webhooks, Google reCAPTCHA v3 bot protection, full-stack Sentry APM with first-party `/monitoring` tunneling and automated production source maps, and OpenAI `gpt-4o-mini` for 24/7 SSE-streamed grounded support chat, post-lesson summaries, and auto-graded quizzes. |
 
 ---
 
@@ -197,7 +198,7 @@ A comprehensive architectural overhaul transitioned Taj Educational Platform fro
 | **Teacher Discovery Catalog** | Direct MySQL queries on each search | **Multi-tier Redis tagged cache** (`10m – 24h` TTL) | **🚀 ~85% reduction** in response time |
 | **Booking Filter Execution Time** | `~15ms` (Full table scan on `booked_by_id`) | **`< 1.5ms`** (`idx_bookings_booked_by_status_date`) | **🚀 ~90% faster** query execution |
 | **Database Read Load at Peak** | 100% direct database queries on catalog/schedule | **~68% reduction** in MySQL read queries | **🛡️ High resilience** against DB connection pool exhaustion |
-| **Backend Test Coverage** | 69 passed (190 assertions) | **221 passed (747 assertions)** | **📈 +220% tests, +293% assertions** (100% passing across 35 test suites) |
+| **Backend Test Coverage** | 69 passed (190 assertions) | **225 passed (754 assertions)** | **📈 +226% tests, +297% assertions** (100% passing across 36 test suites) |
 | **Frontend Test Coverage** | 28 passed across 5 suites | **41 passed across 7 test suites** | **📈 +46% tests** (100% passing across all 7 suites) |
 
 ### 🔍 Architectural Drivers Behind the Performance Gains
@@ -236,13 +237,14 @@ A comprehensive architectural overhaul transitioned Taj Educational Platform fro
 ### 🚀 Release v2.4.0 — Enterprise Security Hardening, Business Logic Maturity & Ledger Immutability
 - **🛡️ OWASP ZAP Remediation & HTTP Security Hardening** — Enforced strict Content-Security-Policy (CSP) whitelisting Agora RTC/RTM, Netless, Moyasar, and Google reCAPTCHA; implemented `Strict-Transport-Security`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Permissions-Policy`, and cloaked Nginx/PHP server banners (`server_tokens off`, `expose_php = Off`).
 - **📦 Framework Core Upgrade (Laravel 12.70)** — Upgraded Laravel framework from `12.56.0` to `12.70.0`, eliminating all known vulnerability audit advisories.
-- **⏱️ Virtual Classroom Scheduling Guard & Integrity** — Enforced strict scheduled entry window checks ([`isWithinClassroomWindow()`](backend/app/Models/Booking.php)) permitting access only within 10 minutes prior to session until 30 minutes post-scheduled end; engineered anti-premature session completion guards to prevent teachers from marking uncommenced lessons as completed.
+- **⏱️ Virtual Classroom Scheduling Guard & Integrity** — Enforced strict scheduled entry window checks ([`isWithinClassroomWindow()`](backend/app/Models/Booking.php)) permitting access only within 15 minutes prior to session until 30 minutes post-scheduled end; engineered anti-premature session completion guards to prevent teachers from marking uncommenced lessons as completed.
 - **🎥 Agora WebRTC Role Isolation & Reverb Channel Security** — Hardened token generation in [`AgoraService`](backend/app/Services/AgoraService.php) with strict publisher/subscriber role separation (students/teachers get publisher tokens; parent observer mode receives audience tokens), enforced 90-minute TTL with safety margin, and protected Laravel Reverb private channels with strict policy authorization.
 - **💰 ACID Ledger Immutability & Financial Precision** — Enforced ledger immutability on [`WalletTransaction`](backend/app/Models/WalletTransaction.php) (throwing `LogicException` on attempted update or deletion to guarantee an untampered audit trail), encapsulated atomic debit/credit operations, added pessimistic row locking (`lockForUpdate()`) for wallet reconciliations and promo codes, and enforced strict decimal precision regex (`regex:/^\d+(\.\d{1,2})?$/`) on Moyasar payments with sanitized external payment errors.
-- **🔐 Atomic User Onboarding & reCAPTCHA v3 Action Verification** — Wrapped user registration within `DB::transaction()` with automatic rollback on email/profile failures, and verified the explicit `'register'` action in Google reCAPTCHA v3 payloads.
+- **🔐 Atomic User Onboarding, Admin Self-Lockout Guard & reCAPTCHA v3** — Wrapped user registration within `DB::transaction()` with automatic rollback on email/profile failures, verified the explicit `'register'` action in Google reCAPTCHA v3 payloads, and added defense-in-depth guards in [`UserResource`](backend/app/Filament/Resources/UserResource.php) and [`User`](backend/app/Models/User.php) preventing administrators from deactivating or deleting their own account.
 - **🔒 Dedicated Isolated KYC Filesystem Disk & Secure Admin Stream** — Isolated sensitive teacher national IDs and academic degrees to a dedicated private disk (`app/private/kyc`) with `'serve' => false`, attribute serialization masking (`$hidden` in [`TeacherProfile`](backend/app/Models/TeacherProfile.php)), and engineered authenticated temporary signed route streaming ([`TeacherKycDocumentController`](backend/app/Http/Controllers/Admin/TeacherKycDocumentController.php)) for confidential administrative verification and download.
+- **🛰️ Sentry First-Party Tunneling & Circuit Breakers** — Enabled `/monitoring` first-party telemetry tunneling in [`next.config.mjs`](frontend/next.config.mjs) and [`instrumentation-client.ts`](frontend/src/instrumentation-client.ts) to bypass regional ISP/ad-blocker filtering and eliminate client retry storms.
 - **🧹 Dead Code Pruning & Controller Hygiene** — Pruned 10 empty scaffolding stubs from `app/Http/Controllers/` to streamline API codebase maintainability.
-- **🧪 100% Automated Test Suites Green** — Expanded test coverage to **221 passing backend tests (747 assertions)** via PHPUnit across 35 test files, and **41 passing frontend tests across 7 test suites** via Jest (100% passing).
+- **🧪 100% Automated Test Suites Green** — Expanded test coverage to **225 passing backend tests (754 assertions)** via PHPUnit across 36 test files, and **41 passing frontend tests across 7 test suites** via Jest (100% passing).
 
 ### 🚀 Release v2.3.0 — Taj AI Support Assistant, AI Session Summaries & Automated Quizzes
 - **🤖 Taj AI Support Assistant ("مساعد تاج الذكي")** — Engineered an interactive, 24/7 AI conversational support widget powered by OpenAI `gpt-4o-mini`, grounded in platform knowledge ([`SupportKnowledgeBase`](backend/app/Services/SupportKnowledgeBase.php)), rate-limited via `throttle:15,1` (`POST /api/v1/support/chat`), and styled with custom Markdown parsing and quick suggestion chips.
@@ -678,7 +680,7 @@ sequenceDiagram
     actor Teacher as 👨‍🏫 Teacher
     participant FE as 💻 Next.js Client App
     participant API as 🔌 Laravel REST API
-    participant Cloudflare as ☁️ Cloudflare R2 Storage
+    participant KYCDisk as 🔒 Private KYC Disk (app/private/kyc)
     participant DB as 🗄️ MySQL (InnoDB Ledger)
     participant Redis as ⚡ Redis (Tokens & Cache)
     participant Agora as 📹 Agora SD-RTN / RTM
@@ -688,8 +690,8 @@ sequenceDiagram
     Note over Teacher,API: ── 1. KYC Profile Submission & Availability Scheduling ──
     Teacher->>FE: Complete Profile (Bio, Subject, National ID, Degree)
     FE->>API: POST /api/v1/profile/teacher (Multipart Form)
-    API->>Cloudflare: Stream Documents to Cloudflare R2 Bucket (kyc-documents/{id})
-    Cloudflare-->>API: 200 OK (S3 Keys & Direct CDN Links)
+    API->>KYCDisk: Store Encrypted/Private KYC Files (visibility: private, serve: false)
+    KYCDisk-->>API: 200 OK (Isolated Storage Paths, Hidden from Public JSON)
     API->>DB: UPDATE teacher_profiles (is_verified = false, docs saved)
     Note over API,DB: Awaits Admin Verification via Filament Dashboard
     API-->>FE: 200 OK (Under Review)
@@ -790,7 +792,7 @@ sequenceDiagram
     autonumber
     actor Admin as 👑 Admin (Super User)
     participant Filament as 🖥️ Filament v3 Panel
-    participant Cloudflare as ☁️ Cloudflare R2 Storage
+    participant Storage as ☁️ Cloudflare R2 & Private KYC Disk
     participant Service as ⚙️ Backend Services
     participant DB as 🗄️ MySQL (InnoDB Ledger)
     participant Redis as ⚡ Redis (Tags & Cache)
@@ -800,8 +802,8 @@ sequenceDiagram
 
     Note over Admin,Edge: ── 1. Teacher KYC Verification & Edge Catalog Propagation ──
     Admin->>Filament: Inspect KYC application (National ID & Degree)
-    Filament->>Cloudflare: Fetch Verified Documents via CDN URL (TeacherProfileResource)
-    Cloudflare-->>Filament: Stream High-Resolution KYC Document Cards
+    Filament->>Storage: Request 10m HMAC-Signed Route (TeacherKycDocumentController)
+    Storage-->>Filament: Stream Private KYC Document Binary Preview / Download
     Admin->>Filament: Click "Approve Teacher" (is_verified = true)
     Filament->>DB: UPDATE teacher_profiles SET is_verified = true
     Note over DB,Redis: Eloquent booted() lifecycle hook triggers
@@ -841,12 +843,12 @@ sequenceDiagram
     end
     Filament-->>Admin: Payout lifecycle finalized & ledger balanced
 
-    Note over Admin,Cloudflare: ── 4. Admin Profile Management & Dynamic Cloud Avatar ──
+    Note over Admin,Storage: ── 4. Admin Profile Management & Dynamic Cloud Avatar ──
     opt Admin Profile & Avatar Customization
         Admin->>Filament: Access Profile Page (/admin/profile) & Select Image
         Filament->>Filament: Stage Upload via Local Temporary Disk (livewire.disk)
-        Filament->>Cloudflare: Stream Image to Cloudflare R2 Bucket (avatars/{hash}.jpg)
-        Cloudflare-->>Filament: 200 OK (Public Edge CDN URL)
+        Filament->>Storage: Stream Image to Cloudflare R2 Bucket (avatars/{hash}.jpg)
+        Storage-->>Filament: 200 OK (Public Edge CDN URL)
         Filament->>DB: UPDATE users SET avatar_url = cdn_url WHERE id = admin.id
         Filament-->>Admin: Dynamic Avatar Live Across Admin Header & Welcome Widgets
     end
@@ -858,23 +860,23 @@ sequenceDiagram
 
 ### Backend (`/backend`)
 
-> **Core:** Laravel 12.70 • PHP 8.3 • MySQL 8.0
+> **Core:** Laravel 12.70 • PHP 8.3 (OPcache + JIT) • MySQL 8.0 (Read/Write Split)
 > **Admin & Security:** Filament V3 • Laravel Sanctum • Spatie Permission
 > **Cloud Storage:** Cloudflare R2 Object Storage (`league/flysystem-aws-s3-v3`) & Private KYC Disk (`app/private/kyc`)
-> **Real-Time & Media:** Agora RTC/RTM Token Generation • Netless Whiteboard REST API
+> **Real-Time & Media:** Laravel Reverb WebSockets • Agora RTC/RTM Token Generation • Netless Whiteboard REST API
 > **Payments:** Moyasar Payment Gateway (SAR)
-> **Async Processing:** Laravel Queues backed by **Redis** (Predis client)
-> **AI & Intelligence Engine:** OpenAI API (`gpt-4o-mini`) • `SupportKnowledgeBase` grounding engine
+> **Async Processing:** Laravel Priority Queues (`high,default,low`) backed by **Redis** (Predis client)
+> **AI & Intelligence Engine:** OpenAI API (`gpt-4o-mini` SSE Streaming) • `SupportKnowledgeBase` grounding engine
 > **Monitoring:** Sentry (`sentry/sentry-laravel`)
-> **Testing:** PHPUnit via `php artisan test` — **221 tests, 747 assertions** (100% passing across 35 test suites)
+> **Testing:** PHPUnit via `php artisan test` — **225 tests, 754 assertions** (100% passing across 36 test suites)
 
 ### Frontend (`/frontend`)
 
 > **Core:** Next.js 15.3 (App Router) • React 19.3 • TypeScript 5 (strict mode)
 > **Styling & UI:** Tailwind CSS 3.4 • Lucide React icons
 > **Live Classroom:** `agora-rtc-sdk-ng` (video/audio/screen share) • `agora-rtm-sdk` (cursor & event sync) • `white-web-sdk` (interactive whiteboard with React 19 compatibility shim)
-> **AI Support & Data:** Taj AI Support Assistant widget • TanStack Query (React Query) • Axios
-> **Monitoring:** `@sentry/nextjs` with Source Maps
+> **AI Support & Data:** Taj AI Support Assistant widget (SSE streaming) • Laravel Echo • TanStack Query (React Query) • Axios
+> **Monitoring:** `@sentry/nextjs` with `/monitoring` first-party tunnel & Source Maps
 > **Testing:** Jest + React Testing Library — **41 tests across 7 test suites** (100% passing)
 
 ---
@@ -883,18 +885,18 @@ sequenceDiagram
 
 | Metric                   | Details                                                          |
 | :------------------------ | :--------------------------------------------------------------- |
-| **🚀 Architecture**       | Monorepo (Next.js frontend + Laravel REST API)                   |
+| **🚀 Architecture**       | Monorepo (Next.js frontend + Laravel REST API + Reverb WebSockets)|
 | **🔐 Role Support**       | Admin, Teacher, Student, Parent                                  |
-| **🤖 AI Capabilities**    | 24/7 AI Support Assistant + AI Session Summaries & Quizzes       |
+| **🤖 AI Capabilities**    | 24/7 SSE AI Support Assistant + AI Session Summaries & Quizzes   |
 | **☁️ Cloud Storage**     | Cloudflare R2 (S3 API) & Private KYC Disk (`app/private/kyc`)     |
 | **📡 Video/Audio**        | Agora RTC — adaptive bitrate, simulcast-enabled                  |
 | **🖊️ Whiteboard**         | Netless `white-web-sdk` — real-time collaborative                |
 | **💳 Payments**           | Moyasar (SAR, Saudi market) with webhook verification            |
-| **🔁 Async Queue**        | Laravel Queue Worker backed by Redis                             |
-| **🛰️ Monitoring**         | Sentry — full-stack (backend + frontend) with Source Maps        |
+| **🔁 Async Queue**        | Laravel Priority Queue Worker (`high,default,low`) on Redis      |
+| **🛰️ Monitoring**         | Sentry — full-stack with `/monitoring` tunnel & Source Maps      |
 | **🌍 Localization**       | 100% Arabic (RTL-native interface)                               |
 | **🛡️ Security**           | Sanctum tokens + Spatie RBAC + rate limiting                     |
-| **🧪 Backend Tests**      | 221 tests · 747 assertions (PHPUnit)                             |
+| **🧪 Backend Tests**      | 225 tests · 754 assertions (PHPUnit)                             |
 | **🧪 Frontend Tests**     | 41 tests · 7 suites (Jest + React Testing Library)               |
 | **📦 Deployment**         | Backend → DigitalOcean VPS / Render · Frontend → Vercel          |
 
@@ -1034,13 +1036,14 @@ cd backend
 php artisan test
 ```
 
-**Current results:** `221 tests · 747 assertions` — all passing ✅
+**Current results:** `225 tests · 754 assertions` — all passing ✅
 
 The suite covers:
 
 | Test File | Area |
 |---|---|
 | `tests/Feature/Admin/TeacherKycDocumentTest.php` | Secure signed URL document streaming & authenticated admin KYC preview/download |
+| `tests/Feature/Admin/UserManagementSecurityTest.php` | Admin self-deactivation/deletion lockout prevention, token revocation & panel authorization |
 | `tests/Feature/Auth/RegistrationTest.php` | User registration, atomic transactions, reCAPTCHA v3 action validation |
 | `tests/Feature/Auth/LoginRouteResilienceTest.php` | Unauthenticated guest fallbacks & JSON API enforcement |
 | `tests/Feature/Auth/SecurityHardeningTest.php` | Active user check, token revocation on password change, fail-closed KYC URLs |
