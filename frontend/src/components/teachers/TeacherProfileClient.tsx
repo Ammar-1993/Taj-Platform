@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { discoveryService, bookingService, parentService } from "@/services/api";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { TeacherSlot, SlotsByDate, TeacherSlotsResponse } from "@/types";
 import { formatDate, formatTime, roundToSlot } from "@/lib/formatters";
@@ -46,6 +46,7 @@ export default function TeacherProfileClient({
 }: TeacherProfileClientProps) {
   const router = useRouter();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const isParent = user?.roles?.some((r) => r.name === "parent");
 
   const initialDate = initialSlots?.data && Object.keys(initialSlots.data).length > 0 
@@ -104,6 +105,11 @@ export default function TeacherProfileClient({
       bookingService.create(data),
     onSuccess: () => {
       toast.success("تم تأكيد حجز موعدك بنجاح!");
+      queryClient.invalidateQueries({ queryKey: queryKeys.teacherSlots.publicByTeacher(teacherId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.parentDashboard.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.bookings.all });
     },
     onError: (error) => {
       showApiError(error);

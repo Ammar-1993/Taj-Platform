@@ -2,7 +2,19 @@ import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { parentService, walletService, bookingService, notificationService } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
-import { User, Booking, AppNotification } from "@/types";
+import { User, Wallet, Booking, AppNotification } from "@/types";
+
+export interface DashboardQueryData {
+  wallet: Wallet;
+  bookings: Booking[];
+  bookingsMeta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+  notifications: AppNotification[];
+}
 
 export const useDashboardData = (user: User | null, isParent: boolean, isTeacher: boolean) => {
   const queryClient = useQueryClient();
@@ -30,7 +42,7 @@ export const useDashboardData = (user: User | null, isParent: boolean, isTeacher
   });
 
   // Fetch generic dashboard data
-  const { data: dashboardData, isLoading: dashboardLoading, refetch: fetchDashboardData } = useQuery({
+  const { data: dashboardData, isLoading: dashboardLoading, refetch: fetchDashboardData } = useQuery<DashboardQueryData>({
     queryKey: queryKeys.dashboard.page(user?.id, bookingPage),
     queryFn: async () => {
       // For parents, we mainly want the wallet/notifications from this generic call
@@ -88,15 +100,17 @@ export const useDashboardData = (user: User | null, isParent: boolean, isTeacher
   // Mutation for notifications
   const markNotificationAsReadMutation = useMutation({
     mutationFn: (id: string) => notificationService.markAsRead(id),
-    onSuccess: (res, id) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      queryClient.setQueryData(queryKeys.dashboard.byUser(user?.id), (oldData: any) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          notifications: oldData.notifications.filter((n: AppNotification) => n.id !== id),
-        };
-      });
+    onSuccess: (_res, id) => {
+      queryClient.setQueriesData<DashboardQueryData>(
+        { queryKey: queryKeys.dashboard.byUser(user?.id) },
+        (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            notifications: oldData.notifications.filter((n: AppNotification) => n.id !== id),
+          };
+        }
+      );
     },
     onError: (error) => {
       console.error("خطأ في قراءة الإشعار", error);

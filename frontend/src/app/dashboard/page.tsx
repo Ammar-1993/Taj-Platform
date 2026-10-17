@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
@@ -21,7 +21,7 @@ const ReviewModal = dynamic(
 import { Role } from "@/types";
 import { useEcho } from "@/hooks/useEcho";
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
 
@@ -163,5 +163,13 @@ export default function DashboardPage() {
         onClose={() => dismissPendingReview()}
       />
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardContent />
+    </Suspense>
   );
 }

@@ -51,6 +51,7 @@ export default function ChildrenManagementPage() {
             setFormData({ name: '', email: '', password: '', grade_level_id: '' });
             setShowForm(false);
             queryClient.invalidateQueries({ queryKey: queryKeys.parentChildren.byUser(user?.id) });
+            queryClient.invalidateQueries({ queryKey: queryKeys.parentDashboard.all });
         },
         onError: (error: unknown) => {
             showApiError(error, 'حدث خطأ أثناء الإضافة');
@@ -94,6 +95,7 @@ export default function ChildrenManagementPage() {
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: queryKeys.parentChildren.byUser(user?.id) });
+            queryClient.invalidateQueries({ queryKey: queryKeys.parentDashboard.all });
         },
     });
 

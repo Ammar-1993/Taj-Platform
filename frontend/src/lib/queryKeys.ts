@@ -47,12 +47,14 @@ export const queryKeys = {
       ["teacher-slots-public", String(teacherId)] as const,
   },
   teacherReviews: {
+    all: ["teacher-reviews-public"] as const,
     publicByTeacher: (teacherId: number | null, page = 1) =>
       ["teacher-reviews-public", teacherId, page] as const,
   },
   discovery: {
     subjects: ["discovery-subjects"] as const,
     gradeLevels: ["grade-levels"] as const,
+    allTeachers: ["discovery-teachers"] as const,
     teachers: (search = "", subjectId = "", sortBy = "", page = 1) =>
       ["discovery-teachers", search, subjectId, sortBy, page] as const,
   },

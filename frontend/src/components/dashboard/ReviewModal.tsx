@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { reviewService } from "@/services/api";
+import { queryKeys } from "@/lib/queryKeys";
 import { Booking } from "@/types";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { showApiError } from "@/hooks/useApiError";
 import Modal from "@/components/ui/Modal";
@@ -15,6 +16,7 @@ interface ReviewModalProps {
 }
 
 export const ReviewModal: React.FC<ReviewModalProps> = ({ pendingReview, onSuccess, onClose }) => {
+  const queryClient = useQueryClient();
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
 
@@ -23,6 +25,10 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ pendingReview, onSucce
         reviewService.create(data),
     onSuccess: () => {
         toast.success("تم إرسال التقييم بنجاح! شكراً لك. ⭐");
+        setRating(5);
+        setComment("");
+        queryClient.invalidateQueries({ queryKey: queryKeys.teacherReviews.all });
+        queryClient.invalidateQueries({ queryKey: queryKeys.discovery.allTeachers });
         onSuccess();
     },
     onError: (err: unknown) => {
