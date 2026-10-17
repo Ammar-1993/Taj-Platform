@@ -13,7 +13,7 @@
   </p>
 
   <p>
-    <a href="#"><img src="https://img.shields.io/badge/Release-v2.4.0-emerald?style=for-the-badge&logo=git&logoColor=white" alt="Release v2.4.0" /></a>
+    <a href="#"><img src="https://img.shields.io/badge/Release-v2.5.0-emerald?style=for-the-badge&logo=git&logoColor=white" alt="Release v2.5.0" /></a>
     <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-12.70-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 12.70" /></a>
     <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-15.3-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 15" /></a>
     <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19.3-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" /></a>
@@ -199,7 +199,7 @@ A comprehensive architectural overhaul transitioned Taj Educational Platform fro
 | **Booking Filter Execution Time** | `~15ms` (Full table scan on `booked_by_id`) | **`< 1.5ms`** (`idx_bookings_booked_by_status_date`) | **🚀 ~90% faster** query execution |
 | **Database Read Load at Peak** | 100% direct database queries on catalog/schedule | **~68% reduction** in MySQL read queries | **🛡️ High resilience** against DB connection pool exhaustion |
 | **Backend Test Coverage** | 69 passed (190 assertions) | **225 passed (754 assertions)** | **📈 +226% tests, +297% assertions** (100% passing across 36 test suites) |
-| **Frontend Test Coverage** | 28 passed across 5 suites | **41 passed across 7 test suites** | **📈 +46% tests** (100% passing across all 7 suites) |
+| **Frontend Test Coverage** | 28 passed across 5 suites | **94 passed across 17 test suites** | **📈 +236% tests, +240% suites** (100% passing across all 17 suites) |
 
 ### 🔍 Architectural Drivers Behind the Performance Gains
 
@@ -233,6 +233,14 @@ A comprehensive architectural overhaul transitioned Taj Educational Platform fro
 ---
 
 ## 🆕 What's New
+
+### 🚀 Release v2.5.0 — Frontend Architectural Overhaul (DDD, SOLID, Security Hardening & Real-Time WebSockets)
+- **🛡️ Edge Route Protection, DOM XSS Elimination & Payment Verification** — Added Next.js Edge Middleware ([`middleware.ts`](frontend/src/middleware.ts)) protecting `/dashboard/*` and `/classroom/*` routes; replaced `dangerouslySetInnerHTML` in [`TajSupportChatWidget`](frontend/src/components/support/TajSupportChatWidget.tsx) with safe React AST node rendering; hardened `/api/revalidate` ([`route.ts`](frontend/src/app/api/revalidate/route.ts)) with fail-closed `REVALIDATION_SECRET` enforcement and constant-time comparison; required backend invoice verification on `/dashboard/top-up/success`; and added client-side MIME/size validation (`JPG/PNG/PDF`, max `5MB`) for KYC document uploads.
+- **🧱 Domain-Driven Design (DDD), DIP Service Layer & Centralized Query Key Factory** — Unified strict domain types in [`src/types/index.ts`](frontend/src/types/index.ts), abstracted client token persistence into [`tokenStorage.ts`](frontend/src/lib/tokenStorage.ts) (synchronizing `localStorage` with a `SameSite=Lax` cookie for Edge Middleware), decoupled UI pages from raw `axios`/`localStorage` calls, and centralized all TanStack Query keys in [`queryKeys.ts`](frontend/src/lib/queryKeys.ts).
+- **⚡ Real-Time WebSockets (`useEcho`) & Cache Invalidation Synchronization** — Fixed stale callback closures and channel re-subscription lifecycle in [`useEcho.ts`](frontend/src/hooks/useEcho.ts), wired `disconnectEcho()` into the logout flow in [`AuthContext.tsx`](frontend/src/context/AuthContext.tsx), and unified React Query cache invalidation across [`useDashboardData.ts`](frontend/src/hooks/useDashboardData.ts), [`TeacherProfileClient.tsx`](frontend/src/components/teachers/TeacherProfileClient.tsx), [`ReviewModal.tsx`](frontend/src/components/dashboard/ReviewModal.tsx), and [`children/page.tsx`](frontend/src/app/dashboard/children/page.tsx).
+- **🧩 SOLID Auth & Registration Unification + Synchronous Form Validation** — Created pure synchronous validators ([`validators.ts`](frontend/src/lib/validators.ts)) and a reusable [`useRecaptcha`](frontend/src/hooks/useRecaptcha.ts) hook, eliminating async React state closure validation bypasses on `/login` and `/register/*`, and consolidated 3 duplicated registration routes into a single role-driven [`RegistrationForm`](frontend/src/components/auth/RegistrationForm.tsx) (shrinking each registration route bundle below `900 B`).
+- **💎 Dashboard, Classroom & Financial Domain Unification** — Extracted [`financialUtils.ts`](frontend/src/lib/financialUtils.ts), [`WalletSecondaryCards.tsx`](frontend/src/components/dashboard/wallet/WalletSecondaryCards.tsx), and [`ClassroomControlDock.tsx`](frontend/src/components/classroom/ClassroomControlDock.tsx) while eliminating 11 dead legacy components.
+- **🧪 Comprehensive Frontend Test Suite Expansion** — Expanded frontend automated test coverage from **41 tests across 7 suites** to **94 passing tests across 17 test suites** via Jest and React Testing Library (`+129%` test growth, 100% passing).
 
 ### 🚀 Release v2.4.0 — Enterprise Security Hardening, Business Logic Maturity & Ledger Immutability
 - **🛡️ OWASP ZAP Remediation & HTTP Security Hardening** — Enforced strict Content-Security-Policy (CSP) whitelisting Agora RTC/RTM, Netless, Moyasar, and Google reCAPTCHA; implemented `Strict-Transport-Security`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Permissions-Policy`, and cloaked Nginx/PHP server banners (`server_tokens off`, `expose_php = Off`).
@@ -364,7 +372,7 @@ sequenceDiagram
         API->>DB: UPDATE users SET last_login_at = now(), last_login_ip = ip
         API->>DB: INSERT INTO personal_access_tokens (Sanctum Token)
         API-->>FE: 200 OK {token, user: {id, name, roles, wallet}}
-        FE->>FE: Store token in secure storage and set Axios Authorization header
+        FE->>FE: Persist token via tokenStorage (localStorage + SameSite=Lax cookie) and set Axios Authorization header
     end
 
     Note over User,Cloudflare: ── 2. Session Hydration & Cloud-Hosted Avatar Storage ──
@@ -407,7 +415,7 @@ sequenceDiagram
     FE->>API: POST /api/v1/auth/logout
     API->>DB: DELETE FROM personal_access_tokens WHERE id = currentAccessToken.id
     API-->>FE: 200 OK (Session invalidated successfully)
-    FE->>FE: Purge local storage and reset TanStack Query cache
+    FE->>FE: Purge tokenStorage (localStorage + cookie), disconnectEcho(), and clear TanStack Query cache
 ```
 
 ---
@@ -872,12 +880,13 @@ sequenceDiagram
 
 ### Frontend (`/frontend`)
 
-> **Core:** Next.js 15.3 (App Router) • React 19.3 • TypeScript 5 (strict mode)
-> **Styling & UI:** Tailwind CSS 3.4 • Lucide React icons
-> **Live Classroom:** `agora-rtc-sdk-ng` (video/audio/screen share) • `agora-rtm-sdk` (cursor & event sync) • `white-web-sdk` (interactive whiteboard with React 19 compatibility shim)
-> **AI Support & Data:** Taj AI Support Assistant widget (SSE streaming) • Laravel Echo • TanStack Query (React Query) • Axios
+> **Core:** Next.js 15.3 (App Router & Edge Middleware) • React 19.3 • TypeScript 5 (strict mode)
+> **Architecture & State:** Domain-Driven Design (`src/types`) • Centralized Query Key Factory (`src/lib/queryKeys.ts`) • Token Storage Abstraction (`src/lib/tokenStorage.ts`) • TanStack Query (React Query) • Axios
+> **Styling & UI:** Tailwind CSS 3.4 • Lucide React icons • SOLID Role-Driven Auth (`RegistrationForm`)
+> **Live Classroom:** `agora-rtc-sdk-ng` (video/audio/screen share) • `agora-rtm-sdk` (cursor & event sync) • `white-web-sdk` (interactive whiteboard with React 19 compatibility shim) • `ClassroomControlDock`
+> **AI Support & Real-Time:** Taj AI Support Assistant widget (SSE streaming & safe AST rendering) • Laravel Echo (`useEcho` with lifecycle cleanup)
 > **Monitoring:** `@sentry/nextjs` with `/monitoring` first-party tunnel & Source Maps
-> **Testing:** Jest + React Testing Library — **41 tests across 7 test suites** (100% passing)
+> **Testing:** Jest + React Testing Library — **94 tests across 17 test suites** (100% passing)
 
 ---
 
@@ -895,9 +904,9 @@ sequenceDiagram
 | **🔁 Async Queue**        | Laravel Priority Queue Worker (`high,default,low`) on Redis      |
 | **🛰️ Monitoring**         | Sentry — full-stack with `/monitoring` tunnel & Source Maps      |
 | **🌍 Localization**       | 100% Arabic (RTL-native interface)                               |
-| **🛡️ Security**           | Sanctum tokens + Spatie RBAC + rate limiting                     |
+| **🛡️ Security**           | Next.js Edge Middleware + Sanctum tokens + Spatie RBAC + rate limiting |
 | **🧪 Backend Tests**      | 225 tests · 754 assertions (PHPUnit)                             |
-| **🧪 Frontend Tests**     | 41 tests · 7 suites (Jest + React Testing Library)               |
+| **🧪 Frontend Tests**     | 94 tests · 17 suites (Jest + React Testing Library)              |
 | **📦 Deployment**         | Backend → DigitalOcean VPS / Render · Frontend → Vercel          |
 
 ---
@@ -960,10 +969,12 @@ Edit `frontend/.env` and fill in:
 |---|---|
 | `NEXT_PUBLIC_API_URL` | Backend API base URL — **must include the `/api/v1` prefix**, e.g. `http://localhost:8000/api/v1` |
 | `INTERNAL_API_URL` | Internal backend API URL for Docker container SSR / Server Components, e.g. `http://laravel.test/api/v1` |
+| `REVALIDATION_SECRET` | Secret token required by `/api/revalidate` for fail-closed on-demand ISR cache invalidation |
 | `NEXT_PUBLIC_AGORA_APP_ID` | Agora App ID for video/audio classrooms |
 | `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | Google reCAPTCHA site key used on auth forms |
 | `NEXT_PUBLIC_WHITEBOARD_APP_IDENTIFIER` | Netless App Identifier for the interactive whiteboard |
 | `NEXT_PUBLIC_WHITEBOARD_REGION` | Netless region (defaults to `sg`, closest to MENA users) |
+| `NEXT_PUBLIC_REVERB_APP_KEY` / `NEXT_PUBLIC_REVERB_HOST` / `NEXT_PUBLIC_REVERB_PORT` / `NEXT_PUBLIC_REVERB_SCHEME` | Laravel Reverb WebSockets connection parameters for real-time Echo channels |
 | `NEXT_PUBLIC_SENTRY_DSN` | Frontend error monitoring DSN (optional) |
 | `SENTRY_AUTH_TOKEN` | Allows Sentry to upload Source Maps on Vercel production builds (optional) |
 | `SENTRY_PROJECT` / `SENTRY_ORG` | Sentry project slug and organization slug — required for Source Map uploads |
@@ -1089,19 +1100,29 @@ npm run test
 npm run test:watch
 ```
 
-**Current results:** `41 tests · 7 test suites` — all passing ✅
+**Current results:** `94 tests · 17 test suites` — all passing ✅
 
 The suite covers:
 
 | Test File | Area |
 |---|---|
-| `src/components/support/__tests__/TajSupportChatWidget.test.tsx` | AI Support Chat widget rendering, interactive chat & dual escalation cards |
-| `src/components/classroom/__tests__/Whiteboard.test.tsx` | Whiteboard SDK integration & connection lifecycle |
+| `src/app/classroom/__tests__/ClassroomPage.test.tsx` | Classroom page access control, lobby preview, whiteboard polling & call view |
+| `src/components/auth/__tests__/RegistrationForm.test.tsx` | Unified SOLID registration form, synchronous validation & 422 taken-field login links |
+| `src/components/classroom/__tests__/ClassroomControlDock.test.tsx` | Floating classroom control dock, host/teacher role controls & permission states |
+| `src/components/classroom/__tests__/Whiteboard.test.tsx` | Whiteboard SDK integration, follower mode & connection lifecycle |
 | `src/components/dashboard/__tests__/SessionSummaryCard.test.tsx` | AI session summary card rendering, status badges & quiz modal triggers |
-| `src/components/dashboard/__tests__/utils.test.tsx` | Dashboard utility functions |
-| `src/components/dashboard/financial/__tests__/WalletSummary.test.tsx` | Wallet summary component rendering |
-| `src/app/classroom/__tests__/ClassroomPage.test.tsx` | Classroom page access control & rendering |
+| `src/components/dashboard/__tests__/utils.test.tsx` | StatusBadge rendering across booking, payout, and transaction states |
+| `src/components/dashboard/bookings/__tests__/ResponsiveBookingTable.test.tsx` | Responsive booking table across Student, Teacher, and Parent roles |
+| `src/components/dashboard/financial/__tests__/WalletSummary.test.tsx` | Wallet summary component rendering & SAR balance formatting |
+| `src/components/dashboard/wallet/__tests__/WalletSecondaryCards.test.tsx` | Recent transactions & Help Center sidebar cards across role contexts |
+| `src/components/support/__tests__/TajSupportChatWidget.test.tsx` | AI Support Chat widget, SSE fallback, XSS sanitization & dual escalation cards |
+| `src/hooks/__tests__/useEcho.test.tsx` | Laravel Echo private channel subscription, live callback refs & cleanup lifecycle |
+| `src/hooks/__tests__/useRecaptcha.test.tsx` | Google reCAPTCHA v3 execution hook & timeout fallback |
+| `src/lib/__tests__/financialUtils.test.ts` | Transaction type normalization, UUID stripping & Arabic description translation |
 | `src/lib/__tests__/formatters.test.ts` | Date, currency, and number formatting helpers |
+| `src/lib/__tests__/queryKeys.test.ts` | Centralized TanStack Query key factory determinism & user isolation |
+| `src/lib/__tests__/tokenStorage.test.ts` | Auth token persistence (`localStorage` + `SameSite=Lax` cookie sync) |
+| `src/lib/__tests__/validators.test.ts` | Synchronous auth field validators & 422 Laravel registration error parser |
 
 ---
 
