@@ -1,5 +1,6 @@
 import api from "@/lib/axios";
 import { ApiResponse, Review } from "@/types";
+import { discoveryService } from "./discoveryService";
 
 export const reviewService = {
   /**
@@ -13,8 +14,7 @@ export const reviewService = {
   /**
    * Get reviews for a specific teacher
    */
-  getTeacherReviews: async (teacherId: number) => {
-    const res = await api.get<ApiResponse<{ data: Review[] }>>(`/discovery/teachers/${teacherId}/reviews`);
-    return res.data;
+  getTeacherReviews: async (teacherId: number, page?: number) => {
+    return discoveryService.getTeacherReviews(teacherId, page);
   },
 };

@@ -1,6 +1,6 @@
 import Echo from "laravel-echo";
 import Pusher from "pusher-js";
-import Cookies from "js-cookie";
+import { tokenStorage } from "./tokenStorage";
 
 let echoInstance: Echo<"reverb"> | null = null;
 
@@ -12,7 +12,7 @@ export const getEcho = (): Echo<"reverb"> | null => {
     return null;
   }
 
-  const token = Cookies.get("auth_token");
+  const token = tokenStorage.getToken();
 
   if (echoInstance) {
     // Update authorization header if token changed

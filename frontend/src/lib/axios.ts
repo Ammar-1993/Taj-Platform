@@ -1,5 +1,5 @@
 import axios from 'axios';
-import Cookies from 'js-cookie';
+import { tokenStorage } from './tokenStorage';
 
 // 🟢 التعديل الذكي: تحديد الرابط بناءً على البيئة (الإنتاج أو المحلي)
 // إذا وجد المتغير في Vercel سيستخدمه، وإلا سيستخدم الرابط المحلي
@@ -15,7 +15,7 @@ const api = axios.create({
 
 // Interceptor لإرفاق التوكن تلقائياً مع كل طلب
 api.interceptors.request.use((config) => {
-    const token = Cookies.get('auth_token');
+    const token = tokenStorage.getToken();
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -27,7 +27,7 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            Cookies.remove('auth_token');
+            tokenStorage.clearToken();
             if (typeof window !== 'undefined') {
                 window.location.href = '/login';
             }

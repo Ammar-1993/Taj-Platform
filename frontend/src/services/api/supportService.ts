@@ -1,5 +1,5 @@
 import api from "@/lib/axios";
-import Cookies from "js-cookie";
+import { tokenStorage } from "@/lib/tokenStorage";
 import {
   ApiResponse,
   PaginatedApiResponse,
@@ -73,7 +73,7 @@ export const supportService = {
     signal?: AbortSignal
   ): Promise<void> => {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
-    const token = Cookies.get("auth_token");
+    const token = tokenStorage.getToken();
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",

@@ -1,6 +1,8 @@
+export type UserRoleName = "student" | "teacher" | "parent" | "admin" | (string & {});
+
 export interface Role {
   id: number;
-  name: string;
+  name: UserRoleName;
 }
 
 export interface GradeLevel {
@@ -46,11 +48,21 @@ export interface Wallet {
   transactions?: PaginatedResponse<WalletTransaction>;
 }
 
+export type WalletTransactionType =
+  | "deposit"
+  | "wallet_topup"
+  | "withdrawal"
+  | "payout"
+  | "earnings"
+  | "class_earnings"
+  | "refund"
+  | (string & {});
+
 export interface WalletTransaction {
   id: number;
   wallet_id: number;
   amount: string;
-  type: string; // withdrawal, class_earnings, wallet_topup, refund, etc.
+  type: WalletTransactionType;
   description: string;
   created_at: string;
   booking?: Booking;
@@ -93,7 +105,7 @@ export interface PaginatedResponse<T> {
 
 export type PaginatedApiResponse<T> = ApiResponse<PaginatedResponse<T>>;
 
-export interface User {
+export interface BaseUser {
   id: number;
   name: string;
   email: string;
@@ -102,6 +114,22 @@ export interface User {
   is_active?: boolean;
   roles: Role[];
   wallet?: Wallet;
+}
+
+export interface StudentUser extends BaseUser {
+  student_profile?: StudentProfile;
+}
+
+export interface TeacherUser extends BaseUser {
+  teacher_profile?: TeacherProfile;
+  active_slots_count?: number;
+}
+
+export interface ParentUser extends BaseUser {
+  children?: StudentUser[];
+}
+
+export interface User extends BaseUser {
   student_profile?: StudentProfile;
   teacher_profile?: TeacherProfile;
   active_slots_count?: number;
@@ -133,11 +161,14 @@ export interface TeacherProfileFormData {
   degree?: File | null;
 }
 
+export type PayoutStatus = "pending" | "approved" | "transferred" | "rejected" | (string & {});
+
 export interface PayoutRequest {
   id: number;
   amount: string;
   bank_name: string;
-  status: string;
+  iban?: string;
+  status: PayoutStatus;
   created_at: string;
 }
 
@@ -155,6 +186,15 @@ export interface Review {
   };
 }
 
+export type BookingStatus =
+  | "pending_payment"
+  | "scheduled"
+  | "in_progress"
+  | "completed"
+  | "cancelled"
+  | "refunded"
+  | "abandoned";
+
 export interface Booking {
   id: number;
   student_id: number;
@@ -163,18 +203,20 @@ export interface Booking {
   booking_date: string;
   session_price: string;
   net_paid: string;
-  status: "scheduled" | "in_progress" | "completed" | "cancelled" | "refunded";
+  status: BookingStatus;
   student?: User;
   teacher?: User;
   teacher_slot?: TeacherSlot;
   review?: Review;
 }
 
+export type SupportTicketStatus = "open" | "in_progress" | "resolved" | (string & {});
+
 export interface SupportTicket {
   id: number;
   subject: string;
   description: string;
-  status: string;
+  status: SupportTicketStatus;
   booking_id?: number;
   admin_reply?: string;
   updated_at: string;

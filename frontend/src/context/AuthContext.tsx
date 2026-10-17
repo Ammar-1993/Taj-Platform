@@ -1,8 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import Cookies from 'js-cookie';
 import { authService } from '@/services/api';
+import { tokenStorage } from '@/lib/tokenStorage';
 import { User } from '@/types'; // تأكد من أن واجهة User مُعرفة في هذا المسار
 
 interface AuthContextType {
@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     useEffect(() => {
         const fetchUser = async () => {
-            const token = Cookies.get('auth_token');
+            const token = tokenStorage.getToken();
             
             // إذا لم يكن هناك توكن، أوقف التحميل فوراً ووفر استهلاك السيرفر
             if (!token) {
@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setUser(response.data);
             } catch (error) {
                 console.warn("انتهت صلاحية الجلسة أو التوكن غير صالح", error);
-                Cookies.remove('auth_token');
+                tokenStorage.clearToken();
                 setUser(null);
             } finally {
                 // 🟢 التحديث 3: ضمان إيقاف التحميل سواء نجح الطلب أو فشل
@@ -49,11 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const login = (token: string, userData: User) => {
         // 🟢 تحصين الكوكي (Security Hardening)
-        Cookies.set('auth_token', token, { 
-            expires: 7, 
-            secure: process.env.NODE_ENV === 'production', // يعمل عبر HTTPS فقط في الإنتاج
-            sameSite: 'strict' // يمنع إرسال الكوكي عبر روابط خارجية (حماية من CSRF)
-        });
+        tokenStorage.setToken(token);
         
         setUser(userData);
     };
@@ -66,7 +62,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             console.warn("فشل تسجيل الخروج من الخادم، سيتم مسح الجلسة محلياً", e);
         } finally {
             // التنظيف المحلي في كل الأحوال
-            Cookies.remove('auth_token');
+            tokenStorage.clearToken();
             
             // إعادة توجيه المستخدم وتفريغ الذاكرة (Full Reload)
             // ملاحظة: لا نقوم باستدعاء setUser(null) هنا لتجنب تضارب التوجيه (InvalidStateError)

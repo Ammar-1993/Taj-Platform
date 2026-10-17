@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
 const ConfirmDialog = dynamic(() => import("@/components/ui/ConfirmDialog"), { ssr: false });
-import api from "@/lib/axios";
+import { bookingService } from "@/services/api";
 import { Wallet, Booking, AppNotification } from "@/types";
 import toast from "react-hot-toast";
 import { showApiError } from "@/hooks/useApiError";
@@ -53,8 +53,8 @@ export const StudentTeacherDashboard: React.FC<
   const handleCancelClass = async () => {
     setActionLoading(true);
     try {
-      const res = await api.patch(`/bookings/${confirmState.bookingId}/cancel`);
-      toast.success(res.data.message || "تم إلغاء الحصة بنجاح.");
+      const res = await bookingService.cancel(confirmState.bookingId);
+      toast.success(res.message || "تم إلغاء الحصة بنجاح.");
       onRefresh();
     } catch (err: unknown) {
       showApiError(err, "حدث خطأ أثناء الإلغاء");
@@ -67,10 +67,8 @@ export const StudentTeacherDashboard: React.FC<
   const handleCompleteClass = async () => {
     setActionLoading(true);
     try {
-      const res = await api.patch(
-        `/bookings/${confirmState.bookingId}/complete`,
-      );
-      toast.success(res.data.message || "تم إنهاء الحصة وإيداع الأرباح.");
+      const res = await bookingService.complete(confirmState.bookingId);
+      toast.success(res.message || "تم إنهاء الحصة وإيداع الأرباح.");
       onRefresh();
     } catch (err: unknown) {
       showApiError(err, "حدث خطأ أثناء إنهاء الحصة");
