@@ -6,9 +6,9 @@ This file serves as the foundational mandate for all development work on the Taj
 
 The project is a decoupled monorepo:
 - **Backend:** Laravel 12 REST API + FilamentPHP v3 Admin Dashboard.
-- **Frontend:** Next.js 14 (App Router) + TypeScript.
-- **Database:** MySQL 8.0.
-- **Real-time:** WebRTC via Agora RTC SDK.
+- **Frontend:** Next.js 15.3 (App Router) + React 19.3 + TypeScript.
+- **Database:** MySQL 8.0 (Read/Write Split Ready) + Redis 7 (Cache & Eviction-Proof Queue Broker).
+- **Real-time:** WebRTC/RTM via Agora SDK, Interactive Whiteboard via Netless `white-web-sdk`, and WebSockets via Laravel Reverb + Laravel Echo.
 - **Environment:** Containerized via Docker Compose.
 
 ---
@@ -16,7 +16,7 @@ The project is a decoupled monorepo:
 ## 🛠 Tech Stack & Conventions
 
 ### Backend (`/backend`)
-- **Framework:** Laravel 12.0
+- **Framework:** Laravel 12.0 (PHP 8.3 with OPcache + Tracing JIT).
 - **Admin Panel:** FilamentPHP v3 (Localized in Arabic/RTL).
 - **Authentication:** Laravel Sanctum (Token-based).
 - **Permissions:** Spatie Laravel Permission (RBAC).
@@ -24,11 +24,12 @@ The project is a decoupled monorepo:
 - **API Design:** Versioned routes (e.g., `/api/v1/...`). Ensure consistent JSON response structures.
 
 ### Frontend (`/frontend`)
-- **Framework:** Next.js 14.2 (App Router).
-- **Language:** TypeScript (Strict mode enabled).
-- **State Management:** TanStack Query (React Query) for server state.
+- **Framework:** Next.js 15.3 (App Router) + React 19.3.
+- **Language:** TypeScript (Strict mode enabled) with canonical DDD domain interfaces (`src/types/index.ts`).
+- **State Management:** TanStack Query v5 for server state with centralized `queryKeys.ts` factory.
+- **Security & Auth:** Next.js Edge Middleware (`src/middleware.ts`), dual-storage token adapter (`tokenStorage.ts`), and strict CSP (`next.config.mjs`).
 - **Styling:** Tailwind CSS 3.4.
-- **Components:** Modular, functional components with Lucide icons.
+- **Components:** Modular, SOLID-compliant functional components with Lucide icons (`RegistrationForm`, `ClassroomControlDock`, `WalletSecondaryCards`, `ResponsiveBookingTable`).
 - **Localization:** Full Arabic (RTL) support is mandatory for all UI changes.
 
 ---
@@ -37,7 +38,7 @@ The project is a decoupled monorepo:
 
 ### 1. Teacher Onboarding & Verification
 - Teachers register and must complete their profile (`completeTeacherProfile`).
-- **KYC:** National ID and Degree uploads are mandatory.
+- **KYC:** National ID and Degree uploads are mandatory (stored privately on Cloudflare R2 / dedicated `kyc` disk and served via ephemeral HMAC-signed URLs).
 - **Verification:** Administrative approval via Filament is required before the teacher appears in search results.
 - **State Trigger:** Any profile or document update resets `is_verified` to `false`.
 
@@ -58,14 +59,14 @@ docker-compose exec laravel.test php artisan migrate --seed
 ```
 
 ### Testing
-- **Backend:** `php artisan test` (Uses PHPUnit).
-- **Frontend:** `npm run test` (Uses Jest).
+- **Backend:** `php artisan test` (Uses PHPUnit — 225 tests across 34 suites).
+- **Frontend:** `npm run test` (Uses Jest + React Testing Library — 94 tests across 17 suites).
 - **Mandate:** Always add a new test case for bug fixes or new features.
 
 ### Deployment Hints
-- Backend hosted on Render (Beta).
-- Frontend hosted on Vercel (Beta).
-- Ensure `FRONTEND_URL` and `MOYASAR_SECRET_KEY` are configured in `.env`.
+- Backend hosted on DigitalOcean Production VPS (`152.42.194.175`) via Docker Compose + GitHub Actions CI/CD.
+- Frontend hosted on Vercel (`https://www.taj-edu.online`).
+- Ensure `FRONTEND_URL`, `REVALIDATION_SECRET`, and `MOYASAR_SECRET_KEY` are configured in `.env`.
 
 ---
 
@@ -673,13 +674,45 @@ Resolved three critical build warnings during `npm run build` in the frontend:
   - Full backend test suite passing: **225 passed (754 assertions)** with 0 failures (`php artisan test`).
   - Code formatted with `laravel/pint`: 100% compliant.
 
+## 📖 Session Log & Recent Updates (Oct 17, 2026)
 
+### 1. Frontend Architectural & Security Overhaul — 7-Phase DDD, SOLID & Security Modernization (`v2.5.0`)
+Executed a comprehensive 7-phase architectural refactoring of `/frontend` following a full security and codebase audit, upgrading the platform to **Release `v2.5.0`** while expanding the automated Jest test suite from **41 tests (7 suites)** to **94 tests (17 suites)**:
 
+#### Phase 1 — Security Hardening & Edge Middleware (`SEC-01` – `SEC-06`) [`906e054`]
+- **SEC-01 (`revalidate/route.ts`):** Eliminated hardcoded `'taj-revalidate-secret-2026'` fallback and vulnerable `!==` string comparison in [`frontend/src/app/api/revalidate/route.ts`](file:///home/ammar/code/taj-platform/frontend/src/app/api/revalidate/route.ts). Enforced mandatory `process.env.REVALIDATION_SECRET` (returning `503 Service Unavailable` when unconfigured) and constant-time cryptographic verification via Node's `crypto.timingSafeEqual`.
+- **SEC-02 (`middleware.ts` & `tokenStorage.ts`):** Created Next.js Edge Middleware [`frontend/src/middleware.ts`](file:///home/ammar/code/taj-platform/frontend/src/middleware.ts) protecting `/dashboard/:path*`, `/classroom/:path*`, `/profile/:path*`, `/wallet/:path*`, and `/parent/:path*` by verifying the `taj_has_token=1` (`SameSite=Lax; Path=/`) indicator cookie before rendering protected routes.
+- **SEC-03 & SEC-04 (`next.config.mjs`):** Hardened Content-Security-Policy in [`frontend/next.config.mjs`](file:///home/ammar/code/taj-platform/frontend/next.config.mjs) with `object-src 'none'; base-uri 'self'; form-action 'self';` and restricted `images.remotePatterns` strictly to R2 CDN (`*.r2.dev`, `*.r2.cloudflarestorage.com`), `*.taj-edu.online`, `ui-avatars.com`, and local dev hosts.
+- **SEC-05 (`TeacherProfileClient.tsx`):** Replaced raw error response rendering with a safe, user-friendly Arabic retry card in [`TeacherProfileClient.tsx`](file:///home/ammar/code/taj-platform/frontend/src/components/teachers/TeacherProfileClient.tsx).
+- **SEC-06 (`npm audit`):** Resolved `next-pwa` / `serialize-javascript` high-severity advisories (`0 high / 0 critical` vulnerabilities).
 
+#### Phase 2 — Dead Code Elimination & Structural Hygiene [`b17dbd9`]
+- Removed 9 unused scaffolding artifacts and dead code files (`frontend/components.json`, `frontend/src/lib/utils.ts`, `frontend/src/app/fonts/`, default SVG icons in `frontend/public/`), cleaned unused state/variables across `Navbar.tsx`, `PaymentModal.tsx`, and `classroom/[id]/page.tsx`, and removed duplicate root devDependencies (`@sentry/cli`, `start-server-and-test`).
 
+#### Phase 3 — Domain Model, Centralized Query Key Factory & Service Layer DDD Alignment [`f0e5bb7`, `6d0f525`]
+- **Canonical Domain Model ([`src/types/index.ts`](file:///home/ammar/code/taj-platform/frontend/src/types/index.ts)):** Consolidated all core TypeScript interfaces (`User`, `RoleName`, `TeacherProfile`, `TeacherSlot`, `Booking`, `BookingStatus`, `Wallet`, `WalletTransaction`, `PayoutRequest`, `SessionSummary`, `Quiz`, `QuizQuestion`, `PaginationMeta`, `PaginatedResponse<T>`, `ParentDashboardData`, `RegisterPayload`) into a single source of truth.
+- **Token Storage Adapter ([`src/lib/tokenStorage.ts`](file:///home/ammar/code/taj-platform/frontend/src/lib/tokenStorage.ts)):** Decoupled token persistence from `AuthContext` and `axios.ts` (Dependency Inversion Principle), synchronizing `localStorage` (`token`) and the Edge Middleware cookie (`taj_has_token=1`).
+- **Centralized Query Key Factory ([`src/lib/queryKeys.ts`](file:///home/ammar/code/taj-platform/frontend/src/lib/queryKeys.ts)):** Standardized hierarchical React Query keys across `discovery`, `bookings`, `teacher`, `wallet`, `payouts`, `parent`, and `classroom` domains.
 
+#### Phase 4 — Real-Time WebSockets (`useEcho.ts`), React Query Cache & Hook Fixes [`755af0a`, `cb50c14`]
+- **WebSocket Lifecycle & Logout Teardown ([`src/lib/echo.ts`](file:///home/ammar/code/taj-platform/frontend/src/lib/echo.ts) & [`src/hooks/useEcho.ts`](file:///home/ammar/code/taj-platform/frontend/src/hooks/useEcho.ts)):** Added `disconnectEcho()` called on `AuthContext.logout()` to cleanly sever private channel subscriptions (`App.Models.User.{id}`, `teacher.{id}`). Stabilized `useEcho` effect dependencies using primitive `userId` and `isTeacher` values and aligned cache invalidation with `queryKeys`.
+- **Deterministic Cache Invalidation ([`useWallet.ts`](file:///home/ammar/code/taj-platform/frontend/src/hooks/useWallet.ts) & [`useBooking.ts`](file:///home/ammar/code/taj-platform/frontend/src/hooks/useBooking.ts)):** Aligned query keys and mutations so wallet top-ups, bookings, completions, and cancellations deterministically invalidate `queryKeys.wallet.all`, `queryKeys.bookings.all`, and `queryKeys.parent.all`.
+- **Next.js App Router Suspense Compliance ([`dashboard/page.tsx`](file:///home/ammar/code/taj-platform/frontend/src/app/dashboard/page.tsx)):** Wrapped `useSearchParams()` inside a `<Suspense>` boundary in `DashboardPage`.
 
+#### Phase 5 — Auth & Registration SOLID Refactoring + Synchronous Validation [`a508d2b`, `f5f18cc`]
+- **Synchronous Validators ([`src/lib/validators.ts`](file:///home/ammar/code/taj-platform/frontend/src/lib/validators.ts)):** Created pure synchronous validation functions (`validateSaudiPhone`, `validateEmail`, `validatePasswordConfirmation`) returning immediate boolean results, fixing the async state batching bug in registration forms.
+- **reCAPTCHA v3 Hook ([`src/hooks/useRecaptcha.ts`](file:///home/ammar/code/taj-platform/frontend/src/hooks/useRecaptcha.ts)):** Encapsulated Google reCAPTCHA v3 script lifecycle and token execution.
+- **Unified Registration Component ([`src/components/auth/RegistrationForm.tsx`](file:///home/ammar/code/taj-platform/frontend/src/components/auth/RegistrationForm.tsx)):** Consolidated 620+ lines of duplicated code across `/register`, `/register/teacher`, and `/register/parent` into a single Open/Closed Principle (OCP) component configured via `role`, `title`, and `subtitle` props.
 
+#### Phase 6 — Dashboard, Classroom & Financial Domain Unification [`44dfffa`, `17bad6b`]
+- **Financial Domain Unification ([`src/lib/financialUtils.ts`](file:///home/ammar/code/taj-platform/frontend/src/lib/financialUtils.ts) & [`src/components/wallet/WalletSecondaryCards.tsx`](file:///home/ammar/code/taj-platform/frontend/src/components/wallet/WalletSecondaryCards.tsx)):** Extracted shared transaction sign/color/badge formatting and unified the secondary wallet cards across `/dashboard` and `/wallet`.
+- **Booking Table Cleanup ([`src/components/dashboard/ResponsiveBookingTable.tsx`](file:///home/ammar/code/taj-platform/frontend/src/components/dashboard/ResponsiveBookingTable.tsx)):** Removed dead `onPayClick` prop and exported reusable `getBookingStatusBadge`.
+- **Classroom Control Dock Extraction ([`src/components/classroom/ClassroomControlDock.tsx`](file:///home/ammar/code/taj-platform/frontend/src/components/classroom/ClassroomControlDock.tsx)):** Extracted the floating media and session control dock from `classroom/[id]/page.tsx` into a dedicated, unit-tested presentation component.
 
-
-
+#### Phase 7 — Comprehensive Automated Test Suite Expansion & Documentation Sync [`ba7a097`]
+- Added 10 new unit and integration test suites covering `revalidate/route.test.ts`, `tokenStorage.test.ts`, `queryKeys.test.ts`, `validators.test.ts`, `financialUtils.test.ts`, `ClassroomControlDock.test.tsx`, `RegistrationForm.test.tsx`, `useRecaptcha.test.tsx`, `ResponsiveBookingTable.test.tsx`, and `WalletSecondaryCards.test.tsx`.
+- **Final Verification Metrics:**
+  - **Frontend Tests:** **17 passed test suites, 94 passed tests** (`npm test`).
+  - **Backend Tests:** **34 passed test suites, 225 passed tests (754 assertions)** (`php artisan test`).
+  - **TypeScript & Build:** `npx tsc --noEmit` (0 errors) and `npm run build` (26 routes compiled cleanly).
+  - **Documentation:** Synchronized [`README.md`](file:///home/ammar/code/taj-platform/README.md) and [`GEMINI.md`](file:///home/ammar/code/taj-platform/GEMINI.md) with all `v2.5.0` architectural updates.
